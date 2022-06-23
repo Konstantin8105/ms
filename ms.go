@@ -13,6 +13,8 @@ const (
 	Add GroupId = iota
 	Split
 	Plate
+	Move
+	Scale
 	Plugin
 	endGroup
 )
@@ -24,7 +26,11 @@ func (g GroupId) String() string {
 	case Split:
 		return "Split"
 	case Plate:
-		return "Plate"
+		return "Plate operations"
+	case Move:
+		return "Move"
+	case Scale:
+		return "Scale"
 	case Plugin:
 		return "Plugin"
 	}
@@ -212,6 +218,79 @@ var Operations = []Operation{{
 		list.Add(&bi)
 
 		return &list
+	}}, {
+	Group: Split,
+	Name:  "Line2 to equal parts",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Split,
+	Name:  "Triangle3 to 3 Quadr4",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Split,
+	Name:  "Triangle3 to 2 Triangle3 by side",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Split,
+	Name:  "Quadr4 to 2 equal Quadr4 by side",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Split,
+	Name:  "Quadr4 to 4 Triangle3",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Move,
+	Name:  "Move by distance [X,Y,Z]",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Move,
+	Name:  "Move from node n1 to node n2",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Move,
+	Name:  "Move to specific plate",
+	Part: func(m Mesh) (w vl.Widget) {
+		// XOY
+		// XOZ
+		// YOZ
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Plate,
+	Name:  "Triangulation by nodes",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Plate,
+	Name:  "Triangulation exist plates by area",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Plate,
+	Name:  "Smooth exist plates",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Scale,
+	Name:  "By ratio and node number",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Scale,
+	Name:  "By ratio and coordinate",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Scale,
+	Name:  "By cylinder system coordinate",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
 	}},
 }
 
