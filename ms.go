@@ -37,7 +37,9 @@ type Mesh interface {
 	SelectNode() (id uint)
 	InsertNodeByDistance(line, distance string, pos uint)
 	InsertNodeByProportional(line, proportional string, pos uint)
-	InsertLineByNodeNumber(nodeBeginId, nodeEndId string)
+	InsertLineByNodeNumber(n1, n2 string)
+	InsertTriangle3ByNodeNumber(n1, n2, n3 string)
+	InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string)
 }
 
 type Operation struct {
@@ -118,15 +120,57 @@ var Operations = []Operation{{
 	Name:  "Line by node numbers",
 	Part: func(m Mesh) (w vl.Widget) {
 		var list vl.List
-		b, bgt := Select("Select line begin node", m.SelectNode)
+		b, bgt := Select("Select node1", m.SelectNode)
 		list.Add(b)
-		e, egt := Select("Select line end node", m.SelectNode)
+		e, egt := Select("Select node2", m.SelectNode)
 		list.Add(e)
 
 		var bi vl.Button
 		bi.SetText("Insert")
 		bi.OnClick = func() {
 			m.InsertLineByNodeNumber(bgt(), egt())
+		}
+		list.Add(&bi)
+
+		return &list
+	}}, {
+	Group: Add,
+	Name:  "Triangle3 by node numbers",
+	Part: func(m Mesh) (w vl.Widget) {
+		var list vl.List
+		n1, n1gt := Select("Select node1", m.SelectNode)
+		list.Add(n1)
+		n2, n2gt := Select("Select node2", m.SelectNode)
+		list.Add(n2)
+		n3, n3gt := Select("Select node3", m.SelectNode)
+		list.Add(n3)
+
+		var bi vl.Button
+		bi.SetText("Insert")
+		bi.OnClick = func() {
+			m.InsertTriangle3ByNodeNumber(n1gt(), n2gt(), n3gt())
+		}
+		list.Add(&bi)
+
+		return &list
+	}}, {
+	Group: Add,
+	Name:  "Quadr4 by node numbers",
+	Part: func(m Mesh) (w vl.Widget) {
+		var list vl.List
+		n1, n1gt := Select("Select node1", m.SelectNode)
+		list.Add(n1)
+		n2, n2gt := Select("Select node2", m.SelectNode)
+		list.Add(n2)
+		n3, n3gt := Select("Select node3", m.SelectNode)
+		list.Add(n3)
+		n4, n4gt := Select("Select node4", m.SelectNode)
+		list.Add(n4)
+
+		var bi vl.Button
+		bi.SetText("Insert")
+		bi.OnClick = func() {
+			m.InsertQuadr4ByNodeNumber(n1gt(), n2gt(), n3gt(), n4gt())
 		}
 		list.Add(&bi)
 
@@ -255,7 +299,17 @@ func (DebugMesh) InsertNodeByProportional(line, proportional string, pos uint) {
 		fmt.Sprintln("InsertNodeByProportional: ", line, proportional, pos))
 }
 
-func (DebugMesh) InsertLineByNodeNumber(nodeBeginId, nodeEndId string) {
+func (DebugMesh) InsertLineByNodeNumber(n1, n2 string) {
 	Debug = append(Debug,
-		fmt.Sprintln("InsertLineByNodeNumber: ", nodeBeginId, nodeEndId))
+		fmt.Sprintln("InsertLineByNodeNumber: ", n1, n2))
+}
+
+func (DebugMesh) InsertTriangle3ByNodeNumber(n1, n2, n3 string) {
+	Debug = append(Debug,
+		fmt.Sprintln("InsertTriangle3ByNodeNumber: ", n1, n2, n3))
+}
+
+func (DebugMesh) InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string) {
+	Debug = append(Debug,
+		fmt.Sprintln("InsertQuadr4ByNodeNumber: ", n1, n2, n3, n4))
 }
