@@ -14,6 +14,7 @@ const (
 	Split
 	Plate
 	Move
+	Copy
 	Scale
 	TypModels
 	Check
@@ -31,6 +32,8 @@ func (g GroupId) String() string {
 		return "Plate operations"
 	case Move:
 		return "Move"
+	case Copy:
+		return "Copy"
 	case Scale:
 		return "Scale"
 	case Check:
@@ -90,8 +93,8 @@ var Operations = []Operation{{
 		list.Add(&b)
 		return &list
 	}}, {
-	Group: Add,
-	Name:  "Node at the line by distance",
+	Group: Split,
+	Name:  "Line2 by distance from node",
 	Part: func(m Mesh) (w vl.Widget) {
 		var list vl.List
 		s, sgt := Select("Select line", Single, m.SelectLines)
@@ -112,8 +115,8 @@ var Operations = []Operation{{
 
 		return &list
 	}}, {
-	Group: Add,
-	Name:  "Node at the line2 by proportional",
+	Group: Split,
+	Name:  "Line2 by ratio",
 	Part: func(m Mesh) (w vl.Widget) {
 		var list vl.List
 		s, sgt := Select("Select line", Single, m.SelectLines)
@@ -250,6 +253,17 @@ var Operations = []Operation{{
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
+	Group: Split,
+	Name:  "Quadr4 to 4 Quadr4",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Split,
+	Name:  "Plates by Line2",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+
 	Group: Move,
 	Name:  "Move by distance [X,Y,Z]",
 	Part: func(m Mesh) (w vl.Widget) {
@@ -268,6 +282,31 @@ var Operations = []Operation{{
 		// YOZ
 		return vl.TextStatic("HOLD")
 	}}, {
+
+	Group: Copy,
+	Name:  "Copy by distance [X,Y,Z]",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Copy,
+	Name:  "Copy from node n1 to node n2",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Copy,
+	Name:  "Copy to specific plate",
+	Part: func(m Mesh) (w vl.Widget) {
+		// XOY
+		// XOZ
+		// YOZ
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Copy,
+	Name:  "Copy by line path",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+
 	Group: Plate,
 	Name:  "Triangulation by nodes",
 	Part: func(m Mesh) (w vl.Widget) {
@@ -295,6 +334,11 @@ var Operations = []Operation{{
 	}}, {
 	Group: Scale,
 	Name:  "By cylinder system coordinate",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Scale,
+	Name:  "By direction on 2 nodes",
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}},
@@ -589,39 +633,7 @@ void menu()
         }
         // modify
         if (ImGui::BeginMenu("Modify")) {
-            if (ImGui::BeginMenu("Add by coordinate")) {
-                templorary_debug_menu("Add node by coordinate");
-                templorary_debug_menu("Add line by coordinate");
-                templorary_debug_menu("Add triangle 3 point by coordinate");
-                templorary_debug_menu("Add triangle 6 point by coordinate");
-                templorary_debug_menu("Add rectangle 4 points by coordinate");
-                templorary_debug_menu("Add rectangle 8 points by coordinate");
-                ImGui::EndMenu();
-            }
-            templorary_debug_menu("Add node at the start of line");
-            templorary_debug_menu("Add node at the end of line");
-            templorary_debug_menu("Add node at the triangle");
 
-            if (ImGui::BeginMenu("Add by node number")) {
-                templorary_debug_menu("Add node by node number");
-                templorary_debug_menu("Add line by node number");
-                templorary_debug_menu("Add triangle 3 point by coordinate");
-                templorary_debug_menu("Add triangle 6 point by coordinate");
-                templorary_debug_menu("Add rectangle 4 points by coordinate");
-                templorary_debug_menu("Add rectangle 8 points by coordinate");
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Add by cursor")) {
-                templorary_debug_menu("Add node by cursor");
-                templorary_debug_menu("Add line by cursor");
-                templorary_debug_menu("Add triangle 3 point by coordinate");
-                templorary_debug_menu("Add triangle 6 point by coordinate");
-                templorary_debug_menu("Add rectangle 4 points by coordinate");
-                templorary_debug_menu("Add rectangle 8 points by coordinate");
-                ImGui::EndMenu();
-            }
-            ImGui::Separator();
             templorary_debug_menu("Create group");
             templorary_debug_menu("Create cross section");
 
@@ -714,18 +726,18 @@ func init() {
 		"Fillet plates",
 		"Explode plates",
 		"Lines offset by direction",
-		"Copy by line path",
-		"Plates smooth",
-		"Split plates by lines",
+		// "Copy by line path",
+		// "Plates smooth",
+		// "Split plates by lines",
 		"Split lines by plates",
-		"Split triangles by side 1",
-		"Split triangles by side 2",
-		"Split triangles by side 3",
-		"Split triangles by center point",
-		"Split triangles to 3 rectangles",
-		"Split rectangles to 4 triangles",
-		"Convert triangles to rectangles",
-		"Convert rectangles to triangles",
+		// "Split triangles by side 1",
+		// "Split triangles by side 2",
+		// "Split triangles by side 3",
+		// "Split triangles by center point",
+		// "Split triangles to 3 rectangles",
+		// "Split rectangles to 4 triangles",
+		// "Convert triangles to rectangles",
+		// "Convert rectangles to triangles",
 		"Move points",
 		"Move from node to node",
 		"Move on plate",
@@ -750,5 +762,4 @@ func init() {
 		"Stiffening rib",
 		"Weld",
 	)
-
 }
