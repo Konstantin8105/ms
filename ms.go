@@ -33,14 +33,20 @@ func (g GroupId) String() string {
 
 type Mesh interface {
 	InsertNode(X, Y, Z string)
-	SelectLine() (id uint)
-	SelectNode() (id uint)
+	SelectLines(single bool) (ids []uint)
+	SelectNodes(single bool) (ids []uint)
 	InsertNodeByDistance(line, distance string, pos uint)
 	InsertNodeByProportional(line, proportional string, pos uint)
 	InsertLineByNodeNumber(n1, n2 string)
 	InsertTriangle3ByNodeNumber(n1, n2, n3 string)
 	InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string)
+	InsertElementsByNodes(ids string, l2, t3, q4 bool)
 }
+
+const (
+	Single = true
+	Many   = false
+)
 
 type Operation struct {
 	Group GroupId
@@ -76,7 +82,7 @@ var Operations = []Operation{{
 	Name:  "Node at the line by distance",
 	Part: func(m Mesh) (w vl.Widget) {
 		var list vl.List
-		s, sgt := Select("Select line", m.SelectLine)
+		s, sgt := Select("Select line", Single, m.SelectLines)
 		list.Add(s)
 		d, dgt := InputFloat("Distance", "meter")
 		list.Add(d)
@@ -95,10 +101,10 @@ var Operations = []Operation{{
 		return &list
 	}}, {
 	Group: Add,
-	Name:  "Node at the line by proportional",
+	Name:  "Node at the line2 by proportional",
 	Part: func(m Mesh) (w vl.Widget) {
 		var list vl.List
-		s, sgt := Select("Select line", m.SelectLine)
+		s, sgt := Select("Select line", Single, m.SelectLines)
 		list.Add(s)
 		d, dgt := InputFloat("Ratio", "")
 		list.Add(d)
@@ -117,12 +123,12 @@ var Operations = []Operation{{
 		return &list
 	}}, {
 	Group: Add,
-	Name:  "Line by node numbers",
+	Name:  "Line2 by node numbers",
 	Part: func(m Mesh) (w vl.Widget) {
 		var list vl.List
-		b, bgt := Select("Select node1", m.SelectNode)
+		b, bgt := Select("Select node1", Single, m.SelectNodes)
 		list.Add(b)
-		e, egt := Select("Select node2", m.SelectNode)
+		e, egt := Select("Select node2", Single, m.SelectNodes)
 		list.Add(e)
 
 		var bi vl.Button
@@ -138,11 +144,11 @@ var Operations = []Operation{{
 	Name:  "Triangle3 by node numbers",
 	Part: func(m Mesh) (w vl.Widget) {
 		var list vl.List
-		n1, n1gt := Select("Select node1", m.SelectNode)
+		n1, n1gt := Select("Select node1", Single, m.SelectNodes)
 		list.Add(n1)
-		n2, n2gt := Select("Select node2", m.SelectNode)
+		n2, n2gt := Select("Select node2", Single, m.SelectNodes)
 		list.Add(n2)
-		n3, n3gt := Select("Select node3", m.SelectNode)
+		n3, n3gt := Select("Select node3", Single, m.SelectNodes)
 		list.Add(n3)
 
 		var bi vl.Button
@@ -158,19 +164,50 @@ var Operations = []Operation{{
 	Name:  "Quadr4 by node numbers",
 	Part: func(m Mesh) (w vl.Widget) {
 		var list vl.List
-		n1, n1gt := Select("Select node1", m.SelectNode)
+		n1, n1gt := Select("Select node1", Single, m.SelectNodes)
 		list.Add(n1)
-		n2, n2gt := Select("Select node2", m.SelectNode)
+		n2, n2gt := Select("Select node2", Single, m.SelectNodes)
 		list.Add(n2)
-		n3, n3gt := Select("Select node3", m.SelectNode)
+		n3, n3gt := Select("Select node3", Single, m.SelectNodes)
 		list.Add(n3)
-		n4, n4gt := Select("Select node4", m.SelectNode)
+		n4, n4gt := Select("Select node4", Single, m.SelectNodes)
 		list.Add(n4)
 
 		var bi vl.Button
 		bi.SetText("Insert")
 		bi.OnClick = func() {
 			m.InsertQuadr4ByNodeNumber(n1gt(), n2gt(), n3gt(), n4gt())
+		}
+		list.Add(&bi)
+
+		return &list
+	}}, {
+	Group: Add,
+	Name:  "Elements by sequence of nodes",
+	Part: func(m Mesh) (w vl.Widget) {
+		var list vl.List
+		ns, nsgt := Select("Select sequence of nodes", Many, m.SelectNodes)
+		list.Add(ns)
+
+		var l2 vl.CheckBox
+		l2.SetText("add lines")
+		list.Add(&l2)
+
+		var tr3 vl.CheckBox
+		tr3.SetText("add triangles")
+		list.Add(&tr3)
+
+		var q4 vl.CheckBox
+		q4.SetText("add quadr4")
+		list.Add(&q4)
+
+		var bi vl.Button
+		bi.SetText("Insert")
+		bi.OnClick = func() {
+			if !(l2.Checked || tr3.Checked || q4.Checked) {
+				return
+			}
+			m.InsertElementsByNodes(nsgt(), l2.Checked, tr3.Checked, q4.Checked)
 		}
 		list.Add(&bi)
 
@@ -201,7 +238,7 @@ func Input3Float(prefix, postfix [3]string) (w vl.Widget, gettext [3]func() stri
 	return &list, gettext
 }
 
-func Select(name string, selector func() uint) (w vl.Widget, gettext func() string) {
+func Select(name string, single bool, selector func(single bool) []uint) (w vl.Widget, gettext func() string) {
 	var l vl.ListH
 	l.Add(vl.TextStatic(name))
 	var id vl.Inputbox
@@ -211,7 +248,14 @@ func Select(name string, selector func() uint) (w vl.Widget, gettext func() stri
 	var b vl.Button
 	b.SetText("Select")
 	b.OnClick = func() {
-		id.SetText(fmt.Sprintf("%d", selector()))
+		ids := selector(single)
+		if len(ids) == 0 {
+			return
+		}
+		if single && 1 < len(ids) {
+			ids = ids[:1]
+		}
+		id.SetText(fmt.Sprintf("%v", ids))
 	}
 	l.Add(&b)
 	return &l, id.GetText
@@ -269,23 +313,31 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 	return
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 type DebugMesh struct{}
 
 func (DebugMesh) InsertNode(X, Y, Z string) {
 	Debug = append(Debug, fmt.Sprintln("InsertNode: ", X, Y, Z))
 }
 
-func (DebugMesh) SelectLine() (id uint) {
-	id = 314
+func (DebugMesh) SelectLines(single bool) (ids []uint) {
+	ids = []uint{314, 567}
+	if single {
+		ids = ids[:1]
+	}
 	Debug = append(Debug,
-		fmt.Sprintln("SelectLine: ", id))
+		fmt.Sprintln("SelectLines: ", ids))
 	return
 }
 
-func (DebugMesh) SelectNode() (id uint) {
-	id = 31
+func (DebugMesh) SelectNodes(single bool) (ids []uint) {
+	ids = []uint{1, 23, 444}
+	if single {
+		ids = ids[:1]
+	}
 	Debug = append(Debug,
-		fmt.Sprintln("SelectNode: ", id))
+		fmt.Sprintln("SelectNodes: ", ids))
 	return
 }
 
@@ -312,4 +364,9 @@ func (DebugMesh) InsertTriangle3ByNodeNumber(n1, n2, n3 string) {
 func (DebugMesh) InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertQuadr4ByNodeNumber: ", n1, n2, n3, n4))
+}
+
+func (DebugMesh) InsertElementsByNodes(ids string, l2, t3, q4 bool) {
+	Debug = append(Debug,
+		fmt.Sprintln("InsertElementsByNodes: ", ids, l2, t3, q4))
 }
