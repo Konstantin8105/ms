@@ -34,8 +34,10 @@ func (g GroupId) String() string {
 type Mesh interface {
 	InsertNode(X, Y, Z string)
 	SelectLine() (id uint)
+	SelectNode() (id uint)
 	InsertNodeByDistance(line, distance string, pos uint)
 	InsertNodeByProportional(line, proportional string, pos uint)
+	InsertLineByNodeNumber(nodeBeginId, nodeEndId string)
 }
 
 type Operation struct {
@@ -44,78 +46,92 @@ type Operation struct {
 	Part  func(m Mesh) (w vl.Widget)
 }
 
-var Operations = []Operation{
-	{
-		Group: Add,
-		Name:  "Node by coordinate [X,Y,Z]",
-		Part: func(m Mesh) (w vl.Widget) {
-			var list vl.List
-			// coordinates
-			w, gt := Input3Float(
-				[3]string{"X", "Y", "Z"},
-				[3]string{"meter", "meter", "meter"},
-			)
-			list.Add(w)
-			// button
-			var b vl.Button
-			b.SetText("Insert")
-			b.OnClick = func() {
-				var vs [3]string
-				for i := range vs {
-					vs[i] = gt[i]()
-				}
-				m.InsertNode(gt[0](), gt[1](), gt[2]())
+var Operations = []Operation{{
+	Group: Add,
+	Name:  "Node by coordinate [X,Y,Z]",
+	Part: func(m Mesh) (w vl.Widget) {
+		var list vl.List
+		// coordinates
+		w, gt := Input3Float(
+			[3]string{"X", "Y", "Z"},
+			[3]string{"meter", "meter", "meter"},
+		)
+		list.Add(w)
+		// button
+		var b vl.Button
+		b.SetText("Insert")
+		b.OnClick = func() {
+			var vs [3]string
+			for i := range vs {
+				vs[i] = gt[i]()
 			}
-			list.Add(&b)
-			return &list
-		},
-	}, {
-		Group: Add,
-		Name:  "Node at the line by distance",
-		Part: func(m Mesh) (w vl.Widget) {
-			var list vl.List
-			s, sgt := Select("Select line", m.SelectLine)
-			list.Add(s)
-			d, dgt := InputFloat("Distance", "meter")
-			list.Add(d)
+			m.InsertNode(gt[0](), gt[1](), gt[2]())
+		}
+		list.Add(&b)
+		return &list
+	}}, {
+	Group: Add,
+	Name:  "Node at the line by distance",
+	Part: func(m Mesh) (w vl.Widget) {
+		var list vl.List
+		s, sgt := Select("Select line", m.SelectLine)
+		list.Add(s)
+		d, dgt := InputFloat("Distance", "meter")
+		list.Add(d)
 
-			var rg vl.RadioGroup
-			rg.SetText([]string{"from line begin", "from line end"})
-			list.Add(&rg)
+		var rg vl.RadioGroup
+		rg.SetText([]string{"from line begin", "from line end"})
+		list.Add(&rg)
 
-			var b vl.Button
-			b.SetText("Insert")
-			b.OnClick = func() {
-				m.InsertNodeByDistance(sgt(), dgt(), rg.GetPos())
-			}
-			list.Add(&b)
+		var bi vl.Button
+		bi.SetText("Insert")
+		bi.OnClick = func() {
+			m.InsertNodeByDistance(sgt(), dgt(), rg.GetPos())
+		}
+		list.Add(&bi)
 
-			return &list
-		},
-	}, {
-		Group: Add,
-		Name:  "Node at the line by proportional",
-		Part: func(m Mesh) (w vl.Widget) {
-			var list vl.List
-			s, sgt := Select("Select line", m.SelectLine)
-			list.Add(s)
-			d, dgt := InputFloat("Ratio", "")
-			list.Add(d)
+		return &list
+	}}, {
+	Group: Add,
+	Name:  "Node at the line by proportional",
+	Part: func(m Mesh) (w vl.Widget) {
+		var list vl.List
+		s, sgt := Select("Select line", m.SelectLine)
+		list.Add(s)
+		d, dgt := InputFloat("Ratio", "")
+		list.Add(d)
 
-			var rg vl.RadioGroup
-			rg.SetText([]string{"from line begin", "from line end"})
-			list.Add(&rg)
+		var rg vl.RadioGroup
+		rg.SetText([]string{"from line begin", "from line end"})
+		list.Add(&rg)
 
-			var b vl.Button
-			b.SetText("Insert")
-			b.OnClick = func() {
-				m.InsertNodeByProportional(sgt(), dgt(), rg.GetPos())
-			}
-			list.Add(&b)
+		var bi vl.Button
+		bi.SetText("Insert")
+		bi.OnClick = func() {
+			m.InsertNodeByProportional(sgt(), dgt(), rg.GetPos())
+		}
+		list.Add(&bi)
 
-			return &list
-		},
-	},
+		return &list
+	}}, {
+	Group: Add,
+	Name:  "Line by node numbers",
+	Part: func(m Mesh) (w vl.Widget) {
+		var list vl.List
+		b, bgt := Select("Select line begin node", m.SelectNode)
+		list.Add(b)
+		e, egt := Select("Select line end node", m.SelectNode)
+		list.Add(e)
+
+		var bi vl.Button
+		bi.SetText("Insert")
+		bi.OnClick = func() {
+			m.InsertLineByNodeNumber(bgt(), egt())
+		}
+		list.Add(&bi)
+
+		return &list
+	}},
 }
 
 func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() string) {
@@ -222,6 +238,13 @@ func (DebugMesh) SelectLine() (id uint) {
 	return
 }
 
+func (DebugMesh) SelectNode() (id uint) {
+	id = 31
+	Debug = append(Debug,
+		fmt.Sprintln("SelectNode: ", id))
+	return
+}
+
 func (DebugMesh) InsertNodeByDistance(line, distance string, pos uint) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertNodeByDistance: ", line, distance, pos))
@@ -230,4 +253,9 @@ func (DebugMesh) InsertNodeByDistance(line, distance string, pos uint) {
 func (DebugMesh) InsertNodeByProportional(line, proportional string, pos uint) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertNodeByProportional: ", line, proportional, pos))
+}
+
+func (DebugMesh) InsertLineByNodeNumber(nodeBeginId, nodeEndId string) {
+	Debug = append(Debug,
+		fmt.Sprintln("InsertLineByNodeNumber: ", nodeBeginId, nodeEndId))
 }
