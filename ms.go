@@ -15,6 +15,8 @@ const (
 	Plate
 	Move
 	Scale
+	TypModels
+	Check
 	Plugin
 	endGroup
 )
@@ -31,6 +33,10 @@ func (g GroupId) String() string {
 		return "Move"
 	case Scale:
 		return "Scale"
+	case Check:
+		return "Check"
+	case TypModels:
+		return "Typical models"
 	case Plugin:
 		return "Plugin"
 	}
@@ -448,4 +454,301 @@ func (DebugMesh) InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string) {
 func (DebugMesh) InsertElementsByNodes(ids string, l2, t3, q4 bool) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertElementsByNodes: ", ids, l2, t3, q4))
+}
+
+/*
+void menu()
+{
+    static bool show[5] = { false, false, false, false, true }; // Node num, Beam num, Plates num, LocalCoord, Node point
+    static bool cursor[3] = { true, true, true }; // Node, Beam, Plates
+    static bool show_second_plate_border = false;
+
+    if (ImGui::BeginMainMenuBar()) {
+        // file
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("New")) { }
+            if (ImGui::MenuItem("Open", "Ctrl+O")) { }
+            if (ImGui::BeginMenu("Open Recent")) {
+                ImGui::MenuItem("fish_hat.c");
+                ImGui::MenuItem("fish_hat.inl");
+                ImGui::MenuItem("fish_hat.h");
+                if (ImGui::BeginMenu("More..")) {
+                    ImGui::MenuItem("Hello");
+                    ImGui::MenuItem("Sailor");
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::MenuItem("Save", "Ctrl+S")) { }
+            if (ImGui::MenuItem("Save As..")) { }
+            ImGui::EndMenu();
+        }
+        // edit
+        if (ImGui::BeginMenu("Edit")) {
+            if (ImGui::MenuItem("Undo", "CTRL+Z")) { }
+            if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) { }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Cut", "CTRL+X")) { }
+            if (ImGui::MenuItem("Copy", "CTRL+C")) { }
+            if (ImGui::MenuItem("Paste", "CTRL+V")) { }
+            ImGui::EndMenu();
+        }
+        // view
+        if (ImGui::BeginMenu("Geometry")) {
+            templorary_debug_menu("View selected elements");
+            templorary_debug_menu("View all elements");
+            ImGui::Separator();
+
+            // TODO: plates edges
+
+            if (ImGui::BeginMenu("Select All")) {
+                templorary_debug_menu("Nodes");
+                templorary_debug_menu("Beams");
+                templorary_debug_menu("Plates");
+                templorary_debug_menu("Geomery");
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
+
+            if (ImGui::BeginMenu("Select inverse")) {
+                templorary_debug_menu("Nodes");
+                templorary_debug_menu("Lines");
+                templorary_debug_menu("Plates");
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
+
+            if (ImGui::BeginMenu("Select by list")) {
+                templorary_debug_menu("Nodes");
+                templorary_debug_menu("Lines");
+                templorary_debug_menu("Plates");
+                // TODO: select by specific properties (material, lenght, ...)
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
+
+            if (ImGui::BeginMenu("Select beams parallel")) {
+                templorary_debug_menu("X");
+                templorary_debug_menu("Y");
+                templorary_debug_menu("Z");
+                templorary_debug_menu("Direction");
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
+
+            if (ImGui::BeginMenu("Select plares parallel")) {
+                templorary_debug_menu("XY");
+                templorary_debug_menu("YZ");
+                templorary_debug_menu("XZ");
+                templorary_debug_menu("Plane");
+                // TODO: select by specific properties (material, lenght, ...)
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
+
+            if (ImGui::BeginMenu("Measurement")) {
+                templorary_debug_menu("Distance between 2 nodes");
+                templorary_debug_menu("Distance between 2 parallel beam");
+                templorary_debug_menu("Distance between 2 parallel plates");
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
+
+            if (ImGui::BeginMenu("Standard views")) {
+                templorary_debug_menu("+X");
+                templorary_debug_menu("-X");
+                templorary_debug_menu("+Y");
+                templorary_debug_menu("-Y");
+                templorary_debug_menu("+Z");
+                templorary_debug_menu("-Z");
+                // TODO: isometric views
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
+
+            ImGui::Checkbox("Show Node number", &show[0]);
+            ImGui::Checkbox("Show Beam number", &show[1]);
+            ImGui::Checkbox("Show Plate number", &show[2]);
+            ImGui::Checkbox("Show Local coordinate", &show[3]);
+            ImGui::Checkbox("Show Node point", &show[4]);
+            ImGui::Checkbox("Show plate secondary border", &show_second_plate_border);
+            ImGui::Separator();
+
+            ImGui::Checkbox("Cursor select node", &cursor[0]);
+            ImGui::Checkbox("Cursor select beams", &cursor[1]);
+            ImGui::Checkbox("Cursor select plates", &cursor[2]);
+            ImGui::Separator();
+
+            templorary_debug_menu("Wireframe mode");
+            templorary_debug_menu("Solid mode");
+            ImGui::Separator();
+
+            templorary_debug_menu("Statistic");
+
+            ImGui::EndMenu();
+        }
+        // modify
+        if (ImGui::BeginMenu("Modify")) {
+            if (ImGui::BeginMenu("Add by coordinate")) {
+                templorary_debug_menu("Add node by coordinate");
+                templorary_debug_menu("Add line by coordinate");
+                templorary_debug_menu("Add triangle 3 point by coordinate");
+                templorary_debug_menu("Add triangle 6 point by coordinate");
+                templorary_debug_menu("Add rectangle 4 points by coordinate");
+                templorary_debug_menu("Add rectangle 8 points by coordinate");
+                ImGui::EndMenu();
+            }
+            templorary_debug_menu("Add node at the start of line");
+            templorary_debug_menu("Add node at the end of line");
+            templorary_debug_menu("Add node at the triangle");
+
+            if (ImGui::BeginMenu("Add by node number")) {
+                templorary_debug_menu("Add node by node number");
+                templorary_debug_menu("Add line by node number");
+                templorary_debug_menu("Add triangle 3 point by coordinate");
+                templorary_debug_menu("Add triangle 6 point by coordinate");
+                templorary_debug_menu("Add rectangle 4 points by coordinate");
+                templorary_debug_menu("Add rectangle 8 points by coordinate");
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Add by cursor")) {
+                templorary_debug_menu("Add node by cursor");
+                templorary_debug_menu("Add line by cursor");
+                templorary_debug_menu("Add triangle 3 point by coordinate");
+                templorary_debug_menu("Add triangle 6 point by coordinate");
+                templorary_debug_menu("Add rectangle 4 points by coordinate");
+                templorary_debug_menu("Add rectangle 8 points by coordinate");
+                ImGui::EndMenu();
+            }
+            ImGui::Separator();
+            templorary_debug_menu("Create group");
+            templorary_debug_menu("Create cross section");
+
+
+            ImGui::EndMenu();
+        }
+        // reports
+        if (ImGui::BeginMenu("Reports")) {
+            if (ImGui::BeginMenu("Covering plates from direction")) {
+                templorary_debug_menu("+X");
+                templorary_debug_menu("-X");
+                templorary_debug_menu("+Y");
+                templorary_debug_menu("-Y");
+                templorary_debug_menu("+Z");
+                templorary_debug_menu("-Z");
+                templorary_debug_menu("by points");
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Location")) {
+                templorary_debug_menu("X");
+                templorary_debug_menu("Y");
+                templorary_debug_menu("Z");
+                ImGui::EndMenu();
+            }
+            //
+            ImGui::EndMenu();
+        }
+
+        //
+        ImGui::EndMainMenuBar();
+    }
+}
+*/
+
+func add(name GroupId, parts ...string) {
+	for i := range parts {
+		Operations = append(Operations, Operation{
+			Group: name,
+			Name:  fmt.Sprintf("%s", parts[i]),
+			Part: func(m Mesh) (w vl.Widget) {
+				return vl.TextStatic("HOLD")
+			},
+		})
+	}
+}
+
+func init() {
+	add(Check,
+		"Multiple structures",
+		"Node duplicate",
+		"Beam duplicate",
+		"Plate duplicate",
+		"Zero length beam",
+		"Zero length plates",
+		"Overlapping Collinear beams",
+		"Empty loads",
+		"Empty combinations",
+		"Not connected nodes",
+		"Unused supports",
+		"Unused beam properties",
+		"All ortho elements",
+	)
+
+	add(TypModels,
+		"Cylinder",
+		"Sphere",
+		"Cone",
+		"Disk",
+		"Cube",
+		"Pipe branch",
+		"Frame",
+		"Beam-beam connection",
+		"Column-beam connection",
+		"Column-column connection",
+	)
+
+	add(Plugin,
+		"Translational Repeat",
+		"Circular Repeat/Spiral",
+		"Mirror",
+		"Move",
+		"Move with remesh/smooth",
+		"Rotate",
+		"Beam intersection",
+		"Merge nodes",
+		"Merge beams",
+		"Merge plates",
+		"Plate intersection",
+		"Chamfer plates",
+		"Fillet plates",
+		"Explode plates",
+		"Lines offset by direction",
+		"Copy by line path",
+		"Plates smooth",
+		"Split plates by lines",
+		"Split lines by plates",
+		"Split triangles by side 1",
+		"Split triangles by side 2",
+		"Split triangles by side 3",
+		"Split triangles by center point",
+		"Split triangles to 3 rectangles",
+		"Split rectangles to 4 triangles",
+		"Convert triangles to rectangles",
+		"Convert rectangles to triangles",
+		"Move points",
+		"Move from node to node",
+		"Move on plate",
+		"Plate bending",
+		"Triangulation",
+		"2D offset",
+		"Twist",
+		"Extrude",
+		"Scale global",
+		"Scale +X",
+		"Scale -X",
+		"Scale +Y",
+		"Scale -Y",
+		"Scale +Z",
+		"Scale -Z",
+		"Scale by direction",
+		"Scale on cylinder system coordinate",
+		"Hole circle, square, rectangle on direction",
+		"Cutoff",
+		"Bend plates",
+		"Stamping by point",
+		"Stiffening rib",
+		"Weld",
+	)
+
 }
