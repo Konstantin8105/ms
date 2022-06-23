@@ -34,20 +34,21 @@ func (g GroupId) String() string {
 type Mesh interface {
 	InsertNode(X, Y, Z string)
 	SelectLine() (id uint)
-	InsertNodeByDistance(line, distance string)
+	InsertNodeByDistance(line, distance string, pos uint)
+	InsertNodeByProportional(line, proportional string, pos uint)
 }
 
 type Operation struct {
 	Group GroupId
 	Name  string
-	Part  func(m Mesh) (w vl.Widget, action chan func())
+	Part  func(m Mesh) (w vl.Widget)
 }
 
 var Operations = []Operation{
 	{
 		Group: Add,
 		Name:  "Node by coordinate [X,Y,Z]",
-		Part: func(m Mesh) (w vl.Widget, action chan func()) {
+		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 			// coordinates
 			w, gt := Input3Float(
@@ -66,24 +67,53 @@ var Operations = []Operation{
 				m.InsertNode(gt[0](), gt[1](), gt[2]())
 			}
 			list.Add(&b)
-			return &list, nil
+			return &list
 		},
 	}, {
 		Group: Add,
 		Name:  "Node at the line by distance",
-		Part: func(m Mesh) (w vl.Widget, action chan func()) {
+		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 			s, sgt := Select("Select line", m.SelectLine)
 			list.Add(s)
 			d, dgt := InputFloat("Distance", "meter")
 			list.Add(d)
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"from line begin", "from line end"})
+			list.Add(&rg)
+
 			var b vl.Button
 			b.SetText("Insert")
 			b.OnClick = func() {
-				m.InsertNodeByDistance(sgt(), dgt())
+				m.InsertNodeByDistance(sgt(), dgt(), rg.GetPos())
 			}
 			list.Add(&b)
-			return &list, nil
+
+			return &list
+		},
+	}, {
+		Group: Add,
+		Name:  "Node at the line by proportional",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			s, sgt := Select("Select line", m.SelectLine)
+			list.Add(s)
+			d, dgt := InputFloat("Ratio", "")
+			list.Add(d)
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"from line begin", "from line end"})
+			list.Add(&rg)
+
+			var b vl.Button
+			b.SetText("Insert")
+			b.OnClick = func() {
+				m.InsertNodeByProportional(sgt(), dgt(), rg.GetPos())
+			}
+			list.Add(&b)
+
+			return &list
 		},
 	},
 }
@@ -159,17 +189,7 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 				err = fmt.Errorf("Widget %02d is empty\n", i)
 				return
 			}
-			r, a := part(m)
-			if a != nil {
-				go func() {
-					for {
-						select {
-						case f := <-a:
-							action <- f
-						}
-					}
-				}()
-			}
+			r := part(m)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true
@@ -197,10 +217,17 @@ func (DebugMesh) InsertNode(X, Y, Z string) {
 
 func (DebugMesh) SelectLine() (id uint) {
 	id = 314
-	Debug = append(Debug, fmt.Sprintln("SelectLine: ", id))
+	Debug = append(Debug,
+		fmt.Sprintln("SelectLine: ", id))
 	return
 }
 
-func (DebugMesh) InsertNodeByDistance(line, distance string) {
-	Debug = append(Debug, fmt.Sprintln("InsertNodeByDistance: ", line, distance))
+func (DebugMesh) InsertNodeByDistance(line, distance string, pos uint) {
+	Debug = append(Debug,
+		fmt.Sprintln("InsertNodeByDistance: ", line, distance, pos))
+}
+
+func (DebugMesh) InsertNodeByProportional(line, proportional string, pos uint) {
+	Debug = append(Debug,
+		fmt.Sprintln("InsertNodeByProportional: ", line, proportional, pos))
 }
