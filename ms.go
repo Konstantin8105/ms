@@ -82,7 +82,7 @@ var Operations = []Operation{{
 		list.Add(w)
 		// button
 		var b vl.Button
-		b.SetText("Insert")
+		b.SetText("Add")
 		b.OnClick = func() {
 			var vs [3]string
 			for i := range vs {
@@ -107,7 +107,7 @@ var Operations = []Operation{{
 		list.Add(&rg)
 
 		var bi vl.Button
-		bi.SetText("Insert")
+		bi.SetText("Add")
 		bi.OnClick = func() {
 			m.InsertNodeByDistance(sgt(), dgt(), rg.GetPos())
 		}
@@ -129,7 +129,7 @@ var Operations = []Operation{{
 		list.Add(&rg)
 
 		var bi vl.Button
-		bi.SetText("Insert")
+		bi.SetText("Split")
 		bi.OnClick = func() {
 			m.InsertNodeByProportional(sgt(), dgt(), rg.GetPos())
 		}
@@ -147,7 +147,7 @@ var Operations = []Operation{{
 		list.Add(e)
 
 		var bi vl.Button
-		bi.SetText("Insert")
+		bi.SetText("Add")
 		bi.OnClick = func() {
 			m.InsertLineByNodeNumber(bgt(), egt())
 		}
@@ -167,7 +167,7 @@ var Operations = []Operation{{
 		list.Add(n3)
 
 		var bi vl.Button
-		bi.SetText("Insert")
+		bi.SetText("Add")
 		bi.OnClick = func() {
 			m.InsertTriangle3ByNodeNumber(n1gt(), n2gt(), n3gt())
 		}
@@ -189,7 +189,7 @@ var Operations = []Operation{{
 		list.Add(n4)
 
 		var bi vl.Button
-		bi.SetText("Insert")
+		bi.SetText("Add")
 		bi.OnClick = func() {
 			m.InsertQuadr4ByNodeNumber(n1gt(), n2gt(), n3gt(), n4gt())
 		}
@@ -217,7 +217,7 @@ var Operations = []Operation{{
 		list.Add(&q4)
 
 		var bi vl.Button
-		bi.SetText("Insert")
+		bi.SetText("Add")
 		bi.OnClick = func() {
 			if !(l2.Checked || tr3.Checked || q4.Checked) {
 				return
@@ -275,11 +275,21 @@ var Operations = []Operation{{
 		return vl.TextStatic("HOLD")
 	}}, {
 	Group: Move,
-	Name:  "Move to specific plate",
+	Name:  "Move to specific plane",
 	Part: func(m Mesh) (w vl.Widget) {
 		// XOY
 		// XOZ
 		// YOZ
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Move,
+	Name:  "Rotate",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Move,
+	Name:  "Mirror",
+	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
 
@@ -294,7 +304,7 @@ var Operations = []Operation{{
 		return vl.TextStatic("HOLD")
 	}}, {
 	Group: Copy,
-	Name:  "Copy to specific plate",
+	Name:  "Copy to specific plane",
 	Part: func(m Mesh) (w vl.Widget) {
 		// XOY
 		// XOZ
@@ -306,6 +316,24 @@ var Operations = []Operation{{
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
+	Group: Copy,
+	Name:  "Translational repeat",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Copy,
+	Name:  "Circular repeat/Spiral",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+	Group: Copy,
+	Name:  "Mirror",
+	Part: func(m Mesh) (w vl.Widget) {
+		return vl.TextStatic("HOLD")
+	}}, {
+
+
+
 
 	Group: Plate,
 	Name:  "Triangulation by nodes",
@@ -401,6 +429,7 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 	root = &scroll
 	scroll.Root = &list
 	action = make(chan func())
+	list.Add(vl.TextStatic(fmt.Sprintf("Amount operations: %d", len(Operations))))
 
 	view := make([]bool, len(Operations))
 	colHeader := make([]vl.CollapsingHeader, endGroup)
@@ -409,6 +438,7 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 		var sublist vl.List
 		colHeader[g].Root = &sublist
 		list.Add(&colHeader[g])
+		//list.Add(new(vl.Separator))
 	}
 	for g := range colHeader {
 		for i := range Operations {
@@ -711,12 +741,12 @@ func init() {
 	)
 
 	add(Plugin,
-		"Translational Repeat",
-		"Circular Repeat/Spiral",
-		"Mirror",
-		"Move",
-		"Move with remesh/smooth",
-		"Rotate",
+		// "Translational Repeat",
+		// "Circular Repeat/Spiral",
+		// "Mirror",
+		// "Move",
+		// "Move with remesh/smooth",
+		// "Rotate",
 		"Beam intersection",
 		"Merge nodes",
 		"Merge beams",
@@ -738,23 +768,23 @@ func init() {
 		// "Split rectangles to 4 triangles",
 		// "Convert triangles to rectangles",
 		// "Convert rectangles to triangles",
-		"Move points",
-		"Move from node to node",
-		"Move on plate",
+		// "Move points",
+		// "Move from node to node",
+		// "Move on plate",
 		"Plate bending",
 		"Triangulation",
 		"2D offset",
 		"Twist",
 		"Extrude",
-		"Scale global",
-		"Scale +X",
-		"Scale -X",
-		"Scale +Y",
-		"Scale -Y",
-		"Scale +Z",
-		"Scale -Z",
-		"Scale by direction",
-		"Scale on cylinder system coordinate",
+		// "Scale global",
+		// "Scale +X",
+		// "Scale -X",
+		// "Scale +Y",
+		// "Scale -Y",
+		// "Scale +Z",
+		// "Scale -Z",
+		// "Scale by direction",
+		// "Scale on cylinder system coordinate",
 		"Hole circle, square, rectangle on direction",
 		"Cutoff",
 		"Bend plates",
