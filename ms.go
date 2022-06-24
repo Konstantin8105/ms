@@ -50,12 +50,18 @@ type Mesh interface {
 	InsertNode(X, Y, Z string)
 	SelectLines(single bool) (ids []uint)
 	SelectNodes(single bool) (ids []uint)
+	SelectTriangles(single bool) (ids []uint)
+	SelectQuadr4(single bool) (ids []uint)
 	InsertNodeByDistance(line, distance string, pos uint)
 	InsertNodeByProportional(line, proportional string, pos uint)
 	InsertLineByNodeNumber(n1, n2 string)
 	InsertTriangle3ByNodeNumber(n1, n2, n3 string)
 	InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string)
 	InsertElementsByNodes(ids string, l2, t3, q4 bool)
+	SplitLinesByRatio(lines, ratio string)
+	SplitTri3To3Quadr4(tris string)
+	SplitTri3To2Tri3(tris string, side uint)
+	SplitQuadr4To2Quadr4(q4s string, side uint)
 }
 
 const (
@@ -231,38 +237,93 @@ var Operations = []Operation{{
 	Group: Split,
 	Name:  "Line2 to equal parts",
 	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
+		var list vl.List
+		ns, nsgt := Select("Select lines", Many, m.SelectLines)
+		list.Add(ns)
+
+		r, rgt := InputFloat("Ratio", "")
+		list.Add(r)
+
+		var bi vl.Button
+		bi.SetText("Split")
+		bi.OnClick = func() {
+			m.SplitLinesByRatio(nsgt(), rgt())
+		}
+		list.Add(&bi)
+
+		return &list
 	}}, {
 	Group: Split,
 	Name:  "Triangle3 to 3 Quadr4",
 	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
+		var list vl.List
+		ns, nsgt := Select("Select triangles3", Many, m.SelectTriangles)
+		list.Add(ns)
+
+		var bi vl.Button
+		bi.SetText("Split")
+		bi.OnClick = func() {
+			m.SplitTri3To3Quadr4(nsgt())
+		}
+		list.Add(&bi)
+
+		return &list
 	}}, {
 	Group: Split,
 	Name:  "Triangle3 to 2 Triangle3 by side",
 	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
+		var list vl.List
+		ns, nsgt := Select("Select triangles3", Many, m.SelectTriangles)
+		list.Add(ns)
+
+		var rg vl.RadioGroup
+		rg.SetText([]string{"by side1", "by side2", "by side3"})
+		list.Add(&rg)
+
+		var bi vl.Button
+		bi.SetText("Split")
+		bi.OnClick = func() {
+			m.SplitTri3To2Tri3(nsgt(), rg.GetPos())
+		}
+		list.Add(&bi)
+
+		return &list
 	}}, {
 	Group: Split,
 	Name:  "Quadr4 to 2 equal Quadr4 by side",
 	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
+		var list vl.List
+		ns, nsgt := Select("Select quadr4", Many, m.SelectQuadr4)
+		list.Add(ns)
+
+		var rg vl.RadioGroup
+		rg.SetText([]string{"by side1, side3", "by side2, side4"})
+		list.Add(&rg)
+
+		var bi vl.Button
+		bi.SetText("Split")
+		bi.OnClick = func() {
+			m.SplitQuadr4To2Quadr4(nsgt(), rg.GetPos())
+		}
+		list.Add(&bi)
+
+		return &list
 	}}, {
-	Group: Split,
-	Name:  "Quadr4 to 4 Triangle3",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Split,
-	Name:  "Quadr4 to 4 Quadr4",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Split,
-	Name:  "Plates by Line2",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
+	// Group: Split,
+	// Name:  "Quadr4 to 4 Triangle3",
+	// Part: func(m Mesh) (w vl.Widget) {
+	// 	return vl.TextStatic("HOLD")
+	// }}, {
+	// Group: Split,
+	// Name:  "Quadr4 to 4 Quadr4",
+	// Part: func(m Mesh) (w vl.Widget) {
+	// 	return vl.TextStatic("HOLD")
+	// }}, {
+	// Group: Split,
+	// Name:  "Triangles3, Quadrs4 by Lines2",
+	// Part: func(m Mesh) (w vl.Widget) {
+	// 	return vl.TextStatic("HOLD")
+	// }}, {
 
 	Group: Move,
 	Name:  "Move by distance [X,Y,Z]",
@@ -331,9 +392,6 @@ var Operations = []Operation{{
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
-
-
-
 
 	Group: Plate,
 	Name:  "Triangulation by nodes",
@@ -455,6 +513,7 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 			r := part(m)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
+			// colHeader[g].Root.(*vl.List).Add(new(vl.Separator))
 			view[i] = true
 		}
 	}
@@ -500,6 +559,26 @@ func (DebugMesh) SelectNodes(single bool) (ids []uint) {
 	return
 }
 
+func (DebugMesh) SelectTriangles(single bool) (ids []uint) {
+	ids = []uint{333, 555, 777}
+	if single {
+		ids = ids[:1]
+	}
+	Debug = append(Debug,
+		fmt.Sprintln("SelectTriangles: ", ids))
+	return
+}
+
+func (DebugMesh) SelectQuadr4(single bool) (ids []uint) {
+	ids = []uint{1111, 2222, 3333, 4444}
+	if single {
+		ids = ids[:1]
+	}
+	Debug = append(Debug,
+		fmt.Sprintln("SelectQuadr4: ", ids))
+	return
+}
+
 func (DebugMesh) InsertNodeByDistance(line, distance string, pos uint) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertNodeByDistance: ", line, distance, pos))
@@ -528,6 +607,26 @@ func (DebugMesh) InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string) {
 func (DebugMesh) InsertElementsByNodes(ids string, l2, t3, q4 bool) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertElementsByNodes: ", ids, l2, t3, q4))
+}
+
+func (DebugMesh) SplitLinesByRatio(lines, ratio string) {
+	Debug = append(Debug,
+		fmt.Sprintln("SplitLinesByRatio: ", lines, ratio))
+}
+
+func (DebugMesh) SplitTri3To3Quadr4(tris string) {
+	Debug = append(Debug,
+		fmt.Sprintln("SplitTri3To3Quadr4: ", tris))
+}
+
+func (DebugMesh) SplitTri3To2Tri3(tris string, side uint) {
+	Debug = append(Debug,
+		fmt.Sprintln("SplitTri3To2Tri3: ", tris, side))
+}
+
+func (DebugMesh) SplitQuadr4To2Quadr4(q4s string, side uint) {
+	Debug = append(Debug,
+		fmt.Sprintln("SplitQuadr4To2Quadr4: ", q4s, side))
 }
 
 /*
