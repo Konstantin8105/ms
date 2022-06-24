@@ -13,8 +13,7 @@ const (
 	Add GroupId = iota
 	Split
 	Plate
-	Move
-	Copy
+	MoveCopy
 	Scale
 	TypModels
 	Check
@@ -30,10 +29,8 @@ func (g GroupId) String() string {
 		return "Split"
 	case Plate:
 		return "Plate operations"
-	case Move:
-		return "Move"
-	case Copy:
-		return "Copy"
+	case MoveCopy:
+		return "Move/Copy"
 	case Scale:
 		return "Scale"
 	case Check:
@@ -325,70 +322,47 @@ var Operations = []Operation{{
 	// 	return vl.TextStatic("HOLD")
 	// }}, {
 
-	Group: Move,
-	Name:  "Move by distance [X,Y,Z]",
+	Group: MoveCopy,
+	Name:  "Move/Copy by distance [X,Y,Z]",
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
-	Group: Move,
-	Name:  "Move from node n1 to node n2",
+	Group: MoveCopy,
+	Name:  "Move/Copy from node n1 to node n2",
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
-	Group: Move,
-	Name:  "Move to specific plane",
+	Group: MoveCopy,
+	Name:  "Move/Copy to specific plane",
 	Part: func(m Mesh) (w vl.Widget) {
 		// XOY
 		// XOZ
 		// YOZ
 		return vl.TextStatic("HOLD")
 	}}, {
-	Group: Move,
+	Group: MoveCopy,
 	Name:  "Rotate",
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
-	Group: Move,
+	Group: MoveCopy,
 	Name:  "Mirror",
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
 
-	Group: Copy,
-	Name:  "Copy by distance [X,Y,Z]",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Copy,
-	Name:  "Copy from node n1 to node n2",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Copy,
-	Name:  "Copy to specific plane",
-	Part: func(m Mesh) (w vl.Widget) {
-		// XOY
-		// XOZ
-		// YOZ
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Copy,
+	Group: MoveCopy,
 	Name:  "Copy by line path",
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
-	Group: Copy,
+	Group: MoveCopy,
 	Name:  "Translational repeat",
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
-	Group: Copy,
+	Group: MoveCopy,
 	Name:  "Circular repeat/Spiral",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Copy,
-	Name:  "Mirror",
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}}, {
@@ -810,6 +784,7 @@ func add(name GroupId, parts ...string) {
 }
 
 func init() {
+	/*
 	add(Check,
 		"Multiple structures",
 		"Node duplicate",
@@ -840,12 +815,6 @@ func init() {
 	)
 
 	add(Plugin,
-		// "Translational Repeat",
-		// "Circular Repeat/Spiral",
-		// "Mirror",
-		// "Move",
-		// "Move with remesh/smooth",
-		// "Rotate",
 		"Beam intersection",
 		"Merge nodes",
 		"Merge beams",
@@ -855,35 +824,15 @@ func init() {
 		"Fillet plates",
 		"Explode plates",
 		"Lines offset by direction",
-		// "Copy by line path",
-		// "Plates smooth",
 		// "Split plates by lines",
 		"Split lines by plates",
-		// "Split triangles by side 1",
-		// "Split triangles by side 2",
-		// "Split triangles by side 3",
-		// "Split triangles by center point",
-		// "Split triangles to 3 rectangles",
-		// "Split rectangles to 4 triangles",
 		// "Convert triangles to rectangles",
 		// "Convert rectangles to triangles",
-		// "Move points",
-		// "Move from node to node",
-		// "Move on plate",
 		"Plate bending",
 		"Triangulation",
 		"2D offset",
 		"Twist",
 		"Extrude",
-		// "Scale global",
-		// "Scale +X",
-		// "Scale -X",
-		// "Scale +Y",
-		// "Scale -Y",
-		// "Scale +Z",
-		// "Scale -Z",
-		// "Scale by direction",
-		// "Scale on cylinder system coordinate",
 		"Hole circle, square, rectangle on direction",
 		"Cutoff",
 		"Bend plates",
@@ -891,4 +840,5 @@ func init() {
 		"Stiffening rib",
 		"Weld",
 	)
+	*/
 }
