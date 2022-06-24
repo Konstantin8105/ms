@@ -507,102 +507,6 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-type DebugMesh struct{}
-
-func (DebugMesh) InsertNode(X, Y, Z string) {
-	Debug = append(Debug, fmt.Sprintln("InsertNode: ", X, Y, Z))
-}
-
-func (DebugMesh) SelectLines(single bool) (ids []uint) {
-	ids = []uint{314, 567}
-	if single {
-		ids = ids[:1]
-	}
-	Debug = append(Debug,
-		fmt.Sprintln("SelectLines: ", ids))
-	return
-}
-
-func (DebugMesh) SelectNodes(single bool) (ids []uint) {
-	ids = []uint{1, 23, 444}
-	if single {
-		ids = ids[:1]
-	}
-	Debug = append(Debug,
-		fmt.Sprintln("SelectNodes: ", ids))
-	return
-}
-
-func (DebugMesh) SelectTriangles(single bool) (ids []uint) {
-	ids = []uint{333, 555, 777}
-	if single {
-		ids = ids[:1]
-	}
-	Debug = append(Debug,
-		fmt.Sprintln("SelectTriangles: ", ids))
-	return
-}
-
-func (DebugMesh) SelectQuadr4(single bool) (ids []uint) {
-	ids = []uint{1111, 2222, 3333, 4444}
-	if single {
-		ids = ids[:1]
-	}
-	Debug = append(Debug,
-		fmt.Sprintln("SelectQuadr4: ", ids))
-	return
-}
-
-func (DebugMesh) InsertNodeByDistance(line, distance string, pos uint) {
-	Debug = append(Debug,
-		fmt.Sprintln("InsertNodeByDistance: ", line, distance, pos))
-}
-
-func (DebugMesh) InsertNodeByProportional(line, proportional string, pos uint) {
-	Debug = append(Debug,
-		fmt.Sprintln("InsertNodeByProportional: ", line, proportional, pos))
-}
-
-func (DebugMesh) InsertLineByNodeNumber(n1, n2 string) {
-	Debug = append(Debug,
-		fmt.Sprintln("InsertLineByNodeNumber: ", n1, n2))
-}
-
-func (DebugMesh) InsertTriangle3ByNodeNumber(n1, n2, n3 string) {
-	Debug = append(Debug,
-		fmt.Sprintln("InsertTriangle3ByNodeNumber: ", n1, n2, n3))
-}
-
-func (DebugMesh) InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string) {
-	Debug = append(Debug,
-		fmt.Sprintln("InsertQuadr4ByNodeNumber: ", n1, n2, n3, n4))
-}
-
-func (DebugMesh) InsertElementsByNodes(ids string, l2, t3, q4 bool) {
-	Debug = append(Debug,
-		fmt.Sprintln("InsertElementsByNodes: ", ids, l2, t3, q4))
-}
-
-func (DebugMesh) SplitLinesByRatio(lines, ratio string) {
-	Debug = append(Debug,
-		fmt.Sprintln("SplitLinesByRatio: ", lines, ratio))
-}
-
-func (DebugMesh) SplitTri3To3Quadr4(tris string) {
-	Debug = append(Debug,
-		fmt.Sprintln("SplitTri3To3Quadr4: ", tris))
-}
-
-func (DebugMesh) SplitTri3To2Tri3(tris string, side uint) {
-	Debug = append(Debug,
-		fmt.Sprintln("SplitTri3To2Tri3: ", tris, side))
-}
-
-func (DebugMesh) SplitQuadr4To2Quadr4(q4s string, side uint) {
-	Debug = append(Debug,
-		fmt.Sprintln("SplitQuadr4To2Quadr4: ", q4s, side))
-}
-
 /*
 void menu()
 {
@@ -785,60 +689,60 @@ func add(name GroupId, parts ...string) {
 
 func init() {
 	/*
-	add(Check,
-		"Multiple structures",
-		"Node duplicate",
-		"Beam duplicate",
-		"Plate duplicate",
-		"Zero length beam",
-		"Zero length plates",
-		"Overlapping Collinear beams",
-		"Empty loads",
-		"Empty combinations",
-		"Not connected nodes",
-		"Unused supports",
-		"Unused beam properties",
-		"All ortho elements",
-	)
+		add(Check,
+			"Multiple structures",
+			"Node duplicate",
+			"Beam duplicate",
+			"Plate duplicate",
+			"Zero length beam",
+			"Zero length plates",
+			"Overlapping Collinear beams",
+			"Empty loads",
+			"Empty combinations",
+			"Not connected nodes",
+			"Unused supports",
+			"Unused beam properties",
+			"All ortho elements",
+		)
 
-	add(TypModels,
-		"Cylinder",
-		"Sphere",
-		"Cone",
-		"Disk",
-		"Cube",
-		"Pipe branch",
-		"Frame",
-		"Beam-beam connection",
-		"Column-beam connection",
-		"Column-column connection",
-	)
+		add(TypModels,
+			"Cylinder",
+			"Sphere",
+			"Cone",
+			"Disk",
+			"Cube",
+			"Pipe branch",
+			"Frame",
+			"Beam-beam connection",
+			"Column-beam connection",
+			"Column-column connection",
+		)
 
-	add(Plugin,
-		"Beam intersection",
-		"Merge nodes",
-		"Merge beams",
-		"Merge plates",
-		"Plate intersection",
-		"Chamfer plates",
-		"Fillet plates",
-		"Explode plates",
-		"Lines offset by direction",
-		// "Split plates by lines",
-		"Split lines by plates",
-		// "Convert triangles to rectangles",
-		// "Convert rectangles to triangles",
-		"Plate bending",
-		"Triangulation",
-		"2D offset",
-		"Twist",
-		"Extrude",
-		"Hole circle, square, rectangle on direction",
-		"Cutoff",
-		"Bend plates",
-		"Stamping by point",
-		"Stiffening rib",
-		"Weld",
-	)
+		add(Plugin,
+			"Beam intersection",
+			"Merge nodes",
+			"Merge beams",
+			"Merge plates",
+			"Plate intersection",
+			"Chamfer plates",
+			"Fillet plates",
+			"Explode plates",
+			"Lines offset by direction",
+			// "Split plates by lines",
+			"Split lines by plates",
+			// "Convert triangles to rectangles",
+			// "Convert rectangles to triangles",
+			"Plate bending",
+			"Triangulation",
+			"2D offset",
+			"Twist",
+			"Extrude",
+			"Hole circle, square, rectangle on direction",
+			"Cutoff",
+			"Bend plates",
+			"Stamping by point",
+			"Stiffening rib",
+			"Weld",
+		)
 	*/
 }
