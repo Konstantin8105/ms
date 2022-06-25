@@ -97,3 +97,18 @@ func (DebugMesh) SplitQuadr4To2Quadr4(q4s string, side uint) {
 	Debug = append(Debug,
 		fmt.Sprintln("SplitQuadr4To2Quadr4: ", q4s, side))
 }
+
+func (DebugMesh) SplitLinesByEqualParts(lines, parts string) {
+	Debug = append(Debug,
+		fmt.Sprintln("SplitLinesByEqualParts: ", lines, parts))
+}
+
+func (DebugMesh) MoveCopyNodesDistance(nodes string, coordinates [3]string, copy bool) {
+	Debug = append(Debug,
+		fmt.Sprintln("MoveCopyNodesDistance: ", nodes, coordinates, copy))
+}
+
+func (DebugMesh) MoveCopyNodesN1N2(nodes, from, to string, copy bool) {
+	Debug = append(Debug,
+		fmt.Sprintln("MoveCopyNodesN1N2: ", nodes, from, to, copy))
+}

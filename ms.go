@@ -56,9 +56,12 @@ type Mesh interface {
 	InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string)
 	InsertElementsByNodes(ids string, l2, t3, q4 bool)
 	SplitLinesByRatio(lines, ratio string)
+	SplitLinesByEqualParts(lines, parts string)
 	SplitTri3To3Quadr4(tris string)
 	SplitTri3To2Tri3(tris string, side uint)
 	SplitQuadr4To2Quadr4(q4s string, side uint)
+	MoveCopyNodesDistance(nodes string, coordinates [3]string, copy bool)
+	MoveCopyNodesN1N2(nodes, from, to string, copy bool)
 }
 
 const (
@@ -238,13 +241,13 @@ var Operations = []Operation{{
 		ns, nsgt := Select("Select lines", Many, m.SelectLines)
 		list.Add(ns)
 
-		r, rgt := InputFloat("Ratio", "")
+		r, rgt := InputUnsigned("Amount parts", "")
 		list.Add(r)
 
 		var bi vl.Button
 		bi.SetText("Split")
 		bi.OnClick = func() {
-			m.SplitLinesByRatio(nsgt(), rgt())
+			m.SplitLinesByEqualParts(nsgt(), rgt())
 		}
 		list.Add(&bi)
 
@@ -323,14 +326,62 @@ var Operations = []Operation{{
 	// }}, {
 
 	Group: MoveCopy,
-	Name:  "Move/Copy by distance [X,Y,Z]",
+	Name:  "Move/Copy nodes by distance [dX,dY,dZ]",
 	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
+		var list vl.List
+
+		ns, ngt := Select("Select nodes", Many, m.SelectNodes)
+		list.Add(ns)
+
+		w, gt := Input3Float(
+			[3]string{"dX", "dY", "dZ"},
+			[3]string{"meter", "meter", "meter"},
+		)
+		list.Add(w)
+
+		var rg vl.RadioGroup
+		rg.SetText([]string{"Move", "Copy"})
+		list.Add(&rg)
+
+		// button
+		var b vl.Button
+		b.SetText("Move/Copy")
+		b.OnClick = func() {
+			var vs [3]string
+			for i := range vs {
+				vs[i] = gt[i]()
+			}
+			m.MoveCopyNodesDistance(ngt(), vs, rg.GetPos() == 1)
+		}
+		list.Add(&b)
+		return &list
 	}}, {
 	Group: MoveCopy,
 	Name:  "Move/Copy from node n1 to node n2",
 	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
+		var list vl.List
+
+		ns, ngt := Select("Select nodes", Many, m.SelectNodes)
+		list.Add(ns)
+
+		nf, nfgt := Select("From node", Single, m.SelectNodes)
+		list.Add(nf)
+
+		nt, ntgt := Select("To node", Single, m.SelectNodes)
+		list.Add(nt)
+
+		var rg vl.RadioGroup
+		rg.SetText([]string{"Move", "Copy"})
+		list.Add(&rg)
+
+		// button
+		var b vl.Button
+		b.SetText("Move/Copy")
+		b.OnClick = func() {
+			m.MoveCopyNodesN1N2(ngt(), nfgt(), ntgt(), rg.GetPos() == 1)
+		}
+		list.Add(&b)
+		return &list
 	}}, {
 	Group: MoveCopy,
 	Name:  "Move/Copy to specific plane",
@@ -402,6 +453,19 @@ var Operations = []Operation{{
 	Part: func(m Mesh) (w vl.Widget) {
 		return vl.TextStatic("HOLD")
 	}},
+}
+
+func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() string) {
+	var (
+		list vl.ListH
+		in   vl.Inputbox
+	)
+	list.Add(vl.TextStatic(prefix))
+	in.SetText("2")
+	in.Filter(tf.UnsignedInteger)
+	list.Add(&in)
+	list.Add(vl.TextStatic(postfix))
+	return &list, in.GetText
 }
 
 func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() string) {
