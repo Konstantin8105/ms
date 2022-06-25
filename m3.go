@@ -3,11 +3,115 @@ package ms
 import (
 	_ "image/png"
 	"log"
+	"os"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/gltext"
 )
+
+const SampleString = "PI=3.1415926 Hello, 世界 Добро пожаловать в Википедию 0 1 2 3 4 5 6 7 8 9 A B C D E F"
+
+var fonts [16]*gltext.Font
+
+// loadFont loads the specified font at the given scale.
+func loadFont(file string, scale int32) (*gltext.Font, error) {
+	fd, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+
+	defer fd.Close()
+
+	return gltext.LoadTruetype(fd, scale, 32, 127, gltext.LeftToRight)
+}
+
+// drawString draws the same string for each loaded font.
+func drawString(x, y float32, str string) error {
+	for i := range fonts {
+		if fonts[i] == nil {
+			continue
+		}
+
+		// We need to offset each string by the height of the
+		// font. To ensure they don't overlap each other.
+		_, h := fonts[i].GlyphBounds()
+		y := y + float32(i*h)
+
+		// Draw a rectangular backdrop using the string's metrics.
+		sw, sh := fonts[i].Metrics(SampleString)
+		gl.Color4f(0.1, 0.1, 0.1, 0.7)
+		gl.Rectf(x, y, x+float32(sw), y+float32(sh))
+
+		// Render the string.
+		gl.Color4f(1, 1, 1, 1)
+		err := fonts[i].Printf(x, y, str)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// initGL initializes GLFW and OpenGL.
+// func initGL() error {
+// 	err := glfw.Init()
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	err = glfw.OpenWindow(640, 480, 8, 8, 8, 8, 0, 0, glfw.Windowed)
+// 	if err != nil {
+// 		glfw.Terminate()
+// 		return err
+// 	}
+//
+// 	glfw.SetWindowTitle("go-gl/gltext: Truetype font example")
+// 	glfw.SetSwapInterval(1)
+// 	glfw.SetWindowSizeCallback(onResize)
+// 	glfw.SetKeyCallback(onKey)
+//
+// 	errno := gl.Init()
+// 	if errno != gl.NO_ERROR {
+// 		str, err := glu.ErrorString(errno)
+// 		if err != nil {
+// 			return fmt.Errorf("Unknown openGL error: %d", errno)
+// 		}
+// 		return fmt.Errorf(str)
+// 	}
+//
+// 	gl.Disable(gl.DEPTH_TEST)
+// 	gl.Disable(gl.LIGHTING)
+// 	gl.ClearColor(0.2, 0.2, 0.23, 0.0)
+// 	return nil
+// }
+
+// onKey handles key events.
+// func onKey(key, state int) {
+// 	if key == glfw.KeyEsc {
+// 		glfw.CloseWindow()
+// 	}
+// }
+
+// onResize handles window resize events.
+// func onResize(w, h int) {
+// 	if w < 1 {
+// 		w = 1
+// 	}
+//
+// 	if h < 1 {
+// 		h = 1
+// 	}
+//
+// 	gl.Viewport(0, 0, wid, h)
+// 	gl.MatrixMode(gl.PROJECTION)
+// 	gl.LoadIdentity()
+// 	gl.Ortho(0, float64(w), float64(h), 0, 0, 1)
+// 	gl.MatrixMode(gl.MODELVIEW)
+// 	gl.LoadIdentity()
+// }
 
 var (
 	rotationX float32
@@ -40,9 +144,29 @@ func M3() {
 		panic(err)
 	}
 
+	file := "/home/konstantin/.fonts/Go-Bold.ttf"
+
+	// Load the same font at different scale factors and directions.
+	for i := range fonts {
+		fonts[i], err = loadFont(file, int32(12+i))
+		if err != nil {
+			log.Printf("LoadFont: %v", err)
+			return
+		}
+
+		defer fonts[i].Release()
+	}
+
 	setupScene()
 	for !window.ShouldClose() {
 		drawScene()
+
+		err = drawString(10, 10, SampleString)
+		if err != nil {
+			log.Printf("Printf: %v", err)
+			return
+		}
+
 		window.SwapBuffers()
 		glfw.PollEvents()
 	}
