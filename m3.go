@@ -3,57 +3,109 @@ package ms
 import (
 	_ "image/png"
 	"log"
-	"os"
 	"runtime"
 
-	"github.com/go-gl/gl/v2.1/gl"
+	"github.com/go-gl/gl/all-core/gl"
+	 // "github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
-	"github.com/go-gl/gltext"
+	"github.com/nullboundary/glfont"
 )
+
+const windowWidth = 600
+const windowHeight = 400
+
+func init() {
+	runtime.LockOSThread()
+}
+
+// func text() {
+//
+// 	if err := glfw.Init(); err != nil {
+// 		log.Fatalln("failed to initialize glfw:", err)
+// 	}
+// 	defer glfw.Terminate()
+//
+// 	glfw.WindowHint(glfw.Resizable, glfw.True)
+// 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
+// 	glfw.WindowHint(glfw.ContextVersionMinor, 2)
+// 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+// 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+//
+// 	window, _ := glfw.CreateWindow(int(windowWidth), int(windowHeight), "glfontExample", glfw.GetPrimaryMonitor(), nil)
+//
+// 	window.MakeContextCurrent()
+// 	glfw.SwapInterval(1)
+//
+// 	if err := gl.Init(); err != nil {
+// 		panic(err)
+// 	}
+//
+// 	//load font (fontfile, font scale, window width, window height
+// 	font, err := glfont.LoadFont("Go-Bold.ttf", int32(10), windowWidth, windowHeight)
+// 	if err != nil {
+// 		log.Panicf("LoadFont: %v", err)
+// 	}
+//
+// 	gl.Enable(gl.DEPTH_TEST)
+// 	gl.DepthFunc(gl.LESS)
+// 	gl.ClearColor(0.0, 0.0, 0.0, 0.0)
+//
+// 	for !window.ShouldClose() {
+// 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+//
+//      //set color and draw text
+// 		font.SetColor(1.0, 1.0, 1.0, 1.0) //r,g,b,a font color
+// 		font.Printf(80, 80, 1.0, "PI=3.14 Hello, 世界 Добро пожаловать в Википедию 0 1 2 3 4 5 6 7 8 9 A B C D E F  Lorem ipsum dolor sit amet, consectetur adipiscing elit.") //x,y,scale,string,printf args
+//
+// 		window.SwapBuffers()
+// 		glfw.PollEvents()
+//
+// 	}
+// }
 
 const SampleString = "PI=3.1415926 Hello, 世界 Добро пожаловать в Википедию 0 1 2 3 4 5 6 7 8 9 A B C D E F"
 
-var fonts [16]*gltext.Font
+// var fonts [16]*gltext.Font
 
 // loadFont loads the specified font at the given scale.
-func loadFont(file string, scale int32) (*gltext.Font, error) {
-	fd, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-
-	defer fd.Close()
-
-	return gltext.LoadTruetype(fd, scale, 32, 127, gltext.LeftToRight)
-}
+// func loadFont(file string, scale int32) (*gltext.Font, error) {
+// 	fd, err := os.Open(file)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	defer fd.Close()
+//
+// 	return gltext.LoadTruetype(fd, scale, 32, 127, gltext.LeftToRight)
+// }
 
 // drawString draws the same string for each loaded font.
-func drawString(x, y float32, str string) error {
-	for i := range fonts {
-		if fonts[i] == nil {
-			continue
-		}
-
-		// We need to offset each string by the height of the
-		// font. To ensure they don't overlap each other.
-		_, h := fonts[i].GlyphBounds()
-		y := y + float32(i*h)
-
-		// Draw a rectangular backdrop using the string's metrics.
-		sw, sh := fonts[i].Metrics(SampleString)
-		gl.Color4f(0.1, 0.1, 0.1, 0.7)
-		gl.Rectf(x, y, x+float32(sw), y+float32(sh))
-
-		// Render the string.
-		gl.Color4f(1, 1, 1, 1)
-		err := fonts[i].Printf(x, y, str)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
+// func drawString(x, y float32, str string) error {
+// 	for i := range fonts {
+// 		if fonts[i] == nil {
+// 			continue
+// 		}
+//
+// 		// We need to offset each string by the height of the
+// 		// font. To ensure they don't overlap each other.
+// 		_, h := fonts[i].GlyphBounds()
+// 		y := y + float32(i*h)
+//
+// 		// Draw a rectangular backdrop using the string's metrics.
+// 		sw, sh := fonts[i].Metrics(SampleString)
+// 		gl.Color4f(0.1, 0.1, 0.1, 0.7)
+// 		gl.Rectf(x, y, x+float32(sw), y+float32(sh))
+//
+// 		// Render the string.
+// 		gl.Color4f(1, 1, 1, 1)
+// 		err := fonts[i].Printf(x, y, str)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+//
+// 	return nil
+// }
 
 // initGL initializes GLFW and OpenGL.
 // func initGL() error {
@@ -120,10 +172,10 @@ var (
 
 const width, height = 800, 600
 
-func init() {
-	// GLFW event handling must run on the main OS thread
-	runtime.LockOSThread()
-}
+// func init() {
+// 	// GLFW event handling must run on the main OS thread
+// 	runtime.LockOSThread()
+// }
 
 func M3() {
 	if err := glfw.Init(); err != nil {
@@ -132,8 +184,8 @@ func M3() {
 	defer glfw.Terminate()
 
 	glfw.WindowHint(glfw.Resizable, glfw.False)
-	glfw.WindowHint(glfw.ContextVersionMajor, 2)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.ContextVersionMajor, 3)
+	glfw.WindowHint(glfw.ContextVersionMinor, 2)
 	window, err := glfw.CreateWindow(width, height, "Cube", nil, nil)
 	if err != nil {
 		panic(err)
@@ -144,28 +196,40 @@ func M3() {
 		panic(err)
 	}
 
-	file := "/home/konstantin/.fonts/Go-Bold.ttf"
+	// file :=  "/home/konstantin/.fonts/Go-Bold.ttf"
+	file :=  "/home/konstantin/.fonts/PTM55F.ttf"
 
-	// Load the same font at different scale factors and directions.
-	for i := range fonts {
-		fonts[i], err = loadFont(file, int32(12+i))
-		if err != nil {
-			log.Printf("LoadFont: %v", err)
-			return
-		}
-
-		defer fonts[i].Release()
+	//load font (fontfile, font scale, window width, window height
+	font, err := glfont.LoadFont(file, int32(20), windowWidth, windowHeight)
+	if err != nil {
+		panic(err)
+		// log.Panicf("LoadFont: %v", err)
 	}
 
-	setupScene()
-	for !window.ShouldClose() {
-		drawScene()
+	// Load the same font at different scale factors and directions.
+	// 	for i := range fonts {
+	// 		fonts[i], err = loadFont(file, int32(9+i))
+	// 		if err != nil {
+	// 			log.Printf("LoadFont: %v", err)
+	// 			return
+	// 		}
+	//
+	// 		defer fonts[i].Release()
+	// 	}
 
-		err = drawString(10, 10, SampleString)
-		if err != nil {
-			log.Printf("Printf: %v", err)
-			return
-		}
+	//setupScene()
+	for !window.ShouldClose() {
+		//drawScene()
+
+		// err = drawString(10, 10, SampleString)
+		// if err != nil {
+		// 	log.Printf("Printf: %v", err)
+		// 	return
+		// }
+
+		font.SetColor(1.0, 1.0, 1.0, 1.0) //r,g,b,a font color
+
+		font.Printf(80, 80, 1.0, "PI=3.14 Hello, \n世界 Добро пожаловать в Википедию\n 0 1 2 3 4 5 6 7 8 9 A B C D E F\n  Lorem ipsum dolor sit amet, consectetur adipiscing elit.") //x,y,scale,string,printf args
 
 		window.SwapBuffers()
 		glfw.PollEvents()

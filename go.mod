@@ -7,7 +7,7 @@ require (
 	github.com/Konstantin8105/vl v0.0.0-20220624075315-d7860c03c666
 	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20220622232848-a6c407ee30a0
-	github.com/go-gl/gltext v0.0.0-20170328174336-01a355945a70
+	github.com/nullboundary/glfont v0.0.0-20220309200611-a732e1465f7d
 )
 
 require (
