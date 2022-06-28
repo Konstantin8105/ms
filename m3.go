@@ -157,11 +157,11 @@ func cameraView(window *glfw.Window) {
 	gl.Viewport(0, 0, int32(w), int32(h))
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
-	var ratio float64 = 1.0
+	ratio := 1.0
 	{
-		cx := float64(camera.center.X)
-		cy := float64(camera.center.Y)
-		cz := float64(camera.center.Z)
+		cx := camera.center.X
+		cy := camera.center.Y
+		cz := camera.center.Z
 		// scaling monitor 3d model on screen
 		if w < h {
 			ratio = float64(w) / float64(h)
