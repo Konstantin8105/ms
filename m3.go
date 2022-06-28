@@ -215,23 +215,25 @@ func model(window *glfw.Window) {
 			return
 		}
 		// calculate radius
-		var xmin = float64(ps[0].X)
-		var xmax = float64(ps[0].X)
-		var ymin = float64(ps[0].Y)
-		var ymax = float64(ps[0].Y)
-		var zmin = float64(ps[0].Z)
-		var zmax = float64(ps[0].Z)
+		var (
+			xmin = ps[0].X
+			xmax = ps[0].X
+			ymin = ps[0].Y
+			ymax = ps[0].Y
+			zmin = ps[0].Z
+			zmax = ps[0].Z
+		)
 		for i := range ps {
-			xmin = math.Min(xmin, float64(ps[i].X))
-			ymin = math.Min(ymin, float64(ps[i].Y))
-			zmin = math.Min(zmin, float64(ps[i].Z))
-			xmax = math.Max(xmax, float64(ps[i].X))
-			ymax = math.Max(ymax, float64(ps[i].Y))
-			zmax = math.Max(zmax, float64(ps[i].Z))
+			xmin = math.Min(xmin, ps[i].X)
+			ymin = math.Min(ymin, ps[i].Y)
+			zmin = math.Min(zmin, ps[i].Z)
+			xmax = math.Max(xmax, ps[i].X)
+			ymax = math.Max(ymax, ps[i].Y)
+			zmax = math.Max(zmax, ps[i].Z)
 		}
-		camera.R = math.Max(xmax-xmin, float64(camera.R))
-		camera.R = math.Max(ymax-ymin, float64(camera.R))
-		camera.R = math.Max(zmax-zmin, float64(camera.R))
+		camera.R = math.Max(xmax-xmin, camera.R)
+		camera.R = math.Max(ymax-ymin, camera.R)
+		camera.R = math.Max(zmax-zmin, camera.R)
 		camera.center = Point{
 			(xmax + xmin) / 2.0,
 			(ymax + ymin) / 2.0,
