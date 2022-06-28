@@ -74,14 +74,16 @@ var (
 )
 
 func init() { // TODO remove
-	Ri := 0.5
-	Ro := 2.5
-	da := 30.0 // degree
-	dy := 0.05
-	var amount int = 80
-	var len_ps int = amount * 2
-	var len_ls int = amount + 2*(amount-1)
-	var len_ts int = 2 * (amount - 1)
+	var (
+		Ri     = 0.5
+		Ro     = 2.5
+		da     = 30.0 // degree
+		dy     = 0.2
+		amount = 80
+		len_ps = amount * 2
+		len_ls = amount + 2*(amount-1)
+		len_ts = 2 * (amount - 1)
+	)
 	ps = make([]Point, len_ps)
 	ls = make([][2]int, len_ls)
 	ts = make([][3]int, len_ts)
