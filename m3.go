@@ -291,14 +291,11 @@ func axe(window *glfw.Window) {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
 
-	var s float64 = 50
-	if sh := float64(h / 8.0); s < sh {
-		s = sh
-	}
-	var b float64 = 5 // distance from window border
+	s := math.Max(50.0, float64(h) / 8.0)
+	b := 5.0 // distance from window border
 
-	var center_x float64 = float64(w) - b - s/2.0
-	var center_y float64 = b + s/2.0
+	center_x := float64(w) - b - s/2.0
+	center_y := b + s/2.0
 	gl.Begin(gl.QUADS)
 	gl.Color3d(0.8, 0.8, 0.8)
 	{
