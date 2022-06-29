@@ -4,15 +4,19 @@ import (
 	_ "image/png"
 	"log"
 	"math"
+	"os"
 	"runtime"
 
-	"github.com/go-gl/gl/all-core/gl"
+	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/gltext"
 )
 
 func init() {
 	runtime.LockOSThread()
 }
+
+var font *Font
 
 func M3() {
 	if err := glfw.Init(); err != nil {
@@ -38,13 +42,23 @@ func M3() {
 
 	// ???
 
-	gl.Enable(gl.DEPTH_TEST)
-	gl.Enable(gl.TEXTURE_2D)
+	file := "/home/konstantin/.fonts/Go-Mono-Bold.ttf"
+	font, err = NewFont(file, 30)
+	if err != nil {
+		panic(err)
+	}
 
 	for !window.ShouldClose() {
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
+
+		gl.Disable(gl.DEPTH_TEST)
+		gl.Disable(gl.LIGHTING)
+		// gl.ClearColor(0.2, 0.2, 0.23, 0.0)
+
+		ui(window)
+
 		gl.Enable(gl.DEPTH_TEST)
 		gl.Enable(gl.TEXTURE_2D)
 
@@ -112,6 +126,38 @@ func init() { // TODO remove
 		}
 	}
 	updateModel = true
+}
+
+// Font handle
+type Font struct {
+	Handle *gltext.Font
+}
+
+// NewFont create new Font from given filename (.ttf expected)
+func NewFont(filename string, size int) (*Font, error) {
+	fd, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+	font, _ := gltext.LoadTruetype(fd, int32(size), 32, 127, gltext.LeftToRight)
+	return &Font{Handle: font}, nil
+}
+
+// Draw text on the screen
+func (f *Font) Draw(str string, x, y int) { // , c Color) {
+	gl.Color4ub(0, 0, 0, 255)
+	gl.LoadIdentity()
+	f.Handle.Printf(float32(x), float32(y), str)
+}
+
+func ui(window *glfw.Window) {
+
+	// TODO:::
+
+	// OpenGl implementation of vl.Drawer
+	// Drawer = func(row, col uint, s tcell.Style, r rune)
+	font.Draw("Hello world", 100, 40)
 }
 
 var camera = struct {
@@ -291,7 +337,7 @@ func axe(window *glfw.Window) {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
 
-	s := math.Max(50.0, float64(h) / 8.0)
+	s := math.Max(50.0, float64(h)/8.0)
 	b := 5.0 // distance from window border
 
 	center_x := float64(w) - b - s/2.0
