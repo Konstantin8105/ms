@@ -1,12 +1,15 @@
 package ms
 
 import (
+	"fmt"
 	_ "image/png"
 	"log"
 	"math"
 	"os"
 	"runtime"
+	"time"
 
+	"github.com/Konstantin8105/vl"
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/gltext"
@@ -16,7 +19,25 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var font *Font
+var screen vl.Screen
+
+func init() {
+	root, _, err := UserInterface()
+	if err != nil {
+		panic(err)
+	}
+	var l vl.ListH
+	l.Add(root)
+	l.Add(nil)
+	screen.Root = &l
+}
+
+var (
+	font     *Font
+	fontSize int = 15
+)
+
+var fps Fps
 
 func M3() {
 	if err := glfw.Init(); err != nil {
@@ -43,10 +64,12 @@ func M3() {
 	// ???
 
 	file := "/home/konstantin/.fonts/Go-Mono-Bold.ttf"
-	font, err = NewFont(file, 30)
+	font, err = NewFont(file, fontSize)
 	if err != nil {
 		panic(err)
 	}
+
+	fps.Init()
 
 	for !window.ShouldClose() {
 		glfw.PollEvents()
@@ -55,7 +78,6 @@ func M3() {
 
 		gl.Disable(gl.DEPTH_TEST)
 		gl.Disable(gl.LIGHTING)
-		// gl.ClearColor(0.2, 0.2, 0.23, 0.0)
 
 		ui(window)
 
@@ -67,13 +89,42 @@ func M3() {
 		axe(window)
 
 		{ // TODO remove
-			camera.alpha += 0.2
-			camera.betta += 0.05
+			camera.alpha += 10.2
+			camera.betta += 10.05
 		}
+
+		font.Draw(fmt.Sprintf("FPS: %.2f", fps.Get()), 100, 40)
 
 		window.MakeContextCurrent()
 		window.SwapBuffers()
+
+		fps.EndFrame()
 	}
+}
+
+type Fps struct {
+	framesCount int64
+	framesTime  time.Time
+	last        float32
+}
+
+func (f *Fps) Init() {
+	f.framesTime = time.Now()
+}
+
+func (f *Fps) Get() float32 {
+	ms := time.Now().Sub(f.framesTime).Milliseconds()
+	if ms < 1000 && f.framesCount < 100 {
+		return f.last
+	}
+	f.last = float32(f.framesCount) / float32(ms) * 1000.0
+	f.framesCount = 0
+	f.framesTime = time.Now()
+	return f.last
+}
+
+func (f *Fps) EndFrame() {
+	f.framesCount++
 }
 
 type Point struct {
@@ -151,13 +202,35 @@ func (f *Font) Draw(str string, x, y int) { // , c Color) {
 	f.Handle.Printf(float32(x), float32(y), str)
 }
 
+var cells [][]vl.Cell
+
 func ui(window *glfw.Window) {
-
-	// TODO:::
-
 	// OpenGl implementation of vl.Drawer
 	// Drawer = func(row, col uint, s tcell.Style, r rune)
-	font.Draw("Hello world", 100, 40)
+
+	// 	drawer := func(row, col uint, s tcell.Style, r rune) {
+	// 		font.Draw(string(r), fontSize*int(col), fontSize*int(row))
+	// 	}
+	// 	_ = drawer
+
+	w, h := window.GetSize()
+
+	width := uint(w / fontSize)
+
+	// h2 := screen.Render(width, drawer)
+
+	screen.SetHeight(uint(h / fontSize))
+	screen.GetContents(width, &cells)
+
+	for r := range cells {
+		for c := range cells[r] {
+			font.Draw(string(cells[r][c].R), fontSize*int(c), fontSize*int(r))
+		}
+	}
+
+	// fmt.Println(">", w, h, ":::", width, h2)
+	// _ = h2
+	_ = h
 }
 
 var camera = struct {
