@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Konstantin8105/vl"
+	"github.com/gdamore/tcell/v2"
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/gltext"
@@ -34,7 +35,7 @@ func init() {
 
 var (
 	font     *Font
-	fontSize int = 15
+	fontSize int = 12
 )
 
 var fps Fps
@@ -202,35 +203,66 @@ func (f *Font) Draw(str string, x, y int) { // , c Color) {
 	f.Handle.Printf(float32(x), float32(y), str)
 }
 
+func (f *Font) Metrics(text string) (int, int) {
+	return f.Handle.Metrics(text)
+}
+
 var cells [][]vl.Cell
 
 func ui(window *glfw.Window) {
 	// OpenGl implementation of vl.Drawer
 	// Drawer = func(row, col uint, s tcell.Style, r rune)
-
-	// 	drawer := func(row, col uint, s tcell.Style, r rune) {
-	// 		font.Draw(string(r), fontSize*int(col), fontSize*int(row))
-	// 	}
-	// 	_ = drawer
-
 	w, h := window.GetSize()
 
-	width := uint(w / fontSize)
+	gw, gh := font.Metrics(" ")
 
-	// h2 := screen.Render(width, drawer)
+	runeW := uint(w / gw)
+	runeH := uint(h / gh)
 
-	screen.SetHeight(uint(h / fontSize))
-	screen.GetContents(width, &cells)
+	// panic (fmt.Errorf("%v %v", runeW, runeH))
+
+	screen.SetHeight(runeH)
+	screen.GetContents(runeW, &cells)
 
 	for r := range cells {
 		for c := range cells[r] {
-			font.Draw(string(cells[r][c].R), fontSize*int(c), fontSize*int(r))
+			cell := cells[r][c]
+
+			gw, gh := font.Metrics(string(cell.R))
+
+			// background
+			fg, bg, _ := cell.S.Decompose()
+			_ = fg // TODO
+
+			switch bg {
+			case tcell.ColorYellow:
+				gl.Color3d(1, 1, 0)
+			case tcell.ColorViolet:
+				gl.Color3d(0.5, 0, 1)
+			case tcell.ColorWhite:
+				gl.Color3d(1, 1, 1)
+			case tcell.ColorBlack:
+				gl.Color3d(0, 0, 0)
+			default:
+				gl.Color3d(1, 0, 0)
+			}
+			gl.Begin(gl.QUADS)
+			{
+				// func Vertex2i(x int32, y int32)
+				gl.Vertex2i(int32((c+0)*gw), int32(h-(r+0)*gh))
+				gl.Vertex2i(int32((c+1)*gw), int32(h-(r+0)*gh))
+				gl.Vertex2i(int32((c+1)*gw), int32(h-(r+1)*gh))
+				gl.Vertex2i(int32((c+0)*gw), int32(h-(r+1)*gh))
+			}
+			gl.End()
+
+			// text
+			if cells[r][c].R == ' ' {
+				continue
+			}
+			font.Draw(string(cell.R), gw*int(c), gh*int(r))
 		}
 	}
-
-	// fmt.Println(">", w, h, ":::", width, h2)
-	// _ = h2
-	_ = h
 }
 
 var camera = struct {
