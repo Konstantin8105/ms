@@ -292,13 +292,6 @@ func angle_norm(a float64) float64 {
 	return a
 }
 
-// maximal radius of object
-var (
-	X       float64 = 0.0
-	Y       float64 = 0.0
-	Z_ratio float64 = 100.0 // for avoid 3D cutting back model
-)
-
 func cameraView(window *glfw.Window) {
 	// better angle value
 	camera.alpha = angle_norm(camera.alpha)
@@ -310,6 +303,9 @@ func cameraView(window *glfw.Window) {
 	gl.LoadIdentity()
 	ratio := 1.0
 	{
+		// for avoid 3D cutting back model
+		var Z_ratio float64 = 100.0
+		// renaming
 		cx := camera.center.X
 		cy := camera.center.Y
 		cz := camera.center.Z
@@ -317,14 +313,14 @@ func cameraView(window *glfw.Window) {
 		if w < h {
 			ratio = float64(w) / float64(h)
 			gl.Ortho(
-				(-camera.R-X)+cx, (camera.R-X)+cx,
-				(-camera.R-Y)/ratio+cy, (camera.R-Y)/ratio+cy,
+				(-camera.R)+cx, (camera.R)+cx,
+				(-camera.R)/ratio+cy, (camera.R)/ratio+cy,
 				(-camera.R-cz)*Z_ratio, (camera.R+cz)*Z_ratio)
 		} else {
 			ratio = float64(h) / float64(w)
 			gl.Ortho(
-				(-camera.R-X)/ratio+cx, (camera.R-X)/ratio+cx,
-				(-camera.R-Y)+cy, (camera.R-Y)+cy,
+				(-camera.R)/ratio+cx, (camera.R)/ratio+cx,
+				(-camera.R)+cy, (camera.R)+cy,
 				(-camera.R-cz)*Z_ratio, (camera.R+cz)*Z_ratio)
 		}
 	}
@@ -424,6 +420,14 @@ func model(window *glfw.Window) {
 		}
 	}
 	gl.End()
+
+	// Point text
+	w, h := window.GetSize()
+	for i := range ps {
+		x := float64(w)/2 + (ps[i].Z-camera.center.Z)*camera.R
+		y := float64(h)/2 + (ps[i].Y-camera.center.Y)*camera.R
+		font.Draw(fmt.Sprintf("%d", i), int(x), int(y))
+	}
 }
 
 func axe(window *glfw.Window) {
