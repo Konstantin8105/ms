@@ -94,7 +94,9 @@ func M3() {
 			camera.betta += 10.05
 		}
 
-		font.Draw(fmt.Sprintf("FPS: %.2f", fps.Get()), 0, 0)
+		font.Draw(fmt.Sprintf("FPS  : %6.2f", fps.Get()), 0, 0*fontSize)
+		font.Draw(fmt.Sprintf("Nodes: %6d", len(ps)), 0, 1*fontSize)
+		font.Draw(fmt.Sprintf("Lines: %6d", len(ls)), 0, 2*fontSize)
 
 		window.MakeContextCurrent()
 		window.SwapBuffers()
