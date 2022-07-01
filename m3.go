@@ -80,7 +80,7 @@ func M3() {
 		gl.Disable(gl.DEPTH_TEST)
 		gl.Disable(gl.LIGHTING)
 
-		ui(window)
+		// ui(window)
 
 		gl.Enable(gl.DEPTH_TEST)
 		gl.Enable(gl.TEXTURE_2D)
@@ -94,7 +94,7 @@ func M3() {
 			camera.betta += 10.05
 		}
 
-		font.Draw(fmt.Sprintf("FPS: %.2f", fps.Get()), 100, 40)
+		font.Draw(fmt.Sprintf("FPS: %.2f", fps.Get()), 0, 0)
 
 		window.MakeContextCurrent()
 		window.SwapBuffers()
@@ -422,12 +422,12 @@ func model(window *glfw.Window) {
 	gl.End()
 
 	// Point text
-	w, h := window.GetSize()
-	for i := range ps {
-		x := float64(w)/2 + (ps[i].Z-camera.center.Z)*camera.R
-		y := float64(h)/2 + (ps[i].Y-camera.center.Y)*camera.R
-		font.Draw(fmt.Sprintf("%d", i), int(x), int(y))
-	}
+	// w, h := window.GetSize()
+	// for i := range ps {
+	// 	x := float64(w)/2 + (ps[i].Z-camera.center.Z)*camera.R
+	// 	y := float64(h)/2 + (ps[i].Y-camera.center.Y)*camera.R
+	// 	font.Draw(fmt.Sprintf("%d", i), int(x), int(y))
+	// }
 }
 
 func axe(window *glfw.Window) {
