@@ -509,11 +509,11 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 	var l vl.ListH
 	l.Add(vl.TextStatic(name))
 	// For avoid Inputbox
-	// var id vl.Text
+	var id vl.Text
 	//
 	// Base solution with Inputbox
-	var id vl.Inputbox
-	id.Filter(tf.UnsignedInteger)
+	// 	var id vl.Inputbox
+	// 	id.Filter(tf.UnsignedInteger)
 
 	id.SetText("NONE")
 	l.Add(&id)

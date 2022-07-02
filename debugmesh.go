@@ -2,6 +2,13 @@ package ms
 
 import "fmt"
 
+var counter uint
+
+func getId() uint {
+	counter++
+	return counter
+}
+
 type DebugMesh struct{}
 
 func (DebugMesh) AddNode(X, Y, Z string) {
@@ -9,7 +16,7 @@ func (DebugMesh) AddNode(X, Y, Z string) {
 }
 
 func (DebugMesh) SelectLines(single bool) (ids []uint) {
-	ids = []uint{314, 567}
+	ids = []uint{314, 567, getId()}
 	if single {
 		ids = ids[:1]
 	}
@@ -19,7 +26,7 @@ func (DebugMesh) SelectLines(single bool) (ids []uint) {
 }
 
 func (DebugMesh) SelectNodes(single bool) (ids []uint) {
-	ids = []uint{1, 23, 444}
+	ids = []uint{getId(), 1, 23, 444}
 	if single {
 		ids = ids[:1]
 	}
@@ -29,7 +36,7 @@ func (DebugMesh) SelectNodes(single bool) (ids []uint) {
 }
 
 func (DebugMesh) SelectTriangles(single bool) (ids []uint) {
-	ids = []uint{333, 555, 777, 888, 999, 111, 222, 123, 345}
+	ids = []uint{getId(), 333, 555, 777, 888, 999, 111, 222, 123, 345}
 	if single {
 		ids = ids[:1]
 	}
@@ -39,7 +46,7 @@ func (DebugMesh) SelectTriangles(single bool) (ids []uint) {
 }
 
 func (DebugMesh) SelectQuadr4(single bool) (ids []uint) {
-	ids = []uint{1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999}
+	ids = []uint{getId(), 1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999}
 	if single {
 		ids = ids[:1]
 	}
