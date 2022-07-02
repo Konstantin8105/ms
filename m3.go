@@ -56,6 +56,10 @@ func M3() {
 	}
 	window.MakeContextCurrent()
 
+	// window.SetMouseButtonCallback(mouseButtonCallback)
+	window.SetScrollCallback(scrollCallback)
+	window.SetCursorPosCallback(cursorPosCallback)
+
 	if err := gl.Init(); err != nil {
 		panic(err)
 	}
@@ -88,11 +92,6 @@ func M3() {
 		cameraView(window)
 		model3d(window)
 		axe(window)
-
-		{ // TODO remove
-			camera.alpha += 10.2
-			camera.betta += 10.05
-		}
 
 		font.Draw(fmt.Sprintf("FPS  : %6.2f", fps.Get()), 0, 0*fontSize)
 		font.Draw(fmt.Sprintf("Nodes: %6d", len(model.Points)), 0, 1*fontSize)
@@ -129,7 +128,6 @@ func (f *Fps) Get() float32 {
 func (f *Fps) EndFrame() {
 	f.framesCount++
 }
-
 
 // Font handle
 type Font struct {
@@ -472,4 +470,53 @@ func axe(window *glfw.Window) {
 		}
 	}
 	gl.End()
+}
+
+func scrollCallback(window *glfw.Window, xoffset, yoffset float64) {
+	const factor = 0.05
+	switch {
+	case 0 <= yoffset:
+		camera.R /= (1 + factor)
+	case yoffset <= 0:
+		camera.R *= (1 + factor)
+	}
+}
+
+// func mouseButtonCallback(
+// 	w *glfw.Window,
+// 	button glfw.MouseButton,
+// 	action glfw.Action,
+// 	mods glfw.ModifierKey,
+// ) {
+// 	if button == glfw.MouseButton1 && action == glfw.Press {
+// 		x, y := w.GetMousePos()
+// 		xlast = x
+// 		_ = y
+// 		// camera.alpha += 5
+// 	}
+// }
+
+var (
+	xlast float64
+	ylast float64
+)
+
+func cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
+	const angle = 5.0
+	if w.GetMouseButton(glfw.MouseButton1) == glfw.Press {
+		switch {
+		case xpos < xlast:
+			camera.alpha -= angle
+		case xlast < xpos:
+			camera.alpha += angle
+		}
+		switch {
+		case ypos < ylast:
+			camera.betta -= angle
+		case ylast < ypos:
+			camera.betta += angle
+		}
+		xlast = xpos
+		ylast = ypos
+	}
 }

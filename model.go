@@ -51,7 +51,7 @@ func init() { // TODO remove
 			ts[amount-1+i-1][2] = 2*(i-0) + 1
 		}
 	}
-	// TODO updateModel = true
+	updateModel = true// TODO  remove
 
 	model.Points = ps
 	model.Lines = ls
