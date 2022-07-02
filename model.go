@@ -2,7 +2,7 @@ package ms
 
 import "math"
 
-type Point struct{X,Y,Z float64}
+type Point struct{ X, Y, Z float64 }
 
 var model Model
 
@@ -24,9 +24,9 @@ func init() { // TODO remove
 		len_ls = amount + 2*(amount-1)
 		len_ts = 2 * (amount - 1)
 	)
-	ps:= make([]Point, len_ps)
-	ls:= make([][2]int, len_ls)
-	ts:= make([][3]int, len_ts)
+	ps := make([]Point, len_ps)
+	ls := make([][2]int, len_ls)
+	ts := make([][3]int, len_ts)
 	for i := 0; i < amount; i++ {
 		ps[2*i+0].X = Ri * math.Sin(float64(i)*da*math.Pi/180.0)
 		ps[2*i+0].Z = Ri * math.Cos(float64(i)*da*math.Pi/180.0)
@@ -51,7 +51,7 @@ func init() { // TODO remove
 			ts[amount-1+i-1][2] = 2*(i-0) + 1
 		}
 	}
-	updateModel = true// TODO  remove
+	updateModel = true // TODO  remove
 
 	model.Points = ps
 	model.Lines = ls

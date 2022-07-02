@@ -56,7 +56,7 @@ func M3() {
 	}
 	window.MakeContextCurrent()
 
-	// window.SetMouseButtonCallback(mouseButtonCallback)
+	window.SetMouseButtonCallback(mouseButtonCallback)
 	window.SetScrollCallback(scrollCallback)
 	window.SetCursorPosCallback(cursorPosCallback)
 
@@ -218,6 +218,7 @@ var camera = struct {
 	alpha, betta float64
 	R            float64
 	center       Point
+	moveX, moveY float64
 }{
 	alpha:  0,
 	betta:  0,
@@ -241,6 +242,7 @@ func angle_norm(a float64) float64 {
 	return a
 }
 
+
 func cameraView(window *glfw.Window) {
 	// better angle value
 	camera.alpha = angle_norm(camera.alpha)
@@ -253,7 +255,7 @@ func cameraView(window *glfw.Window) {
 	ratio := 1.0
 	{
 		// for avoid 3D cutting back model
-		var Z_ratio float64 = 100.0
+		const Zzoom float64 = 100.0
 		// renaming
 		cx := camera.center.X
 		cy := camera.center.Y
@@ -262,15 +264,15 @@ func cameraView(window *glfw.Window) {
 		if w < h {
 			ratio = float64(w) / float64(h)
 			gl.Ortho(
-				(-camera.R)+cx, (camera.R)+cx,
-				(-camera.R)/ratio+cy, (camera.R)/ratio+cy,
-				(-camera.R-cz)*Z_ratio, (camera.R+cz)*Z_ratio)
+				(-camera.R-camera.moveX)+cx, (camera.R-camera.moveX)+cx,
+				(-camera.R-camera.moveY)/ratio+cy, (camera.R-camera.moveY)/ratio+cy,
+				(-camera.R-cz)*Zzoom, (camera.R+cz)*Zzoom)
 		} else {
 			ratio = float64(h) / float64(w)
 			gl.Ortho(
-				(-camera.R)/ratio+cx, (camera.R)/ratio+cx,
-				(-camera.R)+cy, (camera.R)+cy,
-				(-camera.R-cz)*Z_ratio, (camera.R+cz)*Z_ratio)
+				(-camera.R-camera.moveX)/ratio+cx, (camera.R-camera.moveX)/ratio+cx,
+				(-camera.R-camera.moveY)+cy, (camera.R-camera.moveY)+cy,
+				(-camera.R-cz)*Zzoom, (camera.R+cz)*Zzoom)
 		}
 	}
 	gl.MatrixMode(gl.MODELVIEW)
@@ -482,19 +484,22 @@ func scrollCallback(window *glfw.Window, xoffset, yoffset float64) {
 	}
 }
 
-// func mouseButtonCallback(
-// 	w *glfw.Window,
-// 	button glfw.MouseButton,
-// 	action glfw.Action,
-// 	mods glfw.ModifierKey,
-// ) {
-// 	if button == glfw.MouseButton1 && action == glfw.Press {
-// 		x, y := w.GetMousePos()
-// 		xlast = x
-// 		_ = y
-// 		// camera.alpha += 5
-// 	}
-// }
+func mouseButtonCallback(
+	w *glfw.Window,
+	button glfw.MouseButton,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+) {
+	// if button == glfw.MouseButton1 && action == glfw.Press && mods == glfw.ModControl {
+	// 	fmt.Println(">> SELECT PRESS")
+	// }
+	// if button == glfw.MouseButton1 && action == glfw.Release && mods == glfw.ModControl {
+	// 	fmt.Println(">> SELECT RELEASE")
+	// }
+	// if button == glfw.MouseButton1 && action == glfw.Repeat && mods == glfw.ModControl {
+	// 	fmt.Println(">> SELECT REPEAT")
+	// }
+}
 
 var (
 	xlast float64
@@ -515,6 +520,24 @@ func cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 			camera.betta -= angle
 		case ylast < ypos:
 			camera.betta += angle
+		}
+		xlast = xpos
+		ylast = ypos
+	}
+
+	const factor = 0.01
+	if w.GetMouseButton(glfw.MouseButton2) == glfw.Press {
+		switch {
+		case xpos < xlast:
+			camera.moveX -= camera.R * factor
+		case xlast < xpos:
+			camera.moveX += camera.R * factor
+		}
+		switch {
+		case ypos < ylast:
+			camera.moveY += camera.R * factor
+		case ylast < ypos:
+			camera.moveY -= camera.R * factor
 		}
 		xlast = xpos
 		ylast = ypos
