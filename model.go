@@ -4,12 +4,6 @@ import "math"
 
 type Point struct{X,Y,Z float64}
 
-type (
-	Line     [2]int
-	Triangle [3]int
-	Quadr4   [4]int
-)
-
 var model Model
 
 type Model struct {
