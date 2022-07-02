@@ -68,5 +68,5 @@ func (m *Model) AddNode(X, Y, Z float64) {
 	m.Points = append(m.Points, Point{X: X, Y: Y, Z: Z})
 }
 
-func (m *Model) AddNodeByDistance(line, distance string, atBegin bool) {
-}
+// func (m *Model) AddNodeByDistance(line, distance string, atBegin bool) {
+// }
