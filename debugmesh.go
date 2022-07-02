@@ -4,7 +4,7 @@ import "fmt"
 
 type DebugMesh struct{}
 
-func (DebugMesh) InsertNode(X, Y, Z string) {
+func (DebugMesh) AddNode(X, Y, Z string) {
 	Debug = append(Debug, fmt.Sprintln("InsertNode: ", X, Y, Z))
 }
 
@@ -29,7 +29,7 @@ func (DebugMesh) SelectNodes(single bool) (ids []uint) {
 }
 
 func (DebugMesh) SelectTriangles(single bool) (ids []uint) {
-	ids = []uint{333, 555, 777}
+	ids = []uint{333, 555, 777, 888, 999, 111, 222, 123, 345}
 	if single {
 		ids = ids[:1]
 	}
@@ -39,7 +39,7 @@ func (DebugMesh) SelectTriangles(single bool) (ids []uint) {
 }
 
 func (DebugMesh) SelectQuadr4(single bool) (ids []uint) {
-	ids = []uint{1111, 2222, 3333, 4444}
+	ids = []uint{1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999}
 	if single {
 		ids = ids[:1]
 	}
@@ -48,32 +48,32 @@ func (DebugMesh) SelectQuadr4(single bool) (ids []uint) {
 	return
 }
 
-func (DebugMesh) InsertNodeByDistance(line, distance string, pos uint) {
+func (DebugMesh) AddNodeByDistance(line, distance string, pos uint) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertNodeByDistance: ", line, distance, pos))
 }
 
-func (DebugMesh) InsertNodeByProportional(line, proportional string, pos uint) {
+func (DebugMesh) AddNodeByProportional(line, proportional string, pos uint) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertNodeByProportional: ", line, proportional, pos))
 }
 
-func (DebugMesh) InsertLineByNodeNumber(n1, n2 string) {
+func (DebugMesh) AddLineByNodeNumber(n1, n2 string) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertLineByNodeNumber: ", n1, n2))
 }
 
-func (DebugMesh) InsertTriangle3ByNodeNumber(n1, n2, n3 string) {
+func (DebugMesh) AddTriangle3ByNodeNumber(n1, n2, n3 string) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertTriangle3ByNodeNumber: ", n1, n2, n3))
 }
 
-func (DebugMesh) InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string) {
+func (DebugMesh) AddQuadr4ByNodeNumber(n1, n2, n3, n4 string) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertQuadr4ByNodeNumber: ", n1, n2, n3, n4))
 }
 
-func (DebugMesh) InsertElementsByNodes(ids string, l2, t3, q4 bool) {
+func (DebugMesh) AddElementsByNodes(ids string, l2, t3, q4 bool) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertElementsByNodes: ", ids, l2, t3, q4))
 }

@@ -43,23 +43,36 @@ func (g GroupId) String() string {
 	return fmt.Sprintf("Undefined:%02d", g)
 }
 
-type Mesh interface {
-	InsertNode(X, Y, Z string)
+type Addable interface {
+	AddNode(X, Y, Z string)
+	AddNodeByDistance(line, distance string, pos uint)
+	AddNodeByProportional(line, proportional string, pos uint)
+	AddLineByNodeNumber(n1, n2 string)
+	AddTriangle3ByNodeNumber(n1, n2, n3 string)
+	AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
+	AddElementsByNodes(ids string, l2, t3, q4 bool)
+}
+
+type Selectable interface {
 	SelectLines(single bool) (ids []uint)
 	SelectNodes(single bool) (ids []uint)
 	SelectTriangles(single bool) (ids []uint)
 	SelectQuadr4(single bool) (ids []uint)
-	InsertNodeByDistance(line, distance string, pos uint)
-	InsertNodeByProportional(line, proportional string, pos uint)
-	InsertLineByNodeNumber(n1, n2 string)
-	InsertTriangle3ByNodeNumber(n1, n2, n3 string)
-	InsertQuadr4ByNodeNumber(n1, n2, n3, n4 string)
-	InsertElementsByNodes(ids string, l2, t3, q4 bool)
+}
+
+type Splitable interface {
 	SplitLinesByRatio(lines, ratio string)
 	SplitLinesByEqualParts(lines, parts string)
 	SplitTri3To3Quadr4(tris string)
 	SplitTri3To2Tri3(tris string, side uint)
 	SplitQuadr4To2Quadr4(q4s string, side uint)
+}
+
+type Mesh interface {
+	Addable
+	Selectable
+	Splitable
+
 	MoveCopyNodesDistance(nodes string, coordinates [3]string, copy bool)
 	MoveCopyNodesN1N2(nodes, from, to string, copy bool)
 }
@@ -80,13 +93,13 @@ var Operations = []Operation{{
 	Name:  "Node by coordinate [X,Y,Z]",
 	Part: func(m Mesh) (w vl.Widget) {
 		var list vl.List
-		// coordinates
+
 		w, gt := Input3Float(
 			[3]string{"X", "Y", "Z"},
 			[3]string{"meter", "meter", "meter"},
 		)
 		list.Add(w)
-		// button
+
 		var b vl.Button
 		b.SetText("Add")
 		b.OnClick = func() {
@@ -94,7 +107,7 @@ var Operations = []Operation{{
 			for i := range vs {
 				vs[i] = gt[i]()
 			}
-			m.InsertNode(gt[0](), gt[1](), gt[2]())
+			m.AddNode(gt[0](), gt[1](), gt[2]())
 		}
 		list.Add(&b)
 		return &list
@@ -115,7 +128,7 @@ var Operations = []Operation{{
 		var bi vl.Button
 		bi.SetText("Add")
 		bi.OnClick = func() {
-			m.InsertNodeByDistance(sgt(), dgt(), rg.GetPos())
+			m.AddNodeByDistance(sgt(), dgt(), rg.GetPos())
 		}
 		list.Add(&bi)
 
@@ -137,7 +150,7 @@ var Operations = []Operation{{
 		var bi vl.Button
 		bi.SetText("Split")
 		bi.OnClick = func() {
-			m.InsertNodeByProportional(sgt(), dgt(), rg.GetPos())
+			m.AddNodeByProportional(sgt(), dgt(), rg.GetPos())
 		}
 		list.Add(&bi)
 
@@ -155,7 +168,7 @@ var Operations = []Operation{{
 		var bi vl.Button
 		bi.SetText("Add")
 		bi.OnClick = func() {
-			m.InsertLineByNodeNumber(bgt(), egt())
+			m.AddLineByNodeNumber(bgt(), egt())
 		}
 		list.Add(&bi)
 
@@ -175,7 +188,7 @@ var Operations = []Operation{{
 		var bi vl.Button
 		bi.SetText("Add")
 		bi.OnClick = func() {
-			m.InsertTriangle3ByNodeNumber(n1gt(), n2gt(), n3gt())
+			m.AddTriangle3ByNodeNumber(n1gt(), n2gt(), n3gt())
 		}
 		list.Add(&bi)
 
@@ -197,7 +210,7 @@ var Operations = []Operation{{
 		var bi vl.Button
 		bi.SetText("Add")
 		bi.OnClick = func() {
-			m.InsertQuadr4ByNodeNumber(n1gt(), n2gt(), n3gt(), n4gt())
+			m.AddQuadr4ByNodeNumber(n1gt(), n2gt(), n3gt(), n4gt())
 		}
 		list.Add(&bi)
 
@@ -228,7 +241,7 @@ var Operations = []Operation{{
 			if !(l2.Checked || tr3.Checked || q4.Checked) {
 				return
 			}
-			m.InsertElementsByNodes(nsgt(), l2.Checked, tr3.Checked, q4.Checked)
+			m.AddElementsByNodes(nsgt(), l2.Checked, tr3.Checked, q4.Checked)
 		}
 		list.Add(&bi)
 
@@ -343,7 +356,6 @@ var Operations = []Operation{{
 		rg.SetText([]string{"Move", "Copy"})
 		list.Add(&rg)
 
-		// button
 		var b vl.Button
 		b.SetText("Move/Copy")
 		b.OnClick = func() {
@@ -374,7 +386,6 @@ var Operations = []Operation{{
 		rg.SetText([]string{"Move", "Copy"})
 		list.Add(&rg)
 
-		// button
 		var b vl.Button
 		b.SetText("Move/Copy")
 		b.OnClick = func() {
@@ -491,12 +502,20 @@ func Input3Float(prefix, postfix [3]string) (w vl.Widget, gettext [3]func() stri
 	return &list, gettext
 }
 
-func Select(name string, single bool, selector func(single bool) []uint) (w vl.Widget, gettext func() string) {
+func Select(name string, single bool, selector func(single bool) []uint) (
+	w vl.Widget,
+	gettext func() string,
+) {
 	var l vl.ListH
 	l.Add(vl.TextStatic(name))
+	// For avoid Inputbox
+	// var id vl.Text
+	//
+	// Base solution with Inputbox
 	var id vl.Inputbox
 	id.Filter(tf.UnsignedInteger)
-	id.SetText("0")
+
+	id.SetText("NONE")
 	l.Add(&id)
 	var b vl.Button
 	b.SetText("Select")
