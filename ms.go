@@ -43,6 +43,30 @@ func (g GroupId) String() string {
 	return fmt.Sprintf("Undefined:%02d", g)
 }
 
+type Filable interface {
+	// Open
+	// Save
+	// SaveAs
+	// Close
+}
+
+type Editable interface {
+	// Undo
+	// Redo
+}
+
+type Viewable interface {
+	// Wireframe mode
+	// Solid mode
+	// Standard view +X
+	// Standard view -X
+	// Standard view +Y
+	// Standard view -Y
+	// Standard view +Z
+	// Standard view -Z
+	// Isometric views
+}
+
 type Addable interface {
 	AddNode(X, Y, Z string)
 	AddNodeByDistance(line, distance string, pos uint)
@@ -51,13 +75,26 @@ type Addable interface {
 	AddTriangle3ByNodeNumber(n1, n2, n3 string)
 	AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
 	AddElementsByNodes(ids string, l2, t3, q4 bool)
+
+	// AddGroup
+	// AddCrossSections
 }
 
 type Selectable interface {
-	SelectLines(single bool) (ids []uint)
 	SelectNodes(single bool) (ids []uint)
+	SelectLines(single bool) (ids []uint)
 	SelectTriangles(single bool) (ids []uint)
 	SelectQuadr4(single bool) (ids []uint)
+	// InvertNodes
+	// InvertLines
+	// InvertTriangles
+	// InvertQuadr4
+	//
+	// SelectParallelLines
+	// SelectParallelTriangles // XY, YZ, XZ
+	// SelectParallelQuadr4
+	//
+	// SelectByGroup
 }
 
 type Splitable interface {
@@ -68,10 +105,35 @@ type Splitable interface {
 	SplitQuadr4To2Quadr4(q4s string, side uint)
 }
 
+type Checkable interface {
+	// Multiple structures
+	// Node duplicate
+	// Beam duplicate
+	// Plate duplicate
+	// Zero length beam
+	// Zero length plates
+	// Overlapping Collinear beams
+	// Empty loads
+	// Empty combinations
+	// Not connected nodes
+	// Unused supports
+	// Unused beam properties
+	// All ortho elements
+}
+
+type Measurementable interface {
+	// Distance between 2 nodes
+	// Distance between 2 parallel beam
+	// Distance between 2 parallel plates
+}
+
 type Mesh interface {
+	Viewable
 	Addable
 	Selectable
 	Splitable
+	Checkable
+	Measurementable
 
 	MoveCopyNodesDistance(nodes string, coordinates [3]string, copy bool)
 	MoveCopyNodesN1N2(nodes, from, to string, copy bool)
@@ -591,202 +653,51 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
-void menu()
-{
-    static bool show[5] = { false, false, false, false, true }; // Node num, Beam num, Plates num, LocalCoord, Node point
-    static bool cursor[3] = { true, true, true }; // Node, Beam, Plates
-    static bool show_second_plate_border = false;
+// view
+if (BeginMenu("Geometry")) {
+    m("View selected elements");
+    m("View all elements");
 
-    if (ImGui::BeginMainMenuBar()) {
-        // file
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("New")) { }
-            if (ImGui::MenuItem("Open", "Ctrl+O")) { }
-            if (ImGui::BeginMenu("Open Recent")) {
-                ImGui::MenuItem("fish_hat.c");
-                ImGui::MenuItem("fish_hat.inl");
-                ImGui::MenuItem("fish_hat.h");
-                if (ImGui::BeginMenu("More..")) {
-                    ImGui::MenuItem("Hello");
-                    ImGui::MenuItem("Sailor");
-                    ImGui::EndMenu();
-                }
-                ImGui::EndMenu();
-            }
-            if (ImGui::MenuItem("Save", "Ctrl+S")) { }
-            if (ImGui::MenuItem("Save As..")) { }
-            ImGui::EndMenu();
-        }
-        // edit
-        if (ImGui::BeginMenu("Edit")) {
-            if (ImGui::MenuItem("Undo", "CTRL+Z")) { }
-            if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) { }
-            ImGui::Separator();
-            if (ImGui::MenuItem("Cut", "CTRL+X")) { }
-            if (ImGui::MenuItem("Copy", "CTRL+C")) { }
-            if (ImGui::MenuItem("Paste", "CTRL+V")) { }
-            ImGui::EndMenu();
-        }
-        // view
-        if (ImGui::BeginMenu("Geometry")) {
-            templorary_debug_menu("View selected elements");
-            templorary_debug_menu("View all elements");
-            ImGui::Separator();
-
-            // TODO: plates edges
-
-            if (ImGui::BeginMenu("Select All")) {
-                templorary_debug_menu("Nodes");
-                templorary_debug_menu("Beams");
-                templorary_debug_menu("Plates");
-                templorary_debug_menu("Geomery");
-                ImGui::EndMenu();
-            }
-            ImGui::Separator();
-
-            if (ImGui::BeginMenu("Select inverse")) {
-                templorary_debug_menu("Nodes");
-                templorary_debug_menu("Lines");
-                templorary_debug_menu("Plates");
-                ImGui::EndMenu();
-            }
-            ImGui::Separator();
-
-            if (ImGui::BeginMenu("Select by list")) {
-                templorary_debug_menu("Nodes");
-                templorary_debug_menu("Lines");
-                templorary_debug_menu("Plates");
-                // TODO: select by specific properties (material, lenght, ...)
-                ImGui::EndMenu();
-            }
-            ImGui::Separator();
-
-            if (ImGui::BeginMenu("Select beams parallel")) {
-                templorary_debug_menu("X");
-                templorary_debug_menu("Y");
-                templorary_debug_menu("Z");
-                templorary_debug_menu("Direction");
-                ImGui::EndMenu();
-            }
-            ImGui::Separator();
-
-            if (ImGui::BeginMenu("Select plares parallel")) {
-                templorary_debug_menu("XY");
-                templorary_debug_menu("YZ");
-                templorary_debug_menu("XZ");
-                templorary_debug_menu("Plane");
-                // TODO: select by specific properties (material, lenght, ...)
-                ImGui::EndMenu();
-            }
-            ImGui::Separator();
-
-            if (ImGui::BeginMenu("Measurement")) {
-                templorary_debug_menu("Distance between 2 nodes");
-                templorary_debug_menu("Distance between 2 parallel beam");
-                templorary_debug_menu("Distance between 2 parallel plates");
-                ImGui::EndMenu();
-            }
-            ImGui::Separator();
-
-            if (ImGui::BeginMenu("Standard views")) {
-                templorary_debug_menu("+X");
-                templorary_debug_menu("-X");
-                templorary_debug_menu("+Y");
-                templorary_debug_menu("-Y");
-                templorary_debug_menu("+Z");
-                templorary_debug_menu("-Z");
-                // TODO: isometric views
-                ImGui::EndMenu();
-            }
-            ImGui::Separator();
-
-            ImGui::Checkbox("Show Node number", &show[0]);
-            ImGui::Checkbox("Show Beam number", &show[1]);
-            ImGui::Checkbox("Show Plate number", &show[2]);
-            ImGui::Checkbox("Show Local coordinate", &show[3]);
-            ImGui::Checkbox("Show Node point", &show[4]);
-            ImGui::Checkbox("Show plate secondary border", &show_second_plate_border);
-            ImGui::Separator();
-
-            ImGui::Checkbox("Cursor select node", &cursor[0]);
-            ImGui::Checkbox("Cursor select beams", &cursor[1]);
-            ImGui::Checkbox("Cursor select plates", &cursor[2]);
-            ImGui::Separator();
-
-            templorary_debug_menu("Wireframe mode");
-            templorary_debug_menu("Solid mode");
-            ImGui::Separator();
-
-            templorary_debug_menu("Statistic");
-
-            ImGui::EndMenu();
-        }
-        // modify
-        if (ImGui::BeginMenu("Modify")) {
-
-            templorary_debug_menu("Create group");
-            templorary_debug_menu("Create cross section");
-
-
-            ImGui::EndMenu();
-        }
-        // reports
-        if (ImGui::BeginMenu("Reports")) {
-            if (ImGui::BeginMenu("Covering plates from direction")) {
-                templorary_debug_menu("+X");
-                templorary_debug_menu("-X");
-                templorary_debug_menu("+Y");
-                templorary_debug_menu("-Y");
-                templorary_debug_menu("+Z");
-                templorary_debug_menu("-Z");
-                templorary_debug_menu("by points");
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Location")) {
-                templorary_debug_menu("X");
-                templorary_debug_menu("Y");
-                templorary_debug_menu("Z");
-                ImGui::EndMenu();
-            }
-            //
-            ImGui::EndMenu();
-        }
-
-        //
-        ImGui::EndMainMenuBar();
+    if (BeginMenu("Select by list")) {
+        m("Nodes");
+        m("Lines");
+        m("Plates");
+        // TODO: select by specific properties (material, lenght, ...)
+        EndMenu();
     }
-}
-*/
+    Separator();
 
-func add(name GroupId, parts ...string) {
-	for i := range parts {
-		Operations = append(Operations, Operation{
-			Group: name,
-			Name:  fmt.Sprintf("%s", parts[i]),
-			Part: func(m Mesh) (w vl.Widget) {
-				return vl.TextStatic("HOLD")
-			},
-		})
-	}
-}
+    Checkbox("Show Node number", &show[0]);
+    Checkbox("Show Beam number", &show[1]);
+    Checkbox("Show Plate number", &show[2]);
+    Checkbox("Show Local coordinate", &show[3]);
+    Checkbox("Show Node point", &show[4]);
+    Checkbox("Show plate secondary border", &show_second_plate_border);
+    Separator();
 
-func init() {
-	/*
-		add(Check,
-			"Multiple structures",
-			"Node duplicate",
-			"Beam duplicate",
-			"Plate duplicate",
-			"Zero length beam",
-			"Zero length plates",
-			"Overlapping Collinear beams",
-			"Empty loads",
-			"Empty combinations",
-			"Not connected nodes",
-			"Unused supports",
-			"Unused beam properties",
-			"All ortho elements",
-		)
+    Checkbox("Cursor select node", &cursor[0]);
+    Checkbox("Cursor select beams", &cursor[1]);
+    Checkbox("Cursor select plates", &cursor[2]);
+    Separator();
+
+    Separator();
+
+    m("Statistic");
+
+    EndMenu();
+}
+// reports
+if (BeginMenu("Reports")) {
+    if (BeginMenu("Covering plates from direction")) {
+        m("+X");
+        m("-X");
+        m("+Y");
+        m("-Y");
+        m("+Z");
+        m("-Z");
+        m("by points");
+        EndMenu();
+    }
 
 		add(TypModels,
 			"Cylinder",
@@ -827,5 +738,4 @@ func init() {
 			"Stiffening rib",
 			"Weld",
 		)
-	*/
-}
+*/
