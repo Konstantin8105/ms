@@ -69,7 +69,7 @@ type Viewable interface {
 
 type Addable interface {
 	AddNode(X, Y, Z string)
-	AddNodeByDistance(line, distance string, pos uint)
+	AddNodeByDistance(line, distance string, atBegin bool)
 	AddNodeByProportional(line, proportional string, pos uint)
 	AddLineByNodeNumber(n1, n2 string)
 	AddTriangle3ByNodeNumber(n1, n2, n3 string)
@@ -103,6 +103,9 @@ type Splitable interface {
 	SplitTri3To3Quadr4(tris string)
 	SplitTri3To2Tri3(tris string, side uint)
 	SplitQuadr4To2Quadr4(q4s string, side uint)
+	// Quadr4 to 4 Triangle3
+	// Quadr4 to 4 Quadr4
+	// Triangles3, Quadrs4 by Lines2
 }
 
 type Checkable interface {
@@ -190,7 +193,7 @@ var Operations = []Operation{{
 		var bi vl.Button
 		bi.SetText("Add")
 		bi.OnClick = func() {
-			m.AddNodeByDistance(sgt(), dgt(), rg.GetPos())
+			m.AddNodeByDistance(sgt(), dgt(), rg.GetPos()==0)
 		}
 		list.Add(&bi)
 
@@ -384,21 +387,6 @@ var Operations = []Operation{{
 
 		return &list
 	}}, {
-	// Group: Split,
-	// Name:  "Quadr4 to 4 Triangle3",
-	// Part: func(m Mesh) (w vl.Widget) {
-	// 	return vl.TextStatic("HOLD")
-	// }}, {
-	// Group: Split,
-	// Name:  "Quadr4 to 4 Quadr4",
-	// Part: func(m Mesh) (w vl.Widget) {
-	// 	return vl.TextStatic("HOLD")
-	// }}, {
-	// Group: Split,
-	// Name:  "Triangles3, Quadrs4 by Lines2",
-	// Part: func(m Mesh) (w vl.Widget) {
-	// 	return vl.TextStatic("HOLD")
-	// }}, {
 
 	Group: MoveCopy,
 	Name:  "Move/Copy nodes by distance [dX,dY,dZ]",

@@ -55,9 +55,9 @@ func (DebugMesh) SelectQuadr4(single bool) (ids []uint) {
 	return
 }
 
-func (DebugMesh) AddNodeByDistance(line, distance string, pos uint) {
+func (DebugMesh) AddNodeByDistance(line, distance string, atBegin bool) {
 	Debug = append(Debug,
-		fmt.Sprintln("InsertNodeByDistance: ", line, distance, pos))
+		fmt.Sprintln("InsertNodeByDistance: ", line, distance, atBegin))
 }
 
 func (DebugMesh) AddNodeByProportional(line, proportional string, pos uint) {

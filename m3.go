@@ -86,7 +86,7 @@ func M3() {
 		gl.Enable(gl.TEXTURE_2D)
 
 		cameraView(window)
-		model(window)
+		model3d(window)
 		axe(window)
 
 		{ // TODO remove
@@ -95,8 +95,8 @@ func M3() {
 		}
 
 		font.Draw(fmt.Sprintf("FPS  : %6.2f", fps.Get()), 0, 0*fontSize)
-		font.Draw(fmt.Sprintf("Nodes: %6d", len(ps)), 0, 1*fontSize)
-		font.Draw(fmt.Sprintf("Lines: %6d", len(ls)), 0, 2*fontSize)
+		font.Draw(fmt.Sprintf("Nodes: %6d", len(model.Points)), 0, 1*fontSize)
+		font.Draw(fmt.Sprintf("Lines: %6d", len(model.Lines)), 0, 2*fontSize)
 
 		window.MakeContextCurrent()
 		window.SwapBuffers()
@@ -130,57 +130,6 @@ func (f *Fps) EndFrame() {
 	f.framesCount++
 }
 
-type Point struct {
-	X, Y, Z float64
-}
-
-var (
-	ps          []Point
-	ls          [][2]int
-	ts          [][3]int
-	updateModel bool
-)
-
-func init() { // TODO remove
-	var (
-		Ri     = 0.5
-		Ro     = 2.5
-		da     = 30.0 // degree
-		dy     = 0.2
-		amount = 80
-		len_ps = amount * 2
-		len_ls = amount + 2*(amount-1)
-		len_ts = 2 * (amount - 1)
-	)
-	ps = make([]Point, len_ps)
-	ls = make([][2]int, len_ls)
-	ts = make([][3]int, len_ts)
-	for i := 0; i < amount; i++ {
-		ps[2*i+0].X = Ri * math.Sin(float64(i)*da*math.Pi/180.0)
-		ps[2*i+0].Z = Ri * math.Cos(float64(i)*da*math.Pi/180.0)
-		ps[2*i+0].Y = float64(i) * dy
-		ps[2*i+1].X = Ro * math.Sin(float64(i)*da*math.Pi/180.0)
-		ps[2*i+1].Z = Ro * math.Cos(float64(i)*da*math.Pi/180.0)
-		ps[2*i+1].Y = float64(i) * dy
-		ls[i][0] = 2*i + 0
-		ls[i][1] = 2*i + 1
-		if i != 0 {
-			ls[1*(amount-1)+i][0] = 2*(i-1) + 0
-			ls[1*(amount-1)+i][1] = 2*(i-0) + 0
-			ls[2*(amount-1)+i][0] = 2*(i-1) + 1
-			ls[2*(amount-1)+i][1] = 2*(i-0) + 1
-		}
-		if i != 0 {
-			ts[i-1][0] = 2*(i-1) + 0
-			ts[i-1][1] = 2*(i-1) + 1
-			ts[i-1][2] = 2*(i-0) + 0
-			ts[amount-1+i-1][0] = 2*(i-1) + 1
-			ts[amount-1+i-1][1] = 2*(i-0) + 0
-			ts[amount-1+i-1][2] = 2*(i-0) + 1
-		}
-	}
-	updateModel = true
-}
 
 // Font handle
 type Font struct {
@@ -340,7 +289,9 @@ func cameraView(window *glfw.Window) {
 	}
 }
 
-func model(window *glfw.Window) {
+var updateModel bool // TODO remove
+
+func model3d(window *glfw.Window) {
 	gl.PushMatrix()
 	gl.Rotated(orientation[0], 1, 0, 0)
 	gl.Rotated(orientation[1], 0, 1, 0)
@@ -360,9 +311,11 @@ func model(window *glfw.Window) {
 		camera.betta = 0.0
 		// distance from center to camera
 		camera.R = 1.0
-		if len(ps) == 0 {
+		if len(model.Points) == 0 {
 			return
 		}
+		// renaming
+		ps := model.Points
 		// calculate radius
 		var (
 			xmin = ps[0].X
@@ -394,8 +347,8 @@ func model(window *glfw.Window) {
 	gl.PointSize(5)
 	gl.Begin(gl.POINTS)
 	gl.Color3d(0, 0, 0)
-	for i := range ps {
-		gl.Vertex3d(ps[i].X, ps[i].Y, ps[i].Z)
+	for i := range model.Points {
+		gl.Vertex3d(model.Points[i].X, model.Points[i].Y, model.Points[i].Z)
 	}
 	gl.End()
 	// Lines
@@ -403,9 +356,9 @@ func model(window *glfw.Window) {
 	gl.LineStipple(1, 0x00ff)
 	gl.Begin(gl.LINES)
 	gl.Color3d(0.6, 0.6, 0.6)
-	for i := range ls {
-		f := ps[ls[i][0]]
-		t := ps[ls[i][1]]
+	for i := range model.Lines {
+		f := model.Points[model.Lines[i][0]]
+		t := model.Points[model.Lines[i][1]]
 		gl.Vertex3d(f.X, f.Y, f.Z)
 		gl.Vertex3d(t.X, t.Y, t.Z)
 	}
@@ -413,12 +366,12 @@ func model(window *glfw.Window) {
 	// Triangle
 	gl.Begin(gl.TRIANGLES)
 	gl.Color3d(0.6, 0.0, 0.6)
-	for i := range ts {
+	for i := range model.Triangles {
 		for p := 0; p < 3; p++ {
 			gl.Vertex3d(
-				ps[ts[i][p]].X,
-				ps[ts[i][p]].Y,
-				ps[ts[i][p]].Z)
+				model.Points[model.Triangles[i][p]].X,
+				model.Points[model.Triangles[i][p]].Y,
+				model.Points[model.Triangles[i][p]].Z)
 		}
 	}
 	gl.End()
