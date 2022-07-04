@@ -2,7 +2,10 @@ package ms
 
 import "math"
 
-type Point struct{ X, Y, Z float64 }
+type Point struct {
+	X, Y, Z  float64
+	Selected bool
+}
 
 var model Model
 
@@ -15,47 +18,37 @@ type Model struct {
 
 func init() { // TODO remove
 	var (
-		Ri     = 0.5
-		Ro     = 2.5
-		da     = 30.0 // degree
-		dy     = 0.2
-		amount = 80
-		len_ps = amount * 2
-		len_ls = amount + 2*(amount-1)
-		len_ts = 2 * (amount - 1)
+		Ri    = 0.5
+		Ro    = 2.5
+		dR    = 0.0
+		da    = 30.0 // degree
+		dy    = 0.2
+		levels = 256
+		//    8 = FPS 61.0
+		//   80 = FPS 58.0
+		//  800 = FPS 25.0
+		// 8000 = FPS  5.5 --- 16000 points
 	)
-	ps := make([]Point, len_ps)
-	ls := make([][2]int, len_ls)
-	ts := make([][3]int, len_ts)
-	for i := 0; i < amount; i++ {
-		ps[2*i+0].X = Ri * math.Sin(float64(i)*da*math.Pi/180.0)
-		ps[2*i+0].Z = Ri * math.Cos(float64(i)*da*math.Pi/180.0)
-		ps[2*i+0].Y = float64(i) * dy
-		ps[2*i+1].X = Ro * math.Sin(float64(i)*da*math.Pi/180.0)
-		ps[2*i+1].Z = Ro * math.Cos(float64(i)*da*math.Pi/180.0)
-		ps[2*i+1].Y = float64(i) * dy
-		ls[i][0] = 2*i + 0
-		ls[i][1] = 2*i + 1
-		if i != 0 {
-			ls[1*(amount-1)+i][0] = 2*(i-1) + 0
-			ls[1*(amount-1)+i][1] = 2*(i-0) + 0
-			ls[2*(amount-1)+i][0] = 2*(i-1) + 1
-			ls[2*(amount-1)+i][1] = 2*(i-0) + 1
-		}
-		if i != 0 {
-			ts[i-1][0] = 2*(i-1) + 0
-			ts[i-1][1] = 2*(i-1) + 1
-			ts[i-1][2] = 2*(i-0) + 0
-			ts[amount-1+i-1][0] = 2*(i-1) + 1
-			ts[amount-1+i-1][1] = 2*(i-0) + 0
-			ts[amount-1+i-1][2] = 2*(i-0) + 1
+
+	for i := 0; i < levels; i++ {
+		Ro += dR
+		Ri += dR
+		angle := float64(i) * da * math.Pi / 180.0
+		model.Points = append(model.Points,
+			Point{X: Ri * math.Sin(angle), Y: float64(i) * dy, Z: Ri * math.Cos(angle)},
+			Point{X: Ro * math.Sin(angle), Y: float64(i) * dy, Z: Ro * math.Cos(angle)},
+		)
+		model.Lines = append(model.Lines, [2]int{2*i,2*i+1})
+		if 0 < i {
+			model.Lines =append(model.Lines, 
+			[2]int{2*(i-1),2*i},
+			[2]int{2*(i-1)+1,2*i+1})
+			model.Triangles = append(model.Triangles,
+			[3]int{2*(i-1),2*i, 2*(i-1)+1},
+			[3]int{2*i, 2*(i-1)+1, 2*i+1})
 		}
 	}
 	updateModel = true // TODO  remove
-
-	model.Points = ps
-	model.Lines = ls
-	model.Triangles = ts
 }
 
 func (m *Model) AddNode(X, Y, Z float64) {

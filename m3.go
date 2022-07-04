@@ -101,6 +101,23 @@ func M3() {
 		window.SwapBuffers()
 
 		fps.EndFrame()
+
+		// func ReadPixels(
+		//	x int32, y int32,
+		//	width int32, height int32,
+		//	format uint32, xtype uint32, pixels unsafe.Pointer)
+
+		// for i := 0; i < 100000; i++ {
+		// 	var data []uint8 = make([]uint8, 4)
+		// 	gl.ReadPixels(
+		// 		400, 300,
+		// 		1, 1, // 800, 600,
+		// 		gl.RGBA, gl.UNSIGNED_BYTE,
+		// 		// int32(len(data)),
+		// 		gl.Ptr(&data[0]),
+		// 	)
+		// 	_ = data
+		// }
 	}
 }
 
@@ -223,7 +240,7 @@ var camera = struct {
 	alpha:  0,
 	betta:  0,
 	R:      1,
-	center: Point{0, 0, 0},
+	center: Point{X: 0, Y: 0, Z: 0, Selected: false},
 }
 
 var (
@@ -241,7 +258,6 @@ func angle_norm(a float64) float64 {
 	}
 	return a
 }
-
 
 func cameraView(window *glfw.Window) {
 	// better angle value
@@ -337,26 +353,35 @@ func model3d(window *glfw.Window) {
 		camera.R = math.Max(ymax-ymin, camera.R)
 		camera.R = math.Max(zmax-zmin, camera.R)
 		camera.center = Point{
-			(xmax + xmin) / 2.0,
-			(ymax + ymin) / 2.0,
-			(zmax + zmin) / 2.0,
+			X:        (xmax + xmin) / 2.0,
+			Y:        (ymax + ymin) / 2.0,
+			Z:        (zmax + zmin) / 2.0,
+			Selected: false,
 		}
 	}
 
 	// Point
 	gl.PointSize(5)
 	gl.Begin(gl.POINTS)
-	gl.Color3d(0, 0, 0)
+	gl.Color3ub(1, 1, 1)
 	for i := range model.Points {
+		if model.Points[i].Selected {
+			gl.Color3ub(255, 1, 1)
+		}
+		//gl.Color3ub(255-uint8(i), 128-uint8(i), uint8(i) )
 		gl.Vertex3d(model.Points[i].X, model.Points[i].Y, model.Points[i].Z)
+		if model.Points[i].Selected {
+			gl.Color3ub(1, 1, 1)
+		}
 	}
 	gl.End()
 	// Lines
 	gl.LineWidth(2)
 	gl.LineStipple(1, 0x00ff)
 	gl.Begin(gl.LINES)
-	gl.Color3d(0.6, 0.6, 0.6)
+	gl.Color3ub(153, 153, 153)
 	for i := range model.Lines {
+		//gl.Color3ub(uint8(i), 255-uint8(i), 10)
 		f := model.Points[model.Lines[i][0]]
 		t := model.Points[model.Lines[i][1]]
 		gl.Vertex3d(f.X, f.Y, f.Z)
@@ -365,8 +390,9 @@ func model3d(window *glfw.Window) {
 	gl.End()
 	// Triangle
 	gl.Begin(gl.TRIANGLES)
-	gl.Color3d(0.6, 0.0, 0.6)
+	gl.Color3ub(153, 0, 153)
 	for i := range model.Triangles {
+		//gl.Color3ub(10, uint8(i), 255-uint8(i))
 		for p := 0; p < 3; p++ {
 			gl.Vertex3d(
 				model.Points[model.Triangles[i][p]].X,
@@ -490,15 +516,17 @@ func mouseButtonCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	// if button == glfw.MouseButton1 && action == glfw.Press && mods == glfw.ModControl {
-	// 	fmt.Println(">> SELECT PRESS")
-	// }
-	// if button == glfw.MouseButton1 && action == glfw.Release && mods == glfw.ModControl {
-	// 	fmt.Println(">> SELECT RELEASE")
-	// }
-	// if button == glfw.MouseButton1 && action == glfw.Repeat && mods == glfw.ModControl {
-	// 	fmt.Println(">> SELECT REPEAT")
-	// }
+	if button == glfw.MouseButton1 && mods == glfw.ModControl {
+		switch action {
+		case glfw.Press:
+			fmt.Println(">> SELECT PRESS")
+		case glfw.Release:
+			fmt.Println(">> SELECT RELEASE")
+		case glfw.Repeat:
+			fmt.Println(">> SELECT REPEAT")
+		}
+		fmt.Println(">>>>", xlast, ylast)
+	}
 }
 
 var (
