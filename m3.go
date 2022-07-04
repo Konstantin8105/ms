@@ -76,26 +76,25 @@ func M3() {
 
 	fps.Init()
 
+	gl.Disable(gl.LIGHTING)
+
 	for !window.ShouldClose() {
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
 
-		gl.Disable(gl.DEPTH_TEST)
-		gl.Disable(gl.LIGHTING)
-
+		// gl.Disable(gl.DEPTH_TEST)
 		// ui(window)
-
 		gl.Enable(gl.DEPTH_TEST)
-		gl.Enable(gl.TEXTURE_2D)
 
 		cameraView(window)
 		model3d(window)
 		axe(window)
 
-		font.Draw(fmt.Sprintf("FPS  : %6.2f", fps.Get()), 0, 0*fontSize)
-		font.Draw(fmt.Sprintf("Nodes: %6d", len(model.Points)), 0, 1*fontSize)
-		font.Draw(fmt.Sprintf("Lines: %6d", len(model.Lines)), 0, 2*fontSize)
+		font.Draw(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
+		font.Draw(fmt.Sprintf("Nodes     : %6d", len(model.Points)), 0, 1*fontSize)
+		font.Draw(fmt.Sprintf("Lines     : %6d", len(model.Lines)), 0, 2*fontSize)
+		font.Draw(fmt.Sprintf("Triangles3: %6d", len(model.Triangles)), 0, 3*fontSize)
 
 		window.MakeContextCurrent()
 		window.SwapBuffers()
@@ -243,12 +242,6 @@ var camera = struct {
 	center: Point{X: 0, Y: 0, Z: 0, Selected: false},
 }
 
-var (
-	orientation = [3]float64{0, 0, 0} // Radians
-	position    = [3]float64{0, 0, 0}
-	scale       = [3]float64{1, 1, 1}
-)
-
 func angle_norm(a float64) float64 {
 	if 360.0 < a {
 		return a - 360.0
@@ -309,11 +302,6 @@ var updateModel bool // TODO remove
 
 func model3d(window *glfw.Window) {
 	gl.PushMatrix()
-	gl.Rotated(orientation[0], 1, 0, 0)
-	gl.Rotated(orientation[1], 0, 1, 0)
-	gl.Rotated(orientation[2], 0, 0, 1)
-	gl.Translated(position[0], position[1], position[2])
-	gl.Scaled(scale[0], scale[1], scale[2])
 	defer func() {
 		gl.PopMatrix()
 	}()
