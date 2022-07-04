@@ -83,14 +83,24 @@ func M3() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
 
-		// gl.Disable(gl.DEPTH_TEST)
-		// ui(window)
+		// TODO : DO NOT ADD UI - SEE SELECTION: gl.Disable(gl.DEPTH_TEST)
+		// TODO : DO NOT ADD UI - SEE SELECTION: ui(window)
 		gl.Enable(gl.DEPTH_TEST)
 
 		cameraView(window)
 		model3d(window)
-		axe(window)
 
+		if selectObjects.fromAdd && selectObjects.toAdd {
+			// check select rectangle
+			fmt.Println(">>", selectObjects)
+			selectObjects.fromAdd = false
+			selectObjects.toAdd = false
+			selectObjects.toUpdate = false
+		}
+
+		// draw axe coordinates
+		axe(window)
+		// minimal screen notes
 		font.Draw(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
 		font.Draw(fmt.Sprintf("Nodes     : %6d", len(model.Points)), 0, 1*fontSize)
 		font.Draw(fmt.Sprintf("Lines     : %6d", len(model.Lines)), 0, 2*fontSize)
@@ -389,14 +399,6 @@ func model3d(window *glfw.Window) {
 		}
 	}
 	gl.End()
-
-	// Point text
-	// w, h := window.GetSize()
-	// for i := range ps {
-	// 	x := float64(w)/2 + (ps[i].Z-camera.center.Z)*camera.R
-	// 	y := float64(h)/2 + (ps[i].Y-camera.center.Y)*camera.R
-	// 	font.Draw(fmt.Sprintf("%d", i), int(x), int(y))
-	// }
 }
 
 func axe(window *glfw.Window) {
@@ -414,6 +416,30 @@ func axe(window *glfw.Window) {
 
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
+
+	// draw select rectangle
+	if selectObjects.fromAdd && selectObjects.toUpdate {
+		gl.Begin(gl.LINES)
+		gl.Color3d(1.0, 0.0, 0.0) // Red
+		{
+			x1 := float64(selectObjects.xFrom)
+			y1 := float64(h) - float64(selectObjects.yFrom)
+			x2 := float64(selectObjects.xTo)
+			y2 := float64(h) - float64(selectObjects.yTo)
+			gl.Vertex3d(x1, y1, 0)
+			gl.Vertex3d(x1, y2, 0)
+
+			gl.Vertex3d(x1, y2, 0)
+			gl.Vertex3d(x2, y2, 0)
+
+			gl.Vertex3d(x2, y2, 0)
+			gl.Vertex3d(x2, y1, 0)
+
+			gl.Vertex3d(x2, y1, 0)
+			gl.Vertex3d(x1, y1, 0)
+		}
+		gl.End()
+	}
 
 	s := math.Max(50.0, float64(h)/8.0)
 	b := 5.0 // distance from window border
@@ -498,22 +524,44 @@ func scrollCallback(window *glfw.Window, xoffset, yoffset float64) {
 	}
 }
 
+var selectObjects = struct {
+	xFrom, yFrom float64
+	fromAdd      bool
+
+	xTo, yTo float64
+	toUpdate bool
+	toAdd    bool
+}{}
+
 func mouseButtonCallback(
 	w *glfw.Window,
 	button glfw.MouseButton,
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	if button == glfw.MouseButton1 && mods == glfw.ModControl {
+	if button == glfw.MouseButton1 {
 		switch action {
 		case glfw.Press:
-			fmt.Println(">> SELECT PRESS")
+			if mods == glfw.ModControl {
+				x, y := w.GetCursorPos()
+				selectObjects.xFrom = x
+				selectObjects.yFrom = y
+				selectObjects.fromAdd = true
+			} else {
+				selectObjects.fromAdd = false
+			}
 		case glfw.Release:
-			fmt.Println(">> SELECT RELEASE")
+			if mods == glfw.ModControl {
+				x, y := w.GetCursorPos()
+				selectObjects.xTo = x
+				selectObjects.yTo = y
+				selectObjects.toAdd = true
+			} else {
+				selectObjects.toAdd = false
+			}
 		case glfw.Repeat:
-			fmt.Println(">> SELECT REPEAT")
+			// do nothing
 		}
-		fmt.Println(">>>>", xlast, ylast)
 	}
 }
 
@@ -523,6 +571,13 @@ var (
 )
 
 func cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
+	if selectObjects.fromAdd || selectObjects.toAdd {
+		selectObjects.xTo = xpos
+		selectObjects.yTo = ypos
+		selectObjects.toUpdate = true
+		return
+	}
+
 	const angle = 5.0
 	if w.GetMouseButton(glfw.MouseButton1) == glfw.Press {
 		switch {
