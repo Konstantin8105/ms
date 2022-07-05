@@ -268,8 +268,8 @@ func init() {
 }
 
 type MoveCopyble interface {
-	MoveCopyNodesDistance(nodes string, coordinates [3]string, copy bool)
-	MoveCopyNodesN1N2(nodes, from, to string, copy bool)
+	MoveCopyNodesDistance(nodes string, coordinates [3]string, copy, addLines, addTri bool)
+	MoveCopyNodesN1N2(nodes, from, to string, copy, addLines, addTri bool)
 	// Move/Copy to specific plane",
 	// Rotate",
 	// Mirror",
@@ -293,6 +293,14 @@ func init() {
 			)
 			list.Add(w)
 
+			var chLines vl.CheckBox
+			chLines.SetText("Add intermediant lines")
+			list.Add(&chLines)
+
+			var chTriangles vl.CheckBox
+			chTriangles.SetText("Add intermediant triangles")
+			list.Add(&chTriangles)
+
 			var rg vl.RadioGroup
 			rg.SetText([]string{"Move", "Copy"})
 			list.Add(&rg)
@@ -304,7 +312,8 @@ func init() {
 				for i := range vs {
 					vs[i] = gt[i]()
 				}
-				m.MoveCopyNodesDistance(ngt(), vs, rg.GetPos() == 1)
+				m.MoveCopyNodesDistance(ngt(), vs, rg.GetPos() == 1,
+					chLines.Checked, chTriangles.Checked)
 			}
 			list.Add(&b)
 			return &list
@@ -322,6 +331,14 @@ func init() {
 			nt, ntgt := Select("To node", Single, m.SelectNodes)
 			list.Add(nt)
 
+			var chLines vl.CheckBox
+			chLines.SetText("Add intermediant lines")
+			list.Add(&chLines)
+
+			var chTriangles vl.CheckBox
+			chTriangles.SetText("Add intermediant triangles")
+			list.Add(&chTriangles)
+
 			var rg vl.RadioGroup
 			rg.SetText([]string{"Move", "Copy"})
 			list.Add(&rg)
@@ -329,7 +346,8 @@ func init() {
 			var b vl.Button
 			b.SetText("Move/Copy")
 			b.OnClick = func() {
-				m.MoveCopyNodesN1N2(ngt(), nfgt(), ntgt(), rg.GetPos() == 1)
+				m.MoveCopyNodesN1N2(ngt(), nfgt(), ntgt(), rg.GetPos() == 1,
+					chLines.Checked, chTriangles.Checked)
 			}
 			list.Add(&b)
 			return &list

@@ -110,12 +110,12 @@ func (DebugMesh) SplitLinesByEqualParts(lines, parts string) {
 		fmt.Sprintln("SplitLinesByEqualParts: ", lines, parts))
 }
 
-func (DebugMesh) MoveCopyNodesDistance(nodes string, coordinates [3]string, copy bool) {
+func (DebugMesh) MoveCopyNodesDistance(nodes string, coordinates [3]string, copy, addLines, addTri bool) {
 	Debug = append(Debug,
-		fmt.Sprintln("MoveCopyNodesDistance: ", nodes, coordinates, copy))
+		fmt.Sprintln("MoveCopyNodesDistance: ", nodes, coordinates, copy, addLines, addTri))
 }
 
-func (DebugMesh) MoveCopyNodesN1N2(nodes, from, to string, copy bool) {
+func (DebugMesh) MoveCopyNodesN1N2(nodes, from, to string, copy, addLines, addTri bool) {
 	Debug = append(Debug,
-		fmt.Sprintln("MoveCopyNodesN1N2: ", nodes, from, to, copy))
+		fmt.Sprintln("MoveCopyNodesN1N2: ", nodes, from, to, copy, addLines, addTri))
 }
