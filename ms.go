@@ -175,7 +175,8 @@ type Splitable interface {
 	SplitLinesByRatio(line, proportional string, pos uint)
 	SplitLinesByEqualParts(lines, parts string)
 	// TODO REMOVE SplitTri3To3Quadr4(tris string)
-	SplitTri3To2Tri3(tris string, side uint)
+	SplitTri3To3Tri3(tris string)
+	// SplitTri3To2Tri3(tris string, side uint)
 	// SplitQuadr4To2Quadr4(q4s string, side uint)
 	// Quadr4 to 4 Triangle3
 	// Quadr4 to 4 Quadr4
@@ -244,20 +245,16 @@ func init() {
 
 			return &list
 		}}, {
-		Name: "Triangle3 to 2 Triangle3 by side",
+		Name: "Triangle3 to 3 Triangle3",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 			ns, nsgt := Select("Select triangles3", Many, m.SelectTriangles)
 			list.Add(ns)
 
-			var rg vl.RadioGroup
-			rg.SetText([]string{"by side1", "by side2", "by side3"})
-			list.Add(&rg)
-
 			var bi vl.Button
 			bi.SetText("Split")
 			bi.OnClick = func() {
-				m.SplitTri3To2Tri3(nsgt(), rg.GetPos())
+				m.SplitTri3To3Tri3(nsgt())
 			}
 			list.Add(&bi)
 

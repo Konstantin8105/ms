@@ -90,6 +90,11 @@ func (DebugMesh) SplitTri3To3Quadr4(tris string) {
 		fmt.Sprintln("SplitTri3To3Quadr4: ", tris))
 }
 
+func (DebugMesh) SplitTri3To3Tri3(tris string) {
+	Debug = append(Debug,
+		fmt.Sprintln("SplitTri3To3Tri3: ", tris))
+}
+
 func (DebugMesh) SplitTri3To2Tri3(tris string, side uint) {
 	Debug = append(Debug,
 		fmt.Sprintln("SplitTri3To2Tri3: ", tris, side))
