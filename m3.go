@@ -476,8 +476,6 @@ func openGlScreenCoordinate(window *glfw.Window) {
 	gl.Disable(gl.DEPTH_TEST)
 	gl.Disable(gl.TEXTURE_2D)
 
-	gl.LineWidth(1)
-
 	w, h := window.GetSize()
 	gl.Viewport(0, 0, int32(w), int32(h))
 	gl.MatrixMode(gl.PROJECTION)
