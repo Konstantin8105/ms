@@ -503,17 +503,17 @@ func drawSelectRectangle(window *glfw.Window) {
 		y1 := float64(h) - float64(selectObjects.yFrom)
 		x2 := float64(selectObjects.xTo)
 		y2 := float64(h) - float64(selectObjects.yTo)
-		gl.Vertex3d(x1, y1, 0)
-		gl.Vertex3d(x1, y2, 0)
+		gl.Vertex2d(x1, y1)
+		gl.Vertex2d(x1, y2)
 
-		gl.Vertex3d(x1, y2, 0)
-		gl.Vertex3d(x2, y2, 0)
+		gl.Vertex2d(x1, y2)
+		gl.Vertex2d(x2, y2)
 
-		gl.Vertex3d(x2, y2, 0)
-		gl.Vertex3d(x2, y1, 0)
+		gl.Vertex2d(x2, y2)
+		gl.Vertex2d(x2, y1)
 
-		gl.Vertex3d(x2, y1, 0)
-		gl.Vertex3d(x1, y1, 0)
+		gl.Vertex2d(x2, y1)
+		gl.Vertex2d(x1, y1)
 	}
 	gl.End()
 }
@@ -529,24 +529,24 @@ func drawAxes(window *glfw.Window) {
 	gl.Begin(gl.QUADS)
 	gl.Color3d(0.8, 0.8, 0.8)
 	{
-		gl.Vertex3d(center_x-s/2, center_y-s/2, 0)
-		gl.Vertex3d(center_x+s/2, center_y-s/2, 0)
-		gl.Vertex3d(center_x+s/2, center_y+s/2, 0)
-		gl.Vertex3d(center_x-s/2, center_y+s/2, 0)
+		gl.Vertex2d(center_x-s/2, center_y-s/2)
+		gl.Vertex2d(center_x+s/2, center_y-s/2)
+		gl.Vertex2d(center_x+s/2, center_y+s/2)
+		gl.Vertex2d(center_x-s/2, center_y+s/2)
 	}
 	gl.End()
 	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
 	gl.Color3d(0.1, 0.1, 0.1)
 	{
-		gl.Vertex3d(center_x-s/2, center_y-s/2, 0)
-		gl.Vertex3d(center_x+s/2, center_y-s/2, 0)
-		gl.Vertex3d(center_x+s/2, center_y-s/2, 0)
-		gl.Vertex3d(center_x+s/2, center_y+s/2, 0)
-		gl.Vertex3d(center_x+s/2, center_y+s/2, 0)
-		gl.Vertex3d(center_x-s/2, center_y+s/2, 0)
-		gl.Vertex3d(center_x-s/2, center_y+s/2, 0)
-		gl.Vertex3d(center_x-s/2, center_y-s/2, 0)
+		gl.Vertex2d(center_x-s/2, center_y-s/2)
+		gl.Vertex2d(center_x+s/2, center_y-s/2)
+		gl.Vertex2d(center_x+s/2, center_y-s/2)
+		gl.Vertex2d(center_x+s/2, center_y+s/2)
+		gl.Vertex2d(center_x+s/2, center_y+s/2)
+		gl.Vertex2d(center_x-s/2, center_y+s/2)
+		gl.Vertex2d(center_x-s/2, center_y+s/2)
+		gl.Vertex2d(center_x-s/2, center_y-s/2)
 	}
 	gl.End()
 
