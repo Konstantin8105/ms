@@ -628,9 +628,6 @@ var (
 )
 
 func convertToIndex(color []uint8) (index int) {
-	// if color[3] != 0 {
-	// 	return -int(color[3])
-	// }
 	for i := range color {
 		if i == 3 {
 			break
@@ -763,7 +760,7 @@ func selectByRectangle(window *glfw.Window) {
 		},
 	} {
 		found = true
-		for found {
+		for found { // TODO : infinite loop
 			found = false
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)

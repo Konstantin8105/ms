@@ -14,10 +14,10 @@ const (
 	Split
 	Plate
 	MoveCopy
-	Scale
-	TypModels
-	Check
-	Plugin
+	// 	Scale
+	// 	TypModels
+	// 	Check
+	// 	Plugin
 	endGroup
 )
 
@@ -31,14 +31,14 @@ func (g GroupId) String() string {
 		return "Plate operations"
 	case MoveCopy:
 		return "Move/Copy"
-	case Scale:
-		return "Scale"
-	case Check:
-		return "Check"
-	case TypModels:
-		return "Typical models"
-	case Plugin:
-		return "Plugin"
+		// 	case Scale:
+		// 		return "Scale"
+		// 	case Check:
+		// 		return "Check"
+		// 	case TypModels:
+		// 		return "Typical models"
+		// 	case Plugin:
+		// 		return "Plugin"
 	}
 	return fmt.Sprintf("Undefined:%02d", g)
 }
@@ -69,22 +69,87 @@ type Viewable interface {
 
 type Addable interface {
 	AddNode(X, Y, Z string)
-	AddNodeByDistance(line, distance string, atBegin bool)
-	AddNodeByProportional(line, proportional string, pos uint)
 	AddLineByNodeNumber(n1, n2 string)
 	AddTriangle3ByNodeNumber(n1, n2, n3 string)
-	AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
-	AddElementsByNodes(ids string, l2, t3, q4 bool)
-
+	// TODO REMOVE AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
+	// TODO REMOVE AddElementsByNodes(ids string, l2, t3, q4 bool)
 	// AddGroup
 	// AddCrossSections
+}
+
+func init() {
+	ops := []Operation{{
+		Name: "Node by coordinate [X,Y,Z]",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			w, gt := Input3Float(
+				[3]string{"X", "Y", "Z"},
+				[3]string{"meter", "meter", "meter"},
+			)
+			list.Add(w)
+
+			var b vl.Button
+			b.SetText("Add")
+			b.OnClick = func() {
+				var vs [3]string
+				for i := range vs {
+					vs[i] = gt[i]()
+				}
+				m.AddNode(gt[0](), gt[1](), gt[2]())
+			}
+			list.Add(&b)
+			return &list
+		}}, {
+		Group: Add,
+		Name:  "Line2 by nodes",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			b, bgt := Select("Select node1", Single, m.SelectNodes)
+			list.Add(b)
+			e, egt := Select("Select node2", Single, m.SelectNodes)
+			list.Add(e)
+
+			var bi vl.Button
+			bi.SetText("Add")
+			bi.OnClick = func() {
+				m.AddLineByNodeNumber(bgt(), egt())
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Group: Add,
+		Name:  "Triangle3 by nodes",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			n1, n1gt := Select("Select node1", Single, m.SelectNodes)
+			list.Add(n1)
+			n2, n2gt := Select("Select node2", Single, m.SelectNodes)
+			list.Add(n2)
+			n3, n3gt := Select("Select node3", Single, m.SelectNodes)
+			list.Add(n3)
+
+			var bi vl.Button
+			bi.SetText("Add")
+			bi.OnClick = func() {
+				m.AddTriangle3ByNodeNumber(n1gt(), n2gt(), n3gt())
+			}
+			list.Add(&bi)
+
+			return &list
+		}}}
+	for i := range ops {
+		ops[i].Group = Add
+	}
+	Operations = append(Operations, ops...)
 }
 
 type Selectable interface {
 	SelectNodes(single bool) (ids []uint)
 	SelectLines(single bool) (ids []uint)
 	SelectTriangles(single bool) (ids []uint)
-	SelectQuadr4(single bool) (ids []uint)
+	// TODO REMOVE SelectQuadr4(single bool) (ids []uint)
 	// InvertNodes
 	// InvertLines
 	// InvertTriangles
@@ -97,16 +162,216 @@ type Selectable interface {
 	// SelectByGroup
 }
 
+// func init() {
+// 	ops := []Operation{{}}
+// 	for i := range ops {
+// 		ops[i].Group = Select
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
+
 type Splitable interface {
-	SplitLinesByRatio(lines, ratio string)
+	SplitLinesByDistance(line, distance string, atBegin bool)
+	SplitLinesByRatio(line, proportional string, pos uint)
 	SplitLinesByEqualParts(lines, parts string)
-	SplitTri3To3Quadr4(tris string)
+	// TODO REMOVE SplitTri3To3Quadr4(tris string)
 	SplitTri3To2Tri3(tris string, side uint)
-	SplitQuadr4To2Quadr4(q4s string, side uint)
+	// SplitQuadr4To2Quadr4(q4s string, side uint)
 	// Quadr4 to 4 Triangle3
 	// Quadr4 to 4 Quadr4
 	// Triangles3, Quadrs4 by Lines2
 }
+
+func init() {
+	ops := []Operation{{
+		Name: "Line2 by distance from node",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			s, sgt := Select("Select line", Single, m.SelectLines)
+			list.Add(s)
+			d, dgt := InputFloat("Distance", "meter")
+			list.Add(d)
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"from line begin", "from line end"})
+			list.Add(&rg)
+
+			var bi vl.Button
+			bi.SetText("Split")
+			bi.OnClick = func() {
+				m.SplitLinesByDistance(sgt(), dgt(), rg.GetPos() == 0)
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Name: "Line2 by ratio",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			s, sgt := Select("Select line", Single, m.SelectLines)
+			list.Add(s)
+			d, dgt := InputFloat("Ratio", "")
+			list.Add(d)
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"from line begin", "from line end"})
+			list.Add(&rg)
+
+			var bi vl.Button
+			bi.SetText("Split")
+			bi.OnClick = func() {
+				m.SplitLinesByRatio(sgt(), dgt(), rg.GetPos())
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Name: "Line2 to equal parts",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			ns, nsgt := Select("Select lines", Many, m.SelectLines)
+			list.Add(ns)
+
+			r, rgt := InputUnsigned("Amount parts", "")
+			list.Add(r)
+
+			var bi vl.Button
+			bi.SetText("Split")
+			bi.OnClick = func() {
+				m.SplitLinesByEqualParts(nsgt(), rgt())
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Name: "Triangle3 to 2 Triangle3 by side",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			ns, nsgt := Select("Select triangles3", Many, m.SelectTriangles)
+			list.Add(ns)
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"by side1", "by side2", "by side3"})
+			list.Add(&rg)
+
+			var bi vl.Button
+			bi.SetText("Split")
+			bi.OnClick = func() {
+				m.SplitTri3To2Tri3(nsgt(), rg.GetPos())
+			}
+			list.Add(&bi)
+
+			return &list
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = Split
+	}
+	Operations = append(Operations, ops...)
+}
+
+type MoveCopyble interface {
+	MoveCopyNodesDistance(nodes string, coordinates [3]string, copy bool)
+	MoveCopyNodesN1N2(nodes, from, to string, copy bool)
+	// Move/Copy to specific plane",
+	// Rotate",
+	// Mirror",
+	// Copy by line path",
+	// Translational repeat",
+	// Circular repeat/Spiral",
+}
+
+func init() {
+	ops := []Operation{{
+		Name: "Move/Copy by distance [dX,dY,dZ]",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			ns, ngt := Select("Select elements", Many, m.SelectNodes)
+			list.Add(ns)
+
+			w, gt := Input3Float(
+				[3]string{"dX", "dY", "dZ"},
+				[3]string{"meter", "meter", "meter"},
+			)
+			list.Add(w)
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"Move", "Copy"})
+			list.Add(&rg)
+
+			var b vl.Button
+			b.SetText("Move/Copy")
+			b.OnClick = func() {
+				var vs [3]string
+				for i := range vs {
+					vs[i] = gt[i]()
+				}
+				m.MoveCopyNodesDistance(ngt(), vs, rg.GetPos() == 1)
+			}
+			list.Add(&b)
+			return &list
+		}}, {
+		Name: "Move/Copy from node n1 to node n2",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			ns, ngt := Select("Select elements", Many, m.SelectNodes)
+			list.Add(ns)
+
+			nf, nfgt := Select("From node", Single, m.SelectNodes)
+			list.Add(nf)
+
+			nt, ntgt := Select("To node", Single, m.SelectNodes)
+			list.Add(nt)
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"Move", "Copy"})
+			list.Add(&rg)
+
+			var b vl.Button
+			b.SetText("Move/Copy")
+			b.OnClick = func() {
+				m.MoveCopyNodesN1N2(ngt(), nfgt(), ntgt(), rg.GetPos() == 1)
+			}
+			list.Add(&b)
+			return &list
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = MoveCopy
+	}
+	Operations = append(Operations, ops...)
+}
+
+type Platable interface {
+	// Triangulation by nodes
+	// Triangulation exist plates by area
+	// Smooth exist plates
+}
+
+// func init() {
+// 	ops := []Operation{{
+// 	}}
+// 	for i := range ops {
+// 		ops[i].Group = Plate
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
+
+type Scalable interface {
+	// By ratio [sX,sY,sZ] and node
+	// By cylinder system coordinate
+	// By direction on 2 nodes
+}
+
+// func init() {
+// 	ops := []Operation{{}}
+// 	for i := range ops {
+// 		ops[i].Group = Scale
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
 
 type Checkable interface {
 	// Multiple structures
@@ -124,22 +389,38 @@ type Checkable interface {
 	// All ortho elements
 }
 
+// func init() {
+// 	ops := []Operation{{}}
+// 	for i := range ops {
+// 		ops[i].Group = Check
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
+
 type Measurementable interface {
 	// Distance between 2 nodes
 	// Distance between 2 parallel beam
 	// Distance between 2 parallel plates
 }
 
+// func init() {
+// 	ops := []Operation{{}}
+// 	for i := range ops {
+// 		ops[i].Group = Measurement
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
+
 type Mesh interface {
 	Viewable
 	Addable
 	Selectable
+	Platable
 	Splitable
+	MoveCopyble
+	Scalable
 	Checkable
 	Measurementable
-
-	MoveCopyNodesDistance(nodes string, coordinates [3]string, copy bool)
-	MoveCopyNodesN1N2(nodes, from, to string, copy bool)
 }
 
 const (
@@ -153,368 +434,7 @@ type Operation struct {
 	Part  func(m Mesh) (w vl.Widget)
 }
 
-var Operations = []Operation{{
-	Group: Add,
-	Name:  "Node by coordinate [X,Y,Z]",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-
-		w, gt := Input3Float(
-			[3]string{"X", "Y", "Z"},
-			[3]string{"meter", "meter", "meter"},
-		)
-		list.Add(w)
-
-		var b vl.Button
-		b.SetText("Add")
-		b.OnClick = func() {
-			var vs [3]string
-			for i := range vs {
-				vs[i] = gt[i]()
-			}
-			m.AddNode(gt[0](), gt[1](), gt[2]())
-		}
-		list.Add(&b)
-		return &list
-	}}, {
-	Group: Split,
-	Name:  "Line2 by distance from node",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		s, sgt := Select("Select line", Single, m.SelectLines)
-		list.Add(s)
-		d, dgt := InputFloat("Distance", "meter")
-		list.Add(d)
-
-		var rg vl.RadioGroup
-		rg.SetText([]string{"from line begin", "from line end"})
-		list.Add(&rg)
-
-		var bi vl.Button
-		bi.SetText("Add")
-		bi.OnClick = func() {
-			m.AddNodeByDistance(sgt(), dgt(), rg.GetPos()==0)
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-	Group: Split,
-	Name:  "Line2 by ratio",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		s, sgt := Select("Select line", Single, m.SelectLines)
-		list.Add(s)
-		d, dgt := InputFloat("Ratio", "")
-		list.Add(d)
-
-		var rg vl.RadioGroup
-		rg.SetText([]string{"from line begin", "from line end"})
-		list.Add(&rg)
-
-		var bi vl.Button
-		bi.SetText("Split")
-		bi.OnClick = func() {
-			m.AddNodeByProportional(sgt(), dgt(), rg.GetPos())
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-	Group: Add,
-	Name:  "Line2 by node numbers",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		b, bgt := Select("Select node1", Single, m.SelectNodes)
-		list.Add(b)
-		e, egt := Select("Select node2", Single, m.SelectNodes)
-		list.Add(e)
-
-		var bi vl.Button
-		bi.SetText("Add")
-		bi.OnClick = func() {
-			m.AddLineByNodeNumber(bgt(), egt())
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-	Group: Add,
-	Name:  "Triangle3 by node numbers",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		n1, n1gt := Select("Select node1", Single, m.SelectNodes)
-		list.Add(n1)
-		n2, n2gt := Select("Select node2", Single, m.SelectNodes)
-		list.Add(n2)
-		n3, n3gt := Select("Select node3", Single, m.SelectNodes)
-		list.Add(n3)
-
-		var bi vl.Button
-		bi.SetText("Add")
-		bi.OnClick = func() {
-			m.AddTriangle3ByNodeNumber(n1gt(), n2gt(), n3gt())
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-	Group: Add,
-	Name:  "Quadr4 by node numbers",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		n1, n1gt := Select("Select node1", Single, m.SelectNodes)
-		list.Add(n1)
-		n2, n2gt := Select("Select node2", Single, m.SelectNodes)
-		list.Add(n2)
-		n3, n3gt := Select("Select node3", Single, m.SelectNodes)
-		list.Add(n3)
-		n4, n4gt := Select("Select node4", Single, m.SelectNodes)
-		list.Add(n4)
-
-		var bi vl.Button
-		bi.SetText("Add")
-		bi.OnClick = func() {
-			m.AddQuadr4ByNodeNumber(n1gt(), n2gt(), n3gt(), n4gt())
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-	Group: Add,
-	Name:  "Elements by sequence of nodes",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		ns, nsgt := Select("Select sequence of nodes", Many, m.SelectNodes)
-		list.Add(ns)
-
-		var l2 vl.CheckBox
-		l2.SetText("add lines")
-		list.Add(&l2)
-
-		var tr3 vl.CheckBox
-		tr3.SetText("add triangles")
-		list.Add(&tr3)
-
-		var q4 vl.CheckBox
-		q4.SetText("add quadr4")
-		list.Add(&q4)
-
-		var bi vl.Button
-		bi.SetText("Add")
-		bi.OnClick = func() {
-			if !(l2.Checked || tr3.Checked || q4.Checked) {
-				return
-			}
-			m.AddElementsByNodes(nsgt(), l2.Checked, tr3.Checked, q4.Checked)
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-	Group: Split,
-	Name:  "Line2 to equal parts",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		ns, nsgt := Select("Select lines", Many, m.SelectLines)
-		list.Add(ns)
-
-		r, rgt := InputUnsigned("Amount parts", "")
-		list.Add(r)
-
-		var bi vl.Button
-		bi.SetText("Split")
-		bi.OnClick = func() {
-			m.SplitLinesByEqualParts(nsgt(), rgt())
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-	Group: Split,
-	Name:  "Triangle3 to 3 Quadr4",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		ns, nsgt := Select("Select triangles3", Many, m.SelectTriangles)
-		list.Add(ns)
-
-		var bi vl.Button
-		bi.SetText("Split")
-		bi.OnClick = func() {
-			m.SplitTri3To3Quadr4(nsgt())
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-	Group: Split,
-	Name:  "Triangle3 to 2 Triangle3 by side",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		ns, nsgt := Select("Select triangles3", Many, m.SelectTriangles)
-		list.Add(ns)
-
-		var rg vl.RadioGroup
-		rg.SetText([]string{"by side1", "by side2", "by side3"})
-		list.Add(&rg)
-
-		var bi vl.Button
-		bi.SetText("Split")
-		bi.OnClick = func() {
-			m.SplitTri3To2Tri3(nsgt(), rg.GetPos())
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-	Group: Split,
-	Name:  "Quadr4 to 2 equal Quadr4 by side",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-		ns, nsgt := Select("Select quadr4", Many, m.SelectQuadr4)
-		list.Add(ns)
-
-		var rg vl.RadioGroup
-		rg.SetText([]string{"by side1, side3", "by side2, side4"})
-		list.Add(&rg)
-
-		var bi vl.Button
-		bi.SetText("Split")
-		bi.OnClick = func() {
-			m.SplitQuadr4To2Quadr4(nsgt(), rg.GetPos())
-		}
-		list.Add(&bi)
-
-		return &list
-	}}, {
-
-	Group: MoveCopy,
-	Name:  "Move/Copy nodes by distance [dX,dY,dZ]",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-
-		ns, ngt := Select("Select nodes", Many, m.SelectNodes)
-		list.Add(ns)
-
-		w, gt := Input3Float(
-			[3]string{"dX", "dY", "dZ"},
-			[3]string{"meter", "meter", "meter"},
-		)
-		list.Add(w)
-
-		var rg vl.RadioGroup
-		rg.SetText([]string{"Move", "Copy"})
-		list.Add(&rg)
-
-		var b vl.Button
-		b.SetText("Move/Copy")
-		b.OnClick = func() {
-			var vs [3]string
-			for i := range vs {
-				vs[i] = gt[i]()
-			}
-			m.MoveCopyNodesDistance(ngt(), vs, rg.GetPos() == 1)
-		}
-		list.Add(&b)
-		return &list
-	}}, {
-	Group: MoveCopy,
-	Name:  "Move/Copy from node n1 to node n2",
-	Part: func(m Mesh) (w vl.Widget) {
-		var list vl.List
-
-		ns, ngt := Select("Select nodes", Many, m.SelectNodes)
-		list.Add(ns)
-
-		nf, nfgt := Select("From node", Single, m.SelectNodes)
-		list.Add(nf)
-
-		nt, ntgt := Select("To node", Single, m.SelectNodes)
-		list.Add(nt)
-
-		var rg vl.RadioGroup
-		rg.SetText([]string{"Move", "Copy"})
-		list.Add(&rg)
-
-		var b vl.Button
-		b.SetText("Move/Copy")
-		b.OnClick = func() {
-			m.MoveCopyNodesN1N2(ngt(), nfgt(), ntgt(), rg.GetPos() == 1)
-		}
-		list.Add(&b)
-		return &list
-	}}, {
-	Group: MoveCopy,
-	Name:  "Move/Copy to specific plane",
-	Part: func(m Mesh) (w vl.Widget) {
-		// XOY
-		// XOZ
-		// YOZ
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: MoveCopy,
-	Name:  "Rotate",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: MoveCopy,
-	Name:  "Mirror",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-
-	Group: MoveCopy,
-	Name:  "Copy by line path",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: MoveCopy,
-	Name:  "Translational repeat",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: MoveCopy,
-	Name:  "Circular repeat/Spiral",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-
-	Group: Plate,
-	Name:  "Triangulation by nodes",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Plate,
-	Name:  "Triangulation exist plates by area",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Plate,
-	Name:  "Smooth exist plates",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Scale,
-	Name:  "By ratio and node number",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Scale,
-	Name:  "By ratio and coordinate",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Scale,
-	Name:  "By cylinder system coordinate",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}}, {
-	Group: Scale,
-	Name:  "By direction on 2 nodes",
-	Part: func(m Mesh) (w vl.Widget) {
-		return vl.TextStatic("HOLD")
-	}},
-}
+var Operations []Operation
 
 func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() string) {
 	var (
@@ -594,7 +514,20 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 	root = &scroll
 	scroll.Root = &list
 	action = make(chan func())
-	list.Add(vl.TextStatic(fmt.Sprintf("Amount operations: %d", len(Operations))))
+	{ // TODO REMOVE
+		numNil := 0
+		for i := range Operations {
+			// n := DebugMesh{}
+			if Operations[i].Part == nil {
+				numNil++
+			}
+			// if Operations[i].Part(n) == nil {
+			// 	numNil++
+			// }
+		}
+		list.Add(vl.TextStatic(fmt.Sprintf("Amount operations: %d with %d nil",
+			len(Operations), numNil)))
+	}
 
 	view := make([]bool, len(Operations))
 	colHeader := make([]vl.CollapsingHeader, endGroup)
@@ -614,7 +547,7 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 			c.SetText(Operations[i].Name)
 			part := Operations[i].Part
 			if part == nil {
-				err = fmt.Errorf("Widget %02d is empty\n", i)
+				err = fmt.Errorf("Widget %02d is empty: %#v\n", i, Operations[i])
 				return
 			}
 			r := part(m)

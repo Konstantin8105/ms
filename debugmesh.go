@@ -55,14 +55,14 @@ func (DebugMesh) SelectQuadr4(single bool) (ids []uint) {
 	return
 }
 
-func (DebugMesh) AddNodeByDistance(line, distance string, atBegin bool) {
+func (DebugMesh) SplitLinesByDistance (line, distance string, atBegin bool) {
 	Debug = append(Debug,
-		fmt.Sprintln("InsertNodeByDistance: ", line, distance, atBegin))
+		fmt.Sprintln("SplitLinesByDistance: ", line, distance, atBegin))
 }
 
-func (DebugMesh) AddNodeByProportional(line, proportional string, pos uint) {
+func (DebugMesh) SplitLinesByRatio (line, proportional string, pos uint) {
 	Debug = append(Debug,
-		fmt.Sprintln("InsertNodeByProportional: ", line, proportional, pos))
+		fmt.Sprintln("SplitLinesByRatio: ", line, proportional, pos))
 }
 
 func (DebugMesh) AddLineByNodeNumber(n1, n2 string) {
@@ -83,11 +83,6 @@ func (DebugMesh) AddQuadr4ByNodeNumber(n1, n2, n3, n4 string) {
 func (DebugMesh) AddElementsByNodes(ids string, l2, t3, q4 bool) {
 	Debug = append(Debug,
 		fmt.Sprintln("InsertElementsByNodes: ", ids, l2, t3, q4))
-}
-
-func (DebugMesh) SplitLinesByRatio(lines, ratio string) {
-	Debug = append(Debug,
-		fmt.Sprintln("SplitLinesByRatio: ", lines, ratio))
 }
 
 func (DebugMesh) SplitTri3To3Quadr4(tris string) {
