@@ -2,27 +2,40 @@ package ms
 
 import "math"
 
-type Point struct {
-	X, Y, Z  float64
+type selectable struct {
 	Selected bool
+}
+
+type Point struct {
+	selectable
+	X, Y, Z float64
+}
+
+type Line struct {
+	selectable
+	Index [2]int
+}
+
+type Triangle struct {
+	selectable
+	Index [3]int
 }
 
 var model Model
 
 type Model struct {
 	Points    []Point
-	Lines     [][2]int
-	Triangles [][3]int
-	Quadr4s   [][4]int
+	Lines     []Line
+	Triangles []Triangle
 }
 
 func init() { // TODO remove
 	var (
-		Ri    = 0.5
-		Ro    = 2.5
-		dR    = 0.0
-		da    = 30.0 // degree
-		dy    = 0.2
+		Ri     = 0.5
+		Ro     = 2.5
+		dR     = 0.0
+		da     = 30.0 // degree
+		dy     = 0.2
 		levels = 256
 		//    8 = FPS 61.0
 		//   80 = FPS 58.0
@@ -38,14 +51,14 @@ func init() { // TODO remove
 			Point{X: Ri * math.Sin(angle), Y: float64(i) * dy, Z: Ri * math.Cos(angle)},
 			Point{X: Ro * math.Sin(angle), Y: float64(i) * dy, Z: Ro * math.Cos(angle)},
 		)
-		model.Lines = append(model.Lines, [2]int{2*i,2*i+1})
+		model.Lines = append(model.Lines, Line{Index: [2]int{2 * i, 2*i + 1}})
 		if 0 < i {
-			model.Lines =append(model.Lines, 
-			[2]int{2*(i-1),2*i},
-			[2]int{2*(i-1)+1,2*i+1})
+			model.Lines = append(model.Lines,
+				Line{Index: [2]int{2 * (i - 1), 2 * i}},
+				Line{Index: [2]int{2*(i-1) + 1, 2*i + 1}})
 			model.Triangles = append(model.Triangles,
-			[3]int{2*(i-1),2*i, 2*(i-1)+1},
-			[3]int{2*i, 2*(i-1)+1, 2*i+1})
+				Triangle{Index: [3]int{2 * (i - 1), 2 * i, 2*(i-1) + 1}},
+				Triangle{Index: [3]int{2 * i, 2*(i-1) + 1, 2*i + 1}})
 		}
 	}
 	updateModel = true // TODO  remove

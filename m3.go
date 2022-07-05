@@ -88,18 +88,23 @@ func M3() {
 		gl.Enable(gl.DEPTH_TEST)
 
 		cameraView(window)
-		model3d(window)
+		model3d(window, selectNone)
 
+		// check select rectangle
 		if selectObjects.fromAdd && selectObjects.toAdd {
-			// check select rectangle
-			fmt.Println(">>", selectObjects)
+			selectByRectangle(window)
 			selectObjects.fromAdd = false
 			selectObjects.toAdd = false
 			selectObjects.toUpdate = false
+			continue
 		}
 
+		// screen coordinates
+		openGlScreenCoordinate(window)
+		// select rectangle
+		drawSelectRectangle(window)
 		// draw axe coordinates
-		axe(window)
+		drawAxes(window)
 		// minimal screen notes
 		font.Draw(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
 		font.Draw(fmt.Sprintf("Nodes     : %6d", len(model.Points)), 0, 1*fontSize)
@@ -110,23 +115,6 @@ func M3() {
 		window.SwapBuffers()
 
 		fps.EndFrame()
-
-		// func ReadPixels(
-		//	x int32, y int32,
-		//	width int32, height int32,
-		//	format uint32, xtype uint32, pixels unsafe.Pointer)
-
-		// for i := 0; i < 100000; i++ {
-		// 	var data []uint8 = make([]uint8, 4)
-		// 	gl.ReadPixels(
-		// 		400, 300,
-		// 		1, 1, // 800, 600,
-		// 		gl.RGBA, gl.UNSIGNED_BYTE,
-		// 		// int32(len(data)),
-		// 		gl.Ptr(&data[0]),
-		// 	)
-		// 	_ = data
-		// }
 	}
 }
 
@@ -249,7 +237,7 @@ var camera = struct {
 	alpha:  0,
 	betta:  0,
 	R:      1,
-	center: Point{X: 0, Y: 0, Z: 0, Selected: false},
+	center: Point{X: 0, Y: 0, Z: 0},
 }
 
 func angle_norm(a float64) float64 {
@@ -310,7 +298,7 @@ func cameraView(window *glfw.Window) {
 
 var updateModel bool // TODO remove
 
-func model3d(window *glfw.Window) {
+func model3d(window *glfw.Window, s selectType) {
 	gl.PushMatrix()
 	defer func() {
 		gl.PopMatrix()
@@ -351,62 +339,144 @@ func model3d(window *glfw.Window) {
 		camera.R = math.Max(ymax-ymin, camera.R)
 		camera.R = math.Max(zmax-zmin, camera.R)
 		camera.center = Point{
-			X:        (xmax + xmin) / 2.0,
-			Y:        (ymax + ymin) / 2.0,
-			Z:        (zmax + zmin) / 2.0,
-			Selected: false,
+			X: (xmax + xmin) / 2.0,
+			Y: (ymax + ymin) / 2.0,
+			Z: (zmax + zmin) / 2.0,
 		}
 	}
+
+	// TODO: if model.Points[i].Hided {
+	// TODO: 	continue
+	// TODO: }
 
 	// Point
 	gl.PointSize(5)
-	gl.Begin(gl.POINTS)
-	gl.Color3ub(1, 1, 1)
-	for i := range model.Points {
-		if model.Points[i].Selected {
-			gl.Color3ub(255, 1, 1)
+	switch s {
+	case selectNone:
+		gl.Begin(gl.POINTS)
+		for i := range model.Points {
+			if model.Points[i].Selected {
+				gl.Color3ub(255, 1, 1)
+			} else {
+				gl.Color3ub(1, 1, 1)
+			}
+			gl.Vertex3d(model.Points[i].X, model.Points[i].Y, model.Points[i].Z)
 		}
-		//gl.Color3ub(255-uint8(i), 128-uint8(i), uint8(i) )
-		gl.Vertex3d(model.Points[i].X, model.Points[i].Y, model.Points[i].Z)
-		if model.Points[i].Selected {
-			gl.Color3ub(1, 1, 1)
+		gl.End()
+	case selectPoints:
+		gl.Begin(gl.POINTS)
+		for i := range model.Points {
+			if model.Points[i].Selected {
+				continue
+			}
+			convertToColor(i)
+			gl.Vertex3d(model.Points[i].X, model.Points[i].Y, model.Points[i].Z)
 		}
+		gl.End()
 	}
-	gl.End()
 	// Lines
-	gl.LineWidth(2)
-	gl.LineStipple(1, 0x00ff)
-	gl.Begin(gl.LINES)
-	gl.Color3ub(153, 153, 153)
-	for i := range model.Lines {
-		//gl.Color3ub(uint8(i), 255-uint8(i), 10)
-		f := model.Points[model.Lines[i][0]]
-		t := model.Points[model.Lines[i][1]]
-		gl.Vertex3d(f.X, f.Y, f.Z)
-		gl.Vertex3d(t.X, t.Y, t.Z)
-	}
-	gl.End()
-	// Triangle
-	gl.Begin(gl.TRIANGLES)
-	gl.Color3ub(153, 0, 153)
-	for i := range model.Triangles {
-		//gl.Color3ub(10, uint8(i), 255-uint8(i))
-		for p := 0; p < 3; p++ {
-			gl.Vertex3d(
-				model.Points[model.Triangles[i][p]].X,
-				model.Points[model.Triangles[i][p]].Y,
-				model.Points[model.Triangles[i][p]].Z)
+	gl.LineWidth(3)
+	switch s {
+	case selectNone:
+		gl.Begin(gl.LINES)
+		for i := range model.Lines {
+			if model.Lines[i].Selected {
+				gl.Color3ub(255, 1, 1)
+			} else {
+				gl.Color3ub(153, 153, 153)
+			}
+			f := model.Points[model.Lines[i].Index[0]]
+			t := model.Points[model.Lines[i].Index[1]]
+			gl.Vertex3d(f.X, f.Y, f.Z)
+			gl.Vertex3d(t.X, t.Y, t.Z)
+		}
+		gl.End()
+	case selectLines:
+		gl.PointSize(2)
+		for i := range model.Lines {
+			if model.Lines[i].Selected {
+				continue
+			}
+			convertToColor(i)
+			f := model.Points[model.Lines[i].Index[0]]
+			t := model.Points[model.Lines[i].Index[1]]
+			gl.Begin(gl.LINES)
+			gl.Vertex3d(f.X, f.Y, f.Z)
+			gl.Vertex3d(t.X, t.Y, t.Z)
+			gl.End()
+			gl.Begin(gl.POINTS)
+			gl.Vertex3d(f.X, f.Y, f.Z)
+			gl.Vertex3d(t.X, t.Y, t.Z)
+			gl.End()
 		}
 	}
-	gl.End()
+	// Triangle
+	switch s {
+	case selectNone:
+		gl.Begin(gl.TRIANGLES)
+		for i := range model.Triangles {
+			if model.Triangles[i].Selected {
+				gl.Color3ub(255, 1, 1)
+			} else {
+				gl.Color3ub(153, 0, 153)
+			}
+			for p := 0; p < 3; p++ {
+				gl.Vertex3d(
+					model.Points[model.Triangles[i].Index[p]].X,
+					model.Points[model.Triangles[i].Index[p]].Y,
+					model.Points[model.Triangles[i].Index[p]].Z)
+			}
+		}
+		gl.End()
+	case selectTriangles:
+		gl.PointSize(2)
+		for i := range model.Triangles {
+			if model.Triangles[i].Selected {
+				continue
+			}
+			convertToColor(i)
+			gl.Begin(gl.POINTS)
+			for p := 0; p < 3; p++ {
+				gl.Vertex3d(
+					model.Points[model.Triangles[i].Index[p]].X,
+					model.Points[model.Triangles[i].Index[p]].Y,
+					model.Points[model.Triangles[i].Index[p]].Z)
+			}
+			gl.End()
+			gl.Begin(gl.TRIANGLES)
+			for p := 0; p < 3; p++ {
+				gl.Vertex3d(
+					model.Points[model.Triangles[i].Index[p]].X,
+					model.Points[model.Triangles[i].Index[p]].Y,
+					model.Points[model.Triangles[i].Index[p]].Z)
+			}
+			gl.End()
+			gl.LineWidth(2)
+			gl.Begin(gl.LINES)
+			for p := 0; p < 3; p++ {
+				from, to := p, p+1
+				if to == 3 {
+					to = 0
+				}
+				gl.Vertex3d(
+					model.Points[model.Triangles[i].Index[from]].X,
+					model.Points[model.Triangles[i].Index[from]].Y,
+					model.Points[model.Triangles[i].Index[from]].Z)
+				gl.Vertex3d(
+					model.Points[model.Triangles[i].Index[to]].X,
+					model.Points[model.Triangles[i].Index[to]].Y,
+					model.Points[model.Triangles[i].Index[to]].Z)
+			}
+			gl.End()
+		}
+	}
 }
 
-func axe(window *glfw.Window) {
+func openGlScreenCoordinate(window *glfw.Window) {
 	gl.Disable(gl.DEPTH_TEST)
 	gl.Disable(gl.TEXTURE_2D)
 
 	gl.LineWidth(1)
-	gl.LineStipple(1, 0x00ff)
 
 	w, h := window.GetSize()
 	gl.Viewport(0, 0, int32(w), int32(h))
@@ -416,30 +486,40 @@ func axe(window *glfw.Window) {
 
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
+}
 
+func drawSelectRectangle(window *glfw.Window) {
 	// draw select rectangle
-	if selectObjects.fromAdd && selectObjects.toUpdate {
-		gl.Begin(gl.LINES)
-		gl.Color3d(1.0, 0.0, 0.0) // Red
-		{
-			x1 := float64(selectObjects.xFrom)
-			y1 := float64(h) - float64(selectObjects.yFrom)
-			x2 := float64(selectObjects.xTo)
-			y2 := float64(h) - float64(selectObjects.yTo)
-			gl.Vertex3d(x1, y1, 0)
-			gl.Vertex3d(x1, y2, 0)
-
-			gl.Vertex3d(x1, y2, 0)
-			gl.Vertex3d(x2, y2, 0)
-
-			gl.Vertex3d(x2, y2, 0)
-			gl.Vertex3d(x2, y1, 0)
-
-			gl.Vertex3d(x2, y1, 0)
-			gl.Vertex3d(x1, y1, 0)
-		}
-		gl.End()
+	if !selectObjects.fromAdd || !selectObjects.toUpdate {
+		return
 	}
+	_, h := window.GetSize()
+
+	gl.LineWidth(1)
+	gl.Begin(gl.LINES)
+	gl.Color3d(1.0, 0.0, 0.0) // Red
+	{
+		x1 := float64(selectObjects.xFrom)
+		y1 := float64(h) - float64(selectObjects.yFrom)
+		x2 := float64(selectObjects.xTo)
+		y2 := float64(h) - float64(selectObjects.yTo)
+		gl.Vertex3d(x1, y1, 0)
+		gl.Vertex3d(x1, y2, 0)
+
+		gl.Vertex3d(x1, y2, 0)
+		gl.Vertex3d(x2, y2, 0)
+
+		gl.Vertex3d(x2, y2, 0)
+		gl.Vertex3d(x2, y1, 0)
+
+		gl.Vertex3d(x2, y1, 0)
+		gl.Vertex3d(x1, y1, 0)
+	}
+	gl.End()
+}
+
+func drawAxes(window *glfw.Window) {
+	w, h := window.GetSize()
 
 	s := math.Max(50.0, float64(h)/8.0)
 	b := 5.0 // distance from window border
@@ -455,6 +535,7 @@ func axe(window *glfw.Window) {
 		gl.Vertex3d(center_x-s/2, center_y+s/2, 0)
 	}
 	gl.End()
+	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
 	gl.Color3d(0.1, 0.1, 0.1)
 	{
@@ -472,6 +553,7 @@ func axe(window *glfw.Window) {
 	gl.Translated(center_x, center_y, 0)
 	gl.Rotated(camera.betta, 1.0, 0.0, 0.0)
 	gl.Rotated(camera.alpha, 0.0, 1.0, 0.0)
+	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
 	{
 		factor := 2.5
@@ -533,6 +615,189 @@ var selectObjects = struct {
 	toAdd    bool
 }{}
 
+type selectType = uint8
+
+const (
+	selectNone selectType = iota
+	selectPoints
+	selectLines
+	selectTriangles
+)
+
+var (
+	convertOffset  = uint64(5)
+	convertMaxUint = uint64(245) // max uint value
+)
+
+func convertToIndex(color []uint8) (index int) {
+	// if color[3] != 0 {
+	// 	return -int(color[3])
+	// }
+	for i := range color {
+		if i == 3 {
+			break
+		}
+		if uint64(color[i]) < convertOffset {
+			return -2
+		}
+		if convertOffset+convertMaxUint < uint64(color[i]) {
+			return -3
+		}
+	}
+	color[0] -= uint8(convertOffset)
+	color[1] -= uint8(convertOffset)
+	color[2] -= uint8(convertOffset)
+	u := convertMaxUint
+	return int(uint64(color[0]) + u*uint64(color[1]) + u*u*uint64(color[2]))
+}
+
+func convertToColor(i int) {
+	// func Color3ub(red, green, blue uint8)
+	// `uint8` is the set of all unsigned 8-bit integers.
+	// Range: 0 through 255.
+
+	// offset `uint8` to 5 through 250.
+	o := convertOffset
+	u := convertMaxUint
+	N := uint64(i)
+
+	// Example:
+	// func main() {
+	// 	u := 245
+	// 	N := 1111111
+	// 	k0 := N % u
+	// 	N = (N - k0) / u
+	// 	k1 := N % u
+	// 	N = (N - k1) / u
+	// 	k2 := N % u
+	// 	N = (N - k1) / u
+	// 	k3 := N % u
+	// 	fmt.Println(k0, k1, k2, k3, k0+u*k1+u*u*k2+u*u*u*k3)
+	// }
+	// Result:
+	//	36 125 18 0 1111111
+	var value [3]uint64
+	value[0] = N % u
+	N = (N - value[0]) / u
+	value[1] = N % u
+	N = (N - value[1]) / u
+	value[2] = N % u
+	for i := range value {
+		value[i] += o
+	}
+	gl.Color3ub(
+		uint8(value[0]),
+		uint8(value[1]),
+		uint8(value[2]),
+	)
+}
+
+func selectByRectangle(window *glfw.Window) {
+	_, h := window.GetSize()
+
+	selectObjects.yFrom = float64(h) - selectObjects.yFrom
+	selectObjects.yTo = float64(h) - selectObjects.yTo
+
+	//  glXGetConfig(dpy, vInfo, GLX_RED_SIZE, &attribs->redSize);
+	// GLX_BUFFER_SIZE
+	//
+	//     Number of bits per color buffer. For RGBA visuals,
+	// GLX_BUFFER_SIZE is the sum of GLX_RED_SIZE, GLX_GREEN_SIZE,
+	// GLX_BLUE_SIZE, and GLX_ALPHA_SIZE.
+	// For color index visuals, GLX_BUFFER_SIZE is the size of the color indexes.
+	//
+	// GLX_RED_SIZE
+	//
+	//     Number of bits of red stored in each color buffer.
+	// Undefined if GLX_RGBA is False.
+	//
+	// glxinfo
+	//     visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
+	//   id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
+	// ----------------------------------------------------------------------------
+	// 0x081 24 tc  0  32  0 r  . .   8  8  8  8 .  .  0  0  0  0  0  0  0  0 0 None
+	//
+	// GLX_BUFFER_SIZE = 32
+	// GLX_RED_SIZE    =  8
+	// 8bits is 0...256
+
+	if selectObjects.xTo < selectObjects.xFrom {
+		// swap
+		selectObjects.xTo, selectObjects.xFrom = selectObjects.xFrom, selectObjects.xTo
+	}
+	if selectObjects.yTo < selectObjects.yFrom {
+		// swap
+		selectObjects.yTo, selectObjects.yFrom = selectObjects.yFrom, selectObjects.yTo
+	}
+
+	var found bool
+
+	for _, s := range []struct {
+		st selectType
+		sf func(index int) bool
+	}{
+		{
+			st: selectPoints, sf: func(index int) bool {
+				if index < 0 || len(model.Points) <= index {
+					return false
+				}
+				model.Points[index].Selected = true
+				return true
+			},
+		},
+		{
+			st: selectLines, sf: func(index int) bool {
+				if index < 0 || len(model.Lines) <= index {
+					return false
+				}
+				model.Lines[index].Selected = true
+				return true
+			},
+		},
+		{
+			st: selectTriangles, sf: func(index int) bool {
+				if index < 0 || len(model.Triangles) <= index {
+					return false
+				}
+				model.Triangles[index].Selected = true
+				return true
+			},
+		},
+	} {
+		found = true
+		for found {
+			found = false
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)
+			gl.Enable(gl.DEPTH_TEST)
+			cameraView(window)
+			// color initialize
+			model3d(window, s.st)
+
+			// TODO : screen coordinates
+			// TODO : openGlScreenCoordinate(window)
+			// TODO : gl.Flush()
+
+			// color selection
+			var color []uint8 = make([]uint8, 4)
+			for x := selectObjects.xFrom; x <= selectObjects.xTo; x++ {
+				for y := selectObjects.yFrom; y <= selectObjects.yTo; y++ {
+					// func ReadPixels(
+					//	x int32, y int32,
+					//	width int32, height int32,
+					//	format uint32, xtype uint32, pixels unsafe.Pointer)
+					gl.ReadPixels(int32(x), int32(y), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&color[0]))
+					index := convertToIndex(color)
+					if s.sf(index) {
+						found = true
+					}
+				}
+			}
+			// if any find selection, then try again
+		}
+	}
+}
+
 func mouseButtonCallback(
 	w *glfw.Window,
 	button glfw.MouseButton,
@@ -557,6 +822,8 @@ func mouseButtonCallback(
 				selectObjects.yTo = y
 				selectObjects.toAdd = true
 			} else {
+				selectObjects.toUpdate = false
+				selectObjects.fromAdd = false
 				selectObjects.toAdd = false
 			}
 		case glfw.Repeat:
