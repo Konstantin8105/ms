@@ -607,10 +607,10 @@ func scrollCallback(window *glfw.Window, xoffset, yoffset float64) {
 }
 
 var selectObjects = struct {
-	xFrom, yFrom float64
+	xFrom, yFrom int32
 	fromAdd      bool
 
-	xTo, yTo float64
+	xTo, yTo int32
 	toUpdate bool
 	toAdd    bool
 }{}
@@ -695,8 +695,8 @@ func convertToColor(i int) {
 func selectByRectangle(window *glfw.Window) {
 	_, h := window.GetSize()
 
-	selectObjects.yFrom = float64(h) - selectObjects.yFrom
-	selectObjects.yTo = float64(h) - selectObjects.yTo
+	selectObjects.yFrom = int32(h) - selectObjects.yFrom
+	selectObjects.yTo = int32(h) - selectObjects.yTo
 
 	//  glXGetConfig(dpy, vInfo, GLX_RED_SIZE, &attribs->redSize);
 	// GLX_BUFFER_SIZE
@@ -734,7 +734,7 @@ func selectByRectangle(window *glfw.Window) {
 
 	for _, s := range []struct {
 		st selectType
-		sf func(index int) bool
+		sf func(index int) (found bool)
 	}{
 		{
 			st: selectPoints, sf: func(index int) bool {
@@ -786,7 +786,7 @@ func selectByRectangle(window *glfw.Window) {
 					//	x int32, y int32,
 					//	width int32, height int32,
 					//	format uint32, xtype uint32, pixels unsafe.Pointer)
-					gl.ReadPixels(int32(x), int32(y), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&color[0]))
+					gl.ReadPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&color[0]))
 					index := convertToIndex(color)
 					if s.sf(index) {
 						found = true
@@ -809,8 +809,8 @@ func mouseButtonCallback(
 		case glfw.Press:
 			if mods == glfw.ModControl {
 				x, y := w.GetCursorPos()
-				selectObjects.xFrom = x
-				selectObjects.yFrom = y
+				selectObjects.xFrom = int32(x)
+				selectObjects.yFrom = int32(y)
 				selectObjects.fromAdd = true
 			} else {
 				selectObjects.fromAdd = false
@@ -818,8 +818,8 @@ func mouseButtonCallback(
 		case glfw.Release:
 			if mods == glfw.ModControl {
 				x, y := w.GetCursorPos()
-				selectObjects.xTo = x
-				selectObjects.yTo = y
+				selectObjects.xTo = int32(x)
+				selectObjects.yTo = int32(y)
 				selectObjects.toAdd = true
 			} else {
 				selectObjects.toUpdate = false
@@ -839,8 +839,8 @@ var (
 
 func cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 	if selectObjects.fromAdd || selectObjects.toAdd {
-		selectObjects.xTo = xpos
-		selectObjects.yTo = ypos
+		selectObjects.xTo = int32(xpos)
+		selectObjects.yTo = int32(ypos)
 		selectObjects.toUpdate = true
 		return
 	}
