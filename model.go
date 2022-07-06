@@ -97,7 +97,7 @@ type MeshPrototype struct {
 	Elements    []Element
 }
 
-// Element is typical element for FEM. Examples:              //
+// Element is typical element for FEM. Examples:
 //
 //	Point o                                                   //
 //	ElType : 1                                                //
