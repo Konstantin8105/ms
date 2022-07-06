@@ -3,14 +3,11 @@ package ms
 import (
 	"fmt"
 	_ "image/png"
-	"log"
 	"math"
 	"os"
 	"runtime"
 	"time"
 
-	"github.com/Konstantin8105/vl"
-	"github.com/gdamore/tcell/v2"
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/gltext"
@@ -27,9 +24,10 @@ var (
 
 var fps Fps
 
-func M3() {
-	if err := glfw.Init(); err != nil {
-		log.Fatalln("failed to initialize glfw:", err)
+func M3() (err error) {
+	if err = glfw.Init(); err != nil {
+		err = fmt.Errorf("failed to initialize glfw:", err)
+		return
 	}
 	defer glfw.Terminate()
 
@@ -39,7 +37,7 @@ func M3() {
 
 	window, err := glfw.CreateWindow(800, 600, "3D model", nil, nil)
 	if err != nil {
-		panic(err)
+		return
 	}
 	window.MakeContextCurrent()
 
@@ -49,7 +47,7 @@ func M3() {
 	window.SetKeyCallback(keyCallback)
 
 	if err := gl.Init(); err != nil {
-		panic(err)
+		return err
 	}
 
 	glfw.SwapInterval(1) // Enable vsync
@@ -59,7 +57,7 @@ func M3() {
 	file := "/home/konstantin/.fonts/Go-Mono-Bold.ttf"
 	font, err = NewFont(file, fontSize)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fps.Init()
@@ -106,6 +104,7 @@ func M3() {
 
 		fps.EndFrame()
 	}
+	return
 }
 
 type Fps struct {
@@ -158,74 +157,6 @@ func (f *Font) Draw(str string, x, y int) { // , c Color) {
 
 func (f *Font) Metrics(text string) (int, int) {
 	return f.Handle.Metrics(text)
-}
-
-var cells [][]vl.Cell
-
-var screen vl.Screen
-
-func init() {
-	root, _, err := UserInterface()
-	if err != nil {
-		panic(err)
-	}
-	screen.Root = root
-}
-
-func ui(window *glfw.Window) {
-	// OpenGl implementation of vl.Drawer
-	// Drawer = func(row, col uint, s tcell.Style, r rune)
-	w, h := window.GetSize()
-
-	gw, gh := font.Metrics(" ")
-
-	runeW := uint(w / gw / 2)
-	runeH := uint(h / gh)
-
-	// panic (fmt.Errorf("%v %v", runeW, runeH))
-
-	screen.SetHeight(runeH)
-	screen.GetContents(runeW, &cells)
-
-	for r := range cells {
-		for c := range cells[r] {
-			cell := cells[r][c]
-
-			gw, gh := font.Metrics(string(cell.R))
-
-			// background
-			fg, bg, _ := cell.S.Decompose()
-			_ = fg // TODO
-
-			switch bg {
-			case tcell.ColorYellow:
-				gl.Color3d(1, 1, 0)
-			case tcell.ColorViolet:
-				gl.Color3d(0.5, 0, 1)
-			case tcell.ColorWhite:
-				gl.Color3d(1, 1, 1)
-			case tcell.ColorBlack:
-				gl.Color3d(0, 0, 0)
-			default:
-				gl.Color3d(1, 0, 0)
-			}
-			gl.Begin(gl.QUADS)
-			{
-				// func Vertex2i(x int32, y int32)
-				gl.Vertex2i(int32((c+0)*gw), int32(h-(r+0)*gh))
-				gl.Vertex2i(int32((c+1)*gw), int32(h-(r+0)*gh))
-				gl.Vertex2i(int32((c+1)*gw), int32(h-(r+1)*gh))
-				gl.Vertex2i(int32((c+0)*gw), int32(h-(r+1)*gh))
-			}
-			gl.End()
-
-			// text
-			if cells[r][c].R == ' ' {
-				continue
-			}
-			font.Draw(string(cell.R), gw*int(c), gh*int(r))
-		}
-	}
 }
 
 var camera = struct {
