@@ -20,19 +20,6 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var screen vl.Screen
-
-func init() {
-	root, _, err := UserInterface()
-	if err != nil {
-		panic(err)
-	}
-	var l vl.ListH
-	l.Add(root)
-	l.Add(nil)
-	screen.Root = &l
-}
-
 var (
 	font     *Font
 	fontSize int = 12
@@ -84,9 +71,8 @@ func M3() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
 
-		// TODO : DO NOT ADD UI - SEE SELECTION: gl.Disable(gl.DEPTH_TEST)
-		// TODO : DO NOT ADD UI - SEE SELECTION: ui(window)
 		gl.Enable(gl.DEPTH_TEST)
+		gl.Enable(gl.LINE_SMOOTH)
 
 		cameraView(window)
 		model3d(window, selectNone)
@@ -111,6 +97,9 @@ func M3() {
 		font.Draw(fmt.Sprintf("Nodes     : %6d", len(model.Points)), 0, 1*fontSize)
 		font.Draw(fmt.Sprintf("Lines     : %6d", len(model.Lines)), 0, 2*fontSize)
 		font.Draw(fmt.Sprintf("Triangles3: %6d", len(model.Triangles)), 0, 3*fontSize)
+
+		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
+		// TODO : REMOVE: ui(window)
 
 		window.MakeContextCurrent()
 		window.SwapBuffers()
@@ -173,6 +162,16 @@ func (f *Font) Metrics(text string) (int, int) {
 
 var cells [][]vl.Cell
 
+var screen vl.Screen
+
+func init() {
+	root, _, err := UserInterface()
+	if err != nil {
+		panic(err)
+	}
+	screen.Root = root
+}
+
 func ui(window *glfw.Window) {
 	// OpenGl implementation of vl.Drawer
 	// Drawer = func(row, col uint, s tcell.Style, r rune)
@@ -180,7 +179,7 @@ func ui(window *glfw.Window) {
 
 	gw, gh := font.Metrics(" ")
 
-	runeW := uint(w / gw)
+	runeW := uint(w / gw / 2)
 	runeH := uint(h / gh)
 
 	// panic (fmt.Errorf("%v %v", runeW, runeH))
@@ -766,6 +765,7 @@ func selectByRectangle(window *glfw.Window) {
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)
 			gl.Enable(gl.DEPTH_TEST)
+			gl.Disable(gl.LINE_SMOOTH)
 			cameraView(window)
 			// color initialize
 			model3d(window, s.st)
@@ -878,8 +878,8 @@ func cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 	}
 }
 
-func keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey){
-	switch key{
+func keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+	switch key {
 	case glfw.KeyEscape:
 		// deselect all
 		for i := range model.Points {

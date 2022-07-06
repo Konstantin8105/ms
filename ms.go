@@ -12,7 +12,7 @@ type GroupId uint8
 const (
 	Add GroupId = iota
 	Split
-	Plate
+	// Plate
 	MoveCopy
 	// 	Scale
 	// 	TypModels
@@ -27,8 +27,8 @@ func (g GroupId) String() string {
 		return "Add"
 	case Split:
 		return "Split"
-	case Plate:
-		return "Plate operations"
+// 	case Plate:
+// 		return "Plate operations"
 	case MoveCopy:
 		return "Move/Copy"
 		// 	case Scale:
