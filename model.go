@@ -1,6 +1,9 @@
 package ms
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type selectable struct {
 	Selected bool
@@ -21,13 +24,13 @@ type Triangle struct {
 	Index [3]int
 }
 
-var model Model
-
 type Model struct {
 	Points    []Point
 	Lines     []Line
 	Triangles []Triangle
 }
+
+var model Model
 
 func init() { // TODO remove
 	var (
@@ -66,7 +69,75 @@ func init() { // TODO remove
 
 func (m *Model) AddNode(X, Y, Z float64) {
 	m.Points = append(m.Points, Point{X: X, Y: Y, Z: Z})
+	updateModel = true // Update camera parameter
 }
 
 // func (m *Model) AddNodeByDistance(line, distance string, atBegin bool) {
 // }
+
+type MultiModel struct {
+	actual int // index of actual model
+	Meshs  []MeshPrototype
+	Models []ModelPrototype
+}
+
+type ModelPrototype struct {
+	// Store removed elements
+	// if `true` , then not in model
+	// if `false`, then exist
+	RemoveElements []bool
+	// base mesh index
+	MeshIndex int
+}
+
+type Coordinate [3]float64 // X,Y,Z
+
+type MeshPrototype struct {
+	Coordinates []Coordinate
+	Elements    []Element
+}
+
+// Element is typical element for FEM. Examples:              //
+//                                                            //
+//	Point                                                     //
+//	ElType : 1                                                //
+//	Indexes: 1 (amount indexes of coordinates)                //
+//                                                            //
+//	Line o======o                                             //
+//	ElType : 2                                                //
+//	Indexes: 2 (amount indexes of coordinates)                //
+//                                                            //
+//	Triangle o======o                                         //
+//	          \    /                                          //
+//	           \  /                                           //
+//	            o                                             //
+//	ElType : 3                                                //
+//	Indexes: 3 (amount indexes of coordinates)                //
+//                                                            //
+//	Quadr4 o======o                                           //
+//	       |      |                                           //
+//	       |      |                                           //
+//	       o======o                                           //
+//	ElType : 4                                                //
+//	Indexes: 4 (amount indexes of coordinates)                //
+//                                                            //
+type Element struct {
+	ElType  uint8
+	Indexes []int
+
+	// 3D model variables
+	selected bool
+	hided    bool
+}
+
+// valid matrix element constants
+var valid = [...][2]int{{1, 1}, {2, 2}, {3, 3}, {4, 4}}
+
+func (e Element) Check() error {
+	for i := range valid {
+		if int(e.ElType) == valid[i][0] && len(e.Indexes) != valid[i][1] {
+			return fmt.Errorf("Unacceptable element: %v", e)
+		}
+	}
+	return fmt.Errorf("Undefined element: %v", e)
+}
