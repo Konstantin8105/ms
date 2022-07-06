@@ -102,8 +102,8 @@ type MeshPrototype struct {
 //	Point o                                                   //
 //	ElType : 1                                                //
 //	Indexes: 1 (amount indexes of coordinates)                //
-//	                                                          //
-//	Line o======o
+//
+//	Line o======o                                             //
 //	ElType : 2                                                //
 //	Indexes: 2 (amount indexes of coordinates)                //
 //
