@@ -98,29 +98,29 @@ type MeshPrototype struct {
 }
 
 // Element is typical element for FEM. Examples:              //
-//                                                            //
+//	                                                          //
 //	Point                                                     //
 //	ElType : 1                                                //
 //	Indexes: 1 (amount indexes of coordinates)                //
-//                                                            //
+//	                                                          //
 //	Line o======o                                             //
 //	ElType : 2                                                //
 //	Indexes: 2 (amount indexes of coordinates)                //
-//                                                            //
+//	                                                          //
 //	Triangle o======o                                         //
 //	          \    /                                          //
 //	           \  /                                           //
 //	            o                                             //
 //	ElType : 3                                                //
 //	Indexes: 3 (amount indexes of coordinates)                //
-//                                                            //
+//	                                                          //
 //	Quadr4 o======o                                           //
 //	       |      |                                           //
 //	       |      |                                           //
 //	       o======o                                           //
 //	ElType : 4                                                //
 //	Indexes: 4 (amount indexes of coordinates)                //
-//                                                            //
+//	                                                          //
 type Element struct {
 	ElType  uint8
 	Indexes []int
