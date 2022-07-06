@@ -532,13 +532,9 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 	{ // TODO REMOVE
 		numNil := 0
 		for i := range Operations {
-			// n := DebugMesh{}
 			if Operations[i].Part == nil {
 				numNil++
 			}
-			// if Operations[i].Part(n) == nil {
-			// 	numNil++
-			// }
 		}
 		list.Add(vl.TextStatic(fmt.Sprintf("Amount operations: %d with %d nil",
 			len(Operations), numNil)))
@@ -551,7 +547,6 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 		var sublist vl.List
 		colHeader[g].Root = &sublist
 		list.Add(&colHeader[g])
-		//list.Add(new(vl.Separator))
 	}
 	for g := range colHeader {
 		for i := range Operations {
@@ -568,7 +563,6 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 			r := part(m)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
-			// colHeader[g].Root.(*vl.List).Add(new(vl.Separator))
 			view[i] = true
 		}
 	}

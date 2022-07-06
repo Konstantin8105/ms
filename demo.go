@@ -17,7 +17,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}
-	err = vl.Run(root, action, tcell.KeyCtrlC)
+	err = vl.Run(root, action,nil, tcell.KeyCtrlC)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
