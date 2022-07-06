@@ -27,8 +27,8 @@ func (g GroupId) String() string {
 		return "Add"
 	case Split:
 		return "Split"
-// 	case Plate:
-// 		return "Plate operations"
+		// 	case Plate:
+		// 		return "Plate operations"
 	case MoveCopy:
 		return "Move/Copy"
 		// 	case Scale:
@@ -78,6 +78,8 @@ type Addable interface {
 }
 
 func init() {
+	group := Add
+	name := group.String()
 	ops := []Operation{{
 		Name: "Node by coordinate [X,Y,Z]",
 		Part: func(m Mesh) (w vl.Widget) {
@@ -90,7 +92,7 @@ func init() {
 			list.Add(w)
 
 			var b vl.Button
-			b.SetText("Add")
+			b.SetText(name)
 			b.OnClick = func() {
 				var vs [3]string
 				for i := range vs {
@@ -111,7 +113,7 @@ func init() {
 			list.Add(e)
 
 			var bi vl.Button
-			bi.SetText("Add")
+			bi.SetText(name)
 			bi.OnClick = func() {
 				m.AddLineByNodeNumber(bgt(), egt())
 			}
@@ -131,7 +133,7 @@ func init() {
 			list.Add(n3)
 
 			var bi vl.Button
-			bi.SetText("Add")
+			bi.SetText(name)
 			bi.OnClick = func() {
 				m.AddTriangle3ByNodeNumber(n1gt(), n2gt(), n3gt())
 			}
@@ -140,7 +142,7 @@ func init() {
 			return &list
 		}}}
 	for i := range ops {
-		ops[i].Group = Add
+		ops[i].Group = group
 	}
 	Operations = append(Operations, ops...)
 }
@@ -521,7 +523,8 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 var Debug []string
 
 func UserInterface() (root vl.Widget, action chan func(), err error) {
-	var m DebugMesh
+	// m := &model // TODO REMOVE
+	m := new(DebugMesh) // TODO remove
 	var (
 		scroll vl.Scroll
 		list   vl.List
