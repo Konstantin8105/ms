@@ -59,6 +59,7 @@ func M3() {
 	window.SetMouseButtonCallback(mouseButtonCallback)
 	window.SetScrollCallback(scrollCallback)
 	window.SetCursorPosCallback(cursorPosCallback)
+	window.SetKeyCallback(keyCallback)
 
 	if err := gl.Init(); err != nil {
 		panic(err)
@@ -874,5 +875,21 @@ func cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 		}
 		xlast = xpos
 		ylast = ypos
+	}
+}
+
+func keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey){
+	switch key{
+	case glfw.KeyEscape:
+		// deselect all
+		for i := range model.Points {
+			model.Points[i].Selected = false
+		}
+		for i := range model.Lines {
+			model.Lines[i].Selected = false
+		}
+		for i := range model.Triangles {
+			model.Triangles[i].Selected = false
+		}
 	}
 }

@@ -362,7 +362,7 @@ func init() {
 type Platable interface {
 	// Triangulation by nodes
 	// Triangulation exist plates by area
-	// Smooth exist plates
+	// Smooth mesh
 }
 
 // func init() {
