@@ -26,7 +26,7 @@ var fps Fps
 
 func M3() (err error) {
 	if err = glfw.Init(); err != nil {
-		err = fmt.Errorf("failed to initialize glfw:", err)
+		err = fmt.Errorf("failed to initialize glfw: %v", err)
 		return
 	}
 	defer glfw.Terminate()
