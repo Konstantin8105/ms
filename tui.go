@@ -541,7 +541,7 @@ func Input3Float(prefix, postfix [3]string) (w vl.Widget, gettext [3]func() stri
 
 func Select(name string, single bool, selector func(single bool) []uint) (
 	w vl.Widget,
-	gettext func() string,
+	gettext func() []uint,
 ) {
 	var l vl.ListH
 	l.Add(vl.TextStatic(name))
