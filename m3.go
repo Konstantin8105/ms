@@ -92,9 +92,9 @@ func M3() (err error) {
 		drawAxes(window)
 		// minimal screen notes
 		font.Draw(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
-		font.Draw(fmt.Sprintf("Nodes     : %6d", len(model.Points)), 0, 1*fontSize)
-		font.Draw(fmt.Sprintf("Lines     : %6d", len(model.Lines)), 0, 2*fontSize)
-		font.Draw(fmt.Sprintf("Triangles3: %6d", len(model.Triangles)), 0, 3*fontSize)
+		// font.Draw(fmt.Sprintf("Nodes     : %6d", len(model.Coordinates)), 0, 1*fontSize)
+		// font.Draw(fmt.Sprintf("Lines     : %6d", len(model.Lines)), 0, 2*fontSize)
+		// font.Draw(fmt.Sprintf("Triangles3: %6d", len(model.Triangles)), 0, 3*fontSize)
 
 		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
 		// TODO : REMOVE: ui(window)
@@ -162,13 +162,13 @@ func (f *Font) Metrics(text string) (int, int) {
 var camera = struct {
 	alpha, betta float64
 	R            float64
-	center       Point
+	center       Coordinate
 	moveX, moveY float64
 }{
 	alpha:  0,
 	betta:  0,
 	R:      1,
-	center: Point{X: 0, Y: 0, Z: 0},
+	center: Coordinate{X: 0, Y: 0, Z: 0},
 }
 
 func angle_norm(a float64) float64 {
@@ -244,11 +244,11 @@ func model3d(window *glfw.Window, s selectType) {
 		camera.betta = 0.0
 		// distance from center to camera
 		camera.R = 1.0
-		if len(model.Points) == 0 {
+		if len(model.Coordinates) == 0 {
 			return
 		}
 		// renaming
-		ps := model.Points
+		ps := model.Coordinates
 		// calculate radius
 		var (
 			xmin = ps[0].X
@@ -269,14 +269,14 @@ func model3d(window *glfw.Window, s selectType) {
 		camera.R = math.Max(xmax-xmin, camera.R)
 		camera.R = math.Max(ymax-ymin, camera.R)
 		camera.R = math.Max(zmax-zmin, camera.R)
-		camera.center = Point{
+		camera.center = Coordinate{
 			X: (xmax + xmin) / 2.0,
 			Y: (ymax + ymin) / 2.0,
 			Z: (zmax + zmin) / 2.0,
 		}
 	}
 
-	// TODO: if model.Points[i].Hided {
+	// TODO: if model.Coordinates[i].Hided {
 	// TODO: 	continue
 	// TODO: }
 
@@ -285,120 +285,127 @@ func model3d(window *glfw.Window, s selectType) {
 	switch s {
 	case selectNone:
 		gl.Begin(gl.POINTS)
-		for i := range model.Points {
-			if model.Points[i].Selected {
+		for i := range model.Coordinates {
+			if model.Coordinates[i].selected {
 				gl.Color3ub(255, 1, 1)
 			} else {
 				gl.Color3ub(1, 1, 1)
 			}
-			gl.Vertex3d(model.Points[i].X, model.Points[i].Y, model.Points[i].Z)
+			gl.Vertex3d(model.Coordinates[i].X, model.Coordinates[i].Y, model.Coordinates[i].Z)
 		}
 		gl.End()
 	case selectPoints:
 		gl.Begin(gl.POINTS)
-		for i := range model.Points {
-			if model.Points[i].Selected {
+		for i := range model.Coordinates {
+			if model.Coordinates[i].selected {
 				continue
 			}
 			convertToColor(i)
-			gl.Vertex3d(model.Points[i].X, model.Points[i].Y, model.Points[i].Z)
+			gl.Vertex3d(model.Coordinates[i].X, model.Coordinates[i].Y, model.Coordinates[i].Z)
 		}
 		gl.End()
+	case selectLines, selectTriangles: // do nothing
+	default:
+		panic(fmt.Errorf("not valid selection : %v", s))
 	}
-	// Lines
-	gl.LineWidth(3)
-	switch s {
-	case selectNone:
-		gl.Begin(gl.LINES)
-		for i := range model.Lines {
-			if model.Lines[i].Selected {
-				gl.Color3ub(255, 1, 1)
-			} else {
-				gl.Color3ub(153, 153, 153)
-			}
-			f := model.Points[model.Lines[i].Index[0]]
-			t := model.Points[model.Lines[i].Index[1]]
-			gl.Vertex3d(f.X, f.Y, f.Z)
-			gl.Vertex3d(t.X, t.Y, t.Z)
+	// Elements
+	gl.PointSize(2) // default points size
+	gl.LineWidth(3) // default lines width
+	for i, el := range model.Elements {
+		// do not show selected elements in Select case
+		if s != selectNone && el.selected {
+			continue
 		}
-		gl.End()
-	case selectLines:
-		gl.PointSize(2)
-		for i := range model.Lines {
-			if model.Lines[i].Selected {
-				continue
-			}
-			convertToColor(i)
-			f := model.Points[model.Lines[i].Index[0]]
-			t := model.Points[model.Lines[i].Index[1]]
-			gl.Begin(gl.LINES)
-			gl.Vertex3d(f.X, f.Y, f.Z)
-			gl.Vertex3d(t.X, t.Y, t.Z)
-			gl.End()
-			gl.Begin(gl.POINTS)
-			gl.Vertex3d(f.X, f.Y, f.Z)
-			gl.Vertex3d(t.X, t.Y, t.Z)
-			gl.End()
-		}
-	}
-	// Triangle
-	switch s {
-	case selectNone:
-		gl.Begin(gl.TRIANGLES)
-		for i := range model.Triangles {
-			if model.Triangles[i].Selected {
-				gl.Color3ub(255, 1, 1)
-			} else {
-				gl.Color3ub(153, 0, 153)
-			}
-			for p := 0; p < 3; p++ {
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[p]].X,
-					model.Points[model.Triangles[i].Index[p]].Y,
-					model.Points[model.Triangles[i].Index[p]].Z)
-			}
-		}
-		gl.End()
-	case selectTriangles:
-		gl.PointSize(2)
-		for i := range model.Triangles {
-			if model.Triangles[i].Selected {
-				continue
-			}
-			convertToColor(i)
-			gl.Begin(gl.POINTS)
-			for p := 0; p < 3; p++ {
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[p]].X,
-					model.Points[model.Triangles[i].Index[p]].Y,
-					model.Points[model.Triangles[i].Index[p]].Z)
-			}
-			gl.End()
-			gl.Begin(gl.TRIANGLES)
-			for p := 0; p < 3; p++ {
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[p]].X,
-					model.Points[model.Triangles[i].Index[p]].Y,
-					model.Points[model.Triangles[i].Index[p]].Z)
-			}
-			gl.End()
-			gl.LineWidth(2)
-			gl.Begin(gl.LINES)
-			for p := 0; p < 3; p++ {
-				from, to := p, p+1
-				if to == 3 {
-					to = 0
+		// color identification
+		switch s {
+		case selectNone:
+			switch el.ElementType {
+			case Line2:
+				if el.selected {
+					gl.Color3ub(255, 1, 1)
+				} else {
+					gl.Color3ub(153, 153, 153)
 				}
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[from]].X,
-					model.Points[model.Triangles[i].Index[from]].Y,
-					model.Points[model.Triangles[i].Index[from]].Z)
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[to]].X,
-					model.Points[model.Triangles[i].Index[to]].Y,
-					model.Points[model.Triangles[i].Index[to]].Z)
+			case Triangle3:
+				if el.selected {
+					gl.Color3ub(255, 1, 1)
+				} else {
+					gl.Color3ub(153, 0, 153)
+				}
+			default:
+				panic(fmt.Errorf("not valid element type: %v", el))
+			}
+		case selectPoints, selectLines, selectTriangles:
+			convertToColor(i)
+		default:
+			panic(fmt.Errorf("not valid select element: %v", s))
+		}
+		// draw points in 3D
+		switch s {
+		case selectNone, selectPoints:
+		case selectLines, selectTriangles:
+			gl.Begin(gl.POINTS)
+			for _, k := range el.Indexes {
+				c := model.Coordinates[k]
+				gl.Vertex3d(c.X, c.Y, c.Z)
 			}
 			gl.End()
+		default:
+			panic(fmt.Errorf("not valid select element: %v", s))
+		}
+		// draw lines in 3D
+		switch el.ElementType {
+		case Line2:
+			if s == selectNone || s == selectLines {
+				gl.Begin(gl.LINES)
+				for _, k := range el.Indexes {
+					c := model.Coordinates[k]
+					gl.Vertex3d(c.X, c.Y, c.Z)
+				}
+				gl.End()
+			}
+		case Triangle3:
+			if s == selectTriangles {
+				gl.Begin(gl.LINES)
+				for p := range el.Indexes {
+					from, to := p, p+1
+					if to == len(el.Indexes) {
+						from = el.Indexes[from]
+						to = el.Indexes[0]
+					} else {
+						from = el.Indexes[from]
+						to = el.Indexes[to]
+					}
+					gl.Vertex3d(
+						model.Coordinates[from].X,
+						model.Coordinates[from].Y,
+						model.Coordinates[from].Z)
+					gl.Vertex3d(
+						model.Coordinates[to].X,
+						model.Coordinates[to].Y,
+						model.Coordinates[to].Z)
+				}
+				gl.End()
+			}
+		default:
+			panic(fmt.Errorf("not valid element: %v", el))
+		}
+		// draw triangles in 3D
+		switch el.ElementType {
+		case Line2: // do nothing
+		case Triangle3:
+			if s == selectNone || s == selectTriangles {
+				gl.Begin(gl.TRIANGLES)
+				for _, p := range el.Indexes {
+					gl.Vertex3d(
+						model.Coordinates[p].X,
+						model.Coordinates[p].Y,
+						model.Coordinates[p].Z)
+				}
+				gl.End()
+			}
+		default:
+			panic(fmt.Errorf("not valid element: %v", el))
 		}
 	}
 }
@@ -553,6 +560,7 @@ const (
 	selectTriangles
 )
 
+// maximal amount colors is 245^3 = 14 706 125
 var (
 	convertOffset  = uint64(5)
 	convertMaxUint = uint64(245) // max uint value
@@ -664,28 +672,28 @@ func selectByRectangle(window *glfw.Window) {
 	}{
 		{
 			st: selectPoints, sf: func(index int) bool {
-				if index < 0 || len(model.Points) <= index {
+				if index < 0 || len(model.Coordinates) <= index {
 					return false
 				}
-				model.Points[index].Selected = true
+				model.Coordinates[index].selected = true
 				return true
 			},
 		},
 		{
 			st: selectLines, sf: func(index int) bool {
-				if index < 0 || len(model.Lines) <= index {
+				if index < 0 || len(model.Elements) <= index {
 					return false
 				}
-				model.Lines[index].Selected = true
+				model.Elements[index].selected = true
 				return true
 			},
 		},
 		{
 			st: selectTriangles, sf: func(index int) bool {
-				if index < 0 || len(model.Triangles) <= index {
+				if index < 0 || len(model.Elements) <= index {
 					return false
 				}
-				model.Triangles[index].Selected = true
+				model.Elements[index].selected = true
 				return true
 			},
 		},
@@ -813,14 +821,11 @@ func keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action,
 	switch key {
 	case glfw.KeyEscape:
 		// deselect all
-		for i := range model.Points {
-			model.Points[i].Selected = false
+		for i := range model.Coordinates {
+			model.Coordinates[i].selected = false
 		}
-		for i := range model.Lines {
-			model.Lines[i].Selected = false
-		}
-		for i := range model.Triangles {
-			model.Triangles[i].Selected = false
+		for i := range model.Elements {
+			model.Elements[i].selected = false
 		}
 	}
 }

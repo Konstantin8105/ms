@@ -1,35 +1,91 @@
 package ms
 
 import (
+	"fmt"
 	"math"
 )
 
-type selectable struct {
-	Selected bool
+// 3D model variables
+type object3d struct {
+	selected bool
+	hided    bool
 }
 
-type Point struct {
-	selectable
+type ElType uint8
+
+const (
+	Line2 ElType = iota + 1
+	Triangle3
+)
+
+// Element is typical element for FEM. Examples:
+//
+//	Line o======o                                             //
+//	ElType : 2                                                //
+//	Indexes: 2 (amount indexes of coordinates)                //
+//
+//	Triangle o======o                                         //
+//	          \    /                                          //
+//	           \  /                                           //
+//	            o                                             //
+//	ElType : 3                                                //
+//	Indexes: 3 (amount indexes of coordinates)                //
+//
+//	Quadr4 o======o                                           //
+//	       |      |                                           //
+//	       |      |                                           //
+//	       o======o                                           //
+//	ElType : 4                                                //
+//	Indexes: 4 (amount indexes of coordinates)                //
+//
+type Element struct {
+	object3d
+	ElementType ElType
+	Indexes     []int // index of coordinate
+}
+
+// valid matrix element constants
+var valid = [...][2]int{{2, 2}, {3, 3}, {4, 4}}
+
+func (e Element) Check() error {
+	for i := range valid {
+		if int(e.ElementType) == valid[i][0] && len(e.Indexes) != valid[i][1] {
+			return fmt.Errorf("Unacceptable element: %v", e)
+		}
+	}
+	return fmt.Errorf("Undefined element: %v", e)
+}
+
+// Coordinate store coordinate of points
+type Coordinate struct {
+	object3d
 	X, Y, Z float64
 }
 
-type Line struct {
-	selectable
-	Index [2]int
-}
+// Named intermediant named structure
+type Named struct{ Name string }
+type Ignored struct{ Elements []bool }
 
-type Triangle struct {
-	selectable
-	Index [3]int
+type MultiModel struct {
+	actual int // 0 ... len(Models) ... len(Models)+len(Parts)
+	Models []Model
+	Parts  []Part
 }
 
 type Model struct {
-	Points    []Point
-	Lines     []Line
-	Triangles []Triangle
+	Named
+	Ignored
+	Coordinates []Coordinate
+	Elements    []Element
 }
 
-var model Model
+type Part struct {
+	Named
+	Ignored
+	Base int
+}
+
+var model Model // TODO change to MultiModel
 
 func init() { // TODO remove
 	var (
@@ -49,133 +105,40 @@ func init() { // TODO remove
 		Ro += dR
 		Ri += dR
 		angle := float64(i) * da * math.Pi / 180.0
-		model.Points = append(model.Points,
-			Point{X: Ri * math.Sin(angle), Y: float64(i) * dy, Z: Ri * math.Cos(angle)},
-			Point{X: Ro * math.Sin(angle), Y: float64(i) * dy, Z: Ro * math.Cos(angle)},
+		model.Coordinates = append(model.Coordinates,
+			Coordinate{X: Ri * math.Sin(angle), Y: float64(i) * dy, Z: Ri * math.Cos(angle)},
+			Coordinate{X: Ro * math.Sin(angle), Y: float64(i) * dy, Z: Ro * math.Cos(angle)},
 		)
-		model.Lines = append(model.Lines, Line{Index: [2]int{2 * i, 2*i + 1}})
+		model.Elements = append(model.Elements, Element{
+			ElementType: Line2,
+			Indexes:     []int{2 * i, 2*i + 1},
+		})
 		if 0 < i {
-			model.Lines = append(model.Lines,
-				Line{Index: [2]int{2 * (i - 1), 2 * i}},
-				Line{Index: [2]int{2*(i-1) + 1, 2*i + 1}})
-			model.Triangles = append(model.Triangles,
-				Triangle{Index: [3]int{2 * (i - 1), 2 * i, 2*(i-1) + 1}},
-				Triangle{Index: [3]int{2 * i, 2*(i-1) + 1, 2*i + 1}})
+			model.Elements = append(model.Elements,
+				Element{ElementType: Line2,
+					Indexes: []int{2 * (i - 1), 2 * i},
+				}, Element{ElementType: Line2,
+					Indexes: []int{2*(i-1) + 1, 2*i + 1},
+				})
+			model.Elements = append(model.Elements,
+				Element{ElementType: Triangle3,
+					Indexes: []int{2 * (i - 1), 2 * i, 2*(i-1) + 1},
+				}, Element{ElementType: Triangle3,
+					Indexes: []int{2 * i, 2*(i-1) + 1, 2*i + 1},
+				})
 		}
 	}
 	updateModel = true // TODO  remove
 }
 
 func (m *Model) AddNode(X, Y, Z float64) {
-	m.Points = append(m.Points, Point{X: X, Y: Y, Z: Z})
+	m.Coordinates = append(m.Coordinates, Coordinate{X: X, Y: Y, Z: Z})
 	updateModel = true // Update camera parameter
 }
 
 // func (m *Model) AddNodeByDistance(line, distance string, atBegin bool) {
 // }
 //
-// type MultiModel struct {
-// 	actual int // index of actual model
-// 	Meshs  []MeshPrototype
-// 	Models []ModelPrototype
-// }
-//
-// func (mm *MultiModel) NewModel() {
-// 	mm.Meshs = append(mm.Meshs, MeshPrototype{})
-// 	mm.Models = append(mm.Models, ModelPrototype{
-// 		MeshIndex: len(mm.Meshs) - 1,
-// 	})
-// }
-//
-// func (mm *MultiModel) NewModelBaseOnMesh() {
-// 	// TODO
-// }
-//
-// func (mm *MultiModel) AddNode(X, Y, Z float64) {
-// 	meshId := mm.Models[mm.actual].MeshIndex
-// 	mm.Meshs[meshId].Coordinates = append(mm.Meshs[meshId].Coordinates,
-// 		Coordinate{X: X, Y: Y, Z: Z})
-// }
-//
-// type ModelPrototype struct {
-// 	Name string
-// 	// Store removed elements
-// 	// if `true` , then not in model
-// 	// if `false`, then exist
-// 	RemoveElements []bool
-// 	// base mesh index
-// 	MeshIndex int
-// }
-//
-// type Coordinate [3]float64 // X,Y,Z
-//
-// type MeshPrototype struct {
-// 	Coordinates []Coordinate
-// 	Elements    []Element
-// }
-//
-// // Element is typical element for FEM. Examples:
-// //
-// //	Point o                                                   //
-// //	ElType : 1                                                //
-// //	Indexes: 1 (amount indexes of coordinates)                //
-// //
-// //	Line o======o                                             //
-// //	ElType : 2                                                //
-// //	Indexes: 2 (amount indexes of coordinates)                //
-// //
-// //	Triangle o======o                                         //
-// //	          \    /                                          //
-// //	           \  /                                           //
-// //	            o                                             //
-// //	ElType : 3                                                //
-// //	Indexes: 3 (amount indexes of coordinates)                //
-// //
-// //	Quadr4 o======o                                           //
-// //	       |      |                                           //
-// //	       |      |                                           //
-// //	       o======o                                           //
-// //	ElType : 4                                                //
-// //	Indexes: 4 (amount indexes of coordinates)                //
-// //
-// type Element struct {
-// 	ElType  uint8
-// 	Indexes []int // index of points, but not coordinate
-//
-// 	// 3D model variables
-// 	selected bool
-// 	hided    bool
-// }
-//
-// // valid matrix element constants
-// var valid = [...][2]int{{1, 1}, {2, 2}, {3, 3}, {4, 4}}
-//
-// func (e Element) Check() error {
-// 	for i := range valid {
-// 		if int(e.ElType) == valid[i][0] && len(e.Indexes) != valid[i][1] {
-// 			return fmt.Errorf("Unacceptable element: %v", e)
-// 		}
-// 	}
-// 	return fmt.Errorf("Undefined element: %v", e)
-// }
-//
-//                                                                           //
-
-// type MultiModel struct {
-// 	actual int // index of actual model
-// 	Models []Mbase
-// }
-//
-// type M interface {
-// 	AddCoordinate(c [3]float64) error
-// 	AddElement(t ElType, ind []int) error
-// }
-//
-// type Mbase struct {
-// 	Coordinates []Coordinate
-// 	Elements    []Element
-// }
-//`
 // Approach is not aurogenerate model, but approach is
 // fast create model.
 //
