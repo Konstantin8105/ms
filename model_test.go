@@ -21,4 +21,20 @@ func Example() {
 	}
 	fmt.Println(string(b))
 	// Output:
+	// {
+	//   "Models": [
+	//     {
+	//       "Name": "",
+	//       "Coordinates": null,
+	//       "Elements": null
+	//     }
+	//   ],
+	//   "Parts": [
+	//     {
+	//       "Name": "",
+	//       "Elements": null,
+	//       "Base": 0
+	//     }
+	//   ]
+	// }
 }
