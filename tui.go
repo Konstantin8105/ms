@@ -2,6 +2,7 @@ package ms
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
@@ -179,7 +180,7 @@ type Selectable interface {
 type Splitable interface {
 	SplitLinesByDistance(line, distance string, atBegin bool)
 	SplitLinesByRatio(line, proportional string, pos uint)
-	SplitLinesByEqualParts(lines, parts string)
+	SplitLinesByEqualParts(lines string, parts uint)
 	SplitTri3To3Tri3(tris string)
 	// TODO REMOVE SplitTri3To3Quadr4(tris string)
 	// SplitTri3To2Tri3(tris string, side uint)
@@ -495,7 +496,7 @@ type Operation struct {
 
 var Operations []Operation
 
-func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() string) {
+func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() uint) {
 	var (
 		list vl.ListH
 		in   vl.Inputbox
@@ -505,7 +506,14 @@ func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() string) 
 	in.Filter(tf.UnsignedInteger)
 	list.Add(&in)
 	list.Add(vl.TextStatic(postfix))
-	return &list, in.GetText
+	return &list, func() uint {
+		text := in.GetText()
+		value, err := strconv.ParseUint(text,10,64)
+		if err != nil {
+			return 0
+		}
+		return uint(value)
+	}
 }
 
 func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() string) {

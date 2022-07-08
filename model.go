@@ -238,7 +238,7 @@ func (mm *MultiModel) SelectTriangles(single bool) (ids []uint) { return }
 
 func (mm *MultiModel) SplitLinesByDistance(line, distance string, atBegin bool) {}
 func (mm *MultiModel) SplitLinesByRatio(line, proportional string, pos uint)    {}
-func (mm *MultiModel) SplitLinesByEqualParts(lines, parts string)               {}
+func (mm *MultiModel) SplitLinesByEqualParts(lines string, parts uint)          {}
 func (mm *MultiModel) SplitTri3To3Tri3(tris string)                             {}
 
 func (mm *MultiModel) MoveCopyNodesDistance(nodes string, coordinates [3]string, copy, addLines, addTri bool) {
