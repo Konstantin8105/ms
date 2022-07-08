@@ -508,7 +508,7 @@ func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() uint) {
 	list.Add(vl.TextStatic(postfix))
 	return &list, func() uint {
 		text := in.GetText()
-		value, err := strconv.ParseUint(text,10,64)
+		value, err := strconv.ParseUint(text, 10, 64)
 		if err != nil {
 			return 0
 		}
@@ -552,7 +552,9 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 	// 	var id vl.Inputbox
 	// 	id.Filter(tf.UnsignedInteger)
 
-	id.SetText("NONE")
+	const Default = "NONE"
+
+	id.SetText(Default)
 	l.Add(&id)
 	var b vl.Button
 	b.SetText("Select")
@@ -562,7 +564,8 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 			return
 		}
 		if single && 1 < len(ids) {
-			ids = ids[:1]
+			id.SetText(Default)
+			return
 		}
 		id.SetText(fmt.Sprintf("%v", ids))
 	}
