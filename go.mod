@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/Konstantin8105/pow v0.1.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

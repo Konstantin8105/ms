@@ -3,6 +3,10 @@ package ms
 import (
 	"fmt"
 	"math"
+	"strconv"
+	"strings"
+
+	"github.com/Konstantin8105/pow"
 )
 
 // 3D model variables
@@ -50,10 +54,10 @@ var valid = [...][2]int{{2, 2}, {3, 3}, {4, 4}}
 func (e Element) Check() error {
 	for i := range valid {
 		if int(e.ElementType) == valid[i][0] && len(e.Indexes) != valid[i][1] {
-			return fmt.Errorf("Unacceptable element: %v", e)
+			return fmt.Errorf("unacceptable element: %v", e)
 		}
 	}
-	return fmt.Errorf("Undefined element: %v", e)
+	return fmt.Errorf("undefined element: %v", e)
 }
 
 // Coordinate store coordinate of points
@@ -65,6 +69,8 @@ type Coordinate struct {
 // Named intermediant named structure
 type Named struct{ Name string }
 type Ignored struct{ IgnoreElements []bool }
+
+var mm MultiModel
 
 type MultiModel struct {
 	// actual = 0, then change Model
@@ -83,8 +89,6 @@ type Part struct {
 	Named
 	Ignored
 }
-
-var mm MultiModel
 
 func init() { // TODO remove
 	var (
@@ -129,13 +133,118 @@ func init() { // TODO remove
 	updateModel = true // TODO  remove
 }
 
-// func (m *ModelBase) AddNode(X, Y, Z float64) {
-// 	m.Coords = append(m.Coords, Coordinate{X: X, Y: Y, Z: Z})
-// 	updateModel = true // Update camera parameter
-// }
+const distanceError = 1e-6
 
-// func (m *Model) AddNodeByDistance(line, distance string, atBegin bool) {
-// }
+func clearValue(str string) string {
+	str = strings.ReplaceAll(str, "[", "")
+	str = strings.ReplaceAll(str, "]", "")
+	return str
+}
+
+func (mm *MultiModel) AddNode(X, Y, Z string) (err error) {
+	// clear
+	X = clearValue(X)
+	Y = clearValue(Y)
+	Z = clearValue(Z)
+	// parse
+	x, err := strconv.ParseFloat(X, 64)
+	if err != nil {
+		return
+	}
+	y, err := strconv.ParseFloat(Y, 64)
+	if err != nil {
+		return
+	}
+	z, err := strconv.ParseFloat(Z, 64)
+	if err != nil {
+		return
+	}
+	// check is this coordinate exist?
+	for i := range mm.Coords {
+		distance := math.Sqrt(pow.E2(mm.Coords[i].X-x) +
+			pow.E2(mm.Coords[i].Y-y) +
+			pow.E2(mm.Coords[i].Z-z))
+		if distance < distanceError {
+			return
+		}
+	}
+	// append
+	mm.Coords = append(mm.Coords, Coordinate{X: x, Y: y, Z: z})
+	updateModel = true // Update camera parameter
+	return
+}
+
+func (mm *MultiModel) AddLineByNodeNumber(N1, N2 string) (err error) {
+	// clear
+	N1 = clearValue(N1)
+	N2 = clearValue(N2)
+	// parse
+	// n1
+	n1, err := strconv.ParseUint(N1, 10, 64)
+	if err != nil {
+		return
+	}
+	// n2
+	n2, err := strconv.ParseUint(N2, 10, 64)
+	if err != nil {
+		return
+	}
+	// type convection
+	ni1 := int(n1)
+	ni2 := int(n2)
+	// check is this coordinate exist?
+	for _, el := range mm.Elements {
+		if el.ElementType != Line2 {
+			continue
+		}
+		if el.Indexes[0] == ni1 && el.Indexes[1] == ni2 {
+			return
+		}
+		if el.Indexes[1] == ni1 && el.Indexes[0] == ni2 {
+			return
+		}
+	}
+	// append
+	mm.Elements = append(mm.Elements, Element{
+		ElementType: Line2,
+		Indexes:     []int{ni1, ni2},
+	})
+	updateModel = true // Update camera parameter
+	return
+}
+
+func (mm *MultiModel) AddTriangle3ByNodeNumber(N1, N2, N3 string) (err error) {
+	// clear
+	N1 = clearValue(N1)
+	N2 = clearValue(N2)
+	N3 = clearValue(N3)
+	// TODO:
+	updateModel = true // Update camera parameter
+	return
+}
+
+func (mm *MultiModel) SelectNodes(single bool) (ids []uint) {
+	for i := range mm.Coords {
+		if !mm.Coords[i].selected {
+			continue
+		}
+		ids = append(ids, uint(i))
+	}
+	return
+}
+
+func (mm *MultiModel) SelectLines(single bool) (ids []uint)     { return }
+func (mm *MultiModel) SelectTriangles(single bool) (ids []uint) { return }
+
+func (mm *MultiModel) SplitLinesByDistance(line, distance string, atBegin bool) {}
+func (mm *MultiModel) SplitLinesByRatio(line, proportional string, pos uint)    {}
+func (mm *MultiModel) SplitLinesByEqualParts(lines, parts string)               {}
+func (mm *MultiModel) SplitTri3To3Tri3(tris string)                             {}
+
+func (mm *MultiModel) MoveCopyNodesDistance(nodes string, coordinates [3]string, copy, addLines, addTri bool) {
+}
+func (mm *MultiModel) MoveCopyNodesN1N2(nodes, from, to string, copy, addLines, addTri bool) {}
+
 //
 // Approach is not aurogenerate model, but approach is
 // fast create model.

@@ -237,11 +237,13 @@ func model3d(window *glfw.Window, s selectType) {
 
 	if updateModel {
 		updateModel = false
-		// default values
+
+		// Do not update angles
 		// angle in global plate XOZ
-		camera.alpha = 0.0
+		// camera.alpha = 0.0
 		// angle in global plate XOY
-		camera.betta = 0.0
+		// camera.betta = 0.0
+
 		// distance from center to camera
 		camera.R = 1.0
 		if len(mm.Coords) == 0 {

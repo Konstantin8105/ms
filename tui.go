@@ -68,9 +68,9 @@ type Viewable interface {
 }
 
 type Addable interface {
-	AddNode(X, Y, Z string)
-	AddLineByNodeNumber(n1, n2 string)
-	AddTriangle3ByNodeNumber(n1, n2, n3 string)
+	AddNode(X, Y, Z string) error
+	AddLineByNodeNumber(n1, n2 string) error
+	AddTriangle3ByNodeNumber(n1, n2, n3 string) error
 	// TODO REMOVE AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
 	// TODO REMOVE AddElementsByNodes(ids string, l2, t3, q4 bool)
 	// AddGroup
@@ -180,8 +180,8 @@ type Splitable interface {
 	SplitLinesByDistance(line, distance string, atBegin bool)
 	SplitLinesByRatio(line, proportional string, pos uint)
 	SplitLinesByEqualParts(lines, parts string)
-	// TODO REMOVE SplitTri3To3Quadr4(tris string)
 	SplitTri3To3Tri3(tris string)
+	// TODO REMOVE SplitTri3To3Quadr4(tris string)
 	// SplitTri3To2Tri3(tris string, side uint)
 	// SplitQuadr4To2Quadr4(q4s string, side uint)
 	// Quadr4 to 4 Triangle3
@@ -567,8 +567,6 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 var Debug []string
 
 func UserInterface() (root vl.Widget, action chan func(), err error) {
-	// m := &model // TODO REMOVE
-	m := new(DebugMesh) // TODO remove
 	var (
 		scroll vl.Scroll
 		list   vl.List
@@ -576,16 +574,6 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 	root = &scroll
 	scroll.Root = &list
 	action = make(chan func())
-	{ // TODO REMOVE
-		numNil := 0
-		for i := range Operations {
-			if Operations[i].Part == nil {
-				numNil++
-			}
-		}
-		list.Add(vl.TextStatic(fmt.Sprintf("Amount operations: %d with %d nil",
-			len(Operations), numNil)))
-	}
 
 	view := make([]bool, len(Operations))
 	colHeader := make([]vl.CollapsingHeader, endGroup)
@@ -604,10 +592,10 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 			c.SetText(Operations[i].Name)
 			part := Operations[i].Part
 			if part == nil {
-				err = fmt.Errorf("Widget %02d is empty: %#v\n", i, Operations[i])
+				err = fmt.Errorf("widget %02d is empty: %#v", i, Operations[i])
 				return
 			}
-			r := part(m)
+			r := part(&mm)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true
@@ -621,8 +609,20 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 			}
 		}
 		if len(nums) != 0 {
-			err = fmt.Errorf("Do not view next operations: %v", nums)
+			err = fmt.Errorf("do not view next operations: %v", nums)
 		}
 	}
+
+	// TODO : var txt vl.Text
+	// TODO : list.Add(&txt)
+	// TODO : go func() {
+	// TODO : 	<-time.After(time.Millisecond * 500)
+	// TODO : 	var str string
+	// TODO : 	for i := range Debug {
+	// TODO : 		str += Debug[i] + "\n"
+	// TODO : 	}
+	// TODO : 	txt.SetText(str)
+	// TODO : }()
+
 	return
 }
