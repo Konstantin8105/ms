@@ -162,6 +162,10 @@ type Selectable interface {
 	// SelectParallelQuadr4
 	//
 	// SelectByGroup
+	//
+	// Cursor select node
+	// Cursor select beams
+	// Cursor select plates
 }
 
 // func init() {
@@ -428,6 +432,43 @@ type Measurementable interface {
 // 	Operations = append(Operations, ops...)
 // }
 
+type Pluginable interface {
+	// Cylinder
+	// Sphere
+	// Cone
+	// Disk
+	// Cube
+	// Pipe branch
+	// Frame
+	// Beam-beam connection
+	// Column-beam connection
+	// Column-column connection
+	// Beam intersection
+	// Merge nodes
+	// Merge beams
+	// Merge plates
+	// Plate intersection
+	// Chamfer plates
+	// Fillet plates
+	// Explode plates
+	// Lines offset by direction
+	// Split plates by lines
+	// Split lines by plates
+	// Convert triangles to rectangles
+	// Convert rectangles to triangles
+	// Plate bending
+	// Triangulation
+	// 2D offset
+	// Twist
+	// Extrude
+	// Hole circle, square, rectangle on direction
+	// Cutoff
+	// Bend plates
+	// Stamping by point
+	// Stiffening rib
+	// Weld
+}
+
 type Mesh interface {
 	Viewable
 	Addable
@@ -437,6 +478,7 @@ type Mesh interface {
 	MoveCopyble
 	Scalable
 	Checkable
+	Pluginable
 	Measurementable
 }
 
@@ -520,6 +562,8 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 	return &l, id.GetText
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 var Debug []string
 
 func UserInterface() (root vl.Widget, action chan func(), err error) {
@@ -582,93 +626,3 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 	}
 	return
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-/*
-// view
-if (BeginMenu("Geometry")) {
-    m("View selected elements");
-    m("View all elements");
-
-    if (BeginMenu("Select by list")) {
-        m("Nodes");
-        m("Lines");
-        m("Plates");
-        // TODO: select by specific properties (material, lenght, ...)
-        EndMenu();
-    }
-    Separator();
-
-    Checkbox("Show Node number", &show[0]);
-    Checkbox("Show Beam number", &show[1]);
-    Checkbox("Show Plate number", &show[2]);
-    Checkbox("Show Local coordinate", &show[3]);
-    Checkbox("Show Node point", &show[4]);
-    Checkbox("Show plate secondary border", &show_second_plate_border);
-    Separator();
-
-    Checkbox("Cursor select node", &cursor[0]);
-    Checkbox("Cursor select beams", &cursor[1]);
-    Checkbox("Cursor select plates", &cursor[2]);
-    Separator();
-
-    Separator();
-
-    m("Statistic");
-
-    EndMenu();
-}
-// reports
-if (BeginMenu("Reports")) {
-    if (BeginMenu("Covering plates from direction")) {
-        m("+X");
-        m("-X");
-        m("+Y");
-        m("-Y");
-        m("+Z");
-        m("-Z");
-        m("by points");
-        EndMenu();
-    }
-
-		add(TypModels,
-			"Cylinder",
-			"Sphere",
-			"Cone",
-			"Disk",
-			"Cube",
-			"Pipe branch",
-			"Frame",
-			"Beam-beam connection",
-			"Column-beam connection",
-			"Column-column connection",
-		)
-
-		add(Plugin,
-			"Beam intersection",
-			"Merge nodes",
-			"Merge beams",
-			"Merge plates",
-			"Plate intersection",
-			"Chamfer plates",
-			"Fillet plates",
-			"Explode plates",
-			"Lines offset by direction",
-			// "Split plates by lines",
-			"Split lines by plates",
-			// "Convert triangles to rectangles",
-			// "Convert rectangles to triangles",
-			"Plate bending",
-			"Triangulation",
-			"2D offset",
-			"Twist",
-			"Extrude",
-			"Hole circle, square, rectangle on direction",
-			"Cutoff",
-			"Bend plates",
-			"Stamping by point",
-			"Stiffening rib",
-			"Weld",
-		)
-*/
