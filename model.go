@@ -64,28 +64,27 @@ type Coordinate struct {
 
 // Named intermediant named structure
 type Named struct{ Name string }
-type Ignored struct{ Elements []bool }
+type Ignored struct{ IgnoreElements []bool }
 
 type MultiModel struct {
-	actual int // 0 ... len(Models) ... len(Models)+len(Parts)
-	Models []Model
-	Parts  []Part
-}
+	// actual = 0, then change Model
+	// 0 < actual, then change Parts[actual - 1]
+	actual int
 
-type Model struct {
 	Named
 	Ignored
-	Coordinates []Coordinate
-	Elements    []Element
+	Elements []Element
+	Coords   []Coordinate
+
+	Parts []Part
 }
 
 type Part struct {
 	Named
 	Ignored
-	Base int
 }
 
-var model Model // TODO change to MultiModel
+var mm MultiModel
 
 func init() { // TODO remove
 	var (
@@ -105,22 +104,21 @@ func init() { // TODO remove
 		Ro += dR
 		Ri += dR
 		angle := float64(i) * da * math.Pi / 180.0
-		model.Coordinates = append(model.Coordinates,
+		mm.Coords = append(mm.Coords,
 			Coordinate{X: Ri * math.Sin(angle), Y: float64(i) * dy, Z: Ri * math.Cos(angle)},
 			Coordinate{X: Ro * math.Sin(angle), Y: float64(i) * dy, Z: Ro * math.Cos(angle)},
 		)
-		model.Elements = append(model.Elements, Element{
-			ElementType: Line2,
-			Indexes:     []int{2 * i, 2*i + 1},
+		mm.Elements = append(mm.Elements, Element{ElementType: Line2,
+			Indexes: []int{2 * i, 2*i + 1},
 		})
 		if 0 < i {
-			model.Elements = append(model.Elements,
+			mm.Elements = append(mm.Elements,
 				Element{ElementType: Line2,
 					Indexes: []int{2 * (i - 1), 2 * i},
 				}, Element{ElementType: Line2,
 					Indexes: []int{2*(i-1) + 1, 2*i + 1},
 				})
-			model.Elements = append(model.Elements,
+			mm.Elements = append(mm.Elements,
 				Element{ElementType: Triangle3,
 					Indexes: []int{2 * (i - 1), 2 * i, 2*(i-1) + 1},
 				}, Element{ElementType: Triangle3,
@@ -131,10 +129,10 @@ func init() { // TODO remove
 	updateModel = true // TODO  remove
 }
 
-func (m *Model) AddNode(X, Y, Z float64) {
-	m.Coordinates = append(m.Coordinates, Coordinate{X: X, Y: Y, Z: Z})
-	updateModel = true // Update camera parameter
-}
+// func (m *ModelBase) AddNode(X, Y, Z float64) {
+// 	m.Coords = append(m.Coords, Coordinate{X: X, Y: Y, Z: Z})
+// 	updateModel = true // Update camera parameter
+// }
 
 // func (m *Model) AddNodeByDistance(line, distance string, atBegin bool) {
 // }
@@ -208,8 +206,8 @@ func (m *Model) AddNode(X, Y, Z float64) {
 // Amount coordinates, elements are `after` model equal `base` model.
 //
 // Examples of use:
-//	* Coordinates based on buckling imperfections.
-//	* Coordinates based on deformation imperfections.
+//	* Coords based on buckling imperfections.
+//	* Coords based on deformation imperfections.
 //	* Move/Rotate base model.
 //
 // type Modificator struct {

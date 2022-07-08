@@ -92,9 +92,9 @@ func M3() (err error) {
 		drawAxes(window)
 		// minimal screen notes
 		font.Draw(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
-		// font.Draw(fmt.Sprintf("Nodes     : %6d", len(model.Coordinates)), 0, 1*fontSize)
-		// font.Draw(fmt.Sprintf("Lines     : %6d", len(model.Lines)), 0, 2*fontSize)
-		// font.Draw(fmt.Sprintf("Triangles3: %6d", len(model.Triangles)), 0, 3*fontSize)
+		// font.Draw(fmt.Sprintf("Nodes     : %6d", len(mm.Coords)), 0, 1*fontSize)
+		// font.Draw(fmt.Sprintf("Lines     : %6d", len(mm.Lines)), 0, 2*fontSize)
+		// font.Draw(fmt.Sprintf("Triangles3: %6d", len(mm.Triangles)), 0, 3*fontSize)
 
 		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
 		// TODO : REMOVE: ui(window)
@@ -244,11 +244,11 @@ func model3d(window *glfw.Window, s selectType) {
 		camera.betta = 0.0
 		// distance from center to camera
 		camera.R = 1.0
-		if len(model.Coordinates) == 0 {
+		if len(mm.Coords) == 0 {
 			return
 		}
 		// renaming
-		ps := model.Coordinates
+		ps := mm.Coords
 		// calculate radius
 		var (
 			xmin = ps[0].X
@@ -276,7 +276,7 @@ func model3d(window *glfw.Window, s selectType) {
 		}
 	}
 
-	// TODO: if model.Coordinates[i].Hided {
+	// TODO: if mm.Coords[i].Hided {
 	// TODO: 	continue
 	// TODO: }
 
@@ -285,23 +285,23 @@ func model3d(window *glfw.Window, s selectType) {
 	switch s {
 	case selectNone:
 		gl.Begin(gl.POINTS)
-		for i := range model.Coordinates {
-			if model.Coordinates[i].selected {
+		for i := range mm.Coords {
+			if mm.Coords[i].selected {
 				gl.Color3ub(255, 1, 1)
 			} else {
 				gl.Color3ub(1, 1, 1)
 			}
-			gl.Vertex3d(model.Coordinates[i].X, model.Coordinates[i].Y, model.Coordinates[i].Z)
+			gl.Vertex3d(mm.Coords[i].X, mm.Coords[i].Y, mm.Coords[i].Z)
 		}
 		gl.End()
 	case selectPoints:
 		gl.Begin(gl.POINTS)
-		for i := range model.Coordinates {
-			if model.Coordinates[i].selected {
+		for i := range mm.Coords {
+			if mm.Coords[i].selected {
 				continue
 			}
 			convertToColor(i)
-			gl.Vertex3d(model.Coordinates[i].X, model.Coordinates[i].Y, model.Coordinates[i].Z)
+			gl.Vertex3d(mm.Coords[i].X, mm.Coords[i].Y, mm.Coords[i].Z)
 		}
 		gl.End()
 	case selectLines, selectTriangles: // do nothing
@@ -311,7 +311,7 @@ func model3d(window *glfw.Window, s selectType) {
 	// Elements
 	gl.PointSize(2) // default points size
 	gl.LineWidth(3) // default lines width
-	for i, el := range model.Elements {
+	for i, el := range mm.Elements {
 		// do not show selected elements in Select case
 		if s != selectNone && el.selected {
 			continue
@@ -346,7 +346,7 @@ func model3d(window *glfw.Window, s selectType) {
 		case selectLines, selectTriangles:
 			gl.Begin(gl.POINTS)
 			for _, k := range el.Indexes {
-				c := model.Coordinates[k]
+				c := mm.Coords[k]
 				gl.Vertex3d(c.X, c.Y, c.Z)
 			}
 			gl.End()
@@ -359,7 +359,7 @@ func model3d(window *glfw.Window, s selectType) {
 			if s == selectNone || s == selectLines {
 				gl.Begin(gl.LINES)
 				for _, k := range el.Indexes {
-					c := model.Coordinates[k]
+					c := mm.Coords[k]
 					gl.Vertex3d(c.X, c.Y, c.Z)
 				}
 				gl.End()
@@ -377,13 +377,13 @@ func model3d(window *glfw.Window, s selectType) {
 						to = el.Indexes[to]
 					}
 					gl.Vertex3d(
-						model.Coordinates[from].X,
-						model.Coordinates[from].Y,
-						model.Coordinates[from].Z)
+						mm.Coords[from].X,
+						mm.Coords[from].Y,
+						mm.Coords[from].Z)
 					gl.Vertex3d(
-						model.Coordinates[to].X,
-						model.Coordinates[to].Y,
-						model.Coordinates[to].Z)
+						mm.Coords[to].X,
+						mm.Coords[to].Y,
+						mm.Coords[to].Z)
 				}
 				gl.End()
 			}
@@ -398,9 +398,9 @@ func model3d(window *glfw.Window, s selectType) {
 				gl.Begin(gl.TRIANGLES)
 				for _, p := range el.Indexes {
 					gl.Vertex3d(
-						model.Coordinates[p].X,
-						model.Coordinates[p].Y,
-						model.Coordinates[p].Z)
+						mm.Coords[p].X,
+						mm.Coords[p].Y,
+						mm.Coords[p].Z)
 				}
 				gl.End()
 			}
@@ -672,28 +672,28 @@ func selectByRectangle(window *glfw.Window) {
 	}{
 		{
 			st: selectPoints, sf: func(index int) bool {
-				if index < 0 || len(model.Coordinates) <= index {
+				if index < 0 || len(mm.Coords) <= index {
 					return false
 				}
-				model.Coordinates[index].selected = true
+				mm.Coords[index].selected = true
 				return true
 			},
 		},
 		{
 			st: selectLines, sf: func(index int) bool {
-				if index < 0 || len(model.Elements) <= index {
+				if index < 0 || len(mm.Elements) <= index {
 					return false
 				}
-				model.Elements[index].selected = true
+				mm.Elements[index].selected = true
 				return true
 			},
 		},
 		{
 			st: selectTriangles, sf: func(index int) bool {
-				if index < 0 || len(model.Elements) <= index {
+				if index < 0 || len(mm.Elements) <= index {
 					return false
 				}
-				model.Elements[index].selected = true
+				mm.Elements[index].selected = true
 				return true
 			},
 		},
@@ -821,11 +821,11 @@ func keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action,
 	switch key {
 	case glfw.KeyEscape:
 		// deselect all
-		for i := range model.Coordinates {
-			model.Coordinates[i].selected = false
+		for i := range mm.Coords {
+			mm.Coords[i].selected = false
 		}
-		for i := range model.Elements {
-			model.Elements[i].selected = false
+		for i := range mm.Elements {
+			mm.Elements[i].selected = false
 		}
 	}
 }

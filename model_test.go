@@ -3,15 +3,23 @@ package ms
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 )
 
 func Example() {
 	var mm MultiModel
-	var m Model
-	mm.Models = append(mm.Models, m)
+	mm.Coords = append(mm.Coords,
+		Coordinate{X: 0, Y: 0, Z: 0},
+		Coordinate{X: math.Pi, Y: 2, Z: 1},
+		Coordinate{X: 6, Y: 5, Z: 4},
+	)
+	mm.Elements = append(mm.Elements,
+		Element{ElementType: Line2, Indexes: []int{0, 1}},
+	)
+	mm.IgnoreElements = append(mm.IgnoreElements, true)
 
 	var p Part
-	p.Base = 0
+	p.IgnoreElements = append(p.IgnoreElements, true, true)
 	mm.Parts = append(mm.Parts, p)
 
 	b, err := json.MarshalIndent(mm, "", "  ")
@@ -20,20 +28,46 @@ func Example() {
 		return
 	}
 	fmt.Println(string(b))
+
 	// Output:
 	// {
-	//   "Models": [
+	//   "Name": "",
+	//   "IgnoreElements": [
+	//     true
+	//   ],
+	//   "Elements": [
 	//     {
-	//       "Name": "",
-	//       "Coordinates": null,
-	//       "Elements": null
+	//       "ElementType": 1,
+	//       "Indexes": [
+	//         0,
+	//         1
+	//       ]
+	//     }
+	//   ],
+	//   "Coords": [
+	//     {
+	//       "X": 0,
+	//       "Y": 0,
+	//       "Z": 0
+	//     },
+	//     {
+	//       "X": 3.141592653589793,
+	//       "Y": 2,
+	//       "Z": 1
+	//     },
+	//     {
+	//       "X": 6,
+	//       "Y": 5,
+	//       "Z": 4
 	//     }
 	//   ],
 	//   "Parts": [
 	//     {
 	//       "Name": "",
-	//       "Elements": null,
-	//       "Base": 0
+	//       "IgnoreElements": [
+	//         true,
+	//         true
+	//       ]
 	//     }
 	//   ]
 	// }
