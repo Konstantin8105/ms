@@ -239,9 +239,41 @@ func (mm *Model) SelectNodes(single bool) (ids []uint) {
 	return
 }
 
-func (mm *Model) SelectLines(single bool) (ids []uint)     { return }
-func (mm *Model) SelectTriangles(single bool) (ids []uint) { return }
-func (mm *Model) SelectElements(single bool) (ids []uint)  { return }
+func (mm *Model) SelectLines(single bool) (ids []uint) {
+	for i, el := range mm.Elements {
+		if !el.selected {
+			continue
+		}
+		if el.ElementType != Line2 {
+			continue
+		}
+		ids = append(ids, uint(i))
+	}
+	return
+}
+
+func (mm *Model) SelectTriangles(single bool) (ids []uint) {
+	for i, el := range mm.Elements {
+		if !el.selected {
+			continue
+		}
+		if el.ElementType != Triangle3 {
+			continue
+		}
+		ids = append(ids, uint(i))
+	}
+	return
+}
+
+func (mm *Model) SelectElements(single bool) (ids []uint) {
+	for i, el := range mm.Elements {
+		if !el.selected {
+			continue
+		}
+		ids = append(ids, uint(i))
+	}
+	return
+}
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {}
 func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, pos uint)    {}
