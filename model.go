@@ -68,9 +68,11 @@ type Coordinate struct {
 type Named struct{ Name string }
 type Ignored struct{ IgnoreElements []bool }
 
-var mm MultiModel
 
-type MultiModel struct {
+// TODO : type MultiModel struct { Models []Model}
+var mm Model // TODO : remove
+
+type Model struct {
 	// actual = 0, then change Model
 	// 0 < actual, then change Parts[actual - 1]
 	actual int
@@ -133,7 +135,7 @@ func init() { // TODO remove
 
 const distanceError = 1e-6
 
-func (mm *MultiModel) AddNode(X, Y, Z float64) (err error) {
+func (mm *Model) AddNode(X, Y, Z float64) (err error) {
 	// check is this coordinate exist?
 	for i := range mm.Coords {
 		distance := math.Sqrt(pow.E2(mm.Coords[i].X-X) +
@@ -149,7 +151,7 @@ func (mm *MultiModel) AddNode(X, Y, Z float64) (err error) {
 	return
 }
 
-func (mm *MultiModel) AddLineByNodeNumber(n1, n2 uint) (err error) {
+func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (err error) {
 	// type convection
 	ni1 := int(n1)
 	ni2 := int(n2)
@@ -174,13 +176,13 @@ func (mm *MultiModel) AddLineByNodeNumber(n1, n2 uint) (err error) {
 	return
 }
 
-func (mm *MultiModel) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (err error) {
+func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (err error) {
 	// TODO:
 	updateModel = true // Update camera parameter
 	return
 }
 
-func (mm *MultiModel) SelectNodes(single bool) (ids []uint) {
+func (mm *Model) SelectNodes(single bool) (ids []uint) {
 	for i := range mm.Coords {
 		if !mm.Coords[i].selected {
 			continue
@@ -190,18 +192,18 @@ func (mm *MultiModel) SelectNodes(single bool) (ids []uint) {
 	return
 }
 
-func (mm *MultiModel) SelectLines(single bool) (ids []uint)     { return }
-func (mm *MultiModel) SelectTriangles(single bool) (ids []uint) { return }
-func (mm *MultiModel) SelectElements() (ids []uint)             { return }
+func (mm *Model) SelectLines(single bool) (ids []uint)     { return }
+func (mm *Model) SelectTriangles(single bool) (ids []uint) { return }
+func (mm *Model) SelectElements() (ids []uint)             { return }
 
-func (mm *MultiModel) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {}
-func (mm *MultiModel) SplitLinesByRatio(lines []uint, proportional float64, pos uint)    {}
-func (mm *MultiModel) SplitLinesByEqualParts(lines []uint, parts uint)                   {}
-func (mm *MultiModel) SplitTri3To3Tri3(tris []uint)                                      {}
+func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {}
+func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, pos uint)    {}
+func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint)                   {}
+func (mm *Model) SplitTri3To3Tri3(tris []uint)                                      {}
 
-func (mm *MultiModel) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
+func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
 }
-func (mm *MultiModel) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
+func (mm *Model) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
 }
 
 //
