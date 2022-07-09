@@ -13,6 +13,7 @@ type GroupId uint8
 
 const (
 	Add GroupId = iota
+	Ignore
 	Split
 	// Plate
 	MoveCopy
@@ -27,6 +28,8 @@ func (g GroupId) String() string {
 	switch g {
 	case Add:
 		return "Add"
+	case Ignore:
+		return "Ignore"
 	case Split:
 		return "Split"
 		// 	case Plate:
@@ -173,11 +176,60 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
+type Ignorable interface {
+	IgnoreElements(ids []uint)
+	Unignore()
+}
+
+func init() {
+	group := Ignore
+	name := group.String()
+	ops := []Operation{{
+		Name: "Ignore elements",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			elf, elfgt := Select("Select elements", Many, m.SelectElements)
+			list.Add(elf)
+
+			var b vl.Button
+			b.SetText(name)
+			b.OnClick = func() {
+				els := elfgt()
+				if len(els) == 0 {
+					return
+				}
+				m.IgnoreElements(els)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Clear ignoring elements",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var b vl.Button
+			b.SetText("Clear")
+			b.OnClick = func() {
+				m.Unignore()
+			}
+			list.Add(&b)
+
+			return &list
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = group
+	}
+	Operations = append(Operations, ops...)
+}
+
 type Selectable interface {
 	SelectNodes(single bool) (ids []uint)
 	SelectLines(single bool) (ids []uint)
 	SelectTriangles(single bool) (ids []uint)
-	SelectElements() (ids []uint)
+	SelectElements(single bool) (ids []uint)
 	// TODO REMOVE SelectQuadr4(single bool) (ids []uint)
 	// InvertNodes
 	// InvertLines
@@ -519,6 +571,7 @@ type Pluginable interface {
 type Mesh interface {
 	Viewable
 	Addable
+	Ignorable
 	Selectable
 	Platable
 	Splitable
@@ -618,7 +671,7 @@ func SelectAll(m Mesh) (
 	b.SetText("Select")
 	b.OnClick = func() {
 		coordinates := m.SelectNodes(Many)
-		elements := m.SelectElements()
+		elements := m.SelectElements(Many)
 		if len(coordinates) == 0 && len(elements) == 0 {
 			return
 		}

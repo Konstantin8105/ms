@@ -68,7 +68,6 @@ type Coordinate struct {
 type Named struct{ Name string }
 type Ignored struct{ IgnoreElements []bool }
 
-
 // TODO : type MultiModel struct { Models []Model}
 var mm Model // TODO : remove
 
@@ -192,9 +191,12 @@ func (mm *Model) SelectNodes(single bool) (ids []uint) {
 	return
 }
 
+func (mm *Model) IgnoreElements(ids []uint) {}
+func (mm *Model) Unignore()                 {}
+
 func (mm *Model) SelectLines(single bool) (ids []uint)     { return }
 func (mm *Model) SelectTriangles(single bool) (ids []uint) { return }
-func (mm *Model) SelectElements() (ids []uint)             { return }
+func (mm *Model) SelectElements(single bool) (ids []uint)  { return }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {}
 func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, pos uint)    {}
