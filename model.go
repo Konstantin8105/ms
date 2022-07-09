@@ -176,9 +176,57 @@ func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (err error) {
 }
 
 func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (err error) {
-	// TODO:
+	// type convection
+	ni1 := int(n1)
+	ni2 := int(n2)
+	ni3 := int(n3)
+	// check is this coordinate exist?
+	for _, el := range mm.Elements {
+		if el.ElementType != Triangle3 {
+			continue
+		}
+		if el.Indexes[0] == ni1 && el.Indexes[1] == ni2 && el.Indexes[2] == ni3 {
+			return
+		}
+		if el.Indexes[0] == ni2 && el.Indexes[1] == ni3 && el.Indexes[2] == ni1 {
+			return
+		}
+		if el.Indexes[0] == ni3 && el.Indexes[1] == ni1 && el.Indexes[2] == ni2 {
+			return
+		}
+		if el.Indexes[0] == ni3 && el.Indexes[1] == ni2 && el.Indexes[2] == ni1 {
+			return
+		}
+		if el.Indexes[0] == ni2 && el.Indexes[1] == ni1 && el.Indexes[2] == ni3 {
+			return
+		}
+		if el.Indexes[0] == ni1 && el.Indexes[1] == ni3 && el.Indexes[2] == ni2 {
+			return
+		}
+	}
+	// append
+	mm.Elements = append(mm.Elements, Element{
+		ElementType: Triangle3,
+		Indexes:     []int{ni1, ni2, ni3},
+	})
 	updateModel = true // Update camera parameter
 	return
+}
+
+func (mm *Model) IgnoreElements(ids []uint) {
+	ignore := &mm.IgnoreElements
+	if 0 < mm.actual {
+		ignore = &mm.Parts[mm.actual-1].IgnoreElements
+	}
+	*ignore = append(*ignore, ids...)
+}
+
+func (mm *Model) Unignore() {
+	ignore := &mm.IgnoreElements
+	if 0 < mm.actual {
+		ignore = &mm.Parts[mm.actual-1].IgnoreElements
+	}
+	*ignore = nil
 }
 
 func (mm *Model) SelectNodes(single bool) (ids []uint) {
@@ -190,9 +238,6 @@ func (mm *Model) SelectNodes(single bool) (ids []uint) {
 	}
 	return
 }
-
-func (mm *Model) IgnoreElements(ids []uint) {}
-func (mm *Model) Unignore()                 {}
 
 func (mm *Model) SelectLines(single bool) (ids []uint)     { return }
 func (mm *Model) SelectTriangles(single bool) (ids []uint) { return }
