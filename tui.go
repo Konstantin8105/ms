@@ -3,6 +3,7 @@ package ms
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
@@ -69,9 +70,9 @@ type Viewable interface {
 }
 
 type Addable interface {
-	AddNode(X, Y, Z string) error
-	AddLineByNodeNumber(n1, n2 string) error
-	AddTriangle3ByNodeNumber(n1, n2, n3 string) error
+	AddNode(X, Y, Z float64) error
+	AddLineByNodeNumber(n1, n2 uint) error
+	AddTriangle3ByNodeNumber(n1, n2, n3 uint) error
 	// TODO REMOVE AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
 	// TODO REMOVE AddElementsByNodes(ids string, l2, t3, q4 bool)
 	// AddGroup
@@ -95,11 +96,15 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				var vs [3]string
+				var vs [3]float64
+				var ok bool
 				for i := range vs {
-					vs[i] = gt[i]()
+					vs[i], ok = gt[i]()
+					if !ok {
+						return
+					}
 				}
-				m.AddNode(gt[0](), gt[1](), gt[2]())
+				m.AddNode(vs[0], vs[1], vs[2])
 			}
 			list.Add(&b)
 			return &list
@@ -116,7 +121,15 @@ func init() {
 			var bi vl.Button
 			bi.SetText(name)
 			bi.OnClick = func() {
-				m.AddLineByNodeNumber(bgt(), egt())
+				b, ok := isOne(bgt)
+				if !ok {
+					return
+				}
+				e, ok := isOne(egt)
+				if !ok {
+					return
+				}
+				m.AddLineByNodeNumber(b, e)
 			}
 			list.Add(&bi)
 
@@ -136,7 +149,19 @@ func init() {
 			var bi vl.Button
 			bi.SetText(name)
 			bi.OnClick = func() {
-				m.AddTriangle3ByNodeNumber(n1gt(), n2gt(), n3gt())
+				n1, ok := isOne(n1gt)
+				if !ok {
+					return
+				}
+				n2, ok := isOne(n2gt)
+				if !ok {
+					return
+				}
+				n3, ok := isOne(n3gt)
+				if !ok {
+					return
+				}
+				m.AddTriangle3ByNodeNumber(n1, n2, n3)
 			}
 			list.Add(&bi)
 
@@ -152,6 +177,7 @@ type Selectable interface {
 	SelectNodes(single bool) (ids []uint)
 	SelectLines(single bool) (ids []uint)
 	SelectTriangles(single bool) (ids []uint)
+	SelectElements() (ids []uint)
 	// TODO REMOVE SelectQuadr4(single bool) (ids []uint)
 	// InvertNodes
 	// InvertLines
@@ -178,10 +204,10 @@ type Selectable interface {
 // }
 
 type Splitable interface {
-	SplitLinesByDistance(line, distance string, atBegin bool)
-	SplitLinesByRatio(line, proportional string, pos uint)
-	SplitLinesByEqualParts(lines string, parts uint)
-	SplitTri3To3Tri3(tris string)
+	SplitLinesByDistance(lines []uint, distance float64, atBegin bool)
+	SplitLinesByRatio(lines []uint, proportional float64, pos uint)
+	SplitLinesByEqualParts(lines []uint, parts uint)
+	SplitTri3To3Tri3(tris []uint)
 	// TODO REMOVE SplitTri3To3Quadr4(tris string)
 	// SplitTri3To2Tri3(tris string, side uint)
 	// SplitQuadr4To2Quadr4(q4s string, side uint)
@@ -195,7 +221,7 @@ func init() {
 		Name: "Line2 by distance from node",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
-			s, sgt := Select("Select line", Single, m.SelectLines)
+			s, sgt := Select("Select lines", Many, m.SelectLines)
 			list.Add(s)
 			d, dgt := InputFloat("Distance", "meter")
 			list.Add(d)
@@ -207,7 +233,11 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Split")
 			bi.OnClick = func() {
-				m.SplitLinesByDistance(sgt(), dgt(), rg.GetPos() == 0)
+				d, ok := dgt()
+				if !ok {
+					return
+				}
+				m.SplitLinesByDistance(sgt(), d, rg.GetPos() == 0)
 			}
 			list.Add(&bi)
 
@@ -216,7 +246,7 @@ func init() {
 		Name: "Line2 by ratio",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
-			s, sgt := Select("Select line", Single, m.SelectLines)
+			s, sgt := Select("Select line", Many, m.SelectLines)
 			list.Add(s)
 			d, dgt := InputFloat("Ratio", "")
 			list.Add(d)
@@ -228,7 +258,11 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Split")
 			bi.OnClick = func() {
-				m.SplitLinesByRatio(sgt(), dgt(), rg.GetPos())
+				r, ok := dgt()
+				if !ok {
+					return
+				}
+				m.SplitLinesByRatio(sgt(), r, rg.GetPos())
 			}
 			list.Add(&bi)
 
@@ -275,8 +309,8 @@ func init() {
 }
 
 type MoveCopyble interface {
-	MoveCopyNodesDistance(nodes string, coordinates [3]string, copy, addLines, addTri bool)
-	MoveCopyNodesN1N2(nodes, from, to string, copy, addLines, addTri bool)
+	MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool)
+	MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool)
 	// Move/Copy to specific plane",
 	// Rotate",
 	// Mirror",
@@ -291,7 +325,7 @@ func init() {
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
-			ns, ngt := Select("Select elements", Many, m.SelectNodes)
+			ns, coordgt, elgt := SelectAll(m)
 			list.Add(ns)
 
 			w, gt := Input3Float(
@@ -315,11 +349,15 @@ func init() {
 			var b vl.Button
 			b.SetText("Move/Copy")
 			b.OnClick = func() {
-				var vs [3]string
+				var vs [3]float64
+				var ok bool
 				for i := range vs {
-					vs[i] = gt[i]()
+					vs[i], ok = gt[i]()
+					if !ok {
+						return
+					}
 				}
-				m.MoveCopyNodesDistance(ngt(), vs, rg.GetPos() == 1,
+				m.MoveCopyNodesDistance(coordgt(), elgt(), vs, rg.GetPos() == 1,
 					chLines.Checked, chTriangles.Checked)
 			}
 			list.Add(&b)
@@ -329,7 +367,7 @@ func init() {
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
-			ns, ngt := Select("Select elements", Many, m.SelectNodes)
+			ns, coordgt, elgt := SelectAll(m)
 			list.Add(ns)
 
 			nf, nfgt := Select("From node", Single, m.SelectNodes)
@@ -353,7 +391,15 @@ func init() {
 			var b vl.Button
 			b.SetText("Move/Copy")
 			b.OnClick = func() {
-				m.MoveCopyNodesN1N2(ngt(), nfgt(), ntgt(), rg.GetPos() == 1,
+				f := nfgt()
+				if len(f) != 1 {
+					return
+				}
+				t := ntgt()
+				if len(t) != 1 {
+					return
+				}
+				m.MoveCopyNodesN1N2(coordgt(), elgt(), f[0], t[0], rg.GetPos() == 1,
 					chLines.Checked, chTriangles.Checked)
 			}
 			list.Add(&b)
@@ -516,20 +562,32 @@ func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() uint) {
 	}
 }
 
-func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() string) {
+func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() (_ float64, ok bool)) {
 	var (
 		list vl.ListH
 		in   vl.Inputbox
 	)
 	list.Add(vl.TextStatic(prefix))
-	in.SetText("0.000")
+
+	const Default = "0.000"
+
+	in.SetText(Default)
 	in.Filter(tf.Float)
 	list.Add(&in)
 	list.Add(vl.TextStatic(postfix))
-	return &list, in.GetText
+	return &list, func() (v float64, ok bool) {
+		str := in.GetText()
+		clearValue(str)
+		v, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			in.SetText(Default)
+			return
+		}
+		return v, true
+	}
 }
 
-func Input3Float(prefix, postfix [3]string) (w vl.Widget, gettext [3]func() string) {
+func Input3Float(prefix, postfix [3]string) (w vl.Widget, gettext [3]func() (float64, bool)) {
 	var list vl.List
 	for i := 0; i < 3; i++ {
 		w, gt := InputFloat(prefix[i], postfix[i])
@@ -537,6 +595,42 @@ func Input3Float(prefix, postfix [3]string) (w vl.Widget, gettext [3]func() stri
 		gettext[i] = gt
 	}
 	return &list, gettext
+}
+
+func SelectAll(m Mesh) (
+	w vl.Widget,
+	getCoords func() []uint,
+	getElements func() []uint,
+) {
+	var l vl.ListH
+	l.Add(vl.TextStatic("Select nodes and elements"))
+	const Default = "NONE"
+
+	var coords vl.Text
+	coords.SetText(Default)
+	l.Add(&coords)
+
+	var els vl.Text
+	els.SetText(Default)
+	l.Add(&els)
+
+	var b vl.Button
+	b.SetText("Select")
+	b.OnClick = func() {
+		coordinates := m.SelectNodes(Many)
+		elements := m.SelectElements()
+		if len(coordinates) == 0 && len(elements) == 0 {
+			return
+		}
+		coords.SetText(fmt.Sprintf("%v", coordinates))
+		els.SetText(fmt.Sprintf("%v", elements))
+	}
+	l.Add(&b)
+	return &l, func() (ids []uint) {
+			return convertUint(coords.GetText())
+		}, func() (ids []uint) {
+			return convertUint(els.GetText())
+		}
 }
 
 func Select(name string, single bool, selector func(single bool) []uint) (
@@ -570,7 +664,9 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 		id.SetText(fmt.Sprintf("%v", ids))
 	}
 	l.Add(&b)
-	return &l, id.GetText
+	return &l, func() (ids []uint) {
+		return convertUint(id.GetText())
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -635,5 +731,32 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 	// TODO : 	txt.SetText(str)
 	// TODO : }()
 
+	return
+}
+
+func isOne(f func() []uint) (value uint, ok bool) {
+	b := f()
+	if len(b) != 1 {
+		return
+	}
+	return b[0], true
+}
+
+func clearValue(str string) string {
+	str = strings.ReplaceAll(str, "[", "")
+	str = strings.ReplaceAll(str, "]", "")
+	return str
+}
+
+func convertUint(str string) (ids []uint) {
+	clearValue(str)
+	fs := strings.Fields(str)
+	for i := range fs {
+		u, err := strconv.ParseUint(fs[i], 10, 64)
+		if err != nil {
+			return
+		}
+		ids = append(ids, uint(u))
+	}
 	return
 }

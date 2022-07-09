@@ -3,8 +3,6 @@ package ms
 import (
 	"fmt"
 	"math"
-	"strconv"
-	"strings"
 
 	"github.com/Konstantin8105/pow"
 )
@@ -135,60 +133,23 @@ func init() { // TODO remove
 
 const distanceError = 1e-6
 
-func clearValue(str string) string {
-	str = strings.ReplaceAll(str, "[", "")
-	str = strings.ReplaceAll(str, "]", "")
-	return str
-}
-
-func (mm *MultiModel) AddNode(X, Y, Z string) (err error) {
-	// clear
-	X = clearValue(X)
-	Y = clearValue(Y)
-	Z = clearValue(Z)
-	// parse
-	x, err := strconv.ParseFloat(X, 64)
-	if err != nil {
-		return
-	}
-	y, err := strconv.ParseFloat(Y, 64)
-	if err != nil {
-		return
-	}
-	z, err := strconv.ParseFloat(Z, 64)
-	if err != nil {
-		return
-	}
+func (mm *MultiModel) AddNode(X, Y, Z float64) (err error) {
 	// check is this coordinate exist?
 	for i := range mm.Coords {
-		distance := math.Sqrt(pow.E2(mm.Coords[i].X-x) +
-			pow.E2(mm.Coords[i].Y-y) +
-			pow.E2(mm.Coords[i].Z-z))
+		distance := math.Sqrt(pow.E2(mm.Coords[i].X-X) +
+			pow.E2(mm.Coords[i].Y-Y) +
+			pow.E2(mm.Coords[i].Z-Z))
 		if distance < distanceError {
 			return
 		}
 	}
 	// append
-	mm.Coords = append(mm.Coords, Coordinate{X: x, Y: y, Z: z})
+	mm.Coords = append(mm.Coords, Coordinate{X: X, Y: Y, Z: Z})
 	updateModel = true // Update camera parameter
 	return
 }
 
-func (mm *MultiModel) AddLineByNodeNumber(N1, N2 string) (err error) {
-	// clear
-	N1 = clearValue(N1)
-	N2 = clearValue(N2)
-	// parse
-	// n1
-	n1, err := strconv.ParseUint(N1, 10, 64)
-	if err != nil {
-		return
-	}
-	// n2
-	n2, err := strconv.ParseUint(N2, 10, 64)
-	if err != nil {
-		return
-	}
+func (mm *MultiModel) AddLineByNodeNumber(n1, n2 uint) (err error) {
 	// type convection
 	ni1 := int(n1)
 	ni2 := int(n2)
@@ -213,11 +174,7 @@ func (mm *MultiModel) AddLineByNodeNumber(N1, N2 string) (err error) {
 	return
 }
 
-func (mm *MultiModel) AddTriangle3ByNodeNumber(N1, N2, N3 string) (err error) {
-	// clear
-	N1 = clearValue(N1)
-	N2 = clearValue(N2)
-	N3 = clearValue(N3)
+func (mm *MultiModel) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (err error) {
 	// TODO:
 	updateModel = true // Update camera parameter
 	return
@@ -235,15 +192,17 @@ func (mm *MultiModel) SelectNodes(single bool) (ids []uint) {
 
 func (mm *MultiModel) SelectLines(single bool) (ids []uint)     { return }
 func (mm *MultiModel) SelectTriangles(single bool) (ids []uint) { return }
+func (mm *MultiModel) SelectElements() (ids []uint)             { return }
 
-func (mm *MultiModel) SplitLinesByDistance(line, distance string, atBegin bool) {}
-func (mm *MultiModel) SplitLinesByRatio(line, proportional string, pos uint)    {}
-func (mm *MultiModel) SplitLinesByEqualParts(lines string, parts uint)          {}
-func (mm *MultiModel) SplitTri3To3Tri3(tris string)                             {}
+func (mm *MultiModel) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {}
+func (mm *MultiModel) SplitLinesByRatio(lines []uint, proportional float64, pos uint)    {}
+func (mm *MultiModel) SplitLinesByEqualParts(lines []uint, parts uint)                   {}
+func (mm *MultiModel) SplitTri3To3Tri3(tris []uint)                                      {}
 
-func (mm *MultiModel) MoveCopyNodesDistance(nodes string, coordinates [3]string, copy, addLines, addTri bool) {
+func (mm *MultiModel) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
 }
-func (mm *MultiModel) MoveCopyNodesN1N2(nodes, from, to string, copy, addLines, addTri bool) {}
+func (mm *MultiModel) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
+}
 
 //
 // Approach is not aurogenerate model, but approach is
