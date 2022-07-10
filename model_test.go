@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"testing"
 )
 
 func Example() {
@@ -71,4 +72,30 @@ func Example() {
 	//     }
 	//   ]
 	// }
+}
+
+func TestUniqUint(t *testing.T) {
+	tcs := []struct {
+		input  []uint
+		expect []uint
+	}{{
+		input:  []uint{1, 2, 4, 2, 1, 4},
+		expect: []uint{1, 2, 4},
+	}, {
+		input:  []uint{6, 1, 1, 1, 1, 1},
+		expect: []uint{1, 6},
+	}}
+	for i := range tcs {
+		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			act := uniqUint(tcs[i].input)
+			if len(act) != len(tcs[i].expect) {
+				t.Fatalf("not same")
+			}
+			for p := range act {
+				if act[p] != tcs[i].expect[p] {
+					t.Fatalf("not equal")
+				}
+			}
+		})
+	}
 }

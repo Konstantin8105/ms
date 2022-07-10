@@ -2,6 +2,7 @@ package ms
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -834,6 +835,43 @@ func convertUint(str string) (ids []uint) {
 			continue
 		}
 		ids = append(ids, uint(u))
+	}
+	return
+}
+
+// compress
+//
+//	Example:
+//	from: 1 2 3 4 5 6 7
+//	to  : 1 TO 7
+//
+//	from: 1 2 3 4 6 7
+//	to  : 1 TO 4 6 7
+//
+//	from: 1 3 5 7
+//	to  : 1 3 5 7
+// func compress(ids []uint) (res string) {
+// 	ids := uniqUint(ids)
+// 	for i, id := range ids {
+// 		res += fmt.Sprintf(" %d ", id)
+// 	}
+// 	return
+// }
+
+func uniqUint(ids []uint) (res []uint) {
+	sort.SliceStable(ids, func(i, j int) bool {
+		return ids[i] < ids[j]
+	})
+	res = make([]uint, 0, len(ids))
+	for i, id := range ids {
+		if i == 0 {
+			res = append(res, id)
+			continue
+		}
+		if res[len(res)-1] == ids[i] {
+			continue
+		}
+		res = append(res, id)
 	}
 	return
 }

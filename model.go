@@ -473,11 +473,79 @@ func (mm *Model) SplitTri3To3Tri3(tris []uint) {
 	}
 }
 
-func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
-	// TODO
+func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coords [3]float64, copy, addLines, addTri bool) {
+	defer mm.DeselectAll() // deselect
+	if distance := math.Sqrt(pow.E2(coords[0]) + pow.E2(coords[1]) + pow.E2(coords[2])); distance < distanceError {
+		return
+	}
+	// nodes appending
+	for _, ie := range elements {
+		for _, ind := range mm.Elements[ie].Indexes {
+			nodes = append(nodes, uint(ind))
+		}
+	}
+	nodes = uniqUint(nodes)
+	elements = uniqUint(elements)
+	if len(nodes) == 0 || len(elements) == 0 {
+		return
+	}
+	if !copy { // move
+		for _, id := range nodes {
+			mm.Coords[id].X += coords[0]
+			mm.Coords[id].Y += coords[1]
+			mm.Coords[id].Z += coords[2]
+		}
+		return
+	}
+	// add nodes
+	newNodes := make([]int, len(mm.Coords))
+	for _, p := range nodes {
+		id := mm.AddNode(
+			mm.Coords[p].X+coords[0],
+			mm.Coords[p].Y+coords[1],
+			mm.Coords[p].Z+coords[2],
+		)
+		newNodes[p] = int(id)
+		if addLines {
+			mm.AddLineByNodeNumber(p, id)
+		}
+	}
+	// add elements
+	for _, p := range elements {
+		el := mm.Elements[p]
+		switch el.ElementType {
+		case ElRemove:
+			// do nothing
+		case Line2:
+			mm.AddLineByNodeNumber(
+				uint(newNodes[el.Indexes[0]]),
+				uint(newNodes[el.Indexes[1]]),
+			)
+		case Triangle3:
+			mm.AddTriangle3ByNodeNumber(
+				uint(newNodes[el.Indexes[0]]),
+				uint(newNodes[el.Indexes[1]]),
+				uint(newNodes[el.Indexes[2]]),
+			)
+		default:
+			// TODO:
+			panic(fmt.Errorf("add implementation: %v", el))
+		}
+	}
 }
+
 func (mm *Model) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
-	// TODO
+	if len(mm.Coords) <= int(from) {
+		return
+	}
+	if len(mm.Coords) <= int(to) {
+		return
+	}
+	mm.MoveCopyNodesDistance(nodes, elements, [3]float64{
+		mm.Coords[to].X - mm.Coords[from].X,
+		mm.Coords[to].Y - mm.Coords[from].Y,
+		mm.Coords[to].Z - mm.Coords[from].Z,
+	}, copy, addLines, addTri)
 }
 
 //
