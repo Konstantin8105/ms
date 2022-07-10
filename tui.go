@@ -14,6 +14,7 @@ type GroupId uint8
 
 const (
 	View GroupId = iota
+	Selection
 	Add
 	Ignore
 	Split
@@ -30,6 +31,8 @@ func (g GroupId) String() string {
 	switch g {
 	case View:
 		return "View"
+	case Selection:
+		return "Selection"
 	case Add:
 		return "Add"
 	case Ignore:
@@ -312,9 +315,7 @@ type Selectable interface {
 	SelectTriangles(single bool) (ids []uint)
 	SelectElements(single bool) (ids []uint)
 
-	// InvertNodes
-	// InvertLines
-	// InvertTriangles
+	InvertSelect(nodes, lines, triangles bool)
 
 	// SelectParallelLines
 	// SelectParallelTriangles // XY, YZ, XZ
@@ -326,13 +327,41 @@ type Selectable interface {
 	// Cursor select plates
 }
 
-// func init() {
-// 	ops := []Operation{{}}
-// 	for i := range ops {
-// 		ops[i].Group = Select
-// 	}
-// 	Operations = append(Operations, ops...)
-// }
+func init() {
+	group := Selection
+	name:=group.String()
+	ops := []Operation{{
+		Name: "Invert selection",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var nodes vl.CheckBox
+			nodes.SetText("Nodes")
+			list.Add(&nodes)
+
+			var lines vl.CheckBox
+			lines.SetText("Lines")
+			list.Add(&lines)
+
+			var tris vl.CheckBox
+			tris.SetText("Triangles")
+			list.Add(&tris)
+
+			var b vl.Button
+			b.SetText(name)
+			b.OnClick = func() {
+				m.InvertSelect(nodes.Checked, lines.Checked, tris.Checked)
+			}
+			list.Add(&b)
+
+			return &list
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = group
+	}
+	Operations = append(Operations, ops...)
+}
 
 type Splitable interface {
 	SplitLinesByDistance(lines []uint, distance float64, atBegin bool)

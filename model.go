@@ -286,6 +286,30 @@ func (mm *Model) SelectElements(single bool) (ids []uint) {
 	return
 }
 
+func (mm *Model) InvertSelect(nodes, lines, triangles bool) {
+	if nodes {
+		for i := range mm.Coords {
+			mm.Coords[i].selected = !mm.Coords[i].selected
+		}
+	}
+	if lines {
+		for i := range mm.Elements {
+			if mm.Elements[i].ElementType != Line2 {
+				continue
+			}
+			mm.Elements[i].selected = !mm.Elements[i].selected
+		}
+	}
+	if triangles {
+		for i := range mm.Elements {
+			if mm.Elements[i].ElementType != Triangle3 {
+				continue
+			}
+			mm.Elements[i].selected = !mm.Elements[i].selected
+		}
+	}
+}
+
 func (mm *Model) DeselectAll() {
 	// deselect all
 	for i := range mm.Coords {
