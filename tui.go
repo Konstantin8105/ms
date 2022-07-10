@@ -73,9 +73,9 @@ type Viewable interface {
 }
 
 type Addable interface {
-	AddNode(X, Y, Z float64) error
-	AddLineByNodeNumber(n1, n2 uint) error
-	AddTriangle3ByNodeNumber(n1, n2, n3 uint) error
+	AddNode(X, Y, Z float64) (id uint)
+	AddLineByNodeNumber(n1, n2 uint) (id uint)
+	AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint)
 	// TODO REMOVE AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
 	// TODO REMOVE AddElementsByNodes(ids string, l2, t3, q4 bool)
 	// AddGroup
@@ -831,7 +831,8 @@ func convertUint(str string) (ids []uint) {
 	for i := range fs {
 		u, err := strconv.ParseUint(fs[i], 10, 64)
 		if err != nil {
-			return
+			Debug = append(Debug, fmt.Sprintln("convertUint error: ", err))
+			continue
 		}
 		ids = append(ids, uint(u))
 	}

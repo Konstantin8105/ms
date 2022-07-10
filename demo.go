@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/Konstantin8105/ms"
 	"github.com/Konstantin8105/vl"
@@ -20,6 +21,16 @@ func main() {
 	// }
 	// create user interface
 
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("recovered from ", r)
+			debug.PrintStack()
+		}
+		for i := range ms.Debug {
+			fmt.Println(ms.Debug[i])
+		}
+	}()
+
 	root, action, err := ms.UserInterface()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
@@ -34,8 +45,5 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
-	}
-	for i := range ms.Debug {
-		fmt.Println(ms.Debug[i])
 	}
 }

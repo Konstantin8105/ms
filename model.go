@@ -18,6 +18,7 @@ type ElType uint8
 const (
 	Line2 ElType = iota + 1
 	Triangle3
+	ElRemove
 )
 
 // Element is typical element for FEM. Examples:
@@ -47,7 +48,7 @@ type Element struct {
 }
 
 // valid matrix element constants
-var valid = [...][2]int{{2, 2}, {3, 3}, {4, 4}}
+var valid = [...][2]int{{int(Line2), 2}, {int(Triangle3), 3}, {int(ElRemove), 0}}
 
 func (e Element) Check() error {
 	for i := range valid {
@@ -133,36 +134,36 @@ func (mm *Model) DemoSpiral() {
 
 const distanceError = 1e-6
 
-func (mm *Model) AddNode(X, Y, Z float64) (err error) {
+func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 	// check is this coordinate exist?
 	for i := range mm.Coords {
 		distance := math.Sqrt(pow.E2(mm.Coords[i].X-X) +
 			pow.E2(mm.Coords[i].Y-Y) +
 			pow.E2(mm.Coords[i].Z-Z))
 		if distance < distanceError {
-			return
+			return uint(i)
 		}
 	}
 	// append
 	mm.Coords = append(mm.Coords, Coordinate{X: X, Y: Y, Z: Z})
 	updateModel = true // Update camera parameter
-	return
+	return uint(len(mm.Coords) - 1)
 }
 
-func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (err error) {
+func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 	// type convection
 	ni1 := int(n1)
 	ni2 := int(n2)
 	// check is this coordinate exist?
-	for _, el := range mm.Elements {
+	for i, el := range mm.Elements {
 		if el.ElementType != Line2 {
 			continue
 		}
 		if el.Indexes[0] == ni1 && el.Indexes[1] == ni2 {
-			return
+			return uint(i)
 		}
 		if el.Indexes[1] == ni1 && el.Indexes[0] == ni2 {
-			return
+			return uint(i)
 		}
 	}
 	// append
@@ -171,36 +172,36 @@ func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (err error) {
 		Indexes:     []int{ni1, ni2},
 	})
 	updateModel = true // Update camera parameter
-	return
+	return uint(len(mm.Elements) - 1)
 }
 
-func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (err error) {
+func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 	// type convection
 	ni1 := int(n1)
 	ni2 := int(n2)
 	ni3 := int(n3)
 	// check is this coordinate exist?
-	for _, el := range mm.Elements {
+	for i, el := range mm.Elements {
 		if el.ElementType != Triangle3 {
 			continue
 		}
 		if el.Indexes[0] == ni1 && el.Indexes[1] == ni2 && el.Indexes[2] == ni3 {
-			return
+			return uint(i)
 		}
 		if el.Indexes[0] == ni2 && el.Indexes[1] == ni3 && el.Indexes[2] == ni1 {
-			return
+			return uint(i)
 		}
 		if el.Indexes[0] == ni3 && el.Indexes[1] == ni1 && el.Indexes[2] == ni2 {
-			return
+			return uint(i)
 		}
 		if el.Indexes[0] == ni3 && el.Indexes[1] == ni2 && el.Indexes[2] == ni1 {
-			return
+			return uint(i)
 		}
 		if el.Indexes[0] == ni2 && el.Indexes[1] == ni1 && el.Indexes[2] == ni3 {
-			return
+			return uint(i)
 		}
 		if el.Indexes[0] == ni1 && el.Indexes[1] == ni3 && el.Indexes[2] == ni2 {
-			return
+			return uint(i)
 		}
 	}
 	// append
@@ -209,7 +210,7 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (err error) {
 		Indexes:     []int{ni1, ni2, ni3},
 	})
 	updateModel = true // Update camera parameter
-	return
+	return uint(len(mm.Elements) - 1)
 }
 
 func (mm *Model) IgnoreModelElements(ids []uint) {
@@ -286,17 +287,86 @@ func (mm *Model) SelectElements(single bool) (ids []uint) {
 }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
-	// split point on line corner
-	// split point inside line
-	// split point outside line
-	// TODO
+	if distance == 0 {
+		// split by begin/end point
+		// do nothing
+		return
+	}
+	// TODO unique lines list
+	// TODO concurrency split
+	cs := mm.Coords
+	for _, il := range lines {
+		// TODO check is line ignored
+		if len(mm.Elements) <= int(il) {
+			continue
+		}
+		if mm.Elements[il].ElementType != Line2 {
+			continue
+		}
+		el := mm.Elements[il]
+		length := math.Sqrt(
+			pow.E2(cs[el.Indexes[0]].X-cs[el.Indexes[1]].X) +
+				pow.E2(cs[el.Indexes[0]].Y-cs[el.Indexes[1]].Y) +
+				pow.E2(cs[el.Indexes[0]].Z-cs[el.Indexes[1]].Z))
+		if length < distanceError {
+			// do nothing
+			continue
+		}
+		// split point on line corner
+		if atBegin && math.Abs(length-distance) < distanceError {
+			// point at end point
+			continue
+		}
+		if !atBegin && math.Abs(length+distance) < distanceError {
+			// point at begin point
+			continue
+		}
+		// change !atBegin to atBegin
+		if !atBegin {
+			mm.SplitLinesByDistance([]uint{il}, length-distance, true)
+		}
+		// split point inside line
+		b := cs[el.Indexes[0]] // begin point
+		e := cs[el.Indexes[1]] // end point
+		proportional := distance / length
+		// add new point
+		id := mm.AddNode(
+			b.X+(e.X-b.X)*proportional,
+			b.Y+(e.Y-b.Y)*proportional,
+			b.Z+(e.Z-b.Z)*proportional,
+		)
+		if 0 < distance && distance < length {
+			// add new line only if split point inside line
+			mm.AddLineByNodeNumber(id, uint(el.Indexes[1]))
+			mm.Elements[il].Indexes[1] = int(id)
+			continue
+		}
+		// split point outside line
+		// split point near end line point
+		// do nothing
+	}
 }
 
 func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
-	// split point on line corner
-	// split point inside line
-	// split point outside line
-	// TODO
+	if proportional == 0 || proportional == 1 {
+		return
+	}
+	// TODO concurrency split
+	cs := mm.Coords
+	for _, il := range lines {
+		if len(mm.Elements) <= int(il) {
+			continue
+		}
+		if mm.Elements[il].ElementType != Line2 {
+			continue
+		}
+		el := mm.Elements[il]
+		length := math.Sqrt(
+			pow.E2(cs[el.Indexes[0]].X-cs[el.Indexes[1]].X) +
+				pow.E2(cs[el.Indexes[0]].Y-cs[el.Indexes[1]].Y) +
+				pow.E2(cs[el.Indexes[0]].Z-cs[el.Indexes[1]].Z))
+		mm.SplitLinesByDistance([]uint{il}, proportional*length, atBegin)
+	}
 }
 
 func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
