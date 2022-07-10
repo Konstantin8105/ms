@@ -573,6 +573,7 @@ type Mesh interface {
 	Addable
 	Ignorable
 	Selectable
+	// TODO Intersection
 	Platable
 	Splitable
 	MoveCopyble

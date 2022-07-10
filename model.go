@@ -275,14 +275,33 @@ func (mm *Model) SelectElements(single bool) (ids []uint) {
 	return
 }
 
-func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {}
-func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, pos uint)    {}
-func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint)                   {}
-func (mm *Model) SplitTri3To3Tri3(tris []uint)                                      {}
+func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
+	// split point on line corner
+	// split point inside line
+	// split point outside line
+	// TODO
+}
+
+func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, pos uint) {
+	// split point on line corner
+	// split point inside line
+	// split point outside line
+	// TODO
+}
+
+func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
+	// TODO
+}
+
+func (mm *Model) SplitTri3To3Tri3(tris []uint) {
+	// TODO
+}
 
 func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
+	// TODO
 }
 func (mm *Model) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
+	// TODO
 }
 
 //
