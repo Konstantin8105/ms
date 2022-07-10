@@ -177,7 +177,7 @@ func init() {
 }
 
 type Ignorable interface {
-	IgnoreElements(ids []uint)
+	IgnoreModelElements(ids []uint)
 	Unignore()
 }
 
@@ -199,7 +199,7 @@ func init() {
 				if len(els) == 0 {
 					return
 				}
-				m.IgnoreElements(els)
+				m.IgnoreModelElements(els)
 			}
 			list.Add(&b)
 
@@ -257,7 +257,7 @@ type Selectable interface {
 
 type Splitable interface {
 	SplitLinesByDistance(lines []uint, distance float64, atBegin bool)
-	SplitLinesByRatio(lines []uint, proportional float64, pos uint)
+	SplitLinesByRatio(lines []uint, proportional float64, atBegin bool)
 	SplitLinesByEqualParts(lines []uint, parts uint)
 	SplitTri3To3Tri3(tris []uint)
 	// TODO REMOVE SplitTri3To3Quadr4(tris string)
@@ -314,7 +314,7 @@ func init() {
 				if !ok {
 					return
 				}
-				m.SplitLinesByRatio(sgt(), r, rg.GetPos())
+				m.SplitLinesByRatio(sgt(), r, rg.GetPos() == 0)
 			}
 			list.Add(&bi)
 

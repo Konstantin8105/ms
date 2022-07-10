@@ -7,7 +7,7 @@ import (
 )
 
 func Example() {
-	var mm MultiModel
+	var mm Model
 	mm.Coords = append(mm.Coords,
 		Coordinate{X: 0, Y: 0, Z: 0},
 		Coordinate{X: math.Pi, Y: 2, Z: 1},

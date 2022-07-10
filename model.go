@@ -213,12 +213,23 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (err error) {
 	return
 }
 
-func (mm *Model) IgnoreElements(ids []uint) {
+func (mm *Model) IgnoreModelElements(ids []uint) {
+	if len(ids) == 0 {
+		return
+	}
 	ignore := &mm.IgnoreElements
 	if 0 < mm.actual {
 		ignore = &mm.Parts[mm.actual-1].IgnoreElements
 	}
-	*ignore = append(*ignore, ids...)
+	if len(mm.Elements) < len(*ignore) {
+		*ignore = (*ignore)[:len(mm.Elements)]
+	}
+	if len(*ignore) != len(mm.Elements) {
+		*ignore = append(*ignore, make([]bool, len(mm.Elements)-len(*ignore))...)
+	}
+	for _, p := range ids {
+		(*ignore)[p] = true
+	}
 }
 
 func (mm *Model) Unignore() {
@@ -282,7 +293,7 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 	// TODO
 }
 
-func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, pos uint) {
+func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
 	// split point on line corner
 	// split point inside line
 	// split point outside line
