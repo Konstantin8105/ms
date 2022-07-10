@@ -654,7 +654,7 @@ func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() (_ float64,
 	list.Add(vl.TextStatic(postfix))
 	return &list, func() (v float64, ok bool) {
 		str := in.GetText()
-		clearValue(str)
+		clearValue(&str)
 		v, err := strconv.ParseFloat(str, 64)
 		if err != nil {
 			in.SetText(Default)
@@ -819,14 +819,13 @@ func isOne(f func() []uint) (value uint, ok bool) {
 	return b[0], true
 }
 
-func clearValue(str string) string {
-	str = strings.ReplaceAll(str, "[", "")
-	str = strings.ReplaceAll(str, "]", "")
-	return str
+func clearValue(str *string) {
+	*str = strings.ReplaceAll(*str, "[", " ")
+	*str = strings.ReplaceAll(*str, "]", " ")
 }
 
 func convertUint(str string) (ids []uint) {
-	clearValue(str)
+	clearValue(&str)
 	fs := strings.Fields(str)
 	for i := range fs {
 		u, err := strconv.ParseUint(fs[i], 10, 64)

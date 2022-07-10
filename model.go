@@ -286,7 +286,18 @@ func (mm *Model) SelectElements(single bool) (ids []uint) {
 	return
 }
 
+func (mm *Model) DeselectAll() {
+	// deselect all
+	for i := range mm.Coords {
+		mm.Coords[i].selected = false
+	}
+	for i := range mm.Elements {
+		mm.Elements[i].selected = false
+	}
+}
+
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
+	defer mm.DeselectAll() // deselect
 	if distance == 0 {
 		// split by begin/end point
 		// do nothing
@@ -326,7 +337,8 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 		}
 		// change !atBegin to atBegin
 		if !atBegin {
-			mm.SplitLinesByDistance([]uint{il}, length-distance, true)
+			mm.SplitLinesByDistance([]uint{il}, length-distance, !atBegin)
+			continue
 		}
 		// split point inside line
 		b := cs[el.Indexes[0]] // begin point
@@ -351,6 +363,7 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 }
 
 func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
+	defer mm.DeselectAll() // deselect
 	if proportional == 0 || proportional == 1 {
 		return
 	}
@@ -380,12 +393,14 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 }
 
 func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
+	defer mm.DeselectAll() // deselect
 	if parts < 2 {
 		return
 	}
 	if len(lines) == 0 {
 		return
 	}
+	cs := mm.Coords
 	for _, il := range lines {
 		if len(mm.Elements) <= int(il) {
 			continue
@@ -405,6 +420,8 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 		var ids []uint
 		for p := uint(0); p < parts-1; p++ {
 			proportional := float64(p+1) / float64(parts)
+			b := cs[el.Indexes[0]] // begin point
+			e := cs[el.Indexes[1]] // end point
 			id := mm.AddNode(
 				b.X+(e.X-b.X)*proportional,
 				b.Y+(e.Y-b.Y)*proportional,
@@ -419,12 +436,13 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 			}
 			mm.AddLineByNodeNumber(ids[i-1], ids[i])
 		}
-		mm.AddLineByNodeNumber(ids[len(ids)-1], el.Indexes[1])
-		el.Indexes[1] = ids[0]
+		mm.AddLineByNodeNumber(ids[len(ids)-1], uint(el.Indexes[1]))
+		el.Indexes[1] = int(ids[0])
 	}
 }
 
 func (mm *Model) SplitTri3To3Tri3(tris []uint) {
+	defer mm.DeselectAll() // deselect
 	if len(tris) == 0 {
 		return
 	}
@@ -433,23 +451,24 @@ func (mm *Model) SplitTri3To3Tri3(tris []uint) {
 		if len(mm.Elements) <= int(it) {
 			continue
 		}
-		if mm.Elements[il].ElementType != Triangle3 {
+		el := mm.Elements[it]
+		if el.ElementType != Triangle3 {
 			continue
 		}
 		ns := []Coordinate{
-			mm.Coords[mm.Elements[it][0]],
-			mm.Coords[mm.Elements[it][1]],
-			mm.Coords[mm.Elements[it][2]],
+			mm.Coords[el.Indexes[0]],
+			mm.Coords[el.Indexes[1]],
+			mm.Coords[el.Indexes[2]],
 		}
 		id := mm.AddNode(
-			one3*ns[0].X + one3*ns[1].X + one3*ns[2].X,
-			one3*ns[0].Y + one3*ns[1].Y + one3*ns[2].Y,
-			one3*ns[0].Z + one3*ns[1].Z + one3*ns[2].Z,
+			one3*ns[0].X+one3*ns[1].X+one3*ns[2].X,
+			one3*ns[0].Y+one3*ns[1].Y+one3*ns[2].Y,
+			one3*ns[0].Z+one3*ns[1].Z+one3*ns[2].Z,
 		)
 		// TODO loads on all elements
-		mm.AddTriangle3ByNodeNumber(el.Indexes[1], el.Indexes[2], id)
-		mm.AddTriangle3ByNodeNumber(el.Indexes[2], el.Indexes[0], id)
-		el.Indexes = []int{el.Indexes[0], el.Indexes[1], id}
+		mm.AddTriangle3ByNodeNumber(uint(el.Indexes[1]), uint(el.Indexes[2]), id)
+		mm.AddTriangle3ByNodeNumber(uint(el.Indexes[2]), uint(el.Indexes[0]), id)
+		el.Indexes = []int{el.Indexes[0], el.Indexes[1], int(id)}
 	}
 }
 

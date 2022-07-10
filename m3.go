@@ -823,11 +823,6 @@ func keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action,
 	switch key {
 	case glfw.KeyEscape:
 		// deselect all
-		for i := range mm.Coords {
-			mm.Coords[i].selected = false
-		}
-		for i := range mm.Elements {
-			mm.Elements[i].selected = false
-		}
+		mm.DeselectAll()
 	}
 }
