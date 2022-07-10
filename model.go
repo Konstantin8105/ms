@@ -306,6 +306,7 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 	if len(lines) == 0 {
 		return
 	}
+	// TODO single change per time Lock/Unlock
 	// TODO unique lines list
 	// TODO concurrency split
 	cs := mm.Coords
