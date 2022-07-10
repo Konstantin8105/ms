@@ -20,7 +20,7 @@ const (
 	// 	Scale
 	// 	TypModels
 	// 	Check
-	// 	Plugin
+	Plugin
 	endGroup
 )
 
@@ -42,8 +42,8 @@ func (g GroupId) String() string {
 		// 		return "Check"
 		// 	case TypModels:
 		// 		return "Typical models"
-		// 	case Plugin:
-		// 		return "Plugin"
+	case Plugin:
+		return "Plugin"
 	}
 	return fmt.Sprintf("Undefined:%02d", g)
 }
@@ -532,6 +532,7 @@ type Measurementable interface {
 // }
 
 type Pluginable interface {
+	DemoSpiral()
 	// Cylinder
 	// Sphere
 	// Cone
@@ -566,6 +567,28 @@ type Pluginable interface {
 	// Stamping by point
 	// Stiffening rib
 	// Weld
+}
+
+func init() {
+	group := Plugin
+	ops := []Operation{{
+		Name: "Demo: spiral",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var b vl.Button
+			b.SetText("Add")
+			b.OnClick = func() {
+				m.DemoSpiral()
+			}
+			list.Add(&b)
+			return &list
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = group
+	}
+	Operations = append(Operations, ops...)
 }
 
 type Mesh interface {

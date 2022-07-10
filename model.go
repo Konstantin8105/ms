@@ -89,7 +89,7 @@ type Part struct {
 	Ignored
 }
 
-func init() { // TODO remove
+func (mm *Model) DemoSpiral() {
 	var (
 		Ri     = 0.5
 		Ro     = 2.5
@@ -102,7 +102,6 @@ func init() { // TODO remove
 		//  800 = FPS 25.0
 		// 8000 = FPS  5.5 --- 16000 points
 	)
-
 	for i := 0; i < levels; i++ {
 		Ro += dR
 		Ri += dR
