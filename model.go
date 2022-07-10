@@ -532,6 +532,26 @@ func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coords [3]float64
 			panic(fmt.Errorf("add implementation: %v", el))
 		}
 	}
+	// add intermediant triangles for Line2
+	if addTri {
+		for _, p := range elements {
+			el := mm.Elements[p]
+			if el.ElementType != Line2 {
+				continue
+			}
+			mm.AddTriangle3ByNodeNumber(
+				uint(el.Indexes[0]),
+				uint(el.Indexes[1]),
+				uint(newNodes[el.Indexes[1]]),
+			)
+			mm.AddTriangle3ByNodeNumber(
+				uint(el.Indexes[0]),
+				uint(newNodes[el.Indexes[1]]),
+				uint(newNodes[el.Indexes[0]]),
+			)
+		}
+	}
+	// TODO check triangles on one line
 }
 
 func (mm *Model) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
