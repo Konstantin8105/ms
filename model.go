@@ -568,6 +568,30 @@ func (mm *Model) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, 
 	}, copy, addLines, addTri)
 }
 
+func (mm *Model) StandardView(view SView) {
+	updateModel = true
+	switch view {
+	case StandardViewXOYpos:
+		camera.alpha = 0.0
+		camera.betta = 0.0
+	case StandardViewYOZpos:
+		camera.alpha = 90.0
+		camera.betta = 0.0
+	case StandardViewXOZpos:
+		camera.alpha = 0.0
+		camera.betta = 270.0
+	case StandardViewXOYneg:
+		camera.alpha = 180.0
+		camera.betta = 0.0
+	case StandardViewYOZneg:
+		camera.alpha = 270.0
+		camera.betta = 0.0
+	case StandardViewXOZneg:
+		camera.alpha = 0.0
+		camera.betta = 90.0
+	}
+}
+
 //
 // Approach is not aurogenerate model, but approach is
 // fast create model.

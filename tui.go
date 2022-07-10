@@ -13,7 +13,8 @@ import (
 type GroupId uint8
 
 const (
-	Add GroupId = iota
+	View GroupId = iota
+	Add
 	Ignore
 	Split
 	// Plate
@@ -27,6 +28,8 @@ const (
 
 func (g GroupId) String() string {
 	switch g {
+	case View:
+		return "View"
 	case Add:
 		return "Add"
 	case Ignore:
@@ -56,21 +59,98 @@ type Filable interface {
 	// Close
 }
 
+// func init() {
+// 	ops := []Operation{{}}
+// 	for i := range ops {
+// 		ops[i].Group = Select
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
+
 type Editable interface {
 	// Undo
 	// Redo
 }
 
+// func init() {
+// 	ops := []Operation{{}}
+// 	for i := range ops {
+// 		ops[i].Group = Select
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
+
+type SView uint8
+
+const (
+	StandardViewXOYpos SView = iota
+	StandardViewYOZpos
+	StandardViewXOZpos
+	StandardViewXOYneg
+	StandardViewYOZneg
+	StandardViewXOZneg
+	endStandardView
+)
+
+func (s SView) String() string {
+	switch s {
+	case StandardViewXOYpos:
+		return "+XOY"
+	case StandardViewYOZpos:
+		return "+YOZ"
+	case StandardViewXOZpos:
+		return "+XOZ"
+	case StandardViewXOYneg:
+		return "-XOY"
+	case StandardViewYOZneg:
+		return "-YOZ"
+	case StandardViewXOZneg:
+		return "-XOZ"
+	}
+	return "Undefined view"
+}
+
 type Viewable interface {
 	// Wireframe mode
 	// Solid mode
-	// Standard view +X
-	// Standard view -X
-	// Standard view +Y
-	// Standard view -Y
-	// Standard view +Z
-	// Standard view -Z
+	StandardView(view SView)
 	// Isometric views
+}
+
+func init() {
+	group := View
+	name := group.String()
+	ops := []Operation{{
+		Name: "Standard View",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var names []string
+			for i := 0; i < int(endStandardView); i++ {
+				names = append(names, SView(i).String())
+			}
+
+			var rg vl.RadioGroup
+			rg.SetText(names)
+			list.Add(&rg)
+
+			var b vl.Button
+			b.SetText(name)
+			b.OnClick = func() {
+				pos := rg.GetPos()
+				if uint(endStandardView) <= pos {
+					return
+				}
+				m.StandardView(SView(pos))
+			}
+			list.Add(&b)
+			return &list
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = group
+	}
+	Operations = append(Operations, ops...)
 }
 
 type Addable interface {
@@ -231,16 +311,14 @@ type Selectable interface {
 	SelectLines(single bool) (ids []uint)
 	SelectTriangles(single bool) (ids []uint)
 	SelectElements(single bool) (ids []uint)
-	// TODO REMOVE SelectQuadr4(single bool) (ids []uint)
+
 	// InvertNodes
 	// InvertLines
 	// InvertTriangles
-	// InvertQuadr4
-	//
+
 	// SelectParallelLines
 	// SelectParallelTriangles // XY, YZ, XZ
-	// SelectParallelQuadr4
-	//
+
 	// SelectByGroup
 	//
 	// Cursor select node
