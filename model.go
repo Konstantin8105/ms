@@ -292,6 +292,9 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 		// do nothing
 		return
 	}
+	if len(lines) == 0 {
+		return
+	}
 	// TODO unique lines list
 	// TODO concurrency split
 	cs := mm.Coords
@@ -351,6 +354,9 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 	if proportional == 0 || proportional == 1 {
 		return
 	}
+	if len(lines) == 0 {
+		return
+	}
 	// TODO concurrency split
 	cs := mm.Coords
 	for _, il := range lines {
@@ -365,16 +371,86 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 			pow.E2(cs[el.Indexes[0]].X-cs[el.Indexes[1]].X) +
 				pow.E2(cs[el.Indexes[0]].Y-cs[el.Indexes[1]].Y) +
 				pow.E2(cs[el.Indexes[0]].Z-cs[el.Indexes[1]].Z))
+		if length < distanceError {
+			// do nothing
+			continue
+		}
 		mm.SplitLinesByDistance([]uint{il}, proportional*length, atBegin)
 	}
 }
 
 func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
-	// TODO
+	if parts < 2 {
+		return
+	}
+	if len(lines) == 0 {
+		return
+	}
+	for _, il := range lines {
+		if len(mm.Elements) <= int(il) {
+			continue
+		}
+		if mm.Elements[il].ElementType != Line2 {
+			continue
+		}
+		el := mm.Elements[il]
+		length := math.Sqrt(
+			pow.E2(cs[el.Indexes[0]].X-cs[el.Indexes[1]].X) +
+				pow.E2(cs[el.Indexes[0]].Y-cs[el.Indexes[1]].Y) +
+				pow.E2(cs[el.Indexes[0]].Z-cs[el.Indexes[1]].Z))
+		if length < distanceError {
+			// do nothing
+			continue
+		}
+		var ids []uint
+		for p := uint(0); p < parts-1; p++ {
+			proportional := float64(p+1) / float64(parts)
+			id := mm.AddNode(
+				b.X+(e.X-b.X)*proportional,
+				b.Y+(e.Y-b.Y)*proportional,
+				b.Z+(e.Z-b.Z)*proportional,
+			)
+			ids = append(ids, id)
+		}
+		for i := range ids {
+			if i == 0 {
+				mm.AddLineByNodeNumber(uint(el.Indexes[0]), ids[0])
+				continue
+			}
+			mm.AddLineByNodeNumber(ids[i-1], ids[i])
+		}
+		mm.AddLineByNodeNumber(ids[len(ids)-1], el.Indexes[1])
+		el.Indexes[1] = ids[0]
+	}
 }
 
 func (mm *Model) SplitTri3To3Tri3(tris []uint) {
-	// TODO
+	if len(tris) == 0 {
+		return
+	}
+	const one3 = 1.0 / 3.0
+	for _, it := range tris {
+		if len(mm.Elements) <= int(it) {
+			continue
+		}
+		if mm.Elements[il].ElementType != Triangle3 {
+			continue
+		}
+		ns := []Coordinate{
+			mm.Coords[mm.Elements[it][0]],
+			mm.Coords[mm.Elements[it][1]],
+			mm.Coords[mm.Elements[it][2]],
+		}
+		id := mm.AddNode(
+			one3*ns[0].X + one3*ns[1].X + one3*ns[2].X,
+			one3*ns[0].Y + one3*ns[1].Y + one3*ns[2].Y,
+			one3*ns[0].Z + one3*ns[1].Z + one3*ns[2].Z,
+		)
+		// TODO loads on all elements
+		mm.AddTriangle3ByNodeNumber(el.Indexes[1], el.Indexes[2], id)
+		mm.AddTriangle3ByNodeNumber(el.Indexes[2], el.Indexes[0], id)
+		el.Indexes = []int{el.Indexes[0], el.Indexes[1], id}
+	}
 }
 
 func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
