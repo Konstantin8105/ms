@@ -73,7 +73,7 @@ func M3() (err error) {
 		gl.Enable(gl.LINE_SMOOTH)
 
 		cameraView(window)
-		model3d(window, selectNone)
+		model3d(window, state)
 
 		// check select rectangle
 		if selectObjects.fromAdd && selectObjects.toAdd {
@@ -228,7 +228,7 @@ func cameraView(window *glfw.Window) {
 
 var updateModel bool // TODO remove
 
-func model3d(window *glfw.Window, s selectType) {
+func model3d(window *glfw.Window, s windowViewState) {
 	gl.PushMatrix()
 	defer func() {
 		gl.PopMatrix()
@@ -284,7 +284,7 @@ func model3d(window *glfw.Window, s selectType) {
 	// Point
 	gl.PointSize(5)
 	switch s {
-	case selectNone:
+	case normal, colorEdgeElements:
 		gl.Begin(gl.POINTS)
 		for i := range mm.Coords {
 			if mm.Coords[i].Removed {
@@ -323,12 +323,12 @@ func model3d(window *glfw.Window, s selectType) {
 			continue
 		}
 		// do not show selected elements in Select case
-		if s != selectNone && el.selected {
+		if s != normal && s != colorEdgeElements && el.selected {
 			continue
 		}
 		// color identification
 		switch s {
-		case selectNone:
+		case normal, colorEdgeElements:
 			switch el.ElementType {
 			case Line2:
 				if el.selected {
@@ -352,7 +352,7 @@ func model3d(window *glfw.Window, s selectType) {
 		}
 		// draw points in 3D
 		switch s {
-		case selectNone, selectPoints:
+		case normal, colorEdgeElements, selectPoints:
 		case selectLines, selectTriangles:
 			gl.Begin(gl.POINTS)
 			for _, k := range el.Indexes {
@@ -366,9 +366,18 @@ func model3d(window *glfw.Window, s selectType) {
 		// draw lines in 3D
 		switch el.ElementType {
 		case Line2:
-			if s == selectNone || s == selectLines {
+			if s == normal || s == selectLines || (s == colorEdgeElements && el.selected) {
 				gl.Begin(gl.LINES)
 				for _, k := range el.Indexes {
+					c := mm.Coords[k]
+					gl.Vertex3d(c.X, c.Y, c.Z)
+				}
+				gl.End()
+			}
+			if s == colorEdgeElements && !el.selected {
+				gl.Begin(gl.LINES)
+				for i, k := range el.Indexes {
+					edgeColor(i)
 					c := mm.Coords[k]
 					gl.Vertex3d(c.X, c.Y, c.Z)
 				}
@@ -404,9 +413,20 @@ func model3d(window *glfw.Window, s selectType) {
 		switch el.ElementType {
 		case Line2: // do nothing
 		case Triangle3:
-			if s == selectNone || s == selectTriangles {
+			if s == normal || s == selectTriangles || (s == colorEdgeElements && el.selected) {
 				gl.Begin(gl.TRIANGLES)
 				for _, p := range el.Indexes {
+					gl.Vertex3d(
+						mm.Coords[p].X,
+						mm.Coords[p].Y,
+						mm.Coords[p].Z)
+				}
+				gl.End()
+			}
+			if s == colorEdgeElements && !el.selected {
+				gl.Begin(gl.TRIANGLES)
+				for i, p := range el.Indexes {
+					edgeColor(i)
 					gl.Vertex3d(
 						mm.Coords[p].X,
 						mm.Coords[p].Y,
@@ -561,14 +581,35 @@ var selectObjects = struct {
 	toAdd    bool
 }{}
 
-type selectType = uint8
+type windowViewState = uint8
+
+var state windowViewState = normal
 
 const (
-	selectNone selectType = iota
+	normal windowViewState = iota
+	colorEdgeElements
 	selectPoints
 	selectLines
 	selectTriangles
 )
+
+func edgeColor(pos int) {
+	switch pos {
+	case 0: // yellow
+		gl.Color3ub(255, 255, 0)
+		return
+	case 1: // blue
+		gl.Color3ub(0, 0, 255)
+		return
+	case 2: // orange
+		gl.Color3ub(255, 165, 0)
+		return
+	case 3: // green
+		gl.Color3ub(0, 128, 0)
+		return
+	}
+	panic(fmt.Errorf("not valid pos: %d", pos))
+}
 
 // maximal amount colors is 245^3 = 14 706 125
 var (
@@ -677,7 +718,7 @@ func selectByRectangle(window *glfw.Window) {
 	var found bool
 
 	for _, s := range []struct {
-		st selectType
+		st windowViewState
 		sf func(index int) (found bool)
 	}{
 		{

@@ -281,6 +281,15 @@ func (mm *Model) IsIgnore(id uint) bool {
 	return false
 }
 
+func (mm *Model) ColorEdge(isColor bool) {
+	if isColor {
+		state = colorEdgeElements
+	} else {
+		state = normal
+	}
+}
+
+
 func (mm *Model) IgnoreModelElements(ids []uint) {
 	if len(ids) == 0 {
 		return

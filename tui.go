@@ -124,6 +124,7 @@ type Viewable interface {
 	// Wireframe mode
 	// Solid mode
 	StandardView(view SView)
+	ColorEdge(isColor bool)
 	// Isometric views
 }
 
@@ -152,6 +153,26 @@ func init() {
 					return
 				}
 				m.StandardView(SView(pos))
+			}
+			list.Add(&b)
+			return &list
+		}}, {
+		Name: "Color edges of elements",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"Normal colors", "Edge colors of elements"})
+			list.Add(&rg)
+
+			var b vl.Button
+			b.SetText(name)
+			b.OnClick = func() {
+				pos := rg.GetPos()
+				if uint(endStandardView) <= pos {
+					return
+				}
+				m.ColorEdge(pos == 1)
 			}
 			list.Add(&b)
 			return &list
