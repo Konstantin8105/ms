@@ -18,8 +18,7 @@ func init() {
 }
 
 var (
-	font     *Font
-	fontSize int = 12
+	font *gltext.Font
 )
 
 var fps Fps
@@ -54,11 +53,25 @@ func (mm *Model) View3d() (err error) {
 
 	// ???
 
-	file := "/home/konstantin/.fonts/Go-Mono-Bold.ttf"
-	font, err = NewFont(file, fontSize)
+	const (
+		fontSize = 12
+		fontFile     = "/home/konstantin/.fonts/Go-Mono-Bold.ttf"
+	)
+
+	// create new Font from given filename (.ttf expected)
+	fd, err := os.Open(fontFile)
 	if err != nil {
 		return err
 	}
+	font, err = gltext.LoadTruetype(fd, int32(fontSize), 32, 127, gltext.LeftToRight)
+	if err != nil {
+		return err
+	}
+	err = fd.Close()
+	if err != nil {
+		return err
+	}
+	// font is prepared
 
 	fps.Init()
 
@@ -91,9 +104,9 @@ func (mm *Model) View3d() (err error) {
 		// draw axe coordinates
 		mm.drawAxes(window)
 		// minimal screen notes
-		font.Draw(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
-		font.Draw(fmt.Sprintf("Nodes     : %6d", len(mm.Coords)), 0, 1*fontSize)
-		font.Draw(fmt.Sprintf("Elements  : %6d", len(mm.Elements)), 0, 2*fontSize)
+		DrawText(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
+		DrawText(fmt.Sprintf("Nodes     : %6d", len(mm.Coords)), 0, 1*fontSize)
+		DrawText(fmt.Sprintf("Elements  : %6d", len(mm.Elements)), 0, 2*fontSize)
 
 		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
 		// TODO : REMOVE: ui(window)
@@ -131,31 +144,11 @@ func (f *Fps) EndFrame() {
 	f.framesCount++
 }
 
-// Font handle
-type Font struct {
-	Handle *gltext.Font
-}
-
-// NewFont create new Font from given filename (.ttf expected)
-func NewFont(filename string, size int) (*Font, error) {
-	fd, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
-	font, _ := gltext.LoadTruetype(fd, int32(size), 32, 127, gltext.LeftToRight)
-	return &Font{Handle: font}, nil
-}
-
 // Draw text on the screen
-func (f *Font) Draw(str string, x, y int) { // , c Color) {
+func DrawText(str string, x, y int) {
 	gl.Color4ub(0, 0, 0, 255)
 	gl.LoadIdentity()
-	f.Handle.Printf(float32(x), float32(y), str)
-}
-
-func (f *Font) Metrics(text string) (int, int) {
-	return f.Handle.Metrics(text)
+	font.Printf(float32(x), float32(y), str)
 }
 
 func angle_norm(a float64) float64 {
