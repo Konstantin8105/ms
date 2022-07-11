@@ -17,11 +17,7 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var (
-	font *gltext.Font
-)
-
-var fps Fps
+var font *gltext.Font
 
 func (mm *Model) View3d() (err error) {
 	if err = glfw.Init(); err != nil {
@@ -53,17 +49,13 @@ func (mm *Model) View3d() (err error) {
 
 	// ???
 
-	const (
-		fontSize = 12
-		fontFile     = "/home/konstantin/.fonts/Go-Mono-Bold.ttf"
-	)
-
 	// create new Font from given filename (.ttf expected)
-	fd, err := os.Open(fontFile)
+	fd, err := os.Open("/home/konstantin/.fonts/Go-Mono-Bold.ttf") // fontfile
 	if err != nil {
 		return err
 	}
-	font, err = gltext.LoadTruetype(fd, int32(fontSize), 32, 127, gltext.LeftToRight)
+	const fontSize = int32(12)
+	font, err = gltext.LoadTruetype(fd, fontSize, 32, 127, gltext.LeftToRight)
 	if err != nil {
 		return err
 	}
@@ -73,6 +65,8 @@ func (mm *Model) View3d() (err error) {
 	}
 	// font is prepared
 
+	// calculate data for FPS
+	var fps Fps
 	fps.Init()
 
 	gl.Disable(gl.LIGHTING)
@@ -145,7 +139,7 @@ func (f *Fps) EndFrame() {
 }
 
 // Draw text on the screen
-func DrawText(str string, x, y int) {
+func DrawText(str string, x, y int32) {
 	gl.Color4ub(0, 0, 0, 255)
 	gl.LoadIdentity()
 	font.Printf(float32(x), float32(y), str)
