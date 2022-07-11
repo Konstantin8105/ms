@@ -769,7 +769,7 @@ func (mm *Model) mouseButtonCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	if button == glfw.MouseButton1 {
+	if button == glfw.MouseButton3 {
 		switch action {
 		case glfw.Press:
 			if mods == glfw.ModControl {
@@ -811,7 +811,7 @@ func (mm *Model) cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 	}
 
 	const angle = 5.0
-	if w.GetMouseButton(glfw.MouseButton1) == glfw.Press {
+	if w.GetMouseButton(glfw.MouseButton3) == glfw.Press {
 		switch {
 		case xpos < xlast:
 			mm.camera.alpha -= angle
