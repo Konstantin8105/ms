@@ -92,9 +92,8 @@ func M3() (err error) {
 		drawAxes(window)
 		// minimal screen notes
 		font.Draw(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
-		// font.Draw(fmt.Sprintf("Nodes     : %6d", len(mm.Coords)), 0, 1*fontSize)
-		// font.Draw(fmt.Sprintf("Lines     : %6d", len(mm.Lines)), 0, 2*fontSize)
-		// font.Draw(fmt.Sprintf("Triangles3: %6d", len(mm.Triangles)), 0, 3*fontSize)
+		font.Draw(fmt.Sprintf("Nodes     : %6d", len(mm.Coords)), 0, 1*fontSize)
+		font.Draw(fmt.Sprintf("Elements  : %6d", len(mm.Elements)), 0, 2*fontSize)
 
 		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
 		// TODO : REMOVE: ui(window)

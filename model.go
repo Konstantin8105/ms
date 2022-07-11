@@ -3,6 +3,8 @@ package ms
 import (
 	"fmt"
 	"math"
+	"runtime"
+	"sync"
 
 	"github.com/Konstantin8105/pow"
 )
@@ -62,6 +64,7 @@ func (e Element) Check() error {
 // Coordinate store coordinate of points
 type Coordinate struct {
 	object3d
+	Removed bool // TODO check everywhere
 	X, Y, Z float64
 }
 
@@ -136,7 +139,7 @@ const distanceError = 1e-6
 
 func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 	// check is this coordinate exist?
-	for i := range mm.Coords {
+	for i := range mm.Coords { // TODO bench problem
 		distance := math.Sqrt(pow.E2(mm.Coords[i].X-X) +
 			pow.E2(mm.Coords[i].Y-Y) +
 			pow.E2(mm.Coords[i].Z-Z))
@@ -464,6 +467,107 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 		mm.AddLineByNodeNumber(ids[len(ids)-1], uint(el.Indexes[1]))
 		el.Indexes[1] = int(ids[0])
 	}
+}
+
+//func (mm *Model) RemoveEmptyNodes() {
+// remove Removed Coordinates
+// find Coordinates without elements
+// remove Removed Elements
+// }
+
+func (mm *Model) MergeNodes(minDistance float64) {
+	if minDistance <= 0.0 {
+		return
+	}
+	if minDistance == 0.0 {
+		minDistance = distanceError
+	}
+
+	type link struct {
+		less, more int
+	}
+
+	in := make(chan link)
+	re := make(chan link)
+
+	compare := func(less, more int) {
+		// SQRT(DX^2+DY^2+DZ^2) < D
+		//      DX^2+DY^2+DZ^2  < D^2
+		// specific cases:
+		//	    DX^2            < D^2, DY=0, DZ=0
+		if more <= less {
+			return
+		}
+		if mm.Coords[less].Removed {
+			return
+		}
+		if mm.Coords[more].Removed {
+			return
+		}
+		dX := mm.Coords[more].X - mm.Coords[less].X
+		if distanceError < math.Abs(dX) {
+			return
+		}
+		dY := mm.Coords[more].Y - mm.Coords[less].Y
+		if distanceError < math.Abs(dY) {
+			return
+		}
+		dZ := mm.Coords[more].Z - mm.Coords[less].Z
+		if distanceError < math.Abs(dZ) {
+			return
+		}
+		distanceSquare := pow.E2(dX) + pow.E2(dY) + pow.E2(dZ)
+		if math.Sqrt(distanceSquare) < minDistance {
+			// Coordinates are same
+			re <- link{less: less, more: more}
+		}
+	}
+
+	size := runtime.NumCPU()
+	if size < 1 {
+		size = 1
+	}
+	var wg sync.WaitGroup
+	wg.Add(size)
+	for i := 0; i < size; i++ {
+		go func() {
+			for l := range in {
+				compare(l.less, l.more)
+			}
+			wg.Done()
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(re)
+	}()
+
+	done := make(chan bool)
+	go func() {
+		for l := range re {
+			for i := range mm.Elements {
+				for j := range mm.Elements[i].Indexes {
+					if mm.Elements[i].Indexes[j] == l.less {
+						mm.Elements[i].Indexes[j] = l.more
+					}
+				}
+			}
+			mm.Coords[l.more].Removed = true
+		}
+		done <- true
+	}()
+
+	for i := range mm.Coords {
+		for j := range mm.Coords {
+			in <- link{less: i, more: j}
+		}
+	}
+	close(in)
+
+	<-done
+	close(done)
+	// TODO loads merge
 }
 
 func (mm *Model) SplitTri3To3Tri3(tris []uint) {

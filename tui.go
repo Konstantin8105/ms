@@ -18,6 +18,8 @@ const (
 	Add
 	Ignore
 	Split
+	Merge
+	Remove
 	// Plate
 	MoveCopy
 	// 	Scale
@@ -39,6 +41,10 @@ func (g GroupId) String() string {
 		return "Ignore"
 	case Split:
 		return "Split"
+	case Merge:
+		return "Merge"
+	case Remove:
+		return "Remove"
 		// 	case Plate:
 		// 		return "Plate operations"
 	case MoveCopy:
@@ -329,7 +335,7 @@ type Selectable interface {
 
 func init() {
 	group := Selection
-	name:=group.String()
+	name := group.String()
 	ops := []Operation{{
 		Name: "Invert selection",
 		Part: func(m Mesh) (w vl.Widget) {
@@ -362,6 +368,34 @@ func init() {
 	}
 	Operations = append(Operations, ops...)
 }
+
+type Removable interface {
+	// RemoveEmptyNodes()
+}
+
+// func init() {
+// 	group := Remove
+// 	name := group.String()
+// 	ops := []Operation{{
+// 		Name: "Empty/removable nodes/elements",
+// 		Part: func(m Mesh) (w vl.Widget) {
+// 			var list vl.List
+//
+// 			var bi vl.Button
+// 			bi.SetText(name)
+// 			bi.OnClick = func() {
+// 				m.RemoveEmptyNodes()
+// 			}
+// 			list.Add(&bi)
+//
+// 			return &list
+// 		}},
+// 	}
+// 	for i := range ops {
+// 		ops[i].Group = group
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
 
 type Splitable interface {
 	SplitLinesByDistance(lines []uint, distance float64, atBegin bool)
@@ -464,6 +498,45 @@ func init() {
 	}
 	for i := range ops {
 		ops[i].Group = Split
+	}
+	Operations = append(Operations, ops...)
+}
+
+type Mergable interface {
+	MergeNodes(minDistance float64)
+	// MergeLines()
+	// MergeTriangles()
+}
+
+func init() {
+	group := Merge
+	name := group.String()
+	ops := []Operation{{
+		Name: "Merge nodes",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			d, dgt := InputFloat("Minimal distance", "meter")
+			list.Add(d)
+
+			var b vl.Button
+			b.SetText(name)
+			b.OnClick = func() {
+				d, ok := dgt()
+				if !ok {
+					return
+				}
+				if d <= 0.0 {
+					return
+				}
+				m.MergeNodes(d)
+			}
+			list.Add(&b)
+			return &list
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = group
 	}
 	Operations = append(Operations, ops...)
 }
@@ -652,9 +725,6 @@ type Pluginable interface {
 	// Column-beam connection
 	// Column-column connection
 	// Beam intersection
-	// Merge nodes
-	// Merge beams
-	// Merge plates
 	// Plate intersection
 	// Chamfer plates
 	// Fillet plates
@@ -704,9 +774,11 @@ type Mesh interface {
 	Addable
 	Ignorable
 	Selectable
+	Removable
 	// TODO Intersection
 	Platable
 	Splitable
+	Mergable
 	MoveCopyble
 	Scalable
 	Checkable
