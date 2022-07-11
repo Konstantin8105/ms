@@ -80,7 +80,6 @@ type Named struct{ Name string }
 type Ignored struct{ IgnoreElements []bool }
 
 // TODO : type MultiModel struct { Models []Model}
-// var mm Model // TODO : remove
 
 type Model struct {
 	// actual = 0, then change Model
@@ -93,6 +92,16 @@ type Model struct {
 	Coords   []Coordinate
 
 	Parts []Part
+
+	// for 3d view
+	state       windowViewState
+	updateModel bool
+	camera      struct {
+		alpha, betta float64
+		R            float64
+		center       Coordinate
+		moveX, moveY float64
+	}
 }
 
 type Part struct {
@@ -139,7 +148,7 @@ func (mm *Model) AddModel(m Model) {
 			panic(fmt.Errorf("not implemented %v", el))
 		}
 	}
-	updateModel = true // TODO  remove
+	mm.updateModel = true // Update camera parameter
 }
 
 func (mm *Model) DemoSpiral() {
@@ -210,7 +219,7 @@ func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 	}
 	// append
 	mm.Coords = append(mm.Coords, Coordinate{X: X, Y: Y, Z: Z})
-	updateModel = true // Update camera parameter
+	mm.updateModel = true // Update camera parameter
 	return uint(len(mm.Coords) - 1)
 }
 
@@ -235,7 +244,7 @@ func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 		ElementType: Line2,
 		Indexes:     []int{ni1, ni2},
 	})
-	updateModel = true // Update camera parameter
+	mm.updateModel = true // Update camera parameter
 	return uint(len(mm.Elements) - 1)
 }
 
@@ -273,7 +282,7 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 		ElementType: Triangle3,
 		Indexes:     []int{ni1, ni2, ni3},
 	})
-	updateModel = true // Update camera parameter
+	mm.updateModel = true // Update camera parameter
 	return uint(len(mm.Elements) - 1)
 }
 
@@ -290,9 +299,9 @@ func (mm *Model) IsIgnore(id uint) bool {
 
 func (mm *Model) ColorEdge(isColor bool) {
 	if isColor {
-		state = colorEdgeElements
+		mm.state = colorEdgeElements
 	} else {
-		state = normal
+		mm.state = normal
 	}
 }
 
@@ -845,26 +854,26 @@ func (mm *Model) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, 
 }
 
 func (mm *Model) StandardView(view SView) {
-	updateModel = true
+	mm.updateModel = true
 	switch view {
 	case StandardViewXOYpos:
-		camera.alpha = 0.0
-		camera.betta = 0.0
+		mm.camera.alpha = 0.0
+		mm.camera.betta = 0.0
 	case StandardViewYOZpos:
-		camera.alpha = 90.0
-		camera.betta = 0.0
+		mm.camera.alpha = 90.0
+		mm.camera.betta = 0.0
 	case StandardViewXOZpos:
-		camera.alpha = 0.0
-		camera.betta = 270.0
+		mm.camera.alpha = 0.0
+		mm.camera.betta = 270.0
 	case StandardViewXOYneg:
-		camera.alpha = 180.0
-		camera.betta = 0.0
+		mm.camera.alpha = 180.0
+		mm.camera.betta = 0.0
 	case StandardViewYOZneg:
-		camera.alpha = 270.0
-		camera.betta = 0.0
+		mm.camera.alpha = 270.0
+		mm.camera.betta = 0.0
 	case StandardViewXOZneg:
-		camera.alpha = 0.0
-		camera.betta = 90.0
+		mm.camera.alpha = 0.0
+		mm.camera.betta = 90.0
 	}
 }
 
@@ -1010,6 +1019,9 @@ func (mm *Model) Run(quit <-chan struct{}) (err error) {
 			err = fmt.Errorf("%v\n%v\n%v", err, r, string(debug.Stack()))
 		}
 	}()
+
+	// initialize
+	mm.updateModel = true
 
 	root, action, err := UserInterface(mm)
 	if err != nil {

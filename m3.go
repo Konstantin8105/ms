@@ -72,8 +72,8 @@ func (mm *Model) View3d() (err error) {
 		gl.Enable(gl.DEPTH_TEST)
 		gl.Enable(gl.LINE_SMOOTH)
 
-		cameraView(window)
-		mm.model3d(window, state)
+		mm.cameraView(window)
+		mm.model3d(window, mm.state)
 
 		// check select rectangle
 		if selectObjects.fromAdd && selectObjects.toAdd {
@@ -89,7 +89,7 @@ func (mm *Model) View3d() (err error) {
 		// select rectangle
 		drawSelectRectangle(window)
 		// draw axe coordinates
-		drawAxes(window)
+		mm.drawAxes(window)
 		// minimal screen notes
 		font.Draw(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
 		font.Draw(fmt.Sprintf("Nodes     : %6d", len(mm.Coords)), 0, 1*fontSize)
@@ -158,18 +158,6 @@ func (f *Font) Metrics(text string) (int, int) {
 	return f.Handle.Metrics(text)
 }
 
-var camera = struct {
-	alpha, betta float64
-	R            float64
-	center       Coordinate
-	moveX, moveY float64
-}{
-	alpha:  0,
-	betta:  0,
-	R:      1,
-	center: Coordinate{X: 0, Y: 0, Z: 0},
-}
-
 func angle_norm(a float64) float64 {
 	if 360.0 < a {
 		return a - 360.0
@@ -180,10 +168,10 @@ func angle_norm(a float64) float64 {
 	return a
 }
 
-func cameraView(window *glfw.Window) {
+func (mm *Model) cameraView(window *glfw.Window) {
 	// better angle value
-	camera.alpha = angle_norm(camera.alpha)
-	camera.betta = angle_norm(camera.betta)
+	mm.camera.alpha = angle_norm(mm.camera.alpha)
+	mm.camera.betta = angle_norm(mm.camera.betta)
 
 	w, h := window.GetSize()
 	gl.Viewport(0, 0, int32(w), int32(h))
@@ -194,39 +182,37 @@ func cameraView(window *glfw.Window) {
 		// for avoid 3D cutting back model
 		const Zzoom float64 = 100.0
 		// renaming
-		cx := camera.center.X
-		cy := camera.center.Y
-		cz := camera.center.Z
+		cx := mm.camera.center.X
+		cy := mm.camera.center.Y
+		cz := mm.camera.center.Z
 		// scaling monitor 3d model on screen
 		if w < h {
 			ratio = float64(w) / float64(h)
 			gl.Ortho(
-				(-camera.R-camera.moveX)+cx, (camera.R-camera.moveX)+cx,
-				(-camera.R-camera.moveY)/ratio+cy, (camera.R-camera.moveY)/ratio+cy,
-				(-camera.R-cz)*Zzoom, (camera.R+cz)*Zzoom)
+				(-mm.camera.R-mm.camera.moveX)+cx, (mm.camera.R-mm.camera.moveX)+cx,
+				(-mm.camera.R-mm.camera.moveY)/ratio+cy, (mm.camera.R-mm.camera.moveY)/ratio+cy,
+				(-mm.camera.R-cz)*Zzoom, (mm.camera.R+cz)*Zzoom)
 		} else {
 			ratio = float64(h) / float64(w)
 			gl.Ortho(
-				(-camera.R-camera.moveX)/ratio+cx, (camera.R-camera.moveX)/ratio+cx,
-				(-camera.R-camera.moveY)+cy, (camera.R-camera.moveY)+cy,
-				(-camera.R-cz)*Zzoom, (camera.R+cz)*Zzoom)
+				(-mm.camera.R-mm.camera.moveX)/ratio+cx, (mm.camera.R-mm.camera.moveX)/ratio+cx,
+				(-mm.camera.R-mm.camera.moveY)+cy, (mm.camera.R-mm.camera.moveY)+cy,
+				(-mm.camera.R-cz)*Zzoom, (mm.camera.R+cz)*Zzoom)
 		}
 	}
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
 
-	gl.Translated(camera.center.X, camera.center.Y, camera.center.Z)
-	gl.Rotated(camera.betta, 1.0, 0.0, 0.0)
-	gl.Rotated(camera.alpha, 0.0, 1.0, 0.0)
-	gl.Translated(-camera.center.X, -camera.center.Y, -camera.center.Z)
+	gl.Translated(mm.camera.center.X, mm.camera.center.Y, mm.camera.center.Z)
+	gl.Rotated(mm.camera.betta, 1.0, 0.0, 0.0)
+	gl.Rotated(mm.camera.alpha, 0.0, 1.0, 0.0)
+	gl.Translated(-mm.camera.center.X, -mm.camera.center.Y, -mm.camera.center.Z)
 
 	// minimal R
-	if camera.R < 0.1 {
-		camera.R = 0.1
+	if mm.camera.R < 0.1 {
+		mm.camera.R = 0.1
 	}
 }
-
-var updateModel bool // TODO remove
 
 func (mm *Model) model3d(window *glfw.Window, s windowViewState) {
 	gl.PushMatrix()
@@ -234,8 +220,8 @@ func (mm *Model) model3d(window *glfw.Window, s windowViewState) {
 		gl.PopMatrix()
 	}()
 
-	if updateModel {
-		updateModel = false
+	if mm.updateModel {
+		mm.updateModel = false
 
 		// Do not update angles
 		// angle in global plate XOZ
@@ -244,7 +230,7 @@ func (mm *Model) model3d(window *glfw.Window, s windowViewState) {
 		// camera.betta = 0.0
 
 		// distance from center to camera
-		camera.R = 1.0
+		mm.camera.R = 1.0
 		if len(mm.Coords) == 0 {
 			return
 		}
@@ -267,10 +253,10 @@ func (mm *Model) model3d(window *glfw.Window, s windowViewState) {
 			ymax = math.Max(ymax, ps[i].Y)
 			zmax = math.Max(zmax, ps[i].Z)
 		}
-		camera.R = math.Max(xmax-xmin, camera.R)
-		camera.R = math.Max(ymax-ymin, camera.R)
-		camera.R = math.Max(zmax-zmin, camera.R)
-		camera.center = Coordinate{
+		mm.camera.R = math.Max(xmax-xmin, mm.camera.R)
+		mm.camera.R = math.Max(ymax-ymin, mm.camera.R)
+		mm.camera.R = math.Max(zmax-zmin, mm.camera.R)
+		mm.camera.center = Coordinate{
 			X: (xmax + xmin) / 2.0,
 			Y: (ymax + ymin) / 2.0,
 			Z: (zmax + zmin) / 2.0,
@@ -490,7 +476,7 @@ func drawSelectRectangle(window *glfw.Window) {
 	gl.End()
 }
 
-func drawAxes(window *glfw.Window) {
+func (mm *Model) drawAxes(window *glfw.Window) {
 	w, h := window.GetSize()
 
 	s := math.Max(50.0, float64(h)/8.0)
@@ -523,8 +509,8 @@ func drawAxes(window *glfw.Window) {
 	gl.End()
 
 	gl.Translated(center_x, center_y, 0)
-	gl.Rotated(camera.betta, 1.0, 0.0, 0.0)
-	gl.Rotated(camera.alpha, 0.0, 1.0, 0.0)
+	gl.Rotated(mm.camera.betta, 1.0, 0.0, 0.0)
+	gl.Rotated(mm.camera.alpha, 0.0, 1.0, 0.0)
 	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
 	{
@@ -572,9 +558,9 @@ func (mm *Model) scrollCallback(window *glfw.Window, xoffset, yoffset float64) {
 	const factor = 0.05
 	switch {
 	case 0 <= yoffset:
-		camera.R /= (1 + factor)
+		mm.camera.R /= (1 + factor)
 	case yoffset <= 0:
-		camera.R *= (1 + factor)
+		mm.camera.R *= (1 + factor)
 	}
 }
 
@@ -589,7 +575,7 @@ var selectObjects = struct {
 
 type windowViewState = uint8
 
-var state windowViewState = normal
+// TODO remove    var state windowViewState = normal
 
 const (
 	normal windowViewState = iota
@@ -618,7 +604,7 @@ func edgeColor(pos int) {
 }
 
 // maximal amount colors is 245^3 = 14 706 125
-var (
+const (
 	convertOffset  = uint64(5)
 	convertMaxUint = uint64(245) // max uint value
 )
@@ -762,7 +748,7 @@ func (mm *Model) selectByRectangle(window *glfw.Window) {
 			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)
 			gl.Enable(gl.DEPTH_TEST)
 			gl.Disable(gl.LINE_SMOOTH)
-			cameraView(window)
+			mm.cameraView(window)
 			// color initialize
 			mm.model3d(window, s.st)
 
@@ -841,15 +827,15 @@ func (mm *Model) cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 	if w.GetMouseButton(glfw.MouseButton1) == glfw.Press {
 		switch {
 		case xpos < xlast:
-			camera.alpha -= angle
+			mm.camera.alpha -= angle
 		case xlast < xpos:
-			camera.alpha += angle
+			mm.camera.alpha += angle
 		}
 		switch {
 		case ypos < ylast:
-			camera.betta -= angle
+			mm.camera.betta -= angle
 		case ylast < ypos:
-			camera.betta += angle
+			mm.camera.betta += angle
 		}
 		xlast = xpos
 		ylast = ypos
@@ -859,15 +845,15 @@ func (mm *Model) cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 	if w.GetMouseButton(glfw.MouseButton2) == glfw.Press {
 		switch {
 		case xpos < xlast:
-			camera.moveX -= camera.R * factor
+			mm.camera.moveX -= mm.camera.R * factor
 		case xlast < xpos:
-			camera.moveX += camera.R * factor
+			mm.camera.moveX += mm.camera.R * factor
 		}
 		switch {
 		case ypos < ylast:
-			camera.moveY += camera.R * factor
+			mm.camera.moveY += mm.camera.R * factor
 		case ylast < ypos:
-			camera.moveY -= camera.R * factor
+			mm.camera.moveY -= mm.camera.R * factor
 		}
 		xlast = xpos
 		ylast = ypos
