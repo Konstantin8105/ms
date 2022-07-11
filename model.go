@@ -98,18 +98,22 @@ type Part struct {
 }
 
 func (mm *Model) AddModel(m Model) {
+	newId := make([]int, len(m.Coords))
 	for i := range m.Coords {
+		if m.Coords[i].Removed {
+			continue
+		}
 		id := mm.AddNode(
 			m.Coords[i].X,
 			m.Coords[i].Y,
 			m.Coords[i].Z,
 		)
-		for k := range m.Elements {
-			for p := range m.Elements[k].Indexes {
-				if m.Elements[k].Indexes[p] == i {
-					m.Elements[k].Indexes[p] = int(id)
-				}
-			}
+		newId[i] = int(id)
+	}
+	for k := range m.Elements {
+		el := m.Elements[k]
+		for p := range el.Indexes {
+			el.Indexes[p] = newId[el.Indexes[p]]
 		}
 	}
 	for i := range m.Elements {
