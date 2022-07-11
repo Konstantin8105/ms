@@ -66,6 +66,10 @@ type Coordinate struct {
 	object3d
 	Removed bool // TODO check everywhere
 	X, Y, Z float64
+
+	// TODO
+	// index int    // index of Models
+	// C [3]float64 // coordinates
 }
 
 // Named intermediant named structure
@@ -93,7 +97,44 @@ type Part struct {
 	Ignored
 }
 
+func (mm *Model) AddModel(m Model) {
+	for i := range m.Coords {
+		id := mm.AddNode(
+			m.Coords[i].X,
+			m.Coords[i].Y,
+			m.Coords[i].Z,
+		)
+		for k := range m.Elements {
+			for p := range m.Elements[k].Indexes {
+				if m.Elements[k].Indexes[p] == i {
+					m.Elements[k].Indexes[p] = int(id)
+				}
+			}
+		}
+	}
+	for i:=range m.Elements{
+		el := m.Elements[i]
+		switch el.ElementType {
+		case ElRemove:
+			// do nothing
+		case Line2:
+			mm.AddLineByNodeNumber(
+				uint(el.Indexes[0]),
+				uint(el.Indexes[1]),
+			)
+		case Triangle3:
+			mm.AddTriangle3ByNodeNumber(
+				uint(el.Indexes[0]),
+				uint(el.Indexes[1]),
+				uint(el.Indexes[2]),
+			)
+		}
+	}
+	updateModel = true // TODO  remove
+}
+
 func (mm *Model) DemoSpiral() {
+	var m Model
 	var (
 		Ri     = 0.5
 		Ro     = 2.5
@@ -110,21 +151,21 @@ func (mm *Model) DemoSpiral() {
 		Ro += dR
 		Ri += dR
 		angle := float64(i) * da * math.Pi / 180.0
-		mm.Coords = append(mm.Coords,
+		m.Coords = append(m.Coords,
 			Coordinate{X: Ri * math.Sin(angle), Y: float64(i) * dy, Z: Ri * math.Cos(angle)},
 			Coordinate{X: Ro * math.Sin(angle), Y: float64(i) * dy, Z: Ro * math.Cos(angle)},
 		)
-		mm.Elements = append(mm.Elements, Element{ElementType: Line2,
+		m.Elements = append(m.Elements, Element{ElementType: Line2,
 			Indexes: []int{2 * i, 2*i + 1},
 		})
 		if 0 < i {
-			mm.Elements = append(mm.Elements,
+			m.Elements = append(m.Elements,
 				Element{ElementType: Line2,
 					Indexes: []int{2 * (i - 1), 2 * i},
 				}, Element{ElementType: Line2,
 					Indexes: []int{2*(i-1) + 1, 2*i + 1},
 				})
-			mm.Elements = append(mm.Elements,
+			m.Elements = append(m.Elements,
 				Element{ElementType: Triangle3,
 					Indexes: []int{2 * (i - 1), 2 * i, 2*(i-1) + 1},
 				}, Element{ElementType: Triangle3,
@@ -132,7 +173,7 @@ func (mm *Model) DemoSpiral() {
 				})
 		}
 	}
-	updateModel = true // TODO  remove
+	mm.AddModel(m)
 }
 
 const distanceError = 1e-6
@@ -140,6 +181,9 @@ const distanceError = 1e-6
 func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 	// check is this coordinate exist?
 	for i := range mm.Coords {
+		if mm.Coords[i].Removed {
+			continue
+		}
 		// fast algorithm
 		dX := mm.Coords[i].X - X
 		if distanceError < math.Abs(dX) {
@@ -289,6 +333,9 @@ func (mm *Model) SelectTriangles(single bool) (ids []uint) {
 
 func (mm *Model) SelectElements(single bool) (ids []uint) {
 	for i, el := range mm.Elements {
+		if el.ElementType == ElRemove {
+			continue
+		}
 		if !el.selected {
 			continue
 		}
@@ -300,6 +347,9 @@ func (mm *Model) SelectElements(single bool) (ids []uint) {
 func (mm *Model) InvertSelect(nodes, lines, triangles bool) {
 	if nodes {
 		for i := range mm.Coords {
+			if mm.Coords[i].Removed {
+				continue
+			}
 			mm.Coords[i].selected = !mm.Coords[i].selected
 		}
 	}

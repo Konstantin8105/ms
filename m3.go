@@ -287,6 +287,9 @@ func model3d(window *glfw.Window, s selectType) {
 	case selectNone:
 		gl.Begin(gl.POINTS)
 		for i := range mm.Coords {
+			if mm.Coords[i].Removed {
+				continue
+			}
 			if mm.Coords[i].selected {
 				gl.Color3ub(255, 1, 1)
 			} else {
@@ -298,6 +301,9 @@ func model3d(window *glfw.Window, s selectType) {
 	case selectPoints:
 		gl.Begin(gl.POINTS)
 		for i := range mm.Coords {
+			if mm.Coords[i].Removed {
+				continue
+			}
 			if mm.Coords[i].selected {
 				continue
 			}
