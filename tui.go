@@ -349,6 +349,8 @@ type Selectable interface {
 	SelectLinesOnPlane(xoy, xoz, yoz bool)
 
 	// SelectParallelLines
+	// SelectRadiantLines
+	//Selecet Curc Lines
 	// SelectParallelTriangles // XY, YZ, XZ
 
 	// SelectByGroup

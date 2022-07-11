@@ -4,7 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"os"
+	"runtime/debug"
 	"testing"
+	"time"
+
+	"github.com/Konstantin8105/vl"
+	"github.com/gdamore/tcell/v2"
 )
 
 func Example() {
@@ -47,16 +53,19 @@ func Example() {
 	//   ],
 	//   "Coords": [
 	//     {
+	//       "Removed": false,
 	//       "X": 0,
 	//       "Y": 0,
 	//       "Z": 0
 	//     },
 	//     {
+	//       "Removed": false,
 	//       "X": 3.141592653589793,
 	//       "Y": 2,
 	//       "Z": 1
 	//     },
 	//     {
+	//       "Removed": false,
 	//       "X": 6,
 	//       "Y": 5,
 	//       "Z": 4
@@ -97,5 +106,43 @@ func TestUniqUint(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestIntegration(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("recovered from ", r)
+			debug.PrintStack()
+		}
+		for i := range Debug {
+			fmt.Println(Debug[i])
+		}
+	}()
+
+	root, action, err := UserInterface()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+		os.Exit(1)
+	}
+	go func() {
+		if err := M3(); err != nil {
+			fmt.Fprintf(os.Stderr, "M3: %v", err)
+		}
+	}()
+
+	quit := make(chan struct{})
+
+	go func() {
+		<-time.After(500 * time.Millisecond)
+		mm.DemoSpiral()
+		<-time.After(2 * time.Second)
+		close(quit)
+	}()
+
+	err = vl.Run(root, action, quit, tcell.KeyCtrlC)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+		os.Exit(1)
 	}
 }
