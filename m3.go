@@ -326,6 +326,12 @@ func model3d(window *glfw.Window, s windowViewState) {
 		if s != normal && s != colorEdgeElements && el.selected {
 			continue
 		}
+		if el.hided { // hided element
+			continue
+		}
+		if el.ElementType == ElRemove { // removed element
+			continue
+		}
 		// color identification
 		switch s {
 		case normal, colorEdgeElements:
@@ -601,11 +607,11 @@ func edgeColor(pos int) {
 	case 1: // blue
 		gl.Color3ub(0, 0, 255)
 		return
-	case 2: // orange
-		gl.Color3ub(255, 165, 0)
+	case 2: // green
+		gl.Color3ub(0, 255, 0)
 		return
-	case 3: // green
-		gl.Color3ub(0, 128, 0)
+	case 3: // purple
+		gl.Color3ub(255, 0, 125)
 		return
 	}
 	panic(fmt.Errorf("not valid pos: %d", pos))

@@ -953,6 +953,10 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 var Debug []string
 
 func UserInterface() (root vl.Widget, action chan func(), err error) {
+	{
+		// widgets amount
+		Debug = append(Debug, fmt.Sprintf("Amount widgets: %d", len(Operations)))
+	}
 	var (
 		scroll vl.Scroll
 		list   vl.List
