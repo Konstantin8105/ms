@@ -128,6 +128,8 @@ func (mm *Model) AddModel(m Model) {
 				uint(el.Indexes[1]),
 				uint(el.Indexes[2]),
 			)
+		default:
+			panic(fmt.Errorf("not implemented %v", el))
 		}
 	}
 	updateModel = true // TODO  remove
