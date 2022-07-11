@@ -319,6 +319,9 @@ func model3d(window *glfw.Window, s selectType) {
 	gl.PointSize(2) // default points size
 	gl.LineWidth(3) // default lines width
 	for i, el := range mm.Elements {
+		if mm.IsIgnore(uint(i)) {
+			continue
+		}
 		// do not show selected elements in Select case
 		if s != selectNone && el.selected {
 			continue

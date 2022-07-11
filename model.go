@@ -112,7 +112,7 @@ func (mm *Model) AddModel(m Model) {
 			}
 		}
 	}
-	for i:=range m.Elements{
+	for i := range m.Elements {
 		el := m.Elements[i]
 		switch el.ElementType {
 		case ElRemove:
@@ -268,6 +268,17 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 	})
 	updateModel = true // Update camera parameter
 	return uint(len(mm.Elements) - 1)
+}
+
+func (mm *Model) IsIgnore(id uint) bool {
+	if 0 < mm.actual && int(id) < len(mm.Parts[mm.actual-1].IgnoreElements) {
+		// it is part
+		return mm.Parts[mm.actual-1].IgnoreElements[int(id)]
+	}
+	if int(id) < len(mm.IgnoreElements) {
+		return mm.IgnoreElements[int(id)]
+	}
+	return false
 }
 
 func (mm *Model) IgnoreModelElements(ids []uint) {
