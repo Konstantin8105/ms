@@ -755,7 +755,7 @@ func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coords [3]float64
 	}
 	nodes = uniqUint(nodes)
 	elements = uniqUint(elements)
-	if len(nodes) == 0 || len(elements) == 0 {
+	if len(nodes) == 0 && len(elements) == 0 {
 		return
 	}
 	if !copy { // move
