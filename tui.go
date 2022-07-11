@@ -345,6 +345,9 @@ type Selectable interface {
 
 	InvertSelect(nodes, lines, triangles bool)
 
+	SelectLinesOrtho(x, y, z bool)
+	SelectLinesOnPlane(xoy, xoz, yoz bool)
+
 	// SelectParallelLines
 	// SelectParallelTriangles // XY, YZ, XZ
 
@@ -379,6 +382,56 @@ func init() {
 			b.SetText(name)
 			b.OnClick = func() {
 				m.InvertSelect(nodes.Checked, lines.Checked, tris.Checked)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Select ortho lines parallel axes X, Y, Z",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var x vl.CheckBox
+			x.SetText("X")
+			list.Add(&x)
+
+			var y vl.CheckBox
+			y.SetText("Y")
+			list.Add(&y)
+
+			var z vl.CheckBox
+			z.SetText("Z")
+			list.Add(&z)
+
+			var b vl.Button
+			b.SetText(name)
+			b.OnClick = func() {
+				m.SelectLinesOrtho(x.Checked, y.Checked, z.Checked)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Select lines on plane XOY, YOZ, XOZ",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var xoy vl.CheckBox
+			xoy.SetText("XOY")
+			list.Add(&xoy)
+
+			var yoz vl.CheckBox
+			yoz.SetText("YOZ")
+			list.Add(&yoz)
+
+			var xoz vl.CheckBox
+			xoz.SetText("XOZ")
+			list.Add(&xoz)
+
+			var b vl.Button
+			b.SetText(name)
+			b.OnClick = func() {
+				m.SelectLinesOnPlane(xoy.Checked, yoz.Checked, xoz.Checked)
 			}
 			list.Add(&b)
 

@@ -289,7 +289,6 @@ func (mm *Model) ColorEdge(isColor bool) {
 	}
 }
 
-
 func (mm *Model) IgnoreModelElements(ids []uint) {
 	if len(ids) == 0 {
 		return
@@ -389,6 +388,68 @@ func (mm *Model) InvertSelect(nodes, lines, triangles bool) {
 				continue
 			}
 			mm.Elements[i].selected = !mm.Elements[i].selected
+		}
+	}
+}
+
+func (mm *Model) SelectLinesOrtho(x, y, z bool) {
+	if !x && !y && !z {
+		return
+	}
+	for i, el := range mm.Elements {
+		if el.hided {
+			continue
+		}
+		if el.selected {
+			continue
+		}
+		if el.ElementType != Line2 {
+			continue
+		}
+		var (
+			dX = math.Abs(mm.Coords[el.Indexes[1]].X - mm.Coords[el.Indexes[0]].X)
+			dY = math.Abs(mm.Coords[el.Indexes[1]].Y - mm.Coords[el.Indexes[0]].Y)
+			dZ = math.Abs(mm.Coords[el.Indexes[1]].Z - mm.Coords[el.Indexes[0]].Z)
+		)
+		if x && dY < distanceError && dZ < distanceError {
+			mm.Elements[i].selected = true
+		}
+		if y && dX < distanceError && dZ < distanceError {
+			mm.Elements[i].selected = true
+		}
+		if z && dX < distanceError && dY < distanceError {
+			mm.Elements[i].selected = true
+		}
+	}
+}
+
+func (mm *Model) SelectLinesOnPlane(xoy, yoz, xoz bool) {
+	if !xoy && !yoz && !xoz {
+		return
+	}
+	for i, el := range mm.Elements {
+		if el.hided {
+			continue
+		}
+		if el.selected {
+			continue
+		}
+		if el.ElementType != Line2 {
+			continue
+		}
+		var (
+			dX = math.Abs(mm.Coords[el.Indexes[1]].X - mm.Coords[el.Indexes[0]].X)
+			dY = math.Abs(mm.Coords[el.Indexes[1]].Y - mm.Coords[el.Indexes[0]].Y)
+			dZ = math.Abs(mm.Coords[el.Indexes[1]].Z - mm.Coords[el.Indexes[0]].Z)
+		)
+		if xoy && dZ < distanceError {
+			mm.Elements[i].selected = true
+		}
+		if yoz && dX < distanceError {
+			mm.Elements[i].selected = true
+		}
+		if xoz && dY < distanceError {
+			mm.Elements[i].selected = true
 		}
 	}
 }
