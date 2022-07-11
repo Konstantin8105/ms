@@ -95,6 +95,7 @@ type Model struct {
 
 	// for 3d view
 	state       viewState
+	cursorLeft  viewState
 	updateModel bool
 	camera      struct {
 		alpha, betta float64
@@ -330,6 +331,19 @@ func (mm *Model) Unignore() {
 		ignore = &mm.Parts[mm.actual-1].IgnoreElements
 	}
 	*ignore = nil
+}
+
+func (mm *Model) SelectLeftCursor(nodes, lines, tria bool) {
+	mm.cursorLeft = 0
+	if nodes {
+		mm.cursorLeft |= selectPoints
+	}
+	if lines {
+		mm.cursorLeft |= selectLines
+	}
+	if tria {
+		mm.cursorLeft |= selectTriangles
+	}
 }
 
 func (mm *Model) SelectNodes(single bool) (ids []uint) {
@@ -1022,6 +1036,8 @@ func (mm *Model) Run(quit <-chan struct{}) (err error) {
 
 	// initialize
 	mm.updateModel = true
+	mm.state = normal
+	mm.cursorLeft = selectPoints
 
 	root, action, err := UserInterface(mm)
 	if err != nil {

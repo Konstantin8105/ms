@@ -338,6 +338,8 @@ func init() {
 }
 
 type Selectable interface {
+	SelectLeftCursor(nodes, lines, tria bool)
+
 	SelectNodes(single bool) (ids []uint)
 	SelectLines(single bool) (ids []uint)
 	SelectTriangles(single bool) (ids []uint)
@@ -364,6 +366,30 @@ func init() {
 	group := Selection
 	name := group.String()
 	ops := []Operation{{
+		Name: "Left cursor selection",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var nodes vl.CheckBox
+			nodes.SetText("Nodes")
+			list.Add(&nodes)
+
+			var lines vl.CheckBox
+			lines.SetText("Lines")
+			list.Add(&lines)
+
+			var tris vl.CheckBox
+			tris.SetText("Triangles")
+			list.Add(&tris)
+
+			var b vl.Button
+			b.SetText(name)
+			b.OnClick = func() {
+				m.SelectLeftCursor(nodes.Checked, lines.Checked, tris.Checked)
+			}
+			list.Add(&b)
+			return &list
+		}}, {
 		Name: "Invert selection",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List

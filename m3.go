@@ -329,19 +329,6 @@ func (mm *Model) model3d(s viewState) {
 		default:
 			panic(fmt.Errorf("not valid select element: %v", s))
 		}
-		// draw points in 3D
-		switch s {
-		case normal, colorEdgeElements, selectPoints:
-		case selectLines, selectTriangles:
-			gl.Begin(gl.POINTS)
-			for _, k := range el.Indexes {
-				c := mm.Coords[k]
-				gl.Vertex3d(c.X, c.Y, c.Z)
-			}
-			gl.End()
-		default:
-			panic(fmt.Errorf("not valid select element: %v", s))
-		}
 		// draw lines in 3D
 		switch el.ElementType {
 		case Line2:
@@ -563,7 +550,7 @@ var selectObjects = struct {
 type viewState = uint8
 
 const (
-	normal viewState = iota
+	normal viewState = 1 << iota
 	colorEdgeElements
 	selectPoints
 	selectLines
@@ -712,6 +699,9 @@ func (mm *Model) selectByRectangle(window *glfw.Window) {
 				if index < 0 || len(mm.Elements) <= index {
 					return false
 				}
+				if mm.Elements[index].ElementType != Line2 {
+					return false
+				}
 				mm.Elements[index].selected = true
 				return true
 			},
@@ -721,11 +711,18 @@ func (mm *Model) selectByRectangle(window *glfw.Window) {
 				if index < 0 || len(mm.Elements) <= index {
 					return false
 				}
+				if mm.Elements[index].ElementType != Triangle3 {
+					return false
+				}
 				mm.Elements[index].selected = true
 				return true
 			},
 		},
 	} {
+		if mm.cursorLeft&s.st == 0 {
+			continue
+		}
+
 		found = true
 		for found { // TODO : infinite loop
 			found = false
