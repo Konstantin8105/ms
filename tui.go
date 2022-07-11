@@ -188,6 +188,9 @@ type Addable interface {
 	AddNode(X, Y, Z float64) (id uint)
 	AddLineByNodeNumber(n1, n2 uint) (id uint)
 	AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint)
+
+	// AddLeftCursor(nodes, lines, tria bool)
+
 	// TODO REMOVE AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
 	// TODO REMOVE AddElementsByNodes(ids string, l2, t3, q4 bool)
 	// AddGroup
@@ -473,7 +476,10 @@ func init() {
 }
 
 type Removable interface {
-	// RemoveEmptyNodes()
+	// RemoveSelected
+	// RemoveNodes
+	// RemoveLines
+	// RemoveTriangles
 }
 
 // func init() {
