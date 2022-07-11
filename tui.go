@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
@@ -977,16 +978,39 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 		}
 	}
 
-	// TODO : var txt vl.Text
-	// TODO : list.Add(&txt)
-	// TODO : go func() {
-	// TODO : 	<-time.After(time.Millisecond * 500)
-	// TODO : 	var str string
-	// TODO : 	for i := range Debug {
-	// TODO : 		str += Debug[i] + "\n"
-	// TODO : 	}
-	// TODO : 	txt.SetText(str)
-	// TODO : }()
+	{
+		// Logger
+		var logList vl.List
+
+		var b vl.Button
+		b.SetText("Clear log")
+		b.OnClick = func() {
+			Debug = nil
+		}
+		logList.Add(&b)
+
+		var t vl.Button
+		t.SetText("Add time to log")
+		t.OnClick = func() {
+			Debug = append(Debug, fmt.Sprintf("Time: %v", time.Now()))
+		}
+		logList.Add(&t)
+
+		var txt vl.Text
+		txt.SetText("Logger")
+		go func() {
+			for {
+				<-time.After(time.Millisecond * 500)
+				txt.SetText(strings.Join(Debug, "\n"))
+			}
+		}()
+		logList.Add(&txt)
+
+		var log vl.CollapsingHeader
+		log.SetText("Log")
+		log.Root = &logList
+		list.Add(&log)
+	}
 
 	return
 }
