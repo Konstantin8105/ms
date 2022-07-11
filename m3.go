@@ -80,7 +80,7 @@ func (mm *Model) View3d() (err error) {
 		gl.Enable(gl.LINE_SMOOTH)
 
 		mm.cameraView(window)
-		mm.model3d(window, mm.state)
+		mm.model3d(mm.state)
 
 		// check select rectangle
 		if selectObjects.fromAdd && selectObjects.toAdd {
@@ -201,7 +201,7 @@ func (mm *Model) cameraView(window *glfw.Window) {
 	}
 }
 
-func (mm *Model) model3d(window *glfw.Window, s windowViewState) {
+func (mm *Model) model3d(s viewState) {
 	gl.PushMatrix()
 	defer func() {
 		gl.PopMatrix()
@@ -560,12 +560,10 @@ var selectObjects = struct {
 	toAdd    bool
 }{}
 
-type windowViewState = uint8
-
-// TODO remove    var state windowViewState = normal
+type viewState = uint8
 
 const (
-	normal windowViewState = iota
+	normal viewState = iota
 	colorEdgeElements
 	selectPoints
 	selectLines
@@ -697,7 +695,7 @@ func (mm *Model) selectByRectangle(window *glfw.Window) {
 	var found bool
 
 	for _, s := range []struct {
-		st windowViewState
+		st viewState
 		sf func(index int) (found bool)
 	}{
 		{
@@ -737,7 +735,7 @@ func (mm *Model) selectByRectangle(window *glfw.Window) {
 			gl.Disable(gl.LINE_SMOOTH)
 			mm.cameraView(window)
 			// color initialize
-			mm.model3d(window, s.st)
+			mm.model3d(s.st)
 
 			// TODO : screen coordinates
 			// TODO : openGlScreenCoordinate(window)

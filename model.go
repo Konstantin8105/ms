@@ -94,7 +94,7 @@ type Model struct {
 	Parts []Part
 
 	// for 3d view
-	state       windowViewState
+	state       viewState
 	updateModel bool
 	camera      struct {
 		alpha, betta float64
