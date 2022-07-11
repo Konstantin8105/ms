@@ -769,31 +769,26 @@ func (mm *Model) mouseButtonCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	if button == glfw.MouseButton3 {
+	switch button {
+	case glfw.MouseButton1:
 		switch action {
 		case glfw.Press:
-			if mods == glfw.ModControl {
-				x, y := w.GetCursorPos()
-				selectObjects.xFrom = int32(x)
-				selectObjects.yFrom = int32(y)
-				selectObjects.fromAdd = true
-			} else {
-				selectObjects.fromAdd = false
-			}
+			x, y := w.GetCursorPos()
+			selectObjects.xFrom = int32(x)
+			selectObjects.yFrom = int32(y)
+			selectObjects.fromAdd = true
 		case glfw.Release:
-			if mods == glfw.ModControl {
-				x, y := w.GetCursorPos()
-				selectObjects.xTo = int32(x)
-				selectObjects.yTo = int32(y)
-				selectObjects.toAdd = true
-			} else {
-				selectObjects.toUpdate = false
-				selectObjects.fromAdd = false
-				selectObjects.toAdd = false
-			}
+			x, y := w.GetCursorPos()
+			selectObjects.xTo = int32(x)
+			selectObjects.yTo = int32(y)
+			selectObjects.toAdd = true
 		case glfw.Repeat:
 			// do nothing
 		}
+	default:
+		selectObjects.toUpdate = false
+		selectObjects.fromAdd = false
+		selectObjects.toAdd = false
 	}
 }
 
