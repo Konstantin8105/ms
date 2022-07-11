@@ -139,10 +139,18 @@ const distanceError = 1e-6
 
 func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 	// check is this coordinate exist?
-	for i := range mm.Coords { // TODO bench problem
-		distance := math.Sqrt(pow.E2(mm.Coords[i].X-X) +
-			pow.E2(mm.Coords[i].Y-Y) +
-			pow.E2(mm.Coords[i].Z-Z))
+	for i := range mm.Coords {
+		// fast algorithm
+		dX := mm.Coords[i].X - X
+		if distanceError < math.Abs(dX) {
+			continue
+		}
+		dY := mm.Coords[i].Y - Y
+		if distanceError < math.Abs(dY) {
+			continue
+		}
+		dZ := mm.Coords[i].Z - Z
+		distance := math.Sqrt(pow.E2(dX) + pow.E2(dY) + pow.E2(dZ))
 		if distance < distanceError {
 			return uint(i)
 		}
