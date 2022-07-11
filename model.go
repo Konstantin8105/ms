@@ -1027,6 +1027,12 @@ func (mm *Model) StandardView(view SView) {
 //	 +--------- FREQUENCY                                        //
 //	                                                             //
 
+func (mm *Model) init() {
+	mm.updateModel = true
+	mm.state = normal
+	mm.cursorLeft = selectPoints
+}
+
 func (mm *Model) Run(quit <-chan struct{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1035,9 +1041,7 @@ func (mm *Model) Run(quit <-chan struct{}) (err error) {
 	}()
 
 	// initialize
-	mm.updateModel = true
-	mm.state = normal
-	mm.cursorLeft = selectPoints
+	mm.init()
 
 	root, action, err := UserInterface(mm)
 	if err != nil {

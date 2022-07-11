@@ -841,6 +841,7 @@ func (mm *Model) keyCallback(w *glfw.Window, key glfw.Key, scancode int, action 
 	switch key {
 	case glfw.KeyEscape:
 		// deselect all
+		mm.init()
 		mm.DeselectAll()
 	}
 }
