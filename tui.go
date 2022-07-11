@@ -387,7 +387,7 @@ func init() {
 
 			return &list
 		}}, {
-		Name: "Select ortho lines parallel axes X, Y, Z",
+		Name: "Ortho lines parallel axes X, Y, Z",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
@@ -412,7 +412,7 @@ func init() {
 
 			return &list
 		}}, {
-		Name: "Select lines on plane XOY, YOZ, XOZ",
+		Name: "Lines on plane XOY, YOZ, XOZ",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
@@ -483,6 +483,9 @@ type Splitable interface {
 	// Quadr4 to 4 Triangle3
 	// Quadr4 to 4 Quadr4
 	// Triangles3, Quadrs4 by Lines2
+	// TODO Intersection
+	// Beam intersection
+	// Plate intersection
 }
 
 func init() {
@@ -622,6 +625,7 @@ type MoveCopyble interface {
 	// Move/Copy to specific plane",
 	// Rotate",
 	// Mirror",
+	// Bend
 	// Copy by line path",
 	// Translational repeat",
 	// Circular repeat/Spiral",
@@ -799,8 +803,6 @@ type Pluginable interface {
 	// Beam-beam connection
 	// Column-beam connection
 	// Column-column connection
-	// Beam intersection
-	// Plate intersection
 	// Chamfer plates
 	// Fillet plates
 	// Explode plates
@@ -850,7 +852,6 @@ type Mesh interface {
 	Ignorable
 	Selectable
 	Removable
-	// TODO Intersection
 	Platable
 	Splitable
 	Mergable
