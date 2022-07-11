@@ -1008,7 +1008,7 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 
 var Debug []string
 
-func UserInterface() (root vl.Widget, action chan func(), err error) {
+func UserInterface(mesh Mesh) (root vl.Widget, action chan func(), err error) {
 	{
 		// widgets amount
 		Debug = append(Debug, fmt.Sprintf("Amount widgets: %d", len(Operations)))
@@ -1041,7 +1041,7 @@ func UserInterface() (root vl.Widget, action chan func(), err error) {
 				err = fmt.Errorf("widget %02d is empty: %#v", i, Operations[i])
 				return
 			}
-			r := part(&mm)
+			r := part(mesh)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true

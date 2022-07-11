@@ -24,7 +24,7 @@ var (
 
 var fps Fps
 
-func M3() (err error) {
+func (mm *Model) View3d() (err error) {
 	if err = glfw.Init(); err != nil {
 		err = fmt.Errorf("failed to initialize glfw: %v", err)
 		return
@@ -41,10 +41,10 @@ func M3() (err error) {
 	}
 	window.MakeContextCurrent()
 
-	window.SetMouseButtonCallback(mouseButtonCallback)
-	window.SetScrollCallback(scrollCallback)
-	window.SetCursorPosCallback(cursorPosCallback)
-	window.SetKeyCallback(keyCallback)
+	window.SetMouseButtonCallback(mm.mouseButtonCallback)
+	window.SetScrollCallback(mm.scrollCallback)
+	window.SetCursorPosCallback(mm.cursorPosCallback)
+	window.SetKeyCallback(mm.keyCallback)
 
 	if err := gl.Init(); err != nil {
 		return err
@@ -73,11 +73,11 @@ func M3() (err error) {
 		gl.Enable(gl.LINE_SMOOTH)
 
 		cameraView(window)
-		model3d(window, state)
+		mm.model3d(window, state)
 
 		// check select rectangle
 		if selectObjects.fromAdd && selectObjects.toAdd {
-			selectByRectangle(window)
+			mm.selectByRectangle(window)
 			selectObjects.fromAdd = false
 			selectObjects.toAdd = false
 			selectObjects.toUpdate = false
@@ -228,7 +228,7 @@ func cameraView(window *glfw.Window) {
 
 var updateModel bool // TODO remove
 
-func model3d(window *glfw.Window, s windowViewState) {
+func (mm *Model) model3d(window *glfw.Window, s windowViewState) {
 	gl.PushMatrix()
 	defer func() {
 		gl.PopMatrix()
@@ -568,7 +568,7 @@ func drawAxes(window *glfw.Window) {
 	gl.End()
 }
 
-func scrollCallback(window *glfw.Window, xoffset, yoffset float64) {
+func (mm *Model) scrollCallback(window *glfw.Window, xoffset, yoffset float64) {
 	const factor = 0.05
 	switch {
 	case 0 <= yoffset:
@@ -683,7 +683,7 @@ func convertToColor(i int) {
 	)
 }
 
-func selectByRectangle(window *glfw.Window) {
+func (mm *Model) selectByRectangle(window *glfw.Window) {
 	_, h := window.GetSize()
 
 	selectObjects.yFrom = int32(h) - selectObjects.yFrom
@@ -764,7 +764,7 @@ func selectByRectangle(window *glfw.Window) {
 			gl.Disable(gl.LINE_SMOOTH)
 			cameraView(window)
 			// color initialize
-			model3d(window, s.st)
+			mm.model3d(window, s.st)
 
 			// TODO : screen coordinates
 			// TODO : openGlScreenCoordinate(window)
@@ -790,7 +790,7 @@ func selectByRectangle(window *glfw.Window) {
 	}
 }
 
-func mouseButtonCallback(
+func (mm *Model) mouseButtonCallback(
 	w *glfw.Window,
 	button glfw.MouseButton,
 	action glfw.Action,
@@ -829,7 +829,7 @@ var (
 	ylast float64
 )
 
-func cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
+func (mm *Model) cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 	if selectObjects.fromAdd || selectObjects.toAdd {
 		selectObjects.xTo = int32(xpos)
 		selectObjects.yTo = int32(ypos)
@@ -874,7 +874,7 @@ func cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 	}
 }
 
-func keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+func (mm *Model) keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	switch key {
 	case glfw.KeyEscape:
 		// deselect all

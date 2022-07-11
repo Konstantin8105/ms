@@ -5,12 +5,8 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"runtime/debug"
 	"testing"
 	"time"
-
-	"github.com/Konstantin8105/vl"
-	"github.com/gdamore/tcell/v2"
 )
 
 func Example() {
@@ -111,37 +107,22 @@ func TestUniqUint(t *testing.T) {
 
 func TestIntegration(t *testing.T) {
 	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("recovered from ", r)
-			debug.PrintStack()
-		}
 		for i := range Debug {
 			fmt.Println(Debug[i])
 		}
 	}()
-
-	root, action, err := UserInterface()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(1)
-	}
-	go func() {
-		if err := M3(); err != nil {
-			fmt.Fprintf(os.Stderr, "M3: %v", err)
-		}
-	}()
-
+	// Model
+	var mm Model
+	// tests movements
 	quit := make(chan struct{})
-
 	go func() {
 		<-time.After(500 * time.Millisecond)
 		mm.DemoSpiral()
 		<-time.After(2 * time.Second)
 		close(quit)
 	}()
-
-	err = vl.Run(root, action, quit, tcell.KeyCtrlC)
-	if err != nil {
+	// create a new model
+	if err := mm.Run(quit); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}

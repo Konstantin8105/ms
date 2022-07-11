@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"math"
 	"runtime"
+	"runtime/debug"
 	"sync"
 
 	"github.com/Konstantin8105/pow"
+	"github.com/Konstantin8105/vl"
+	"github.com/gdamore/tcell/v2"
 )
 
 // 3D model variables
@@ -77,7 +80,7 @@ type Named struct{ Name string }
 type Ignored struct{ IgnoreElements []bool }
 
 // TODO : type MultiModel struct { Models []Model}
-var mm Model // TODO : remove
+// var mm Model // TODO : remove
 
 type Model struct {
 	// actual = 0, then change Model
@@ -1000,3 +1003,32 @@ func (mm *Model) StandardView(view SView) {
 //	 |             |                                             //
 //	 +--------- FREQUENCY                                        //
 //	                                                             //
+
+func (mm *Model) Run(quit <-chan struct{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v\n%v\n%v", err, r, string(debug.Stack()))
+		}
+	}()
+
+	root, action, err := UserInterface(mm)
+	if err != nil {
+		return
+	}
+
+	var err3d error
+	defer func() {
+		if err3d != nil {
+			err = fmt.Errorf("%v\n%v", err, err3d)
+		}
+	}()
+
+	go func() {
+		err3d = mm.View3d()
+	}()
+	err = vl.Run(root, action, quit, tcell.KeyCtrlC) // TODO remove key close
+	if err != nil {
+		return
+	}
+	return
+}
