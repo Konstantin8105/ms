@@ -92,8 +92,12 @@ func init() {
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
+			var pre vl.Text
 			var name vl.Text
-			list.Add(&name)
+			var lh vl.ListH
+			lh.Add(&pre)
+			lh.Add(&name)
+			list.Add(&lh)
 
 			go func() {
 				for {
@@ -104,7 +108,12 @@ func init() {
 					if part == "" {
 						part = defaultPartName(int(id))
 					}
-					name.SetText(fmt.Sprintf("№%02d. %s", id, part))
+					prefix :=    "Base model"
+					if 0 < id {
+						prefix = "Submodel"
+					}
+					pre.SetText(fmt.Sprintf("№%02d. %s", id, prefix))
+					name.SetText(part)
 				}
 			}()
 			return &list
