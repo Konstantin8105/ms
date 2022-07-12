@@ -1,0 +1,182 @@
+package ms
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"time"
+)
+
+const filename = "log.out"
+
+type log struct {
+	model Mesh
+}
+
+func (l log) Fprintln(a ...interface{}) {
+	bs, err := ioutil.ReadFile(filename)
+	if err != nil {
+		fmt.Println(err)
+		file, err := os.Create(filename)
+		if err != nil {
+			fmt.Println(err)
+		}
+		file.Close()
+	}
+
+	bs = append(bs, []byte(fmt.Sprintln("\n", time.Now()))...)
+	bs = append(bs, []byte(fmt.Sprintln(a...))...)
+	err = ioutil.WriteFile(filename, bs, 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (l *log) PartPresent() (id uint) {
+// 	l.Fprintln("func (l *log) PartPresent() (id uint) {")
+	id = l.model.PartPresent()
+// 	l.Fprintln(id)
+	return
+}
+func (l *log) PartsName() (names []string) {
+// 	l.Fprintln("func (l *log) PartsName() (names []string) {")
+	names = l.model.PartsName()
+// 	l.Fprintln(names)
+	return
+}
+func (l *log) PartChange(id uint) {
+// 	l.Fprintln("func (l *log) PartChange(id uint) {")
+// 	l.Fprintln(id)
+	l.model.PartChange(id)
+}
+func (l *log) PartNew(str string) {
+// 	l.Fprintln("func (l *log) PartNew(str string) {")
+// 	l.Fprintln(str)
+	l.model.PartNew(str)
+}
+func (l *log) PartRename(id uint, str string) {
+// 	l.Fprintln("func (l *log) PartRename(id uint, str string) {")
+	l.model.PartRename(id, str)
+}
+func (l *log) StandardView(view SView) {
+	l.Fprintln("func (l *log) StandardView(view SView) {")
+	l.model.StandardView(view)
+}
+func (l *log) ColorEdge(isColor bool) {
+	l.Fprintln("func (l *log) ColorEdge(isColor bool) {")
+	l.model.ColorEdge(isColor)
+}
+func (l *log) AddNode(X, Y, Z float64) (id uint) {
+	l.Fprintln("func (l *log) AddNode(X, Y, Z float64) (id uint) {")
+	l.Fprintln(X, Y, Z)
+	id = l.model.AddNode(X, Y, Z)
+	l.Fprintln(id)
+	return
+}
+func (l *log) AddLineByNodeNumber(n1, n2 uint) (id uint) {
+	l.Fprintln("func (l *log) AddLineByNodeNumber(n1, n2 uint) (id uint) {")
+	l.Fprintln(n1, n2)
+	id = l.model.AddLineByNodeNumber(n1, n2)
+	l.Fprintln(id)
+	return
+}
+func (l *log) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
+	l.Fprintln("func (l *log) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {")
+	l.Fprintln(n1, n2, n3)
+	id = l.model.AddTriangle3ByNodeNumber(n1, n2, n3)
+	l.Fprintln(id)
+	return
+}
+func (l *log) IgnoreModelElements(ids []uint) {
+	l.Fprintln("func (l *log) IgnoreModelElements(ids []uint) {")
+	l.model.IgnoreModelElements(ids)
+}
+func (l *log) Unignore() {
+	l.Fprintln("func (l *log) Unignore() {")
+	l.model.Unignore()
+}
+func (l *log) Hide(coordinates, elements []uint) {
+	l.Fprintln("func (l *log) Hide(coordinates, elements []uint) {")
+	l.model.Hide(coordinates, elements)
+}
+func (l *log) UnhideAll() {
+	l.Fprintln("func (l *log) UnhideAll() {")
+	l.model.UnhideAll()
+}
+func (l *log) SelectLeftCursor(nodes, lines, tria bool) {
+	l.Fprintln("func (l *log) SelectLeftCursor(nodes, lines, tria bool) {")
+	l.model.SelectLeftCursor(nodes, lines, tria)
+}
+func (l *log) SelectNodes(single bool) (ids []uint) {
+	l.Fprintln("func (l *log) SelectNodes(single bool) (ids []uint) {")
+	l.Fprintln(single)
+	ids = l.model.SelectNodes(single)
+	l.Fprintln(ids)
+	return
+}
+func (l *log) SelectLines(single bool) (ids []uint) {
+	l.Fprintln("func (l *log) SelectLines(single bool) (ids []uint) {")
+	l.Fprintln(single)
+	ids = l.model.SelectLines(single)
+	l.Fprintln(ids)
+	return
+}
+func (l *log) SelectTriangles(single bool) (ids []uint) {
+	l.Fprintln("func (l *log) SelectTriangles(single bool) (ids []uint) {")
+	l.Fprintln(single)
+	ids = l.model.SelectTriangles(single)
+	l.Fprintln(ids)
+	return
+}
+func (l *log) SelectElements(single bool) (ids []uint) {
+	l.Fprintln("func (l *log) SelectElements(single bool) (ids []uint) {")
+	l.Fprintln(single)
+	ids = l.model.SelectElements(single)
+	l.Fprintln(ids)
+	return
+}
+func (l *log) InvertSelect(nodes, lines, triangles bool) {
+	l.Fprintln("func (l *log) InvertSelect(nodes, lines, triangles bool) {")
+	l.model.InvertSelect(nodes, lines, triangles)
+}
+func (l *log) SelectLinesOrtho(x, y, z bool) {
+	l.Fprintln("func (l *log) SelectLinesOrtho(x, y, z bool) {")
+	l.model.SelectLinesOrtho(x, y, z)
+}
+func (l *log) SelectLinesOnPlane(xoy, xoz, yoz bool) {
+	l.Fprintln("func (l *log) SelectLinesOnPlane(xoy, xoz, yoz bool) {")
+	l.model.SelectLinesOnPlane(xoy, xoz, yoz)
+}
+func (l *log) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
+	l.Fprintln("func (l *log) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {")
+	l.model.SplitLinesByDistance(lines, distance, atBegin)
+}
+func (l *log) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
+	l.Fprintln("func (l *log) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {")
+	l.model.SplitLinesByRatio(lines, proportional, atBegin)
+}
+func (l *log) SplitLinesByEqualParts(lines []uint, parts uint) {
+	l.Fprintln("func (l *log) SplitLinesByEqualParts(lines []uint, parts uint) {")
+	l.model.SplitLinesByEqualParts(lines, parts)
+}
+func (l *log) SplitTri3To3Tri3(tris []uint) {
+	l.Fprintln("func (l *log) SplitTri3To3Tri3(tris []uint) {")
+	l.model.SplitTri3To3Tri3(tris)
+}
+func (l *log) MergeNodes(minDistance float64) {
+	l.Fprintln("func (l *log) MergeNodes(minDistance float64) {")
+	l.model.MergeNodes(minDistance)
+}
+func (l *log) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
+	l.Fprintln("func (l *log) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {")
+	l.model.MoveCopyNodesDistance(nodes, elements, coordinates, copy, addLines, addTri)
+}
+func (l *log) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
+	l.Fprintln("func (l *log) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {")
+	l.model.MoveCopyNodesN1N2(nodes, elements, from, to, copy, addLines, addTri)
+}
+func (l *log) DemoSpiral() {
+	l.Fprintln("func (l *log) DemoSpiral() {")
+	l.Fprintln("DemoSpiral")
+	l.model.DemoSpiral()
+}
