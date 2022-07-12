@@ -120,10 +120,12 @@ func TestIntegration(t *testing.T) {
 		<-time.After(500 * time.Millisecond)
 		mm.DemoSpiral()
 		// draw clone spiral
-		<-time.After(100 * time.Millisecond)
+		<-time.After(500 * time.Millisecond)
 		mm.DemoSpiral()
 		// select
-		<-time.After(100 * time.Millisecond)
+		<-time.After(300 * time.Millisecond)
+		mm.SelectLeftCursor(true, true, true)
+		<-time.After(300 * time.Millisecond)
 		selectObjects.xFrom = 0
 		selectObjects.yFrom = 0
 		selectObjects.fromAdd = true
@@ -132,13 +134,90 @@ func TestIntegration(t *testing.T) {
 		selectObjects.toUpdate = true
 		selectObjects.toAdd = true
 		// color change
-		<-time.After(100 * time.Millisecond)
+		<-time.After(300 * time.Millisecond)
 		mm.ColorEdge(true)
-		<-time.After(100 * time.Millisecond)
+		<-time.After(300 * time.Millisecond)
 		mm.ColorEdge(false)
 		// deselect
-		<-time.After(100 * time.Millisecond)
+		<-time.After(1 * time.Second)
 		mm.DeselectAll()
+		// select ortho
+		<-time.After(300 * time.Millisecond)
+		mm.SelectLinesOrtho(true, true, true)
+		<-time.After(300 * time.Millisecond)
+		mm.InvertSelect(true, true, true)
+		<-time.After(300 * time.Millisecond)
+		els := mm.SelectElements(Many)
+		if len(els) == 0 {
+			close(quit)
+			t.Fatalf("No 1")
+		}
+		// IgnoreElements
+		<-time.After(300 * time.Millisecond)
+		mm.IgnoreModelElements(els)
+		<-time.After(300 * time.Millisecond)
+		mm.Unignore()
+		// split lines
+		<-time.After(300 * time.Millisecond)
+		mm.SelectLinesOrtho(true, true, true)
+		<-time.After(300 * time.Millisecond)
+		els = mm.SelectElements(Many)
+		if len(els) == 0 {
+			close(quit)
+			t.Fatalf("No 2")
+		}
+		<-time.After(300 * time.Millisecond)
+		mm.ColorEdge(true) // color
+		<-time.After(300 * time.Millisecond)
+		mm.SplitLinesByRatio(els, 0.25, false)
+		<-time.After(300 * time.Millisecond)
+		mm.SplitLinesByRatio(els, 1.25, false)
+		<-time.After(300 * time.Millisecond)
+		mm.SplitLinesByEqualParts(els, 10)
+		// merge
+		<-time.After(300 * time.Millisecond)
+		mm.MergeNodes(0.050)
+		// deselect
+		<-time.After(300 * time.Millisecond)
+		mm.DeselectAll()
+
+		// select
+		<-time.After(300 * time.Millisecond)
+		mm.SelectLinesOnPlane(true, true, true)
+		<-time.After(300 * time.Millisecond)
+		mm.InvertSelect(true, true, true)
+		tris := mm.SelectTriangles(Many)
+		<-time.After(300 * time.Millisecond)
+		if len(tris) == 0 {
+			close(quit)
+			t.Fatalf("No 3")
+		}
+		selectObjects.fromAdd = false
+		<-time.After(300 * time.Millisecond)
+		mm.SplitTri3To3Tri3(tris)
+
+		// deselect
+		<-time.After(300 * time.Millisecond)
+		mm.DeselectAll()
+		<-time.After(300 * time.Millisecond)
+		mm.SelectLinesOnPlane(true, true, true)
+		<-time.After(300 * time.Millisecond)
+		mm.InvertSelect(true, false, true)
+		<-time.After(300 * time.Millisecond)
+		tris = mm.SelectElements(Many)
+		if len(tris) == 0 {
+			close(quit)
+			t.Fatalf("No 4")
+		}
+		<-time.After(300 * time.Millisecond)
+		mm.MoveCopyNodesDistance(nil, tris, [3]float64{4, 0, 0}, true, true, true)
+		// View
+		<-time.After(2 * time.Second)
+		mm.StandardView(StandardViewXOYpos)
+		<-time.After(2 * time.Second)
+		mm.StandardView(StandardViewXOZpos)
+		<-time.After(2 * time.Second)
+		mm.StandardView(StandardViewYOZpos)
 		// quit
 		<-time.After(2 * time.Second)
 		close(quit)

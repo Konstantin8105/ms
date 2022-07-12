@@ -211,7 +211,7 @@ func (mm *Model) DemoSpiral() {
 		dR     = 0.0
 		da     = 30.0 // degree
 		dy     = 0.2
-		levels = 256
+		levels = 25
 		//    8 = FPS 61.0
 		//   80 = FPS 58.0
 		//  800 = FPS 25.0
@@ -543,6 +543,9 @@ func (mm *Model) DeselectAll() {
 	for i := range mm.Elements {
 		mm.Elements[i].selected = false
 	}
+	selectObjects.toUpdate = false
+	selectObjects.fromAdd = false
+	selectObjects.toAdd = false
 }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
@@ -845,7 +848,7 @@ func (mm *Model) UnhideAll() {
 	for i := range mm.Coords {
 		mm.Coords[i].hided = false
 	}
-	for i := range mm.Elements{
+	for i := range mm.Elements {
 		mm.Elements[i].hided = false
 	}
 }
@@ -1119,11 +1122,16 @@ func (mm *Model) Run(quit <-chan struct{}) (err error) {
 			err = fmt.Errorf("%v\n%v\n%v", err, r, string(debug.Stack()))
 		}
 	}()
+	var tui Mesh = mm
+
+	// logger only for debug
+	// l := log{model: mm}
+	// tui = &l
 
 	// initialize
 	mm.init()
 
-	root, action, err := UserInterface(mm)
+	root, action, err := UserInterface(tui)
 	if err != nil {
 		return
 	}
