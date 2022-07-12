@@ -1080,7 +1080,9 @@ func (mm *Model) StandardView(view SView) {
 
 func (mm *Model) init() {
 	mm.updateModel = true
-	mm.state = normal
+	if mm.state != normal && mm.state != colorEdgeElements {
+		mm.state = normal
+	}
 	mm.cursorLeft = selectPoints
 }
 

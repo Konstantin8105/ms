@@ -19,6 +19,7 @@ const (
 	Selection
 	Add
 	Ignore
+	Hide
 	Split
 	Merge
 	Remove
@@ -43,6 +44,8 @@ func (g GroupId) String() string {
 		return "Add"
 	case Ignore:
 		return "Ignore"
+	case Hide:
+		return "Hide"
 	case Split:
 		return "Split"
 	case Merge:
@@ -470,6 +473,30 @@ func init() {
 	}
 	Operations = append(Operations, ops...)
 }
+
+type Hidable interface {
+	// Hide coordinates, elements
+	// Unhide
+}
+
+// func init() {
+// 	group := Hide
+// 	ops := []Operation{{ }}
+// 	for i := range ops {
+// 		ops[i].Group = group
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
+
+
+// func init() {
+// 	group := Hide
+// 	ops := []Operation{{ }}
+// 	for i := range ops {
+// 		ops[i].Group = group
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
 
 type Selectable interface {
 	SelectLeftCursor(nodes, lines, tria bool)
@@ -1016,6 +1043,7 @@ type Mesh interface {
 	Viewable
 	Addable
 	Ignorable
+	Hidable
 	Selectable
 	Removable
 	Platable

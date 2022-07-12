@@ -120,10 +120,10 @@ func TestIntegration(t *testing.T) {
 		<-time.After(500 * time.Millisecond)
 		mm.DemoSpiral()
 		// draw clone spiral
-		<-time.After(500 * time.Millisecond)
+		<-time.After(100 * time.Millisecond)
 		mm.DemoSpiral()
 		// select
-		<-time.After(500 * time.Millisecond)
+		<-time.After(100 * time.Millisecond)
 		selectObjects.xFrom = 0
 		selectObjects.yFrom = 0
 		selectObjects.fromAdd = true
@@ -132,12 +132,12 @@ func TestIntegration(t *testing.T) {
 		selectObjects.toUpdate = true
 		selectObjects.toAdd = true
 		// color change
-		<-time.After(200 * time.Millisecond)
+		<-time.After(100 * time.Millisecond)
 		mm.ColorEdge(true)
-		<-time.After(200 * time.Millisecond)
+		<-time.After(100 * time.Millisecond)
 		mm.ColorEdge(false)
 		// deselect
-		<-time.After(200 * time.Millisecond)
+		<-time.After(100 * time.Millisecond)
 		mm.DeselectAll()
 		// quit
 		<-time.After(2 * time.Second)
