@@ -111,7 +111,7 @@ func init() {
 					if part == "" {
 						part = defaultPartName(int(id))
 					}
-					prefix :=    "Base model"
+					prefix := "Base model"
 					if 0 < id {
 						prefix = "Submodel"
 					}
@@ -475,19 +475,54 @@ func init() {
 }
 
 type Hidable interface {
-	// Hide coordinates, elements
-	// Unhide
+	Hide(coordinates, elements []uint)
+	UnhideAll()
 }
 
-// func init() {
-// 	group := Hide
-// 	ops := []Operation{{ }}
-// 	for i := range ops {
-// 		ops[i].Group = group
-// 	}
-// 	Operations = append(Operations, ops...)
-// }
+func init() {
+	group := Hide
+	ops := []Operation{{
+		Name: "Hide",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
 
+			ns, coordgt, elgt := SelectAll(m)
+			list.Add(ns)
+
+			var b vl.Button
+			b.SetText("Hide")
+			b.OnClick = func() {
+				els := elgt()
+				cs := coordgt()
+				if len(els) == 0 && len(cs) == 0{
+					return
+				}
+				m.Hide(cs, els)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Unhide all",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var b vl.Button
+			b.SetText("Unhide all")
+			b.OnClick = func() {
+				m.UnhideAll()
+			}
+			list.Add(&b)
+
+			return &list
+
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = group
+	}
+	Operations = append(Operations, ops...)
+}
 
 // func init() {
 // 	group := Hide

@@ -263,6 +263,9 @@ func (mm *Model) model3d(s viewState) {
 			if mm.Coords[i].Removed {
 				continue
 			}
+			if mm.Coords[i].hided {
+				continue
+			}
 			if mm.Coords[i].selected {
 				gl.Color3ub(255, 1, 1)
 			} else {
@@ -275,6 +278,9 @@ func (mm *Model) model3d(s viewState) {
 		gl.Begin(gl.POINTS)
 		for i := range mm.Coords {
 			if mm.Coords[i].Removed {
+				continue
+			}
+			if mm.Coords[i].hided {
 				continue
 			}
 			if mm.Coords[i].selected {
@@ -328,6 +334,15 @@ func (mm *Model) model3d(s viewState) {
 			convertToColor(i)
 		default:
 			panic(fmt.Errorf("not valid select element: %v", s))
+		}
+		// select points
+		switch s {
+		case selectLines, selectTriangles:
+			gl.Begin(gl.POINTS)
+			for _, p := range el.Indexes {
+				gl.Vertex3d(mm.Coords[p].X, mm.Coords[p].Y, mm.Coords[p].Z)
+			}
+			gl.End()
 		}
 		// draw lines in 3D
 		switch el.ElementType {

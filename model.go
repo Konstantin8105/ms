@@ -823,6 +823,33 @@ func (mm *Model) SplitTri3To3Tri3(tris []uint) {
 	}
 }
 
+func (mm *Model) Hide(nodes, elements []uint) {
+	for _, p := range nodes {
+		mm.Coords[p].hided = true
+	}
+	for _, p := range elements {
+		mm.Elements[p].hided = true
+	}
+	for i := range mm.Elements {
+		el := mm.Elements[i]
+		if el.hided {
+			continue
+		}
+		for k := range el.Indexes {
+			mm.Coords[el.Indexes[k]].hided = false
+		}
+	}
+}
+
+func (mm *Model) UnhideAll() {
+	for i := range mm.Coords {
+		mm.Coords[i].hided = false
+	}
+	for i := range mm.Elements{
+		mm.Elements[i].hided = false
+	}
+}
+
 func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coords [3]float64, copy, addLines, addTri bool) {
 	defer mm.DeselectAll() // deselect
 	if distance := math.Sqrt(pow.E2(coords[0]) + pow.E2(coords[1]) + pow.E2(coords[2])); distance < distanceError {
