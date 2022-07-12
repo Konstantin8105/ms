@@ -5,6 +5,7 @@ import (
 	"math"
 	"runtime"
 	"runtime/debug"
+	"strings"
 	"sync"
 
 	"github.com/Konstantin8105/pow"
@@ -108,6 +109,56 @@ type Model struct {
 type Part struct {
 	Named
 	Ignored
+}
+
+func clearPartName(name *string) {
+	*name = strings.ReplaceAll(*name, "\n", "")
+	*name = strings.ReplaceAll(*name, "\r", "")
+	*name = strings.ReplaceAll(*name, "\t", "")
+}
+
+func (mm *Model) PartsName() (names []string) {
+	names = append(names, mm.Name)
+	for i := range mm.Parts {
+		names = append(names, mm.Parts[i].Name)
+	}
+	return
+}
+
+func (mm *Model) PartPresent() (id uint) {
+	return uint(mm.actual)
+}
+
+func (mm *Model) PartChange(id uint) {
+	if id == 0 {
+		mm.actual = 0
+		return
+	}
+	id = id - 1 // convert to part indexes
+	if int(id) <= len(mm.Parts) {
+		mm.actual = int(id) + 1
+	}
+	// no changes
+}
+
+func (mm *Model) PartNew(name string) {
+	clearPartName(&name)
+	var p Part
+	p.Name = name
+	mm.Parts = append(mm.Parts, p)
+	mm.actual = len(mm.Parts) // no need `-1`, because base model
+}
+
+func (mm *Model) PartRename(id uint, name string) {
+	clearPartName(&name)
+	if id == 0 {
+		mm.Name = name
+		return
+	}
+	if len(mm.Parts) < int(id) {
+		return
+	}
+	mm.Parts[id-1].Name = name
 }
 
 func (mm *Model) AddModel(m Model) {

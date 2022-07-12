@@ -14,7 +14,8 @@ import (
 type GroupId uint8
 
 const (
-	View GroupId = iota
+	File GroupId = iota
+	View
 	Selection
 	Add
 	Ignore
@@ -32,6 +33,8 @@ const (
 
 func (g GroupId) String() string {
 	switch g {
+	case File:
+		return "File"
 	case View:
 		return "View"
 	case Selection:
@@ -67,15 +70,134 @@ type Filable interface {
 	// Save
 	// SaveAs
 	// Close
+
+	PartPresent() (id uint)
+	PartsName() (names []string)
+	PartChange(id uint)
+	PartNew(str string)
+	PartRename(id uint, str string)
 }
 
-// func init() {
-// 	ops := []Operation{{}}
-// 	for i := range ops {
-// 		ops[i].Group = Select
-// 	}
-// 	Operations = append(Operations, ops...)
-// }
+func defaultPartName(id int) string {
+	if id == 0 {
+		return "base model"
+	}
+	return fmt.Sprintf("part %02d", id)
+}
+
+func init() {
+	group := File
+	ops := []Operation{{
+		Name: "Name of actual model/part",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var name vl.Text
+			list.Add(&name)
+
+			go func() {
+				for {
+					<-time.After(1 * time.Second)
+					id := m.PartPresent()
+					ns := m.PartsName()
+					part := ns[id]
+					if part == "" {
+						part = defaultPartName(int(id))
+					}
+					name.SetText(fmt.Sprintf("№%02d. %s", id, part))
+				}
+			}()
+			return &list
+		}}, {
+		Name: "Choose model/part",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var rg vl.RadioGroup
+			list.Add(&rg)
+
+			go func() {
+				for {
+					<-time.After(1 * time.Second)
+					ns := m.PartsName()
+					for i := range ns {
+						if ns[i] != "" {
+							continue
+						}
+						if i == 0 {
+							ns[i] = "base model"
+							continue
+						}
+						ns[i] = fmt.Sprintf("part %02d", i)
+					}
+					rg.SetText(ns)
+				}
+			}()
+
+			var b vl.Button
+			b.SetText("Choose")
+			b.OnClick = func() {
+				pos := rg.GetPos()
+				m.PartChange(pos)
+			}
+			list.Add(&b)
+			return &list
+		}}, {
+		Name: "Create a new part",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var listH vl.ListH
+			listH.Add(vl.TextStatic("Name:"))
+
+			var name vl.Inputbox
+			listH.Add(&name)
+
+			list.Add(&listH)
+
+			var b vl.Button
+			b.SetText("Create")
+			b.OnClick = func() {
+				m.PartNew(name.GetText())
+			}
+			list.Add(&b)
+			return &list
+		}}, {
+		Name: "Rename model/part",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var listH vl.ListH
+			listH.Add(vl.TextStatic("Name:"))
+
+			var name vl.Inputbox
+			listH.Add(&name)
+
+			list.Add(&listH)
+
+			lastId := uint(0)
+			go func() {
+				for {
+					<-time.After(2 * time.Second)
+					id := m.PartPresent()
+					if lastId != id {
+						ns := m.PartsName()
+						name.SetText(ns[id])
+						lastId = id
+						continue
+					}
+					m.PartRename(id, name.GetText())
+				}
+			}()
+
+			return &list
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = group
+	}
+	Operations = append(Operations, ops...)
+}
 
 type Editable interface {
 	// Undo
@@ -881,6 +1003,7 @@ func init() {
 }
 
 type Mesh interface {
+	Filable
 	Viewable
 	Addable
 	Ignorable
