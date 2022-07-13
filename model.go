@@ -1127,10 +1127,11 @@ func Run(quit <-chan struct{}) (err error) {
 			err = fmt.Errorf("%v\n%v\n%v", err, r, string(debug.Stack()))
 		}
 	}()
-	var mm Model
+	var mm Undo
+	// mm.Model = new(Model)
 
 	// initialize
-	mm.init()
+	mm.model.init()
 
 	root, action, err := UserInterface(&mm)
 	if err != nil {
@@ -1152,7 +1153,7 @@ func Run(quit <-chan struct{}) (err error) {
 	}()
 
 	go func() {
-		err3d = mm.View3d()
+		err3d = mm.model.View3d()
 	}()
 	// TODO remove key close
 	err = vl.Run(root, action, quit, tcell.KeyCtrlC)

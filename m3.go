@@ -6,7 +6,6 @@ import (
 	"math"
 	"os"
 	"runtime"
-	"runtime/debug"
 	"time"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -203,6 +202,12 @@ func (mm *Model) cameraView(window *glfw.Window) {
 }
 
 func (mm *Model) model3d(s viewState) {
+	// 	defer func() {
+	// 		if r := recover(); r != nil {
+	// 			Debug = append(Debug, fmt.Sprintf("%v\n%v", r, string(debug.Stack())))
+	// 		}
+	// 	}()
+
 	gl.PushMatrix()
 	defer func() {
 		gl.PopMatrix()
