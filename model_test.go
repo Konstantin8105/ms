@@ -125,7 +125,7 @@ func TestUniqUint(t *testing.T) {
 func TestIntegration(t *testing.T) {
 	defer func() {
 		for i := range Debug {
-			t.Logf("%s",Debug[i])
+			t.Logf("%s", Debug[i])
 		}
 	}()
 	// tests movements
@@ -234,12 +234,14 @@ func TestIntegration(t *testing.T) {
 		<-time.After(1 * time.Second)
 		mm.StandardView(StandardViewYOZpos)
 		// undo
-		for i := 0; i < 10;i++{
-			<-time.After(1 * time.Millisecond)
+		<-time.After(300 * time.Millisecond)
+		mm.ColorEdge(false)
+		<-time.After(300 * time.Millisecond)
+		for i := 0; i < 10; i++ {
 			mm.Undo()
+			<-time.After(2 * time.Second)
 		}
 		// view
-		<-time.After(1 * time.Second)
 		mm.StandardView(StandardViewXOZpos)
 		// quit
 		<-time.After(2 * time.Second)

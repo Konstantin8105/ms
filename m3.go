@@ -25,6 +25,7 @@ type Opengl struct {
 	window *glfw.Window
 
 	model *Model
+	Change func(*Opengl)
 
 	// for 3d view
 	state       viewState
@@ -106,6 +107,10 @@ func NewOpengl() (op *Opengl, err error) {
 func (op *Opengl) Run() {
 	defer glfw.Terminate()
 	for !op.window.ShouldClose() {
+		if op.Change != nil {
+			op.Change(op)
+			op.Change = nil
+		}
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)

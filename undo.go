@@ -21,26 +21,29 @@ func (u *Undo) addToUndo() {
 		u.list = list.New()
 	}
 	u.list.PushBack(b)
-	Debug = append(Debug, fmt.Sprintf(">> %d", u.list.Len()))
 }
 
 func (u *Undo) Undo() {
-	// 	u.model.DeselectAll()
-	// 	el := u.list.Back()
-	// 	if el == nil {
-	// 		return
-	// 	}
-	// 	var last Model
-	// 	b := el.Value.([]byte)
-	// 	if err := json.Unmarshal(b, &last); err != nil {
-	// 		Debug = append(Debug, fmt.Sprintf("Undo: %v", err))
-	// 		return
-	// 	}
-	// 	// u.model = last
-	// 	u.model.init()
-	Debug = append(Debug, fmt.Sprintf("<< %d", u.list.Len()))
-	// 	last.init()
-	// 	u.list.Remove(el)
+	u.model.DeselectAll()
+	el := u.list.Back()
+	if el == nil {
+		return
+	}
+	var last Model
+	b := el.Value.([]byte)
+	if err := json.Unmarshal(b, &last); err != nil {
+		Debug = append(Debug, fmt.Sprintf("Undo: %v", err))
+		return
+	}
+
+	last.op = u.model.op
+	u.model.op.Change = func(op *Opengl) {
+		op.model = &last
+	}
+	last.tui = u.model.tui
+	last.tui.model = &last
+
+	u.list.Remove(el)
 }
 
 func (u *Undo) PartPresent() (id uint) {

@@ -9,8 +9,6 @@ import (
 	"sync"
 
 	"github.com/Konstantin8105/pow"
-	"github.com/Konstantin8105/vl"
-	"github.com/gdamore/tcell/v2"
 )
 
 // 3D model variables
@@ -94,8 +92,8 @@ type Model struct {
 
 	Parts []Part
 
-	// for 3d
-	op *Opengl
+	op  *Opengl // for 3d
+	tui *Tui    // for terminal ui
 }
 
 type Part struct {
@@ -376,7 +374,7 @@ func (mm *Model) Unignore() {
 }
 
 func (mm *Model) SelectLeftCursor(nodes, lines, tria bool) {
-	mm.op. SelectLeftCursor(nodes,lines, tria)
+	mm.op.SelectLeftCursor(nodes, lines, tria)
 }
 
 func (mm *Model) SelectNodes(single bool) (ids []uint) {
@@ -1080,7 +1078,7 @@ func Run(quit <-chan struct{}) (err error) {
 	}()
 	var mm Undo
 
-	root, action, err := UserInterface(&mm)
+	tui, err := NewTui(&mm.model)
 	if err != nil {
 		return
 	}
@@ -1091,6 +1089,7 @@ func Run(quit <-chan struct{}) (err error) {
 	}
 	op.model = &mm.model
 	mm.model.op = op
+	mm.model.tui = tui
 
 	go func() {
 		if testCoverageFunc == nil {
@@ -1103,10 +1102,5 @@ func Run(quit <-chan struct{}) (err error) {
 		op.Run()
 	}()
 
-	// TODO remove key close
-	err = vl.Run(root, action, quit, tcell.KeyCtrlC)
-	if err != nil {
-		return
-	}
-	return
+	return tui.Run(quit)
 }

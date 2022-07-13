@@ -9,6 +9,7 @@ import (
 
 	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
+	"github.com/gdamore/tcell/v2"
 )
 
 type GroupId uint8
@@ -1241,7 +1242,26 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 
 var Debug []string
 
-func UserInterface(mesh Mesh) (root vl.Widget, action chan func(), err error) {
+type Tui struct {
+	root vl.Widget
+
+	model  *Model
+	Change func(*Opengl)
+}
+
+func (tui *Tui) Run(quit <-chan struct{}) error {
+	action := make(chan func())
+	defer func() {
+		close(action)
+	}()
+	// TODO remove key close
+	return vl.Run(tui.root,action, quit, tcell.KeyCtrlC)
+}
+
+func NewTui(mm *Model) (tui *Tui, err error) {
+	tui = new(Tui)
+	tui.model = mm
+
 	{
 		// widgets amount
 		Debug = append(Debug, fmt.Sprintf("Amount widgets: %d", len(Operations)))
@@ -1250,9 +1270,8 @@ func UserInterface(mesh Mesh) (root vl.Widget, action chan func(), err error) {
 		scroll vl.Scroll
 		list   vl.List
 	)
-	root = &scroll
+	tui.root = &scroll
 	scroll.Root = &list
-	action = make(chan func())
 
 	view := make([]bool, len(Operations))
 	colHeader := make([]vl.CollapsingHeader, endGroup)
@@ -1274,7 +1293,7 @@ func UserInterface(mesh Mesh) (root vl.Widget, action chan func(), err error) {
 				err = fmt.Errorf("widget %02d is empty: %#v", i, Operations[i])
 				return
 			}
-			r := part(mesh)
+			r := part(tui.model)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true
