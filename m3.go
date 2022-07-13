@@ -6,6 +6,7 @@ import (
 	"math"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"time"
 
 	"github.com/go-gl/gl/v2.1/gl"

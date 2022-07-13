@@ -1,6 +1,7 @@
 package ms
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -31,6 +32,22 @@ func Example() {
 		return
 	}
 	fmt.Println(string(b))
+
+	// test
+	var actual Model
+	if err := json.Unmarshal(b, &actual); err != nil {
+		fmt.Println(err)
+		return
+	}
+	b2, err := json.MarshalIndent(actual, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if bytes.Compare(b, b2) != 0 {
+		fmt.Println("results are not same")
+		return
+	}
 
 	// Output:
 	// {
@@ -108,14 +125,12 @@ func TestUniqUint(t *testing.T) {
 func TestIntegration(t *testing.T) {
 	defer func() {
 		for i := range Debug {
-			fmt.Println(Debug[i])
+			t.Logf("%s",Debug[i])
 		}
 	}()
-	// Model
-	var mm Model
 	// tests movements
 	quit := make(chan struct{})
-	go func() {
+	testCoverageFunc = func(mm Mesh) {
 		// draw spiral
 		<-time.After(500 * time.Millisecond)
 		mm.DemoSpiral()
@@ -171,7 +186,7 @@ func TestIntegration(t *testing.T) {
 		<-time.After(300 * time.Millisecond)
 		mm.SplitLinesByRatio(els, 0.25, false)
 		<-time.After(300 * time.Millisecond)
-		mm.SplitLinesByRatio(els, 1.25, false)
+		mm.SplitLinesByRatio(els, 2.25, false)
 		<-time.After(300 * time.Millisecond)
 		mm.SplitLinesByEqualParts(els, 10)
 		// merge
@@ -211,19 +226,27 @@ func TestIntegration(t *testing.T) {
 		}
 		<-time.After(300 * time.Millisecond)
 		mm.MoveCopyNodesDistance(nil, tris, [3]float64{4, 0, 0}, true, true, true)
-		// View
-		<-time.After(2 * time.Second)
+		// view
+		<-time.After(1 * time.Second)
 		mm.StandardView(StandardViewXOYpos)
-		<-time.After(2 * time.Second)
+		<-time.After(1 * time.Second)
 		mm.StandardView(StandardViewXOZpos)
-		<-time.After(2 * time.Second)
+		<-time.After(1 * time.Second)
 		mm.StandardView(StandardViewYOZpos)
+		// undo
+		for i := 0; i < 10;i++{
+			<-time.After(1 * time.Millisecond)
+			mm.Undo()
+		}
+		// view
+		<-time.After(1 * time.Second)
+		mm.StandardView(StandardViewXOZpos)
 		// quit
 		<-time.After(2 * time.Second)
 		close(quit)
-	}()
+	}
 	// create a new model
-	if err := mm.Run(quit); err != nil {
+	if err := Run(quit); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}

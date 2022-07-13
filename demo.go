@@ -16,8 +16,7 @@ func main() {
 		}
 	}()
 	// create a new model
-	var mm ms.Model
-	if err := mm.Run(nil); err != nil {
+	if err := ms.Run(nil); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}

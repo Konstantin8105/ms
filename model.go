@@ -111,6 +111,9 @@ type Part struct {
 	Ignored
 }
 
+func (mm *Model) Undo() {}
+func (mm *Model) Redo() {}
+
 func clearPartName(name *string) {
 	*name = strings.ReplaceAll(*name, "\n", "")
 	*name = strings.ReplaceAll(*name, "\r", "")
@@ -1116,22 +1119,20 @@ func (mm *Model) init() {
 	mm.cursorLeft = selectPoints
 }
 
-func (mm *Model) Run(quit <-chan struct{}) (err error) {
+var testCoverageFunc func(m Mesh)
+
+func Run(quit <-chan struct{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v\n%v\n%v", err, r, string(debug.Stack()))
 		}
 	}()
-	var tui Mesh = mm
-
-	// logger only for debug
-	// l := log{model: mm}
-	// tui = &l
+	var mm Model
 
 	// initialize
 	mm.init()
 
-	root, action, err := UserInterface(tui)
+	root, action, err := UserInterface(&mm)
 	if err != nil {
 		return
 	}
@@ -1144,9 +1145,17 @@ func (mm *Model) Run(quit <-chan struct{}) (err error) {
 	}()
 
 	go func() {
+		if testCoverageFunc == nil {
+			return
+		}
+		testCoverageFunc(&mm)
+	}()
+
+	go func() {
 		err3d = mm.View3d()
 	}()
-	err = vl.Run(root, action, quit, tcell.KeyCtrlC) // TODO remove key close
+	// TODO remove key close
+	err = vl.Run(root, action, quit, tcell.KeyCtrlC)
 	if err != nil {
 		return
 	}

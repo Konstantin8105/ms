@@ -15,6 +15,7 @@ type GroupId uint8
 
 const (
 	File GroupId = iota
+	Edit
 	View
 	Selection
 	Add
@@ -36,6 +37,8 @@ func (g GroupId) String() string {
 	switch g {
 	case File:
 		return "File"
+	case Edit:
+		return "Edit"
 	case View:
 		return "View"
 	case Selection:
@@ -212,8 +215,8 @@ func init() {
 }
 
 type Editable interface {
-	// Undo
-	// Redo
+	Undo()
+	// Redo()
 }
 
 // func init() {
@@ -494,7 +497,7 @@ func init() {
 			b.OnClick = func() {
 				els := elgt()
 				cs := coordgt()
-				if len(els) == 0 && len(cs) == 0{
+				if len(els) == 0 && len(cs) == 0 {
 					return
 				}
 				m.Hide(cs, els)
@@ -545,6 +548,8 @@ type Selectable interface {
 
 	SelectLinesOrtho(x, y, z bool)
 	SelectLinesOnPlane(xoy, xoz, yoz bool)
+
+	DeselectAll()
 
 	// SelectParallelLines
 	// SelectRadiantLines
@@ -1077,6 +1082,7 @@ type Mesh interface {
 	Filable
 	Viewable
 	Addable
+	Editable
 	Ignorable
 	Hidable
 	Selectable
