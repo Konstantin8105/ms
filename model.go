@@ -94,16 +94,8 @@ type Model struct {
 
 	Parts []Part
 
-	// for 3d view
-	state       viewState
-	cursorLeft  viewState
-	updateModel bool
-	camera      struct {
-		alpha, betta float64
-		R            float64
-		center       Coordinate
-		moveX, moveY float64
-	}
+	// for 3d
+	op *Opengl
 }
 
 type Part struct {
@@ -203,7 +195,7 @@ func (mm *Model) AddModel(m Model) {
 			panic(fmt.Errorf("not implemented %v", el))
 		}
 	}
-	mm.updateModel = true // Update camera parameter
+	mm.op.updateModel = true // Update camera parameter
 }
 
 func (mm *Model) DemoSpiral() {
@@ -274,7 +266,7 @@ func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 	}
 	// append
 	mm.Coords = append(mm.Coords, Coordinate{X: X, Y: Y, Z: Z})
-	mm.updateModel = true // Update camera parameter
+	mm.op.updateModel = true // Update camera parameter
 	return uint(len(mm.Coords) - 1)
 }
 
@@ -299,7 +291,7 @@ func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 		ElementType: Line2,
 		Indexes:     []int{ni1, ni2},
 	})
-	mm.updateModel = true // Update camera parameter
+	mm.op.updateModel = true // Update camera parameter
 	return uint(len(mm.Elements) - 1)
 }
 
@@ -337,7 +329,7 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 		ElementType: Triangle3,
 		Indexes:     []int{ni1, ni2, ni3},
 	})
-	mm.updateModel = true // Update camera parameter
+	mm.op.updateModel = true // Update camera parameter
 	return uint(len(mm.Elements) - 1)
 }
 
@@ -353,11 +345,7 @@ func (mm *Model) IsIgnore(id uint) bool {
 }
 
 func (mm *Model) ColorEdge(isColor bool) {
-	if isColor {
-		mm.state = colorEdgeElements
-	} else {
-		mm.state = normal
-	}
+	mm.op.ColorEdge(isColor)
 }
 
 func (mm *Model) IgnoreModelElements(ids []uint) {
@@ -388,16 +376,7 @@ func (mm *Model) Unignore() {
 }
 
 func (mm *Model) SelectLeftCursor(nodes, lines, tria bool) {
-	mm.cursorLeft = 0
-	if nodes {
-		mm.cursorLeft |= selectPoints
-	}
-	if lines {
-		mm.cursorLeft |= selectLines
-	}
-	if tria {
-		mm.cursorLeft |= selectTriangles
-	}
+	mm.op. SelectLeftCursor(nodes,lines, tria)
 }
 
 func (mm *Model) SelectNodes(single bool) (ids []uint) {
@@ -952,27 +931,7 @@ func (mm *Model) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, 
 }
 
 func (mm *Model) StandardView(view SView) {
-	mm.updateModel = true
-	switch view {
-	case StandardViewXOYpos:
-		mm.camera.alpha = 0.0
-		mm.camera.betta = 0.0
-	case StandardViewYOZpos:
-		mm.camera.alpha = 90.0
-		mm.camera.betta = 0.0
-	case StandardViewXOZpos:
-		mm.camera.alpha = 0.0
-		mm.camera.betta = 270.0
-	case StandardViewXOYneg:
-		mm.camera.alpha = 180.0
-		mm.camera.betta = 0.0
-	case StandardViewYOZneg:
-		mm.camera.alpha = 270.0
-		mm.camera.betta = 0.0
-	case StandardViewXOZneg:
-		mm.camera.alpha = 0.0
-		mm.camera.betta = 90.0
-	}
+	mm.op.StandardView(view)
 }
 
 //
@@ -1111,14 +1070,6 @@ func (mm *Model) StandardView(view SView) {
 //	 +--------- FREQUENCY                                        //
 //	                                                             //
 
-func (mm *Model) init() {
-	mm.updateModel = true
-	if mm.state != normal && mm.state != colorEdgeElements {
-		mm.state = normal
-	}
-	mm.cursorLeft = selectPoints
-}
-
 var testCoverageFunc func(m Mesh)
 
 func Run(quit <-chan struct{}) (err error) {
@@ -1128,22 +1079,18 @@ func Run(quit <-chan struct{}) (err error) {
 		}
 	}()
 	var mm Undo
-	// mm.Model = new(Model)
-
-	// initialize
-	mm.model.init()
 
 	root, action, err := UserInterface(&mm)
 	if err != nil {
 		return
 	}
 
-	var err3d error
-	defer func() {
-		if err3d != nil {
-			err = fmt.Errorf("%v\n%v", err, err3d)
-		}
-	}()
+	op, err := NewOpengl()
+	if err != nil {
+		return
+	}
+	op.model = &mm.model
+	mm.model.op = op
 
 	go func() {
 		if testCoverageFunc == nil {
@@ -1153,8 +1100,9 @@ func Run(quit <-chan struct{}) (err error) {
 	}()
 
 	go func() {
-		err3d = mm.model.View3d()
+		op.Run()
 	}()
+
 	// TODO remove key close
 	err = vl.Run(root, action, quit, tcell.KeyCtrlC)
 	if err != nil {

@@ -19,30 +19,62 @@ func init() {
 
 var font *gltext.Font
 
-func (mm *Model) View3d() (err error) {
+const fontSize = int32(12)
+
+type Opengl struct {
+	window *glfw.Window
+
+	model *Model
+
+	// for 3d view
+	state       viewState
+	cursorLeft  viewState
+	updateModel bool
+	camera      struct {
+		alpha, betta float64
+		R            float64
+		center       Coordinate
+		moveX, moveY float64
+	}
+
+	// calculate data for FPS
+	fps Fps
+}
+
+func (op *Opengl) Init() {
+	op.updateModel = true
+	if op.state != normal && op.state != colorEdgeElements {
+		op.state = normal
+	}
+	op.cursorLeft = selectPoints
+}
+
+func NewOpengl() (op *Opengl, err error) {
+	op = new(Opengl)
+	op.Init()
+
 	if err = glfw.Init(); err != nil {
 		err = fmt.Errorf("failed to initialize glfw: %v", err)
 		return
 	}
-	defer glfw.Terminate()
 
 	glfw.WindowHint(glfw.Resizable, glfw.True)
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 
-	window, err := glfw.CreateWindow(800, 600, "3D model", nil, nil)
+	op.window, err = glfw.CreateWindow(800, 600, "3D model", nil, nil)
 	if err != nil {
 		return
 	}
-	window.MakeContextCurrent()
+	op.window.MakeContextCurrent()
 
-	window.SetMouseButtonCallback(mm.mouseButtonCallback)
-	window.SetScrollCallback(mm.scrollCallback)
-	window.SetCursorPosCallback(mm.cursorPosCallback)
-	window.SetKeyCallback(mm.keyCallback)
+	op.window.SetMouseButtonCallback(op.mouseButton)
+	op.window.SetScrollCallback(op.scroll)
+	op.window.SetCursorPosCallback(op.cursorPos)
+	op.window.SetKeyCallback(op.key)
 
-	if err := gl.Init(); err != nil {
-		return err
+	if err = gl.Init(); err != nil {
+		return
 	}
 
 	glfw.SwapInterval(1) // Enable vsync
@@ -52,26 +84,28 @@ func (mm *Model) View3d() (err error) {
 	// create new Font from given filename (.ttf expected)
 	fd, err := os.Open("/home/konstantin/.fonts/Go-Mono-Bold.ttf") // fontfile
 	if err != nil {
-		return err
+		return
 	}
-	const fontSize = int32(12)
 	font, err = gltext.LoadTruetype(fd, fontSize, 32, 127, gltext.LeftToRight)
 	if err != nil {
-		return err
+		return
 	}
 	err = fd.Close()
 	if err != nil {
-		return err
+		return
 	}
 	// font is prepared
 
-	// calculate data for FPS
-	var fps Fps
-	fps.Init()
+	op.fps.Init()
 
 	gl.Disable(gl.LIGHTING)
 
-	for !window.ShouldClose() {
+	return
+}
+
+func (op *Opengl) Run() {
+	defer glfw.Terminate()
+	for !op.window.ShouldClose() {
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
@@ -79,12 +113,12 @@ func (mm *Model) View3d() (err error) {
 		gl.Enable(gl.DEPTH_TEST)
 		gl.Enable(gl.LINE_SMOOTH)
 
-		mm.cameraView(window)
-		mm.model3d(mm.state)
+		op.cameraView()
+		op.model3d(op.state)
 
 		// check select rectangle
 		if selectObjects.fromAdd && selectObjects.toAdd {
-			mm.selectByRectangle(window)
+			op.selectByRectangle()
 			selectObjects.fromAdd = false
 			selectObjects.toAdd = false
 			selectObjects.toUpdate = false
@@ -92,25 +126,26 @@ func (mm *Model) View3d() (err error) {
 		}
 
 		// screen coordinates
-		openGlScreenCoordinate(window)
+		openGlScreenCoordinate(op.window)
 		// select rectangle
-		drawSelectRectangle(window)
+		drawSelectRectangle(op.window)
 		// draw axe coordinates
-		mm.drawAxes(window)
+		op.drawAxes()
 		// minimal screen notes
-		DrawText(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
-		DrawText(fmt.Sprintf("Nodes     : %6d", len(mm.Coords)), 0, 1*fontSize)
-		DrawText(fmt.Sprintf("Elements  : %6d", len(mm.Elements)), 0, 2*fontSize)
+		DrawText(fmt.Sprintf("FPS       : %6.2f", op.fps.Get()), 0, 0*fontSize)
+		if op.model != nil {
+			DrawText(fmt.Sprintf("Nodes     : %6d", len(op.model.Coords)), 0, 1*fontSize)
+			DrawText(fmt.Sprintf("Elements  : %6d", len(op.model.Elements)), 0, 2*fontSize)
+		}
 
 		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
 		// TODO : REMOVE: ui(window)
 
-		window.MakeContextCurrent()
-		window.SwapBuffers()
+		op.window.MakeContextCurrent()
+		op.window.SwapBuffers()
 
-		fps.EndFrame()
+		op.fps.EndFrame()
 	}
-	return
 }
 
 type Fps struct {
@@ -155,12 +190,12 @@ func angle_norm(a float64) float64 {
 	return a
 }
 
-func (mm *Model) cameraView(window *glfw.Window) {
+func (op *Opengl) cameraView() {
 	// better angle value
-	mm.camera.alpha = angle_norm(mm.camera.alpha)
-	mm.camera.betta = angle_norm(mm.camera.betta)
+	op.camera.alpha = angle_norm(op.camera.alpha)
+	op.camera.betta = angle_norm(op.camera.betta)
 
-	w, h := window.GetSize()
+	w, h := op.window.GetSize()
 	gl.Viewport(0, 0, int32(w), int32(h))
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
@@ -169,39 +204,42 @@ func (mm *Model) cameraView(window *glfw.Window) {
 		// for avoid 3D cutting back model
 		const Zzoom float64 = 100.0
 		// renaming
-		cx := mm.camera.center.X
-		cy := mm.camera.center.Y
-		cz := mm.camera.center.Z
+		cx := op.camera.center.X
+		cy := op.camera.center.Y
+		cz := op.camera.center.Z
 		// scaling monitor 3d model on screen
 		if w < h {
 			ratio = float64(w) / float64(h)
 			gl.Ortho(
-				(-mm.camera.R-mm.camera.moveX)+cx, (mm.camera.R-mm.camera.moveX)+cx,
-				(-mm.camera.R-mm.camera.moveY)/ratio+cy, (mm.camera.R-mm.camera.moveY)/ratio+cy,
-				(-mm.camera.R-cz)*Zzoom, (mm.camera.R+cz)*Zzoom)
+				(-op.camera.R-op.camera.moveX)+cx, (op.camera.R-op.camera.moveX)+cx,
+				(-op.camera.R-op.camera.moveY)/ratio+cy, (op.camera.R-op.camera.moveY)/ratio+cy,
+				(-op.camera.R-cz)*Zzoom, (op.camera.R+cz)*Zzoom)
 		} else {
 			ratio = float64(h) / float64(w)
 			gl.Ortho(
-				(-mm.camera.R-mm.camera.moveX)/ratio+cx, (mm.camera.R-mm.camera.moveX)/ratio+cx,
-				(-mm.camera.R-mm.camera.moveY)+cy, (mm.camera.R-mm.camera.moveY)+cy,
-				(-mm.camera.R-cz)*Zzoom, (mm.camera.R+cz)*Zzoom)
+				(-op.camera.R-op.camera.moveX)/ratio+cx, (op.camera.R-op.camera.moveX)/ratio+cx,
+				(-op.camera.R-op.camera.moveY)+cy, (op.camera.R-op.camera.moveY)+cy,
+				(-op.camera.R-cz)*Zzoom, (op.camera.R+cz)*Zzoom)
 		}
 	}
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
 
-	gl.Translated(mm.camera.center.X, mm.camera.center.Y, mm.camera.center.Z)
-	gl.Rotated(mm.camera.betta, 1.0, 0.0, 0.0)
-	gl.Rotated(mm.camera.alpha, 0.0, 1.0, 0.0)
-	gl.Translated(-mm.camera.center.X, -mm.camera.center.Y, -mm.camera.center.Z)
+	gl.Translated(op.camera.center.X, op.camera.center.Y, op.camera.center.Z)
+	gl.Rotated(op.camera.betta, 1.0, 0.0, 0.0)
+	gl.Rotated(op.camera.alpha, 0.0, 1.0, 0.0)
+	gl.Translated(-op.camera.center.X, -op.camera.center.Y, -op.camera.center.Z)
 
 	// minimal R
-	if mm.camera.R < 0.1 {
-		mm.camera.R = 0.1
+	if op.camera.R < 0.1 {
+		op.camera.R = 0.1
 	}
 }
 
-func (mm *Model) model3d(s viewState) {
+func (op *Opengl) model3d(s viewState) {
+	if op.model == nil {
+		return
+	}
 	// 	defer func() {
 	// 		if r := recover(); r != nil {
 	// 			Debug = append(Debug, fmt.Sprintf("%v\n%v", r, string(debug.Stack())))
@@ -213,8 +251,8 @@ func (mm *Model) model3d(s viewState) {
 		gl.PopMatrix()
 	}()
 
-	if mm.updateModel {
-		mm.updateModel = false
+	if op.updateModel {
+		op.updateModel = false
 
 		// Do not update angles
 		// angle in global plate XOZ
@@ -223,12 +261,12 @@ func (mm *Model) model3d(s viewState) {
 		// camera.betta = 0.0
 
 		// distance from center to camera
-		mm.camera.R = 1.0
-		if len(mm.Coords) == 0 {
+		op.camera.R = 1.0
+		if len(op.model.Coords) == 0 {
 			return
 		}
 		// renaming
-		ps := mm.Coords
+		ps := op.model.Coords
 		// calculate radius
 		var (
 			xmin = ps[0].X
@@ -246,17 +284,17 @@ func (mm *Model) model3d(s viewState) {
 			ymax = math.Max(ymax, ps[i].Y)
 			zmax = math.Max(zmax, ps[i].Z)
 		}
-		mm.camera.R = math.Max(xmax-xmin, mm.camera.R)
-		mm.camera.R = math.Max(ymax-ymin, mm.camera.R)
-		mm.camera.R = math.Max(zmax-zmin, mm.camera.R)
-		mm.camera.center = Coordinate{
+		op.camera.R = math.Max(xmax-xmin, op.camera.R)
+		op.camera.R = math.Max(ymax-ymin, op.camera.R)
+		op.camera.R = math.Max(zmax-zmin, op.camera.R)
+		op.camera.center = Coordinate{
 			X: (xmax + xmin) / 2.0,
 			Y: (ymax + ymin) / 2.0,
 			Z: (zmax + zmin) / 2.0,
 		}
 	}
 
-	// TODO: if mm.Coords[i].Hided {
+	// TODO: if op.model.Coords[i].Hided {
 	// TODO: 	continue
 	// TODO: }
 
@@ -265,35 +303,35 @@ func (mm *Model) model3d(s viewState) {
 	switch s {
 	case normal, colorEdgeElements:
 		gl.Begin(gl.POINTS)
-		for i := range mm.Coords {
-			if mm.Coords[i].Removed {
+		for i := range op.model.Coords {
+			if op.model.Coords[i].Removed {
 				continue
 			}
-			if mm.Coords[i].hided {
+			if op.model.Coords[i].hided {
 				continue
 			}
-			if mm.Coords[i].selected {
+			if op.model.Coords[i].selected {
 				gl.Color3ub(255, 1, 1)
 			} else {
 				gl.Color3ub(1, 1, 1)
 			}
-			gl.Vertex3d(mm.Coords[i].X, mm.Coords[i].Y, mm.Coords[i].Z)
+			gl.Vertex3d(op.model.Coords[i].X, op.model.Coords[i].Y, op.model.Coords[i].Z)
 		}
 		gl.End()
 	case selectPoints:
 		gl.Begin(gl.POINTS)
-		for i := range mm.Coords {
-			if mm.Coords[i].Removed {
+		for i := range op.model.Coords {
+			if op.model.Coords[i].Removed {
 				continue
 			}
-			if mm.Coords[i].hided {
+			if op.model.Coords[i].hided {
 				continue
 			}
-			if mm.Coords[i].selected {
+			if op.model.Coords[i].selected {
 				continue
 			}
 			convertToColor(i)
-			gl.Vertex3d(mm.Coords[i].X, mm.Coords[i].Y, mm.Coords[i].Z)
+			gl.Vertex3d(op.model.Coords[i].X, op.model.Coords[i].Y, op.model.Coords[i].Z)
 		}
 		gl.End()
 	case selectLines, selectTriangles: // do nothing
@@ -303,8 +341,8 @@ func (mm *Model) model3d(s viewState) {
 	// Elements
 	gl.PointSize(2) // default points size
 	gl.LineWidth(3) // default lines width
-	for i, el := range mm.Elements {
-		if mm.IsIgnore(uint(i)) {
+	for i, el := range op.model.Elements {
+		if op.model.IsIgnore(uint(i)) {
 			continue
 		}
 		// do not show selected elements in Select case
@@ -346,7 +384,7 @@ func (mm *Model) model3d(s viewState) {
 		case selectLines, selectTriangles:
 			gl.Begin(gl.POINTS)
 			for _, p := range el.Indexes {
-				gl.Vertex3d(mm.Coords[p].X, mm.Coords[p].Y, mm.Coords[p].Z)
+				gl.Vertex3d(op.model.Coords[p].X, op.model.Coords[p].Y, op.model.Coords[p].Z)
 			}
 			gl.End()
 		}
@@ -356,7 +394,7 @@ func (mm *Model) model3d(s viewState) {
 			if s == normal || s == selectLines || (s == colorEdgeElements && el.selected) {
 				gl.Begin(gl.LINES)
 				for _, k := range el.Indexes {
-					c := mm.Coords[k]
+					c := op.model.Coords[k]
 					gl.Vertex3d(c.X, c.Y, c.Z)
 				}
 				gl.End()
@@ -365,7 +403,7 @@ func (mm *Model) model3d(s viewState) {
 				gl.Begin(gl.LINES)
 				for i, k := range el.Indexes {
 					edgeColor(i)
-					c := mm.Coords[k]
+					c := op.model.Coords[k]
 					gl.Vertex3d(c.X, c.Y, c.Z)
 				}
 				gl.End()
@@ -383,13 +421,13 @@ func (mm *Model) model3d(s viewState) {
 						to = el.Indexes[to]
 					}
 					gl.Vertex3d(
-						mm.Coords[from].X,
-						mm.Coords[from].Y,
-						mm.Coords[from].Z)
+						op.model.Coords[from].X,
+						op.model.Coords[from].Y,
+						op.model.Coords[from].Z)
 					gl.Vertex3d(
-						mm.Coords[to].X,
-						mm.Coords[to].Y,
-						mm.Coords[to].Z)
+						op.model.Coords[to].X,
+						op.model.Coords[to].Y,
+						op.model.Coords[to].Z)
 				}
 				gl.End()
 			}
@@ -404,9 +442,9 @@ func (mm *Model) model3d(s viewState) {
 				gl.Begin(gl.TRIANGLES)
 				for _, p := range el.Indexes {
 					gl.Vertex3d(
-						mm.Coords[p].X,
-						mm.Coords[p].Y,
-						mm.Coords[p].Z)
+						op.model.Coords[p].X,
+						op.model.Coords[p].Y,
+						op.model.Coords[p].Z)
 				}
 				gl.End()
 			}
@@ -415,9 +453,9 @@ func (mm *Model) model3d(s viewState) {
 				for i, p := range el.Indexes {
 					edgeColor(i)
 					gl.Vertex3d(
-						mm.Coords[p].X,
-						mm.Coords[p].Y,
-						mm.Coords[p].Z)
+						op.model.Coords[p].X,
+						op.model.Coords[p].Y,
+						op.model.Coords[p].Z)
 				}
 				gl.End()
 			}
@@ -471,8 +509,8 @@ func drawSelectRectangle(window *glfw.Window) {
 	gl.End()
 }
 
-func (mm *Model) drawAxes(window *glfw.Window) {
-	w, h := window.GetSize()
+func (op *Opengl) drawAxes() {
+	w, h := op.window.GetSize()
 
 	s := math.Max(50.0, float64(h)/8.0)
 	b := 5.0 // distance from window border
@@ -504,8 +542,8 @@ func (mm *Model) drawAxes(window *glfw.Window) {
 	gl.End()
 
 	gl.Translated(center_x, center_y, 0)
-	gl.Rotated(mm.camera.betta, 1.0, 0.0, 0.0)
-	gl.Rotated(mm.camera.alpha, 0.0, 1.0, 0.0)
+	gl.Rotated(op.camera.betta, 1.0, 0.0, 0.0)
+	gl.Rotated(op.camera.alpha, 0.0, 1.0, 0.0)
 	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
 	{
@@ -549,13 +587,13 @@ func (mm *Model) drawAxes(window *glfw.Window) {
 	gl.End()
 }
 
-func (mm *Model) scrollCallback(window *glfw.Window, xoffset, yoffset float64) {
+func (op *Opengl) scroll(window *glfw.Window, xoffset, yoffset float64) {
 	const factor = 0.05
 	switch {
 	case 0 <= yoffset:
-		mm.camera.R /= (1 + factor)
+		op.camera.R /= (1 + factor)
 	case yoffset <= 0:
-		mm.camera.R *= (1 + factor)
+		op.camera.R *= (1 + factor)
 	}
 }
 
@@ -662,8 +700,8 @@ func convertToColor(i int) {
 	)
 }
 
-func (mm *Model) selectByRectangle(window *glfw.Window) {
-	_, h := window.GetSize()
+func (op *Opengl) selectByRectangle() {
+	_, h := op.window.GetSize()
 
 	selectObjects.yFrom = int32(h) - selectObjects.yFrom
 	selectObjects.yTo = int32(h) - selectObjects.yTo
@@ -708,39 +746,39 @@ func (mm *Model) selectByRectangle(window *glfw.Window) {
 	}{
 		{
 			st: selectPoints, sf: func(index int) bool {
-				if index < 0 || len(mm.Coords) <= index {
+				if index < 0 || len(op.model.Coords) <= index {
 					return false
 				}
-				mm.Coords[index].selected = true
+				op.model.Coords[index].selected = true
 				return true
 			},
 		},
 		{
 			st: selectLines, sf: func(index int) bool {
-				if index < 0 || len(mm.Elements) <= index {
+				if index < 0 || len(op.model.Elements) <= index {
 					return false
 				}
-				if mm.Elements[index].ElementType != Line2 {
+				if op.model.Elements[index].ElementType != Line2 {
 					return false
 				}
-				mm.Elements[index].selected = true
+				op.model.Elements[index].selected = true
 				return true
 			},
 		},
 		{
 			st: selectTriangles, sf: func(index int) bool {
-				if index < 0 || len(mm.Elements) <= index {
+				if index < 0 || len(op.model.Elements) <= index {
 					return false
 				}
-				if mm.Elements[index].ElementType != Triangle3 {
+				if op.model.Elements[index].ElementType != Triangle3 {
 					return false
 				}
-				mm.Elements[index].selected = true
+				op.model.Elements[index].selected = true
 				return true
 			},
 		},
 	} {
-		if mm.cursorLeft&s.st == 0 {
+		if op.cursorLeft&s.st == 0 {
 			continue
 		}
 
@@ -751,9 +789,9 @@ func (mm *Model) selectByRectangle(window *glfw.Window) {
 			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)
 			gl.Enable(gl.DEPTH_TEST)
 			gl.Disable(gl.LINE_SMOOTH)
-			mm.cameraView(window)
+			op.cameraView()
 			// color initialize
-			mm.model3d(s.st)
+			op.model3d(s.st)
 
 			// TODO : screen coordinates
 			// TODO : openGlScreenCoordinate(window)
@@ -779,7 +817,7 @@ func (mm *Model) selectByRectangle(window *glfw.Window) {
 	}
 }
 
-func (mm *Model) mouseButtonCallback(
+func (op *Opengl) mouseButton(
 	w *glfw.Window,
 	button glfw.MouseButton,
 	action glfw.Action,
@@ -813,7 +851,7 @@ var (
 	ylast float64
 )
 
-func (mm *Model) cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
+func (op *Opengl) cursorPos(w *glfw.Window, xpos, ypos float64) {
 	if selectObjects.fromAdd || selectObjects.toAdd {
 		selectObjects.xTo = int32(xpos)
 		selectObjects.yTo = int32(ypos)
@@ -825,15 +863,15 @@ func (mm *Model) cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 	if w.GetMouseButton(glfw.MouseButton3) == glfw.Press {
 		switch {
 		case xpos < xlast:
-			mm.camera.alpha -= angle
+			op.camera.alpha -= angle
 		case xlast < xpos:
-			mm.camera.alpha += angle
+			op.camera.alpha += angle
 		}
 		switch {
 		case ypos < ylast:
-			mm.camera.betta -= angle
+			op.camera.betta -= angle
 		case ylast < ypos:
-			mm.camera.betta += angle
+			op.camera.betta += angle
 		}
 		xlast = xpos
 		ylast = ypos
@@ -843,26 +881,71 @@ func (mm *Model) cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
 	if w.GetMouseButton(glfw.MouseButton2) == glfw.Press {
 		switch {
 		case xpos < xlast:
-			mm.camera.moveX -= mm.camera.R * factor
+			op.camera.moveX -= op.camera.R * factor
 		case xlast < xpos:
-			mm.camera.moveX += mm.camera.R * factor
+			op.camera.moveX += op.camera.R * factor
 		}
 		switch {
 		case ypos < ylast:
-			mm.camera.moveY += mm.camera.R * factor
+			op.camera.moveY += op.camera.R * factor
 		case ylast < ypos:
-			mm.camera.moveY -= mm.camera.R * factor
+			op.camera.moveY -= op.camera.R * factor
 		}
 		xlast = xpos
 		ylast = ypos
 	}
 }
 
-func (mm *Model) keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+func (op *Opengl) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	switch key {
 	case glfw.KeyEscape:
 		// deselect all
-		mm.init()
-		mm.DeselectAll()
+		op.Init()
+		op.model.DeselectAll()
+	}
+}
+
+func (op *Opengl) StandardView(view SView) {
+	op.updateModel = true
+	switch view {
+	case StandardViewXOYpos:
+		op.camera.alpha = 0.0
+		op.camera.betta = 0.0
+	case StandardViewYOZpos:
+		op.camera.alpha = 90.0
+		op.camera.betta = 0.0
+	case StandardViewXOZpos:
+		op.camera.alpha = 0.0
+		op.camera.betta = 270.0
+	case StandardViewXOYneg:
+		op.camera.alpha = 180.0
+		op.camera.betta = 0.0
+	case StandardViewYOZneg:
+		op.camera.alpha = 270.0
+		op.camera.betta = 0.0
+	case StandardViewXOZneg:
+		op.camera.alpha = 0.0
+		op.camera.betta = 90.0
+	}
+}
+
+func (op *Opengl) ColorEdge(isColor bool) {
+	if isColor {
+		op.state = colorEdgeElements
+	} else {
+		op.state = normal
+	}
+}
+
+func (op *Opengl) SelectLeftCursor(nodes, lines, tria bool) {
+	op.cursorLeft = 0
+	if nodes {
+		op.cursorLeft |= selectPoints
+	}
+	if lines {
+		op.cursorLeft |= selectLines
+	}
+	if tria {
+		op.cursorLeft |= selectTriangles
 	}
 }
