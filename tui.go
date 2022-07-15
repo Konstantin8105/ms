@@ -19,7 +19,7 @@ const (
 	Edit
 	View
 	Selection
-	Add
+	AddRemove
 	Ignore
 	Hide
 	Split
@@ -43,9 +43,9 @@ func (g GroupId) String() string {
 	case View:
 		return "View"
 	case Selection:
-		return "Selection"
-	case Add:
-		return "Add"
+		return "Select"
+	case AddRemove:
+		return "Add/Remove"
 	case Ignore:
 		return "Ignore"
 	case Hide:
@@ -347,7 +347,7 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-type Addable interface {
+type AddRemovable interface {
 	AddNode(X, Y, Z float64) (id uint)
 	AddLineByNodeNumber(n1, n2 uint) (id uint)
 	AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint)
@@ -358,10 +358,17 @@ type Addable interface {
 	// TODO REMOVE AddElementsByNodes(ids string, l2, t3, q4 bool)
 	// AddGroup
 	// AddCrossSections
+
+
+
+	// RemoveSelected
+	// RemoveNodes
+	// RemoveLines
+	// RemoveTriangles
 }
 
 func init() {
-	group := Add
+	group := AddRemove
 	name := group.String()
 	ops := []Operation{{
 		Name: "Node by coordinate [X,Y,Z]",
@@ -390,7 +397,6 @@ func init() {
 			list.Add(&b)
 			return &list
 		}}, {
-		Group: Add,
 		Name:  "Line2 by nodes",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
@@ -416,7 +422,6 @@ func init() {
 
 			return &list
 		}}, {
-		Group: Add,
 		Name:  "Triangle3 by nodes",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
@@ -691,37 +696,6 @@ func init() {
 	}
 	Operations = append(Operations, ops...)
 }
-
-type Removable interface {
-	// RemoveSelected
-	// RemoveNodes
-	// RemoveLines
-	// RemoveTriangles
-}
-
-// func init() {
-// 	group := Remove
-// 	name := group.String()
-// 	ops := []Operation{{
-// 		Name: "Empty/removable nodes/elements",
-// 		Part: func(m Mesh) (w vl.Widget) {
-// 			var list vl.List
-//
-// 			var bi vl.Button
-// 			bi.SetText(name)
-// 			bi.OnClick = func() {
-// 				m.RemoveEmptyNodes()
-// 			}
-// 			list.Add(&bi)
-//
-// 			return &list
-// 		}},
-// 	}
-// 	for i := range ops {
-// 		ops[i].Group = group
-// 	}
-// 	Operations = append(Operations, ops...)
-// }
 
 type Splitable interface {
 	SplitLinesByDistance(lines []uint, distance float64, atBegin bool)
@@ -1011,6 +985,7 @@ type Checkable interface {
 	// Plate duplicate
 	// Zero length beam
 	// Zero length plates
+	// Plates not valid FE
 	// Overlapping Collinear beams
 	// Empty loads
 	// Empty combinations
@@ -1100,12 +1075,11 @@ func init() {
 type Mesh interface {
 	Filable
 	Viewable
-	Addable
+	AddRemovable
 	Editable
 	Ignorable
 	Hidable
 	Selectable
-	Removable
 	Platable
 	Splitable
 	Mergable
