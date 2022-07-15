@@ -222,7 +222,7 @@ func init() {
 
 type Editable interface {
 	Undo()
-	// Redo()
+	// Redo() //  The redo command reverses the undo or advances the buffer to a more recent state.
 }
 
 func init() {
@@ -359,8 +359,6 @@ type AddRemovable interface {
 	// AddGroup
 	// AddCrossSections
 
-
-
 	// RemoveSelected
 	// RemoveNodes
 	// RemoveLines
@@ -397,7 +395,7 @@ func init() {
 			list.Add(&b)
 			return &list
 		}}, {
-		Name:  "Line2 by nodes",
+		Name: "Line2 by nodes",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 			b, bgt := Select("Select node1", Single, m.SelectNodes)
@@ -422,7 +420,7 @@ func init() {
 
 			return &list
 		}}, {
-		Name:  "Triangle3 by nodes",
+		Name: "Triangle3 by nodes",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 			n1, n1gt := Select("Select node1", Single, m.SelectNodes)
