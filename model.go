@@ -1132,6 +1132,7 @@ func Run(quit <-chan struct{}) (err error) {
 		}
 	}()
 	var mm Undo
+	mm.model = new(Model)
 
 	tui, err := NewTui(&mm)
 	if err != nil {
@@ -1142,7 +1143,7 @@ func Run(quit <-chan struct{}) (err error) {
 	if err != nil {
 		return
 	}
-	op.model = &mm.model
+	op.model = mm.model
 	mm.model.op = op
 	mm.model.tui = tui
 

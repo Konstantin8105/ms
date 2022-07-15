@@ -24,7 +24,6 @@ const (
 	Hide
 	Split
 	Merge
-	// Plate
 	MoveCopy
 	// 	Scale
 	// 	TypModels
@@ -53,8 +52,6 @@ func (g GroupId) String() string {
 		return "Split"
 	case Merge:
 		return "Merge"
-		// 	case Plate:
-		// 		return "Plate operations"
 	case MoveCopy:
 		return "Move/Copy"
 		// 	case Scale:
@@ -357,6 +354,10 @@ type AddRemovable interface {
 	// AddGroup
 	// AddCrossSections
 
+	// Triangulation by nodes
+	// Triangulation exist plates by area
+	// Smooth mesh
+
 	Remove(nodes, elements []uint)
 	// RemoveSelected
 	// RemoveNodes
@@ -456,7 +457,6 @@ func init() {
 			ns, coordgt, elgt := SelectAll(m)
 			list.Add(ns)
 
-
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
@@ -465,7 +465,7 @@ func init() {
 				if len(cs) == 0 && len(es) == 0 {
 					return
 				}
-				m.Remove(cs,es)
+				m.Remove(cs, es)
 			}
 			list.Add(&bi)
 
@@ -968,21 +968,6 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-type Platable interface {
-	// Triangulation by nodes
-	// Triangulation exist plates by area
-	// Smooth mesh
-}
-
-// func init() {
-// 	ops := []Operation{{
-// 	}}
-// 	for i := range ops {
-// 		ops[i].Group = Plate
-// 	}
-// 	Operations = append(Operations, ops...)
-// }
-
 type Scalable interface {
 	// By ratio [sX,sY,sZ] and node
 	// By cylinder system coordinate
@@ -1099,7 +1084,6 @@ type Mesh interface {
 	Ignorable
 	Hidable
 	Selectable
-	Platable
 	Splitable
 	Mergable
 	MoveCopyble
@@ -1258,7 +1242,7 @@ var Debug []string
 type Tui struct {
 	root vl.Widget
 
-	mesh Mesh
+	mesh   Mesh
 	Change func(*Opengl)
 }
 

@@ -8,7 +8,7 @@ import (
 
 type Undo struct {
 	list  *list.List
-	model Model
+	model *Model
 }
 
 func (u *Undo) addToUndo() {
@@ -46,7 +46,7 @@ func (u *Undo) Undo() {
 	last.tui = u.model.tui
 	last.tui.mesh = &last
 	// undo model
-	u.model = last
+	u.model = &last
 
 	// remove
 	u.list.Remove(el)
