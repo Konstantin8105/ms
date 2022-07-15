@@ -350,12 +350,14 @@ type AddRemovable interface {
 	AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint)
 
 	// AddLeftCursor(nodes, lines, tria bool)
+	// RemoveLeftCursor(nodes, lines, tria bool)
 
 	// TODO REMOVE AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
 	// TODO REMOVE AddElementsByNodes(ids string, l2, t3, q4 bool)
 	// AddGroup
 	// AddCrossSections
 
+	Remove(nodes, elements []uint)
 	// RemoveSelected
 	// RemoveNodes
 	// RemoveLines
@@ -364,7 +366,6 @@ type AddRemovable interface {
 
 func init() {
 	group := AddRemove
-	name := group.String()
 	ops := []Operation{{
 		Name: "Add node by coordinate [X,Y,Z]",
 		Part: func(m Mesh) (w vl.Widget) {
@@ -377,7 +378,7 @@ func init() {
 			list.Add(w)
 
 			var b vl.Button
-			b.SetText(name)
+			b.SetText("Add")
 			b.OnClick = func() {
 				var vs [3]float64
 				var ok bool
@@ -401,7 +402,7 @@ func init() {
 			list.Add(e)
 
 			var bi vl.Button
-			bi.SetText(name)
+			bi.SetText("Add")
 			bi.OnClick = func() {
 				b, ok := isOne(bgt)
 				if !ok {
@@ -428,7 +429,7 @@ func init() {
 			list.Add(n3)
 
 			var bi vl.Button
-			bi.SetText(name)
+			bi.SetText("Add")
 			bi.OnClick = func() {
 				n1, ok := isOne(n1gt)
 				if !ok {
@@ -447,7 +448,29 @@ func init() {
 			list.Add(&bi)
 
 			return &list
-		}}}
+		}}, {
+		Name: "Remove selected",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			ns, coordgt, elgt := SelectAll(m)
+			list.Add(ns)
+
+			var bi vl.Button
+			bi.SetText("Remove")
+			bi.OnClick = func() {
+				cs := coordgt()
+				es := elgt()
+				if len(cs) == 0 && len(es) == 0 {
+					return
+				}
+				m.Remove(cs, es)
+			}
+			list.Add(&bi)
+
+			return &list
+		}},
+	}
 	for i := range ops {
 		ops[i].Group = group
 	}

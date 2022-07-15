@@ -331,13 +331,51 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 	return uint(len(mm.Elements) - 1)
 }
 
-func (mm *Model) IsIgnore(id uint) bool {
-	if 0 < mm.actual && int(id) < len(mm.Parts[mm.actual-1].IgnoreElements) {
-		// it is part
-		return mm.Parts[mm.actual-1].IgnoreElements[int(id)]
+func (mm *Model) Remove(nodes, elements []uint) {
+	// it is part/model
+	// do not remove nodes in ingnore list
+	ignore := make([]bool, len(nodes))
+	for ind, p := range nodes {
+		if mm.Coords[int(p)].hided || mm.Coords[int(p)].Removed {
+			ignore[ind] = true
+			continue
+		}
+		for i := range mm.Elements {
+			if mm.Elements[i].ElementType == ElRemove {
+				continue
+			}
+			if !mm.IsIgnore(uint(i)) {
+				continue
+			}
+			// ignored coordinate on ignored elements
+			for k := range mm.Elements[i].Indexes {
+				if mm.Elements[i].Indexes[k] == int(p) {
+					ignore[ind] = true
+				}
+			}
+		}
 	}
-	if int(id) < len(mm.IgnoreElements) {
-		return mm.IgnoreElements[int(id)]
+	// removing
+	for ind, p := range nodes {
+		if ignore[ind] {
+			continue
+		}
+		mm.Coords[p].Removed = true
+	}
+	for _, p := range elements {
+		mm.Elements[p].ElementType = ElRemove
+		mm.Elements[p].Indexes = nil
+	}
+	return
+}
+
+func (mm *Model) IsIgnore(elId uint) bool {
+	if 0 < mm.actual && int(elId) < len(mm.Parts[mm.actual-1].IgnoreElements) {
+		// it is part
+		return mm.Parts[mm.actual-1].IgnoreElements[int(elId)]
+	}
+	if int(elId) < len(mm.IgnoreElements) {
+		return mm.IgnoreElements[int(elId)]
 	}
 	return false
 }

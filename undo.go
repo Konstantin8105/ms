@@ -182,3 +182,8 @@ func (u *Undo) DemoSpiral() {
 	defer u.addToUndo() // store
 	u.model.DemoSpiral()
 }
+
+func (u *Undo) Remove(nodes, elements []uint) {
+	defer u.addToUndo() // store
+	u.model.Remove(nodes, elements)
+}
