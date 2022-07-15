@@ -77,6 +77,11 @@ type Filable interface {
 	// Save
 	// SaveAs
 	// Close
+	// Store all operations
+	// View 3D model
+
+	// 2D model: axesymm
+	// Convert to 2d
 
 	PartPresent() (id uint)
 	PartsName() (names []string)
@@ -281,6 +286,9 @@ type Viewable interface {
 	StandardView(view SView)
 	ColorEdge(isColor bool)
 	// Isometric views
+	// View node number
+	// View line number
+	// View element number
 }
 
 func init() {
@@ -545,15 +553,6 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-// func init() {
-// 	group := Hide
-// 	ops := []Operation{{ }}
-// 	for i := range ops {
-// 		ops[i].Group = group
-// 	}
-// 	Operations = append(Operations, ops...)
-// }
-
 type Selectable interface {
 	SelectLeftCursor(nodes, lines, tria bool)
 
@@ -571,9 +570,9 @@ type Selectable interface {
 
 	// SelectParallelLines
 	// SelectRadiantLines
-	//Selecet Curc Lines
-	// SelectParallelTriangles // XY, YZ, XZ
-
+	// Select Curc Lines
+	// SelectParallelPlates // XY, YZ, XZ
+	// Select Snow/Wind elements
 	// SelectByGroup
 	//
 	// Cursor select node
@@ -1233,6 +1232,8 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 	// 	id.Filter(tf.UnsignedInteger)
 
 	const Default = "NONE"
+
+	// TODO: Maximal lines of text
 
 	id.SetText(Default)
 	l.Add(&id)
