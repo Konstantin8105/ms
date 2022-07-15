@@ -2,7 +2,6 @@ package ms
 
 import (
 	"fmt"
-	_ "image/png"
 	"math"
 	"os"
 	"runtime"
@@ -164,7 +163,7 @@ func (f *Fps) Init() {
 }
 
 func (f *Fps) Get() float32 {
-	ms := time.Now().Sub(f.framesTime).Milliseconds()
+	ms := time.Since(f.framesTime).Milliseconds()
 	if ms < 1000 && f.framesCount < 100 {
 		return f.last
 	}
@@ -204,7 +203,7 @@ func (op *Opengl) cameraView() {
 	gl.Viewport(0, 0, int32(w), int32(h))
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
-	ratio := 1.0
+	var ratio float64
 	{
 		// for avoid 3D cutting back model
 		const Zzoom float64 = 100.0
@@ -520,33 +519,33 @@ func (op *Opengl) drawAxes() {
 	s := math.Max(50.0, float64(h)/8.0)
 	b := 5.0 // distance from window border
 
-	center_x := float64(w) - b - s/2.0
-	center_y := b + s/2.0
+	centerX := float64(w) - b - s/2.0
+	centerY := b + s/2.0
 	gl.Begin(gl.QUADS)
 	gl.Color3d(0.8, 0.8, 0.8)
 	{
-		gl.Vertex2d(center_x-s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y+s/2)
-		gl.Vertex2d(center_x-s/2, center_y+s/2)
+		gl.Vertex2d(centerX-s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY+s/2)
+		gl.Vertex2d(centerX-s/2, centerY+s/2)
 	}
 	gl.End()
 	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
 	gl.Color3d(0.1, 0.1, 0.1)
 	{
-		gl.Vertex2d(center_x-s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y+s/2)
-		gl.Vertex2d(center_x+s/2, center_y+s/2)
-		gl.Vertex2d(center_x-s/2, center_y+s/2)
-		gl.Vertex2d(center_x-s/2, center_y+s/2)
-		gl.Vertex2d(center_x-s/2, center_y-s/2)
+		gl.Vertex2d(centerX-s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY+s/2)
+		gl.Vertex2d(centerX+s/2, centerY+s/2)
+		gl.Vertex2d(centerX-s/2, centerY+s/2)
+		gl.Vertex2d(centerX-s/2, centerY+s/2)
+		gl.Vertex2d(centerX-s/2, centerY-s/2)
 	}
 	gl.End()
 
-	gl.Translated(center_x, center_y, 0)
+	gl.Translated(centerX, centerY, 0)
 	gl.Rotated(op.camera.betta, 1.0, 0.0, 0.0)
 	gl.Rotated(op.camera.alpha, 0.0, 1.0, 0.0)
 	gl.LineWidth(1)
@@ -803,7 +802,7 @@ func (op *Opengl) selectByRectangle() {
 			// TODO : gl.Flush()
 
 			// color selection
-			var color []uint8 = make([]uint8, 4)
+			color := make([]uint8, 4)
 			for x := selectObjects.xFrom; x <= selectObjects.xTo; x++ {
 				for y := selectObjects.yFrom; y <= selectObjects.yTo; y++ {
 					// func ReadPixels(

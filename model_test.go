@@ -44,7 +44,7 @@ func Example() {
 		fmt.Println(err)
 		return
 	}
-	if bytes.Compare(b, b2) != 0 {
+	if !bytes.Equal(b, b2) {
 		fmt.Println("results are not same")
 		return
 	}

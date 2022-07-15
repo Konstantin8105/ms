@@ -155,7 +155,7 @@ func (mm *Model) PartRename(id uint, name string) {
 }
 
 func (mm *Model) AddModel(m Model) {
-	newId := make([]int, len(m.Coords))
+	newID := make([]int, len(m.Coords))
 	for i := range m.Coords {
 		if m.Coords[i].Removed {
 			continue
@@ -165,12 +165,12 @@ func (mm *Model) AddModel(m Model) {
 			m.Coords[i].Y,
 			m.Coords[i].Z,
 		)
-		newId[i] = int(id)
+		newID[i] = int(id)
 	}
 	for k := range m.Elements {
 		el := m.Elements[k]
 		for p := range el.Indexes {
-			el.Indexes[p] = newId[el.Indexes[p]]
+			el.Indexes[p] = newID[el.Indexes[p]]
 		}
 	}
 	for i := range m.Elements {
@@ -371,7 +371,6 @@ func (mm *Model) Remove(nodes, elements []uint) {
 			for k := range mm.Elements[i].Indexes {
 				if mm.Elements[i].Indexes[k] == int(p) {
 					elements = append(elements, uint(i))
-					Debug = append(Debug, fmt.Sprintln("remove", i))
 					break
 				}
 			}
@@ -382,16 +381,15 @@ func (mm *Model) Remove(nodes, elements []uint) {
 		mm.Elements[p].ElementType = ElRemove
 		mm.Elements[p].Indexes = nil
 	}
-	return
 }
 
-func (mm *Model) IsIgnore(elId uint) bool {
-	if 0 < mm.actual && int(elId) < len(mm.Parts[mm.actual-1].IgnoreElements) {
+func (mm *Model) IsIgnore(elID uint) bool {
+	if 0 < mm.actual && int(elID) < len(mm.Parts[mm.actual-1].IgnoreElements) {
 		// it is part
-		return mm.Parts[mm.actual-1].IgnoreElements[int(elId)]
+		return mm.Parts[mm.actual-1].IgnoreElements[int(elID)]
 	}
-	if int(elId) < len(mm.IgnoreElements) {
-		return mm.IgnoreElements[int(elId)]
+	if int(elID) < len(mm.IgnoreElements) {
+		return mm.IgnoreElements[int(elID)]
 	}
 	return false
 }
