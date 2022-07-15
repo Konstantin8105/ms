@@ -580,10 +580,6 @@ type Selectable interface {
 	//
 	// Select Snow/Wind elements
 	// SelectByGroup
-	//
-	// Cursor select node
-	// Cursor select beams
-	// Cursor select plates
 }
 
 func init() {
