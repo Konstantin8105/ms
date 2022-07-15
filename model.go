@@ -333,7 +333,7 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 
 func (mm *Model) Remove(nodes, elements []uint) {
 	// it is part/model
-	// do not remove nodes in ingnore list
+	// do not remove nodes in ignore list
 	ignore := make([]bool, len(nodes))
 	for ind, p := range nodes {
 		if mm.Coords[int(p)].hided || mm.Coords[int(p)].Removed {
@@ -355,13 +355,29 @@ func (mm *Model) Remove(nodes, elements []uint) {
 			}
 		}
 	}
-	// removing
+	// remove
 	for ind, p := range nodes {
 		if ignore[ind] {
 			continue
 		}
+		// removing coordinates
 		mm.Coords[p].Removed = true
+		// remove elements with coordinate
+		for i := range mm.Elements {
+			if mm.IsIgnore(uint(i)) {
+				continue
+			}
+			// ignored coordinate on ignored elements
+			for k := range mm.Elements[i].Indexes {
+				if mm.Elements[i].Indexes[k] == int(p) {
+					elements = append(elements, uint(i))
+					Debug = append(Debug, fmt.Sprintln("remove", i))
+					break
+				}
+			}
+		}
 	}
+	// remove elements
 	for _, p := range elements {
 		mm.Elements[p].ElementType = ElRemove
 		mm.Elements[p].Indexes = nil
@@ -418,6 +434,9 @@ func (mm *Model) SelectLeftCursor(nodes, lines, tria bool) {
 func (mm *Model) SelectNodes(single bool) (ids []uint) {
 	for i := range mm.Coords {
 		if !mm.Coords[i].selected {
+			continue
+		}
+		if mm.Coords[i].Removed {
 			continue
 		}
 		ids = append(ids, uint(i))
@@ -1116,7 +1135,7 @@ func Run(quit <-chan struct{}) (err error) {
 	}()
 	var mm Undo
 
-	tui, err := NewTui(&mm.model)
+	tui, err := NewTui(&mm)
 	if err != nil {
 		return
 	}

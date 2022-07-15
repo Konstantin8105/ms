@@ -456,6 +456,7 @@ func init() {
 			ns, coordgt, elgt := SelectAll(m)
 			list.Add(ns)
 
+
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
@@ -464,7 +465,7 @@ func init() {
 				if len(cs) == 0 && len(es) == 0 {
 					return
 				}
-				m.Remove(cs, es)
+				m.Remove(cs,es)
 			}
 			list.Add(&bi)
 
@@ -1257,7 +1258,7 @@ var Debug []string
 type Tui struct {
 	root vl.Widget
 
-	model  *Model
+	mesh Mesh
 	Change func(*Opengl)
 }
 
@@ -1270,9 +1271,9 @@ func (tui *Tui) Run(quit <-chan struct{}) error {
 	return vl.Run(tui.root, action, quit, tcell.KeyCtrlC)
 }
 
-func NewTui(mm *Model) (tui *Tui, err error) {
+func NewTui(mesh Mesh) (tui *Tui, err error) {
 	tui = new(Tui)
-	tui.model = mm
+	tui.mesh = mesh
 
 	{
 		// widgets amount
@@ -1305,7 +1306,7 @@ func NewTui(mm *Model) (tui *Tui, err error) {
 				err = fmt.Errorf("widget %02d is empty: %#v", i, Operations[i])
 				return
 			}
-			r := part(tui.model)
+			r := part(tui.mesh)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true

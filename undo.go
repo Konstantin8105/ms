@@ -35,14 +35,20 @@ func (u *Undo) Undo() {
 		Debug = append(Debug, fmt.Sprintf("Undo: %v", err))
 		return
 	}
+	// swap models
 
+	// opengl
 	last.op = u.model.op
 	u.model.op.Change = func(op *Opengl) {
 		op.model = &last
 	}
+	// tui
 	last.tui = u.model.tui
-	last.tui.model = &last
+	last.tui.mesh = &last
+	// undo model
+	u.model = last
 
+	// remove
 	u.list.Remove(el)
 }
 

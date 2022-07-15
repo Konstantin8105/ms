@@ -24,7 +24,7 @@ const fontSize = int32(12)
 type Opengl struct {
 	window *glfw.Window
 
-	model *Model
+	model  *Model
 	Change func(*Opengl)
 
 	// for 3d view

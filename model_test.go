@@ -225,7 +225,8 @@ func TestIntegration(t *testing.T) {
 			t.Fatalf("No 4")
 		}
 		<-time.After(300 * time.Millisecond)
-		mm.MoveCopyNodesDistance(nil, tris, [3]float64{4, 0, 0}, true, true, true)
+		mm.MoveCopyNodesDistance(nil, tris, [3]float64{4, 0, 0},
+			true, true, true)
 		// view
 		<-time.After(1 * time.Second)
 		mm.StandardView(StandardViewXOYpos)
@@ -237,7 +238,7 @@ func TestIntegration(t *testing.T) {
 		<-time.After(300 * time.Millisecond)
 		mm.ColorEdge(false)
 		<-time.After(300 * time.Millisecond)
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 15; i++ {
 			mm.Undo()
 			<-time.After(2 * time.Second)
 		}
