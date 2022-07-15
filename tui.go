@@ -220,13 +220,30 @@ type Editable interface {
 	// Redo()
 }
 
-// func init() {
-// 	ops := []Operation{{}}
-// 	for i := range ops {
-// 		ops[i].Group = Select
-// 	}
-// 	Operations = append(Operations, ops...)
-// }
+func init() {
+	group := Edit
+	ops := []Operation{{
+		Name: "Undo",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.ListH
+
+			list.Add(vl.TextStatic("Undo operation for erase last change of model"))
+
+			var b vl.Button
+			b.SetText("Undo")
+			b.OnClick = func() {
+				m.Undo()
+			}
+			list.Add(&b)
+
+			return &list
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = group
+	}
+	Operations = append(Operations, ops...)
+}
 
 type SView uint8
 
@@ -1255,7 +1272,7 @@ func (tui *Tui) Run(quit <-chan struct{}) error {
 		close(action)
 	}()
 	// TODO remove key close
-	return vl.Run(tui.root,action, quit, tcell.KeyCtrlC)
+	return vl.Run(tui.root, action, quit, tcell.KeyCtrlC)
 }
 
 func NewTui(mm *Model) (tui *Tui, err error) {
