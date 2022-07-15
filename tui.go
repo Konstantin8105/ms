@@ -568,10 +568,16 @@ type Selectable interface {
 
 	DeselectAll()
 
-	// SelectParallelLines
-	// SelectRadiantLines
-	// Select Curc Lines
-	// SelectParallelPlates // XY, YZ, XZ
+	// SelectLinesParallel
+	// SelectLinesByLenght
+	// SelectLinesRadiant
+	// SelectLinesCurc
+	//
+	// SelectPlatesWithAngle
+	// SelectPlatesParallel// XY, YZ, XZ
+	// SelectPlatesByArea
+	// SelectPlatesByAngle
+	//
 	// Select Snow/Wind elements
 	// SelectByGroup
 	//
