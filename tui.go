@@ -24,7 +24,6 @@ const (
 	Hide
 	Split
 	Merge
-	Remove
 	// Plate
 	MoveCopy
 	// 	Scale
@@ -54,8 +53,6 @@ func (g GroupId) String() string {
 		return "Split"
 	case Merge:
 		return "Merge"
-	case Remove:
-		return "Remove"
 		// 	case Plate:
 		// 		return "Plate operations"
 	case MoveCopy:
@@ -369,7 +366,7 @@ func init() {
 	group := AddRemove
 	name := group.String()
 	ops := []Operation{{
-		Name: "Node by coordinate [X,Y,Z]",
+		Name: "Add node by coordinate [X,Y,Z]",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
@@ -395,7 +392,7 @@ func init() {
 			list.Add(&b)
 			return &list
 		}}, {
-		Name: "Line2 by nodes",
+		Name: "Add line2 by nodes",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 			b, bgt := Select("Select node1", Single, m.SelectNodes)
@@ -420,7 +417,7 @@ func init() {
 
 			return &list
 		}}, {
-		Name: "Triangle3 by nodes",
+		Name: "Add triangle3 by nodes",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 			n1, n1gt := Select("Select node1", Single, m.SelectNodes)
