@@ -361,10 +361,6 @@ type AddRemovable interface {
 	// Scale by direction on 2 nodes
 
 	Remove(nodes, elements []uint)
-	// RemoveSelected
-	// RemoveNodes
-	// RemoveLines
-	// RemoveTriangles
 }
 
 func init() {
@@ -616,6 +612,8 @@ type Selectable interface {
 
 	DeselectAll()
 
+	// SelectAll
+	//
 	// SelectLinesParallel
 	// SelectLinesByLenght
 	// SelectLinesRadiant
