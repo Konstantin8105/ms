@@ -452,62 +452,63 @@ func (op *Opengl) model3d(s viewState) {
 		switch el.ElementType {
 		case Line2: // do nothing
 		case Triangle3:
-			if s == selectTriangles {
-				// for perfomance with empty pattern
-				// do not draw triangle, but
-				// draw lines.
-				factor := 0.1 + float64(i)/float64(len(op.model.Elements))*0.8
-				if factor <= 0 || 1.0 <= factor {
-					panic(factor)
-				}
-				ps := [3]Coordinate{
-					op.model.Coords[el.Indexes[0]],
-					op.model.Coords[el.Indexes[1]],
-					op.model.Coords[el.Indexes[2]],
-				}
-				var from, to Coordinate
-				switch i % 3 {
-				case 0:
-					from = Coordinate{
-						X: ps[0].X + (ps[1].X-ps[0].X)*factor,
-						Y: ps[0].Y + (ps[1].Y-ps[0].Y)*factor,
-						Z: ps[0].Z + (ps[1].Z-ps[0].Z)*factor,
-					}
-					to = ps[2]
-				case 1:
-					from = Coordinate{
-						X: ps[1].X + (ps[2].X-ps[1].X)*factor,
-						Y: ps[1].Y + (ps[2].Y-ps[1].Y)*factor,
-						Z: ps[1].Z + (ps[2].Z-ps[1].Z)*factor,
-					}
-					to = ps[0]
-				default:
-					from = Coordinate{
-						X: ps[2].X + (ps[0].X-ps[2].X)*factor,
-						Y: ps[2].Y + (ps[0].Y-ps[2].Y)*factor,
-						Z: ps[2].Z + (ps[0].Z-ps[2].Z)*factor,
-					}
-					to = ps[1]
-				}
-				center := Coordinate{
-					X: to.X + (from.X-to.X)*factor,
-					Y: to.Y + (from.Y-to.Y)*factor,
-					Z: to.Z + (from.Z-to.Z)*factor,
-				}
-				gl.Begin(gl.LINES)
-				for _, p := range el.Indexes {
-					gl.Vertex3d(
-						center.X,
-						center.Y,
-						center.Z)
-					gl.Vertex3d(
-						op.model.Coords[p].X,
-						op.model.Coords[p].Y,
-						op.model.Coords[p].Z)
-				}
-				gl.End()
-			}
-			if s == normal || (s == colorEdgeElements && el.selected) {
+			// DO NOT GARANTEE SELECT
+			// if s == selectTriangles {
+			// 	// for perfomance with empty pattern
+			// 	// do not draw triangle, but
+			// 	// draw lines.
+			// 	factor := 0.1 + float64(i)/float64(len(op.model.Elements))*0.8
+			// 	if factor <= 0 || 1.0 <= factor {
+			// 		panic(factor)
+			// 	}
+			// 	ps := [3]Coordinate{
+			// 		op.model.Coords[el.Indexes[0]],
+			// 		op.model.Coords[el.Indexes[1]],
+			// 		op.model.Coords[el.Indexes[2]],
+			// 	}
+			// 	var from, to Coordinate
+			// 	switch i % 3 {
+			// 	case 0:
+			// 		from = Coordinate{
+			// 			X: ps[0].X + (ps[1].X-ps[0].X)*factor,
+			// 			Y: ps[0].Y + (ps[1].Y-ps[0].Y)*factor,
+			// 			Z: ps[0].Z + (ps[1].Z-ps[0].Z)*factor,
+			// 		}
+			// 		to = ps[2]
+			// 	case 1:
+			// 		from = Coordinate{
+			// 			X: ps[1].X + (ps[2].X-ps[1].X)*factor,
+			// 			Y: ps[1].Y + (ps[2].Y-ps[1].Y)*factor,
+			// 			Z: ps[1].Z + (ps[2].Z-ps[1].Z)*factor,
+			// 		}
+			// 		to = ps[0]
+			// 	default:
+			// 		from = Coordinate{
+			// 			X: ps[2].X + (ps[0].X-ps[2].X)*factor,
+			// 			Y: ps[2].Y + (ps[0].Y-ps[2].Y)*factor,
+			// 			Z: ps[2].Z + (ps[0].Z-ps[2].Z)*factor,
+			// 		}
+			// 		to = ps[1]
+			// 	}
+			// 	center := Coordinate{
+			// 		X: to.X + (from.X-to.X)*factor,
+			// 		Y: to.Y + (from.Y-to.Y)*factor,
+			// 		Z: to.Z + (from.Z-to.Z)*factor,
+			// 	}
+			// 	gl.Begin(gl.LINES)
+			// 	for _, p := range el.Indexes {
+			// 		gl.Vertex3d(
+			// 			center.X,
+			// 			center.Y,
+			// 			center.Z)
+			// 		gl.Vertex3d(
+			// 			op.model.Coords[p].X,
+			// 			op.model.Coords[p].Y,
+			// 			op.model.Coords[p].Z)
+			// 	}
+			// 	gl.End()
+			// }
+			if s == normal || s == selectTriangles || (s == colorEdgeElements && el.selected) {
 				gl.Begin(gl.TRIANGLES)
 				for _, p := range el.Indexes {
 					gl.Vertex3d(
