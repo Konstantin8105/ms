@@ -39,6 +39,10 @@ type Opengl struct {
 
 	// calculate data for FPS
 	fps Fps
+
+	// mouses
+	mouses   [3]Mouse  // left, middle, right
+	mouseMid MouseRoll // middle scroll
 }
 
 func (op *Opengl) Init() {
@@ -107,6 +111,12 @@ func NewOpengl() (op *Opengl, err error) {
 
 	gl.Disable(gl.LIGHTING)
 
+	// mouse initialize
+	op.mouses[0] = new(MouseSelect) // left button
+	op.mouses[1] = new(MouseMove)   // right button
+	op.mouses[2] = new(MouseRotate) // middle button
+	op.mouseMid = new(MouseZoom)    // middle scroll
+
 	return
 }
 
@@ -130,19 +140,8 @@ func (op *Opengl) Run() {
 		op.cameraView()
 		op.model3d(op.state)
 
-		// check select rectangle
-		if selectObjects.fromAdd && selectObjects.toAdd {
-			op.selectByRectangle()
-			selectObjects.fromAdd = false
-			selectObjects.toAdd = false
-			selectObjects.toUpdate = false
-			continue
-		}
-
 		// screen coordinates
 		openGlScreenCoordinate(op.window)
-		// select rectangle
-		drawSelectRectangle(op.window)
 		// draw axe coordinates
 		op.drawAxes()
 		// minimal screen notes
@@ -150,6 +149,18 @@ func (op *Opengl) Run() {
 		if op.model != nil {
 			DrawText(fmt.Sprintf("Nodes     : %6d", len(op.model.Coords)), 0, 1*fontSize)
 			DrawText(fmt.Sprintf("Elements  : %6d", len(op.model.Elements)), 0, 2*fontSize)
+		}
+
+		for i := range op.mouses {
+			if op.mouses[i] == nil {
+				continue
+			}
+			if op.mouses[i].ReadyAction() {
+				op.mouses[i].Action(op)
+			}
+			if op.mouses[i].ReadyPreview() {
+				op.mouses[i].Preview()
+			}
 		}
 
 		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
@@ -452,62 +463,6 @@ func (op *Opengl) model3d(s viewState) {
 		switch el.ElementType {
 		case Line2: // do nothing
 		case Triangle3:
-			// DO NOT GARANTEE SELECT
-			// if s == selectTriangles {
-			// 	// for perfomance with empty pattern
-			// 	// do not draw triangle, but
-			// 	// draw lines.
-			// 	factor := 0.1 + float64(i)/float64(len(op.model.Elements))*0.8
-			// 	if factor <= 0 || 1.0 <= factor {
-			// 		panic(factor)
-			// 	}
-			// 	ps := [3]Coordinate{
-			// 		op.model.Coords[el.Indexes[0]],
-			// 		op.model.Coords[el.Indexes[1]],
-			// 		op.model.Coords[el.Indexes[2]],
-			// 	}
-			// 	var from, to Coordinate
-			// 	switch i % 3 {
-			// 	case 0:
-			// 		from = Coordinate{
-			// 			X: ps[0].X + (ps[1].X-ps[0].X)*factor,
-			// 			Y: ps[0].Y + (ps[1].Y-ps[0].Y)*factor,
-			// 			Z: ps[0].Z + (ps[1].Z-ps[0].Z)*factor,
-			// 		}
-			// 		to = ps[2]
-			// 	case 1:
-			// 		from = Coordinate{
-			// 			X: ps[1].X + (ps[2].X-ps[1].X)*factor,
-			// 			Y: ps[1].Y + (ps[2].Y-ps[1].Y)*factor,
-			// 			Z: ps[1].Z + (ps[2].Z-ps[1].Z)*factor,
-			// 		}
-			// 		to = ps[0]
-			// 	default:
-			// 		from = Coordinate{
-			// 			X: ps[2].X + (ps[0].X-ps[2].X)*factor,
-			// 			Y: ps[2].Y + (ps[0].Y-ps[2].Y)*factor,
-			// 			Z: ps[2].Z + (ps[0].Z-ps[2].Z)*factor,
-			// 		}
-			// 		to = ps[1]
-			// 	}
-			// 	center := Coordinate{
-			// 		X: to.X + (from.X-to.X)*factor,
-			// 		Y: to.Y + (from.Y-to.Y)*factor,
-			// 		Z: to.Z + (from.Z-to.Z)*factor,
-			// 	}
-			// 	gl.Begin(gl.LINES)
-			// 	for _, p := range el.Indexes {
-			// 		gl.Vertex3d(
-			// 			center.X,
-			// 			center.Y,
-			// 			center.Z)
-			// 		gl.Vertex3d(
-			// 			op.model.Coords[p].X,
-			// 			op.model.Coords[p].Y,
-			// 			op.model.Coords[p].Z)
-			// 	}
-			// 	gl.End()
-			// }
 			if s == normal || s == selectTriangles || (s == colorEdgeElements && el.selected) {
 				gl.Begin(gl.TRIANGLES)
 				for _, p := range el.Indexes {
@@ -547,36 +502,6 @@ func openGlScreenCoordinate(window *glfw.Window) {
 
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
-}
-
-func drawSelectRectangle(window *glfw.Window) {
-	// draw select rectangle
-	if !selectObjects.fromAdd || !selectObjects.toUpdate {
-		return
-	}
-	_, h := window.GetSize()
-
-	gl.LineWidth(1)
-	gl.Begin(gl.LINES)
-	gl.Color3d(1.0, 0.0, 0.0) // Red
-	{
-		x1 := float64(selectObjects.xFrom)
-		y1 := float64(h) - float64(selectObjects.yFrom)
-		x2 := float64(selectObjects.xTo)
-		y2 := float64(h) - float64(selectObjects.yTo)
-		gl.Vertex2d(x1, y1)
-		gl.Vertex2d(x1, y2)
-
-		gl.Vertex2d(x1, y2)
-		gl.Vertex2d(x2, y2)
-
-		gl.Vertex2d(x2, y2)
-		gl.Vertex2d(x2, y1)
-
-		gl.Vertex2d(x2, y1)
-		gl.Vertex2d(x1, y1)
-	}
-	gl.End()
 }
 
 func (op *Opengl) drawAxes() {
@@ -658,23 +583,8 @@ func (op *Opengl) drawAxes() {
 }
 
 func (op *Opengl) scroll(window *glfw.Window, xoffset, yoffset float64) {
-	const factor = 0.05
-	switch {
-	case 0 <= yoffset:
-		op.camera.R /= (1 + factor)
-	case yoffset <= 0:
-		op.camera.R *= (1 + factor)
-	}
+	op.mouseMid.Roll(int32(xoffset), int32(yoffset), op)
 }
-
-var selectObjects = struct {
-	xFrom, yFrom int32
-	fromAdd      bool
-
-	xTo, yTo int32
-	toUpdate bool
-	toAdd    bool
-}{}
 
 type viewState = uint8
 
@@ -770,237 +680,55 @@ func convertToColor(i int) {
 	)
 }
 
-func (op *Opengl) selectByRectangle() {
-	_, h := op.window.GetSize()
-
-	selectObjects.yFrom = int32(h) - selectObjects.yFrom
-	selectObjects.yTo = int32(h) - selectObjects.yTo
-
-	//  glXGetConfig(dpy, vInfo, GLX_RED_SIZE, &attribs->redSize);
-	// GLX_BUFFER_SIZE
-	//
-	//     Number of bits per color buffer. For RGBA visuals,
-	// GLX_BUFFER_SIZE is the sum of GLX_RED_SIZE, GLX_GREEN_SIZE,
-	// GLX_BLUE_SIZE, and GLX_ALPHA_SIZE.
-	// For color index visuals, GLX_BUFFER_SIZE is the size of the color indexes.
-	//
-	// GLX_RED_SIZE
-	//
-	//     Number of bits of red stored in each color buffer.
-	// Undefined if GLX_RGBA is False.
-	//
-	// glxinfo
-	//     visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
-	//   id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
-	// ----------------------------------------------------------------------------
-	// 0x081 24 tc  0  32  0 r  . .   8  8  8  8 .  .  0  0  0  0  0  0  0  0 0 None
-	//
-	// GLX_BUFFER_SIZE = 32
-	// GLX_RED_SIZE    =  8
-	// 8bits is 0...256
-
-	if selectObjects.xTo < selectObjects.xFrom {
-		// swap
-		selectObjects.xTo, selectObjects.xFrom = selectObjects.xFrom, selectObjects.xTo
-	}
-	if selectObjects.yTo < selectObjects.yFrom {
-		// swap
-		selectObjects.yTo, selectObjects.yFrom = selectObjects.yFrom, selectObjects.yTo
-	}
-
-	if selectObjects.xFrom < 0 {
-		selectObjects.xFrom = 0
-	}
-	if selectObjects.yFrom < 0 {
-		selectObjects.yFrom = 0
-	}
-	if selectObjects.xTo < 0 {
-		selectObjects.xTo = 0
-	}
-	if selectObjects.yTo < 0 {
-		selectObjects.yTo = 0
-	}
-
-	var found bool
-	// empty pattern
-	empty := make([][]bool, selectObjects.yTo+1)
-	for i := range empty {
-		empty[i] = make([]bool, selectObjects.xTo+1)
-	}
-
-	for _, s := range []struct {
-		st viewState
-		sf func(index int) (found bool)
-	}{
-		{
-			st: selectPoints, sf: func(index int) bool {
-				if index < 0 || len(op.model.Coords) <= index {
-					return false
-				}
-				op.model.Coords[index].selected = true
-				return true
-			},
-		},
-		{
-			st: selectLines, sf: func(index int) bool {
-				if index < 0 || len(op.model.Elements) <= index {
-					return false
-				}
-				if op.model.Elements[index].ElementType != Line2 {
-					return false
-				}
-				op.model.Elements[index].selected = true
-				return true
-			},
-		},
-		{
-			st: selectTriangles, sf: func(index int) bool {
-				if index < 0 || len(op.model.Elements) <= index {
-					return false
-				}
-				if op.model.Elements[index].ElementType != Triangle3 {
-					return false
-				}
-				op.model.Elements[index].selected = true
-				return true
-			},
-		},
-	} {
-		if op.cursorLeft&s.st == 0 {
-			continue
-		}
-
-		// empty pattern prepare data
-		for r := range empty {
-			for c := range empty[r] {
-				empty[r][c] = true
-			}
-		}
-		for x := selectObjects.xFrom; x <= selectObjects.xTo; x++ {
-			for y := selectObjects.yFrom; y <= selectObjects.yTo; y++ {
-				empty[y][x] = false
-			}
-		}
-
-		// find selection
-		found = true
-		for found { // TODO : infinite loop
-			found = false
-			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)
-			gl.Enable(gl.DEPTH_TEST)
-			gl.Disable(gl.LINE_SMOOTH)
-			op.cameraView()
-			// color initialize
-			op.model3d(s.st)
-
-			// TODO : screen coordinates
-			// TODO : openGlScreenCoordinate(window)
-			// TODO : gl.Flush()
-
-			// color selection
-			color := make([]uint8, 4)
-			for x := selectObjects.xFrom; x <= selectObjects.xTo; x++ {
-				for y := selectObjects.yFrom; y <= selectObjects.yTo; y++ {
-					if empty[y][x] {
-						continue
-					}
-					// func ReadPixels(
-					//	x int32, y int32,
-					//	width int32, height int32,
-					//	format uint32, xtype uint32, pixels unsafe.Pointer)
-					gl.ReadPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&color[0]))
-					index := convertToIndex(color)
-					if s.sf(index) {
-						found = true
-					}
-					// add to empty pattern
-					if color[0] == 0 && color[1] == 0 && color[2] == 0 {
-						empty[y][x] = true
-					}
-				}
-			}
-			// if any find selection, then try again
-		}
-	}
-}
-
 func (op *Opengl) mouseButton(
 	w *glfw.Window,
 	button glfw.MouseButton,
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
+	var index int
 	switch button {
 	case glfw.MouseButton1:
+		index = 0
+	case glfw.MouseButton2:
+		index = 1
+	case glfw.MouseButton3:
+		index = 2
+	default:
+		return
+	}
+	for i := range op.mouses {
+		if op.mouses[i] == nil {
+			continue
+		}
+		if i != index {
+			op.mouses[i].Reset()
+			continue
+		}
+		x, y := w.GetCursorPos()
+		_, h := w.GetSize()
+		y = float64(h) - y
 		switch action {
 		case glfw.Press:
-			x, y := w.GetCursorPos()
-			selectObjects.xFrom = int32(x)
-			selectObjects.yFrom = int32(y)
-			selectObjects.fromAdd = true
+			op.mouses[index].Press(int32(x), int32(y))
 		case glfw.Release:
-			x, y := w.GetCursorPos()
-			selectObjects.xTo = int32(x)
-			selectObjects.yTo = int32(y)
-			selectObjects.toAdd = true
-		case glfw.Repeat:
+			op.mouses[index].Release(int32(x), int32(y), op)
+		default:
+			// case glfw.Repeat:
 			// do nothing
 		}
-	default:
-		selectObjects.toUpdate = false
-		selectObjects.fromAdd = false
-		selectObjects.toAdd = false
+		return
 	}
 }
 
-var (
-	xlast float64
-	ylast float64
-)
-
 func (op *Opengl) cursorPos(w *glfw.Window, xpos, ypos float64) {
-	if selectObjects.fromAdd || selectObjects.toAdd {
-		selectObjects.xTo = int32(xpos)
-		selectObjects.yTo = int32(ypos)
-		selectObjects.toUpdate = true
-		return
-	}
-
-	const angle = 5.0
-	if w.GetMouseButton(glfw.MouseButton3) == glfw.Press {
-		switch {
-		case xpos < xlast:
-			op.camera.alpha -= angle
-		case xlast < xpos:
-			op.camera.alpha += angle
+	_, h := w.GetSize()
+	ypos = float64(h) - ypos
+	for i := range op.mouses {
+		if op.mouses[i] == nil {
+			continue
 		}
-		switch {
-		case ypos < ylast:
-			op.camera.betta -= angle
-		case ylast < ypos:
-			op.camera.betta += angle
-		}
-		xlast = xpos
-		ylast = ypos
-	}
-
-	const factor = 0.01
-	if w.GetMouseButton(glfw.MouseButton2) == glfw.Press {
-		switch {
-		case xpos < xlast:
-			op.camera.moveX -= op.camera.R * factor
-		case xlast < xpos:
-			op.camera.moveX += op.camera.R * factor
-		}
-		switch {
-		case ypos < ylast:
-			op.camera.moveY += op.camera.R * factor
-		case ylast < ypos:
-			op.camera.moveY -= op.camera.R * factor
-		}
-		xlast = xpos
-		ylast = ypos
+		op.mouses[i].Update(int32(xpos), int32(ypos))
 	}
 }
 
@@ -1010,6 +738,12 @@ func (op *Opengl) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 		// deselect all
 		op.Init()
 		op.model.DeselectAll()
+		for i := range op.mouses {
+			if op.mouses[i] == nil {
+				continue
+			}
+			op.mouses[i].Reset()
+		}
 	}
 }
 
@@ -1055,5 +789,295 @@ func (op *Opengl) SelectLeftCursor(nodes, lines, tria bool) {
 	}
 	if tria {
 		op.cursorLeft |= selectTriangles
+	}
+}
+
+type MouseRoll interface {
+	Roll(xoffset, yoffset int32, op *Opengl)
+}
+
+type MouseZoom struct {
+	x, y int32
+}
+
+func (mz *MouseZoom) Roll(xoffset, yoffset int32, op *Opengl) {
+	mz.x = xoffset
+	mz.y = yoffset
+	mz.AfterRoll(op)
+}
+
+func (mz *MouseZoom) AfterRoll(op *Opengl) {
+	const factor = 0.05
+	switch {
+	case 0 <= mz.y:
+		op.camera.R /= (1 + factor)
+	case mz.y <= 0:
+		op.camera.R *= (1 + factor)
+	}
+}
+
+type Mouse interface {
+	Press(x, y int32)
+	Update(x, y int32)
+	Release(x, y int32, op *Opengl)
+
+	ReadyPreview() bool
+	Preview()
+
+	ReadyAction() bool
+	Action(op *Opengl)
+
+	Reset()
+}
+
+type Mouse2P struct {
+	from    [2]int32
+	fromAdd bool
+
+	to       [2]int32
+	toUpdate bool
+	toAdd    bool
+}
+
+func (m2 *Mouse2P) Press(x, y int32) {
+	m2.from[0] = x
+	m2.from[1] = y
+	m2.fromAdd = true
+}
+
+func (m2 *Mouse2P) Update(x, y int32) {
+	if !m2.fromAdd {
+		return
+	}
+	m2.to[0] = x
+	m2.to[1] = y
+	m2.toUpdate = true
+}
+
+func (m2 *Mouse2P) Release(x, y int32, op *Opengl) {
+	if !m2.fromAdd {
+		return
+	}
+	m2.to[0] = x
+	m2.to[1] = y
+	m2.toAdd = true
+}
+
+func (m2 *Mouse2P) Reset() {
+	m2.fromAdd = false
+	m2.toUpdate = false
+	m2.toAdd = false
+}
+
+func (m2 *Mouse2P) ReadyPreview() bool {
+	if !m2.fromAdd || !m2.toUpdate {
+		return false
+	}
+	return true
+}
+
+func (m2 *Mouse2P) ReadyAction() bool {
+	if !m2.fromAdd || !m2.toAdd {
+		return false
+	}
+	m2.Reset()
+	return true
+}
+
+type MouseSelect struct {
+	Mouse2P
+}
+
+func (ms *MouseSelect) Preview() {
+	// draw select rectangle
+	gl.LineWidth(1)
+	gl.Begin(gl.LINES)
+	gl.Color3d(1.0, 0.0, 0.0) // Red
+	{
+		var (
+			x1 = ms.from[0]
+			y1 = ms.from[1]
+			x2 = ms.to[0]
+			y2 = ms.to[1]
+		)
+		gl.Vertex2i(x1, y1)
+		gl.Vertex2i(x1, y2)
+
+		gl.Vertex2i(x1, y2)
+		gl.Vertex2i(x2, y2)
+
+		gl.Vertex2i(x2, y2)
+		gl.Vertex2i(x2, y1)
+
+		gl.Vertex2i(x2, y1)
+		gl.Vertex2i(x1, y1)
+	}
+	gl.End()
+}
+
+func (ms *MouseSelect) Action(op *Opengl) {
+	for c := 0; c < 2; c++ {
+		if ms.to[c] < ms.from[c] {
+			// swap
+			ms.to[c], ms.from[c] = ms.from[c], ms.to[c]
+		}
+		if ms.from[c] < 0 {
+			ms.from[c] = 0
+		}
+		if ms.to[c] < 0 {
+			ms.to[c] = 0
+		}
+	}
+
+	var found bool
+	// empty pattern
+	empty := make([][]bool, ms.to[1]+1)
+	for i := range empty {
+		empty[i] = make([]bool, ms.to[0]+1)
+	}
+
+	for _, s := range []struct {
+		st viewState
+		sf func(index int) (found bool)
+	}{
+		{st: selectPoints, sf: func(index int) bool {
+			if index < 0 || len(op.model.Coords) <= index {
+				return false
+			}
+			op.model.Coords[index].selected = true
+			return true
+		}}, {st: selectLines, sf: func(index int) bool {
+			if index < 0 || len(op.model.Elements) <= index {
+				return false
+			}
+			if op.model.Elements[index].ElementType != Line2 {
+				return false
+			}
+			op.model.Elements[index].selected = true
+			return true
+		}}, {st: selectTriangles, sf: func(index int) bool {
+			if index < 0 || len(op.model.Elements) <= index {
+				return false
+			}
+			if op.model.Elements[index].ElementType != Triangle3 {
+				return false
+			}
+			op.model.Elements[index].selected = true
+			return true
+		}},
+	} {
+		if op.cursorLeft&s.st == 0 {
+			continue
+		}
+
+		// empty pattern prepare data
+		for r := range empty {
+			for c := range empty[r] {
+				empty[r][c] = true
+			}
+		}
+		for x := ms.from[0]; x <= ms.to[0]; x++ {
+			for y := ms.from[1]; y <= ms.to[1]; y++ {
+				empty[y][x] = false
+			}
+		}
+
+		// find selection
+		found = true
+		iterations := 0
+		for ; found; iterations++ { // TODO : infinite loop
+			found = false
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)
+			gl.Enable(gl.DEPTH_TEST)
+			gl.Disable(gl.LINE_SMOOTH)
+			op.cameraView()
+			// color initialize
+			op.model3d(s.st)
+
+			// TODO : screen coordinates
+			// TODO : openGlScreenCoordinate(window)
+			// TODO : gl.Flush()
+
+			// color selection
+			color := make([]uint8, 4)
+			for x := ms.from[0]; x <= ms.to[0]; x++ {
+				for y := ms.from[1]; y <= ms.to[1]; y++ {
+					if empty[y][x] {
+						continue
+					}
+					// func ReadPixels(
+					//	x int32, y int32,
+					//	width int32, height int32,
+					//	format uint32, xtype uint32, pixels unsafe.Pointer)
+					gl.ReadPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE,
+						gl.Ptr(&color[0]))
+					index := convertToIndex(color)
+					if s.sf(index) {
+						found = true
+					}
+					// add to empty pattern
+					if color[0] == 0 && color[1] == 0 && color[2] == 0 {
+						empty[y][x] = true
+					}
+				}
+			}
+			// if any find selection, then try again
+		}
+		_ = iterations
+		Debug = append(Debug, fmt.Sprintln("iterations ", iterations))
+	}
+
+	// TODO remove
+	amount := 0
+	for i := range op.model.Coords {
+		if op.model.Coords[i].selected {
+			amount++
+		}
+	}
+	Debug = append(Debug, fmt.Sprintln("amount ", amount))
+}
+
+type MouseRotate struct {
+	Mouse2P
+}
+
+func (mr *MouseRotate) Preview() {}
+
+func (mr *MouseRotate) Action(op *Opengl) {
+	const angle = 15.0
+	switch {
+	case mr.to[0] < mr.from[0]:
+		op.camera.alpha -= angle
+	case mr.from[0] < mr.to[0]:
+		op.camera.alpha += angle
+	}
+	switch {
+	case mr.to[1] < mr.from[1]:
+		op.camera.betta += angle
+	case mr.from[1] < mr.to[1]:
+		op.camera.betta -= angle
+	}
+}
+
+type MouseMove struct {
+	Mouse2P
+}
+
+func (mr *MouseMove) Preview() {}
+
+func (mr *MouseMove) Action(op *Opengl) {
+	const factor = 0.05
+	switch {
+	case mr.to[0] < mr.from[0]:
+		op.camera.moveX -= op.camera.R * factor
+	case mr.from[0] < mr.to[0]:
+		op.camera.moveX += op.camera.R * factor
+	}
+	switch {
+	case mr.to[1] < mr.from[1]:
+		op.camera.moveY -= op.camera.R * factor
+	case mr.from[1] < mr.to[1]:
+		op.camera.moveY += op.camera.R * factor
 	}
 }

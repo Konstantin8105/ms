@@ -578,9 +578,6 @@ func (mm *Model) DeselectAll() {
 	for i := range mm.Elements {
 		mm.Elements[i].selected = false
 	}
-	selectObjects.toUpdate = false
-	selectObjects.fromAdd = false
-	selectObjects.toAdd = false
 }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {

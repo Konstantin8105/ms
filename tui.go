@@ -614,6 +614,8 @@ type Selectable interface {
 	DeselectAll()
 
 	// SelectAll
+	// SelectLinesAll
+	// SelectTrianglesAll
 	//
 	// SelectLinesParallel
 	// SelectLinesByLenght
