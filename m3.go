@@ -456,35 +456,43 @@ func (op *Opengl) model3d(s viewState) {
 				// for perfomance with empty pattern
 				// do not draw triangle, but
 				// draw lines.
-				factor := 0.1 + float64(i) / float64(len(op.model.Elements)) * 0.8
+				factor := 0.1 + float64(i)/float64(len(op.model.Elements))*0.8
+				if factor <= 0 || 1.0 <= factor {
+					panic(factor)
+				}
+				ps := [3]Coordinate{
+					op.model.Coords[el.Indexes[0]],
+					op.model.Coords[el.Indexes[1]],
+					op.model.Coords[el.Indexes[2]],
+				}
 				var from, to Coordinate
 				switch i % 3 {
 				case 0:
 					from = Coordinate{
-						X: (op.model.Coords[0].X + op.model.Coords[1].X) * factor,
-						Y: (op.model.Coords[0].Y + op.model.Coords[1].Y) * factor,
-						Z: (op.model.Coords[0].Z + op.model.Coords[1].Z) * factor,
+						X: ps[0].X + (ps[1].X-ps[0].X)*factor,
+						Y: ps[0].Y + (ps[1].Y-ps[0].Y)*factor,
+						Z: ps[0].Z + (ps[1].Z-ps[0].Z)*factor,
 					}
-					to = op.model.Coords[2]
+					to = ps[2]
 				case 1:
 					from = Coordinate{
-						X: (op.model.Coords[1].X + op.model.Coords[2].X) * factor,
-						Y: (op.model.Coords[1].Y + op.model.Coords[2].Y) * factor,
-						Z: (op.model.Coords[1].Z + op.model.Coords[2].Z) * factor,
+						X: ps[1].X + (ps[2].X-ps[1].X)*factor,
+						Y: ps[1].Y + (ps[2].Y-ps[1].Y)*factor,
+						Z: ps[1].Z + (ps[2].Z-ps[1].Z)*factor,
 					}
-					to = op.model.Coords[0]
+					to = ps[0]
 				default:
 					from = Coordinate{
-						X: (op.model.Coords[0].X + op.model.Coords[2].X) * factor,
-						Y: (op.model.Coords[0].Y + op.model.Coords[2].Y) * factor,
-						Z: (op.model.Coords[0].Z + op.model.Coords[2].Z) * factor,
+						X: ps[2].X + (ps[0].X-ps[2].X)*factor,
+						Y: ps[2].Y + (ps[0].Y-ps[2].Y)*factor,
+						Z: ps[2].Z + (ps[0].Z-ps[2].Z)*factor,
 					}
-					to = op.model.Coords[1]
+					to = ps[1]
 				}
 				center := Coordinate{
-					X: (from.X + to.X) * factor,
-					Y: (from.Y + to.Y) * factor,
-					Z: (from.Z + to.Z) * factor,
+					X: to.X + (from.X-to.X)*factor,
+					Y: to.Y + (from.Y-to.Y)*factor,
+					Z: to.Z + (from.Z-to.Z)*factor,
 				}
 				gl.Begin(gl.LINES)
 				for _, p := range el.Indexes {
@@ -797,6 +805,19 @@ func (op *Opengl) selectByRectangle() {
 	if selectObjects.yTo < selectObjects.yFrom {
 		// swap
 		selectObjects.yTo, selectObjects.yFrom = selectObjects.yFrom, selectObjects.yTo
+	}
+
+	if selectObjects.xFrom < 0 {
+		selectObjects.xFrom = 0
+	}
+	if selectObjects.yFrom < 0 {
+		selectObjects.yFrom = 0
+	}
+	if selectObjects.xTo < 0 {
+		selectObjects.xTo = 0
+	}
+	if selectObjects.yTo < 0 {
+		selectObjects.yTo = 0
 	}
 
 	var found bool
