@@ -39,12 +39,10 @@ func (u *Undo) Undo() {
 
 	// opengl
 	last.op = u.model.op
-	u.model.op.Change = func(op *Opengl) {
-		op.model = &last
-	}
+	last.op.ChangeModel(&last)
 	// tui
 	last.tui = u.model.tui
-	last.tui.mesh = &last
+	last.tui.ChangeModel(&last)
 	// undo model
 	u.model = &last
 

@@ -24,7 +24,7 @@ type Opengl struct {
 	window *glfw.Window
 
 	model  *Model
-	Change func(*Opengl)
+	change func()
 
 	// for 3d view
 	state       viewState
@@ -47,6 +47,13 @@ func (op *Opengl) Init() {
 		op.state = normal
 	}
 	op.cursorLeft = selectPoints
+}
+
+func (op *Opengl) ChangeModel(model *Model) {
+	op.change = func() {
+		op.model = model
+		op.model.op = op
+	}
 }
 
 func NewOpengl() (op *Opengl, err error) {
@@ -106,9 +113,9 @@ func NewOpengl() (op *Opengl, err error) {
 func (op *Opengl) Run() {
 	defer glfw.Terminate()
 	for !op.window.ShouldClose() {
-		if op.Change != nil {
-			op.Change(op)
-			op.Change = nil
+		if op.change != nil {
+			op.change()
+			op.change = nil
 		}
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)

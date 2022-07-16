@@ -1143,9 +1143,9 @@ func Run(quit <-chan struct{}) (err error) {
 	if err != nil {
 		return
 	}
-	op.model = mm.model
-	mm.model.op = op
-	mm.model.tui = tui
+
+	op.ChangeModel(mm.model)
+	tui.ChangeModel(mm.model)
 
 	go func() {
 		if testCoverageFunc == nil {

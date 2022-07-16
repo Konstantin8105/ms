@@ -1246,6 +1246,11 @@ type Tui struct {
 	Change func(*Opengl)
 }
 
+func (tui *Tui) ChangeModel(model *Model) {
+	tui.mesh = model
+	model.tui = tui
+}
+
 func (tui *Tui) Run(quit <-chan struct{}) error {
 	action := make(chan func())
 	defer func() {
