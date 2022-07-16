@@ -681,7 +681,7 @@ func init() {
 
 			return &list
 		}}, {
-		Name: "Ortho lines parallel axes X, Y, Z",
+		Name: "Select ortho lines parallel axes X, Y, Z",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
@@ -706,7 +706,7 @@ func init() {
 
 			return &list
 		}}, {
-		Name: "Lines on plane XOY, YOZ, XOZ",
+		Name: "Select lines on plane XOY, YOZ, XOZ",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 

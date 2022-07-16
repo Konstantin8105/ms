@@ -452,7 +452,54 @@ func (op *Opengl) model3d(s viewState) {
 		switch el.ElementType {
 		case Line2: // do nothing
 		case Triangle3:
-			if s == normal || s == selectTriangles || (s == colorEdgeElements && el.selected) {
+			if s == selectTriangles {
+				// for perfomance with empty pattern
+				// do not draw triangle, but
+				// draw lines.
+				factor := 0.1 + float64(i) / float64(len(op.model.Elements)) * 0.8
+				var from, to Coordinate
+				switch i % 3 {
+				case 0:
+					from = Coordinate{
+						X: (op.model.Coords[0].X + op.model.Coords[1].X) * factor,
+						Y: (op.model.Coords[0].Y + op.model.Coords[1].Y) * factor,
+						Z: (op.model.Coords[0].Z + op.model.Coords[1].Z) * factor,
+					}
+					to = op.model.Coords[2]
+				case 1:
+					from = Coordinate{
+						X: (op.model.Coords[1].X + op.model.Coords[2].X) * factor,
+						Y: (op.model.Coords[1].Y + op.model.Coords[2].Y) * factor,
+						Z: (op.model.Coords[1].Z + op.model.Coords[2].Z) * factor,
+					}
+					to = op.model.Coords[0]
+				default:
+					from = Coordinate{
+						X: (op.model.Coords[0].X + op.model.Coords[2].X) * factor,
+						Y: (op.model.Coords[0].Y + op.model.Coords[2].Y) * factor,
+						Z: (op.model.Coords[0].Z + op.model.Coords[2].Z) * factor,
+					}
+					to = op.model.Coords[1]
+				}
+				center := Coordinate{
+					X: (from.X + to.X) * factor,
+					Y: (from.Y + to.Y) * factor,
+					Z: (from.Z + to.Z) * factor,
+				}
+				gl.Begin(gl.LINES)
+				for _, p := range el.Indexes {
+					gl.Vertex3d(
+						center.X,
+						center.Y,
+						center.Z)
+					gl.Vertex3d(
+						op.model.Coords[p].X,
+						op.model.Coords[p].Y,
+						op.model.Coords[p].Z)
+				}
+				gl.End()
+			}
+			if s == normal || (s == colorEdgeElements && el.selected) {
 				gl.Begin(gl.TRIANGLES)
 				for _, p := range el.Indexes {
 					gl.Vertex3d(
@@ -753,6 +800,11 @@ func (op *Opengl) selectByRectangle() {
 	}
 
 	var found bool
+	// empty pattern
+	empty := make([][]bool, selectObjects.yTo+1)
+	for i := range empty {
+		empty[i] = make([]bool, selectObjects.xTo+1)
+	}
 
 	for _, s := range []struct {
 		st viewState
@@ -796,6 +848,19 @@ func (op *Opengl) selectByRectangle() {
 			continue
 		}
 
+		// empty pattern prepare data
+		for r := range empty {
+			for c := range empty[r] {
+				empty[r][c] = true
+			}
+		}
+		for x := selectObjects.xFrom; x <= selectObjects.xTo; x++ {
+			for y := selectObjects.yFrom; y <= selectObjects.yTo; y++ {
+				empty[y][x] = false
+			}
+		}
+
+		// find selection
 		found = true
 		for found { // TODO : infinite loop
 			found = false
@@ -815,6 +880,9 @@ func (op *Opengl) selectByRectangle() {
 			color := make([]uint8, 4)
 			for x := selectObjects.xFrom; x <= selectObjects.xTo; x++ {
 				for y := selectObjects.yFrom; y <= selectObjects.yTo; y++ {
+					if empty[y][x] {
+						continue
+					}
 					// func ReadPixels(
 					//	x int32, y int32,
 					//	width int32, height int32,
@@ -823,6 +891,10 @@ func (op *Opengl) selectByRectangle() {
 					index := convertToIndex(color)
 					if s.sf(index) {
 						found = true
+					}
+					// add to empty pattern
+					if color[0] == 0 && color[1] == 0 && color[2] == 0 {
+						empty[y][x] = true
 					}
 				}
 			}
