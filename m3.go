@@ -111,7 +111,10 @@ func NewOpengl() (op *Opengl, err error) {
 }
 
 func (op *Opengl) Run() {
-	defer glfw.Terminate()
+	defer func() {
+		// 3D window is close
+		glfw.Terminate()
+	}()
 	for !op.window.ShouldClose() {
 		if op.change != nil {
 			op.change()
