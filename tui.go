@@ -23,9 +23,7 @@ const (
 	Ignore
 	Hide
 	Split
-	Merge
 	MoveCopy
-	// 	Scale
 	// 	TypModels
 	// 	Check
 	Plugin
@@ -43,19 +41,15 @@ func (g GroupId) String() string {
 	case Selection:
 		return "Select"
 	case AddRemove:
-		return "Add/Remove"
+		return "Add/Modify/Remove"
 	case Ignore:
 		return "Ignore"
 	case Hide:
 		return "Hide"
 	case Split:
 		return "Split"
-	case Merge:
-		return "Merge"
 	case MoveCopy:
 		return "Move/Copy"
-		// 	case Scale:
-		// 		return "Scale"
 		// 	case Check:
 		// 		return "Check"
 		// 	case TypModels:
@@ -354,9 +348,17 @@ type AddRemovable interface {
 	// AddGroup
 	// AddCrossSections
 
+	MergeNodes(minDistance float64)
+	// MergeLines()
+	// MergeTriangles()
+
 	// Triangulation by nodes
 	// Triangulation exist plates by area
 	// Smooth mesh
+
+	// Scale by ratio [sX,sY,sZ] and node
+	// Scale by cylinder system coordinate
+	// Scale by direction on 2 nodes
 
 	Remove(nodes, elements []uint)
 	// RemoveSelected
@@ -448,6 +450,28 @@ func init() {
 			}
 			list.Add(&bi)
 
+			return &list
+		}}, {
+		Name: "Merge nodes",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			d, dgt := InputFloat("Minimal distance", "meter")
+			list.Add(d)
+
+			var b vl.Button
+			b.SetText("Merge")
+			b.OnClick = func() {
+				d, ok := dgt()
+				if !ok {
+					return
+				}
+				if d <= 0.0 {
+					return
+				}
+				m.MergeNodes(d)
+			}
+			list.Add(&b)
 			return &list
 		}}, {
 		Name: "Remove selected",
@@ -824,45 +848,6 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-type Mergable interface {
-	MergeNodes(minDistance float64)
-	// MergeLines()
-	// MergeTriangles()
-}
-
-func init() {
-	group := Merge
-	name := group.String()
-	ops := []Operation{{
-		Name: "Merge nodes",
-		Part: func(m Mesh) (w vl.Widget) {
-			var list vl.List
-
-			d, dgt := InputFloat("Minimal distance", "meter")
-			list.Add(d)
-
-			var b vl.Button
-			b.SetText(name)
-			b.OnClick = func() {
-				d, ok := dgt()
-				if !ok {
-					return
-				}
-				if d <= 0.0 {
-					return
-				}
-				m.MergeNodes(d)
-			}
-			list.Add(&b)
-			return &list
-		}},
-	}
-	for i := range ops {
-		ops[i].Group = group
-	}
-	Operations = append(Operations, ops...)
-}
-
 type MoveCopyble interface {
 	MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool)
 	MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool)
@@ -968,20 +953,6 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-type Scalable interface {
-	// By ratio [sX,sY,sZ] and node
-	// By cylinder system coordinate
-	// By direction on 2 nodes
-}
-
-// func init() {
-// 	ops := []Operation{{}}
-// 	for i := range ops {
-// 		ops[i].Group = Scale
-// 	}
-// 	Operations = append(Operations, ops...)
-// }
-
 type Checkable interface {
 	// Multiple structures
 	// Node duplicate
@@ -1085,9 +1056,7 @@ type Mesh interface {
 	Hidable
 	Selectable
 	Splitable
-	Mergable
 	MoveCopyble
-	Scalable
 	Checkable
 	Pluginable
 	Measurementable

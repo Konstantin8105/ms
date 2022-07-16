@@ -19,6 +19,7 @@ func (u *Undo) addToUndo() {
 	}
 	if u.list == nil {
 		u.list = list.New()
+		u.addToUndo() // store
 	}
 	u.list.PushBack(b)
 }
@@ -79,27 +80,27 @@ func (u *Undo) ColorEdge(isColor bool) {
 }
 
 func (u *Undo) AddNode(X, Y, Z float64) (id uint) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	return u.model.AddNode(X, Y, Z)
 }
 
 func (u *Undo) AddLineByNodeNumber(n1, n2 uint) (id uint) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	return u.model.AddLineByNodeNumber(n1, n2)
 }
 
 func (u *Undo) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	return u.model.AddTriangle3ByNodeNumber(n1, n2, n3)
 }
 
 func (u *Undo) IgnoreModelElements(ids []uint) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.IgnoreModelElements(ids)
 }
 
 func (u *Undo) Unignore() {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.Unignore()
 }
 
@@ -148,46 +149,46 @@ func (u *Undo) DeselectAll() {
 }
 
 func (u *Undo) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.SplitLinesByDistance(lines, distance, atBegin)
 }
 
 func (u *Undo) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.SplitLinesByRatio(lines, proportional, atBegin)
 }
 
 func (u *Undo) SplitLinesByEqualParts(lines []uint, parts uint) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.SplitLinesByEqualParts(lines, parts)
 }
 
 func (u *Undo) SplitTri3To3Tri3(tris []uint) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.SplitTri3To3Tri3(tris)
 }
 
 func (u *Undo) MergeNodes(minDistance float64) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.MergeNodes(minDistance)
 }
 
 func (u *Undo) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.MoveCopyNodesDistance(nodes, elements, coordinates, copy, addLines, addTri)
 }
 
 func (u *Undo) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.MoveCopyNodesN1N2(nodes, elements, from, to, copy, addLines, addTri)
 }
 
 func (u *Undo) DemoSpiral() {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.DemoSpiral()
 }
 
 func (u *Undo) Remove(nodes, elements []uint) {
-	defer u.addToUndo() // store
+	u.addToUndo() // store
 	u.model.Remove(nodes, elements)
 }
