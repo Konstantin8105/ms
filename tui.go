@@ -351,6 +351,7 @@ type AddRemovable interface {
 	MergeNodes(minDistance float64)
 	// MergeLines()
 	// MergeTriangles()
+	// MergeMesh()
 
 	// Triangulation by nodes
 	// Triangulation exist plates by area
