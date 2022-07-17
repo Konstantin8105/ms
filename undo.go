@@ -144,6 +144,10 @@ func (u *Undo) SelectLinesOnPlane(xoy, xoz, yoz bool) {
 	u.model.SelectLinesOnPlane(xoy, xoz, yoz)
 }
 
+func (u *Undo) SelectScreen(from, to [2]int32) {
+	u.model.SelectScreen(from, to)
+}
+
 func (u *Undo) DeselectAll() {
 	u.model.DeselectAll()
 }

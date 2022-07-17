@@ -613,6 +613,8 @@ type Selectable interface {
 
 	DeselectAll()
 
+	SelectScreen(from, to [2]int32)
+
 	// SelectAll
 	// SelectLinesAll
 	// SelectTrianglesAll
