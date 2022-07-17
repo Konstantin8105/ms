@@ -589,11 +589,11 @@ func (op *Opengl) scroll(window *glfw.Window, xoffset, yoffset float64) {
 type viewState = uint8
 
 const (
-	normal viewState = 1 << iota
-	colorEdgeElements
-	selectPoints
-	selectLines
-	selectTriangles
+	normal            viewState = 1 << iota // 1
+	colorEdgeElements                       // 2
+	selectPoints                            // 4
+	selectLines                             // 8
+	selectTriangles                         // 16
 )
 
 func edgeColor(pos int) {
@@ -931,10 +931,10 @@ func (ms *MouseSelect) Action(op *Opengl) {
 
 	var found bool
 	// empty pattern
-	empty := make([][]bool, ms.to[1]+1)
-	for i := range empty {
-		empty[i] = make([]bool, ms.to[0]+1)
-	}
+	// empty := make([][]bool, ms.to[1]+1)
+	// for i := range empty {
+	// 	empty[i] = make([]bool, ms.to[0]+1)
+	// }
 
 	for _, s := range []struct {
 		st viewState
@@ -969,23 +969,23 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		if op.cursorLeft&s.st == 0 {
 			continue
 		}
+		AddInfo("Type selection: %d", s.st)
 
 		// empty pattern prepare data
-		for r := range empty {
-			for c := range empty[r] {
-				empty[r][c] = true
-			}
-		}
-		for x := ms.from[0]; x <= ms.to[0]; x++ {
-			for y := ms.from[1]; y <= ms.to[1]; y++ {
-				empty[y][x] = false
-			}
-		}
+		//	for r := range empty {
+		//		for c := range empty[r] {
+		//			empty[r][c] = true
+		//		}
+		//	}
+		//	for x := ms.from[0]; x <= ms.to[0]; x++ {
+		//		for y := ms.from[1]; y <= ms.to[1]; y++ {
+		//			empty[y][x] = false
+		//		}
+		//	}
 
 		// find selection
 		found = true
-		iterations := 0
-		for ; found; iterations++ { // TODO : infinite loop
+		for found { // TODO : infinite loop
 			found = false
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)
@@ -1003,9 +1003,9 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			color := make([]uint8, 4)
 			for x := ms.from[0]; x <= ms.to[0]; x++ {
 				for y := ms.from[1]; y <= ms.to[1]; y++ {
-					if empty[y][x] {
-						continue
-					}
+					//	if empty[y][x] {
+					//		continue
+					//	}
 					// func ReadPixels(
 					//	x int32, y int32,
 					//	width int32, height int32,
@@ -1013,19 +1013,19 @@ func (ms *MouseSelect) Action(op *Opengl) {
 					gl.ReadPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE,
 						gl.Ptr(&color[0]))
 					index := convertToIndex(color)
+					AddInfo("read")
 					if s.sf(index) {
+						AddInfo("Found: %d %v", index, color)
 						found = true
 					}
 					// add to empty pattern
-					if color[0] == 0 && color[1] == 0 && color[2] == 0 {
-						empty[y][x] = true
-					}
+					//	if color[0] == 0 && color[1] == 0 && color[2] == 0 {
+					//		empty[y][x] = true
+					//	}
 				}
 			}
 			// if any find selection, then try again
 		}
-		_ = iterations
-		AddInfo("iterations %d", iterations)
 	}
 
 	// TODO remove
@@ -1035,7 +1035,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			amount++
 		}
 	}
-	AddInfo("amount %d", amount)
+	AddInfo("amount selected coordinates %d", amount)
 }
 
 type MouseRotate struct {
