@@ -580,12 +580,8 @@ func (mm *Model) DeselectAll() {
 	}
 }
 
-
 func (mm *Model) SelectScreen(from, to [2]int32) {
-	var ms MouseSelect
-	ms.Press(from[0], from[1])
-	ms.Release(to[0], to[1], mm.op)
-	ms.Action(mm.op)
+	mm.op.SelectScreen(from, to)
 }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {

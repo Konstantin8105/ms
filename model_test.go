@@ -144,11 +144,13 @@ func TestIntegration(t *testing.T) {
 		AddInfo("change SelectLeftCursor")
 		<-time.After(300 * time.Millisecond)
 		AddInfo("SelectScreen")
-		mm.SelectScreen([2]int32{0, 0}, [2]int32{600, 400})
+		mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300})
+		<-time.After(300 * time.Millisecond)
 		{
 			els := mm.SelectElements(Many)
 			AddInfo("SelectElements")
 			if len(els) == 0 {
+				AddInfo("Error: SelectElements is zero")
 				close(quit)
 				t.Fatalf("after select screen")
 			}

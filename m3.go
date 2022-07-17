@@ -43,6 +43,8 @@ type Opengl struct {
 	// mouses
 	mouses   [3]Mouse  // left, middle, right
 	mouseMid MouseRoll // middle scroll
+
+	pause bool
 }
 
 func (op *Opengl) Init() {
@@ -138,7 +140,7 @@ func (op *Opengl) Run() {
 		gl.Enable(gl.LINE_SMOOTH)
 
 		op.cameraView()
-		op.model3d(op.state)
+		op.model3d(op.state, "run")
 
 		// screen coordinates
 		openGlScreenCoordinate(op.window)
@@ -149,6 +151,9 @@ func (op *Opengl) Run() {
 		if op.model != nil {
 			DrawText(fmt.Sprintf("Nodes     : %6d", len(op.model.Coords)), 0, 1*fontSize)
 			DrawText(fmt.Sprintf("Elements  : %6d", len(op.model.Elements)), 0, 2*fontSize)
+		}
+		for op.pause {
+			<-time.After(100 * time.Millisecond)
 		}
 
 		for i := range op.mouses {
@@ -261,7 +266,7 @@ func (op *Opengl) cameraView() {
 	}
 }
 
-func (op *Opengl) model3d(s viewState) {
+func (op *Opengl) model3d(s viewState, parent string) {
 	if op.model == nil {
 		return
 	}
@@ -270,6 +275,11 @@ func (op *Opengl) model3d(s viewState) {
 	// 			Debug = append(Debug, fmt.Sprintf("%v\n%v", r, string(debug.Stack())))
 	// 		}
 	// 	}()
+
+	//	AddInfo("model3d at begin : %v %s", s, parent)
+	//	defer func() {
+	//		AddInfo("model3d at end : %v %s", s, parent)
+	//	}()
 
 	gl.PushMatrix()
 	defer func() {
@@ -586,7 +596,7 @@ func (op *Opengl) scroll(window *glfw.Window, xoffset, yoffset float64) {
 	op.mouseMid.Roll(int32(xoffset), int32(yoffset), op)
 }
 
-type viewState = uint8
+type viewState uint8
 
 const (
 	normal            viewState = 1 << iota // 1
@@ -595,6 +605,22 @@ const (
 	selectLines                             // 8
 	selectTriangles                         // 16
 )
+
+func (s viewState) String() string {
+	switch s {
+	case normal:
+		return "normal"
+	case colorEdgeElements:
+		return "colorEdgeElements"
+	case selectPoints:
+		return "selectPoints"
+	case selectLines:
+		return "selectLines"
+	case selectTriangles:
+		return "selectTriangles"
+	}
+	return fmt.Sprintf("%d", s)
+}
 
 func edgeColor(pos int) {
 	switch pos {
@@ -712,7 +738,7 @@ func (op *Opengl) mouseButton(
 		case glfw.Press:
 			op.mouses[index].Press(int32(x), int32(y))
 		case glfw.Release:
-			op.mouses[index].Release(int32(x), int32(y), op)
+			op.mouses[index].Release(int32(x), int32(y))
 		default:
 			// case glfw.Repeat:
 			// do nothing
@@ -792,6 +818,25 @@ func (op *Opengl) SelectLeftCursor(nodes, lines, tria bool) {
 	}
 }
 
+func (op *Opengl) SelectScreen(from, to [2]int32) {
+	for i := range op.mouses {
+		if op.mouses[i] == nil {
+			continue
+		}
+		switch m := op.mouses[i].(type) {
+		case *MouseSelect:
+			op.pause = true
+			defer func() {
+				op.pause = false
+			}()
+			m.Reset()
+			m.Press(from[0], from[1])
+			m.Release(to[0], to[1])
+			m.Action(op)
+		}
+	}
+}
+
 type MouseRoll interface {
 	Roll(xoffset, yoffset int32, op *Opengl)
 }
@@ -819,7 +864,7 @@ func (mz *MouseZoom) AfterRoll(op *Opengl) {
 type Mouse interface {
 	Press(x, y int32)
 	Update(x, y int32)
-	Release(x, y int32, op *Opengl)
+	Release(x, y int32)
 
 	ReadyPreview() bool
 	Preview()
@@ -854,7 +899,7 @@ func (m2 *Mouse2P) Update(x, y int32) {
 	m2.toUpdate = true
 }
 
-func (m2 *Mouse2P) Release(x, y int32, op *Opengl) {
+func (m2 *Mouse2P) Release(x, y int32) {
 	if !m2.fromAdd {
 		return
 	}
@@ -986,18 +1031,25 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		// find selection
 		found = true
 		for found { // TODO : infinite loop
+			AddInfo("try found: %s", s.st)
+
 			found = false
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)
+			gl.ClearColorxOES(0, 0, 0, 0)
+			// gl.ClearColor(1, 1, 1, 1)
 			gl.Enable(gl.DEPTH_TEST)
 			gl.Disable(gl.LINE_SMOOTH)
 			op.cameraView()
 			// color initialize
-			op.model3d(s.st)
+
+			op.model3d(s.st, "select")
 
 			// TODO : screen coordinates
 			// TODO : openGlScreenCoordinate(window)
-			// TODO : gl.Flush()
+			// TODO :
+			// gl.Flush()
+
+			counter := 0
 
 			// color selection
 			color := make([]uint8, 4)
@@ -1013,7 +1065,8 @@ func (ms *MouseSelect) Action(op *Opengl) {
 					gl.ReadPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE,
 						gl.Ptr(&color[0]))
 					index := convertToIndex(color)
-					AddInfo("read")
+					counter++
+					// AddInfo("read")
 					if s.sf(index) {
 						AddInfo("Found: %d %v", index, color)
 						found = true
@@ -1024,6 +1077,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 					//	}
 				}
 			}
+			AddInfo("Counters : %d", counter)
 			// if any find selection, then try again
 		}
 	}

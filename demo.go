@@ -11,9 +11,7 @@ import (
 
 func main() {
 	defer func() {
-		for i := range ms.Debug {
-			fmt.Println(ms.Debug[i])
-		}
+		fmt.Println(ms.PrintInfo())
 	}()
 	// create a new model
 	if err := ms.Run(nil); err != nil {

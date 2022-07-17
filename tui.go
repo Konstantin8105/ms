@@ -1209,7 +1209,9 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 
 ///////////////////////////////////////////////////////////////////////////////
 
-var Info []string
+var (
+	Info []string
+)
 
 func AddInfo(format string, args ...interface{}) {
 	Info = append(Info, fmt.Sprintf(format, args...))
@@ -1306,7 +1308,7 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 		var b vl.Button
 		b.SetText("Clear log")
 		b.OnClick = func() {
-			Info=nil
+			Info = nil
 		}
 		logList.Add(&b)
 
