@@ -124,14 +124,8 @@ func TestUniqUint(t *testing.T) {
 
 func TestIntegration(t *testing.T) {
 	defer func() {
-		for i := range Debug {
-			t.Logf("%s", Debug[i])
-		}
+		t.Logf("%s", PrintInfo())
 	}()
-
-	print := func(args ...interface{}) {
-		Debug = append(Debug, fmt.Sprintln(args...))
-	}
 
 	// tests movements
 	quit := make(chan struct{})
@@ -139,49 +133,49 @@ func TestIntegration(t *testing.T) {
 		// draw spiral
 		<-time.After(500 * time.Millisecond)
 		mm.DemoSpiral()
-		print("add DemoSpiral")
+		AddInfo("add DemoSpiral")
 		// draw clone spiral
 		<-time.After(500 * time.Millisecond)
 		mm.DemoSpiral()
-		print("add DemoSpiral again")
+		AddInfo("add DemoSpiral again")
 		// select
 		<-time.After(300 * time.Millisecond)
 		mm.SelectLeftCursor(true, true, true)
-		print("change SelectLeftCursor")
+		AddInfo("change SelectLeftCursor")
 		<-time.After(300 * time.Millisecond)
-		print("SelectScreen")
+		AddInfo("SelectScreen")
 		mm.SelectScreen([2]int32{0, 0}, [2]int32{600, 400})
-		// {
-		// 	els := mm.SelectElements(Many)
-		// 	print("SelectElements")
-		// 	if len(els) == 0 {
-		// 		close(quit)
-		// 		t.Fatalf("after select screen")
-		// 	}
-		// }
+		{
+			els := mm.SelectElements(Many)
+			AddInfo("SelectElements")
+			if len(els) == 0 {
+				close(quit)
+				t.Fatalf("after select screen")
+			}
+		}
 		<-time.After(1 * time.Second)
-		print("select screen")
+		AddInfo("select screen")
 		// color change
 		<-time.After(300 * time.Millisecond)
 		mm.ColorEdge(true)
-		print("add colors")
+		AddInfo("add colors")
 		<-time.After(300 * time.Millisecond)
 		mm.ColorEdge(false)
-		print("false colors")
+		AddInfo("false colors")
 		// deselect
 		<-time.After(1 * time.Second)
 		mm.DeselectAll()
-		print("deselect")
+		AddInfo("deselect")
 		// select ortho
 		<-time.After(300 * time.Millisecond)
 		mm.SelectLinesOrtho(true, true, true)
-		print("SelectLinesOrtho")
+		AddInfo("SelectLinesOrtho")
 		<-time.After(300 * time.Millisecond)
 		mm.InvertSelect(true, true, true)
-		print("InvertSelect")
+		AddInfo("InvertSelect")
 		<-time.After(300 * time.Millisecond)
 		els := mm.SelectElements(Many)
-		print("SelectElements")
+		AddInfo("SelectElements")
 		if len(els) == 0 {
 			close(quit)
 			t.Fatalf("No 1")
@@ -189,52 +183,52 @@ func TestIntegration(t *testing.T) {
 		// IgnoreElements
 		<-time.After(300 * time.Millisecond)
 		mm.IgnoreModelElements(els)
-		print("IgnoreModelElements")
+		AddInfo("IgnoreModelElements")
 		<-time.After(300 * time.Millisecond)
 		mm.Unignore()
-		print("Unignore")
+		AddInfo("Unignore")
 		// split lines
 		<-time.After(300 * time.Millisecond)
 		mm.SelectLinesOrtho(true, true, true)
-		print("SelectLinesOrtho")
+		AddInfo("SelectLinesOrtho")
 		<-time.After(300 * time.Millisecond)
 		els = mm.SelectElements(Many)
-		print("SelectElements")
+		AddInfo("SelectElements")
 		if len(els) == 0 {
 			close(quit)
 			t.Fatalf("No 2")
 		}
 		<-time.After(300 * time.Millisecond)
 		mm.ColorEdge(true) // color
-		print("add colors")
+		AddInfo("add colors")
 		<-time.After(300 * time.Millisecond)
 		mm.SplitLinesByRatio(els, 0.25, false)
-		print("SplitLinesByRatio")
+		AddInfo("SplitLinesByRatio")
 		<-time.After(300 * time.Millisecond)
 		mm.SplitLinesByRatio(els, 2.25, false)
-		print("SplitLinesByRatio")
+		AddInfo("SplitLinesByRatio")
 		<-time.After(300 * time.Millisecond)
 		mm.SplitLinesByEqualParts(els, 10)
-		print("SplitLinesByEqualParts")
+		AddInfo("SplitLinesByEqualParts")
 		// merge
 		<-time.After(300 * time.Millisecond)
 		mm.MergeNodes(0.050)
-		print("MergeNodes")
+		AddInfo("MergeNodes")
 		// deselect
 		<-time.After(300 * time.Millisecond)
 		mm.DeselectAll()
-		print("DeselectAll")
+		AddInfo("DeselectAll")
 
 		// select
 		<-time.After(300 * time.Millisecond)
 		mm.SelectLinesOnPlane(true, true, true)
-		print("SelectLinesOnPlane")
+		AddInfo("SelectLinesOnPlane")
 		<-time.After(300 * time.Millisecond)
 		mm.InvertSelect(true, true, true)
-		print("InvertSelect")
+		AddInfo("InvertSelect")
 		<-time.After(300 * time.Millisecond)
 		tris := mm.SelectTriangles(Many)
-		print("SelectTriangles")
+		AddInfo("SelectTriangles")
 		if len(tris) == 0 {
 			close(quit)
 			t.Fatalf("No 3")
@@ -242,21 +236,21 @@ func TestIntegration(t *testing.T) {
 		// selectObjects.fromAdd = false
 		<-time.After(300 * time.Millisecond)
 		mm.SplitTri3To3Tri3(tris)
-		print("SplitTri3To3Tri3")
+		AddInfo("SplitTri3To3Tri3")
 
 		// deselect
 		<-time.After(300 * time.Millisecond)
 		mm.DeselectAll()
-		print("DeselectAll")
+		AddInfo("DeselectAll")
 		<-time.After(300 * time.Millisecond)
 		mm.SelectLinesOnPlane(true, true, true)
-		print("SelectLinesOnPlane")
+		AddInfo("SelectLinesOnPlane")
 		<-time.After(300 * time.Millisecond)
 		mm.InvertSelect(true, false, true)
-		print("InvertSelect")
+		AddInfo("InvertSelect")
 		<-time.After(300 * time.Millisecond)
 		tris = mm.SelectElements(Many)
-		print("SelectElements")
+		AddInfo("SelectElements")
 		if len(tris) == 0 {
 			close(quit)
 			t.Fatalf("No 4")
@@ -264,29 +258,29 @@ func TestIntegration(t *testing.T) {
 		<-time.After(300 * time.Millisecond)
 		mm.MoveCopyNodesDistance(nil, tris, [3]float64{4, 0, 0},
 			true, true, true)
-		print("MoveCopyNodesDistance")
+		AddInfo("MoveCopyNodesDistance")
 		// view
 		<-time.After(1 * time.Second)
 		mm.StandardView(StandardViewXOYpos)
-		print("StandardView")
+		AddInfo("StandardView")
 		<-time.After(1 * time.Second)
 		mm.StandardView(StandardViewXOZpos)
-		print("StandardView")
+		AddInfo("StandardView")
 		<-time.After(1 * time.Second)
 		mm.StandardView(StandardViewYOZpos)
-		print("StandardView")
+		AddInfo("StandardView")
 		// undo
 		<-time.After(300 * time.Millisecond)
 		mm.ColorEdge(false)
 		<-time.After(300 * time.Millisecond)
 		for i := 0; i < 15; i++ {
 			mm.Undo()
-			print("Undo")
+			AddInfo("Undo")
 			<-time.After(2 * time.Second)
 		}
 		// view
 		mm.StandardView(StandardViewXOZpos)
-		print("StandardView")
+		AddInfo("StandardView")
 		// quit
 		<-time.After(2 * time.Second)
 		close(quit)

@@ -3,7 +3,6 @@ package ms
 import (
 	"container/list"
 	"encoding/json"
-	"fmt"
 )
 
 type Undo struct {
@@ -14,7 +13,7 @@ type Undo struct {
 func (u *Undo) addToUndo() {
 	b, err := json.Marshal(u.model)
 	if err != nil {
-		Debug = append(Debug, fmt.Sprintf("addToUndo: %v", err))
+		AddInfo("addToUndo: %v", err)
 		return
 	}
 	if u.list == nil {
@@ -33,7 +32,7 @@ func (u *Undo) Undo() {
 	var last Model
 	b := el.Value.([]byte)
 	if err := json.Unmarshal(b, &last); err != nil {
-		Debug = append(Debug, fmt.Sprintf("Undo: %v", err))
+		AddInfo("Undo: %v", err)
 		return
 	}
 	// swap models

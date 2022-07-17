@@ -1025,7 +1025,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			// if any find selection, then try again
 		}
 		_ = iterations
-		Debug = append(Debug, fmt.Sprintln("iterations ", iterations))
+		AddInfo("iterations %d", iterations)
 	}
 
 	// TODO remove
@@ -1035,7 +1035,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			amount++
 		}
 	}
-	Debug = append(Debug, fmt.Sprintln("amount ", amount))
+	AddInfo("amount %d", amount)
 }
 
 type MouseRotate struct {

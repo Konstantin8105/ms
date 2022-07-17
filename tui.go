@@ -1209,7 +1209,21 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 
 ///////////////////////////////////////////////////////////////////////////////
 
-var Debug []string
+var Info []string
+
+func AddInfo(format string, args ...interface{}) {
+	Info = append(Info, fmt.Sprintf(format, args...))
+}
+
+func PrintInfo() string {
+	var out string
+	for i := range Info {
+		out += Info[i] + "\n"
+	}
+	return out
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 type Tui struct {
 	root vl.Widget
@@ -1238,7 +1252,7 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 
 	{
 		// widgets amount
-		Debug = append(Debug, fmt.Sprintf("Amount widgets: %d", len(Operations)))
+		AddInfo(fmt.Sprintf("Amount widgets: %d", len(Operations)))
 	}
 	var (
 		scroll vl.Scroll
@@ -1292,14 +1306,14 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 		var b vl.Button
 		b.SetText("Clear log")
 		b.OnClick = func() {
-			Debug = nil
+			Info=nil
 		}
 		logList.Add(&b)
 
 		var t vl.Button
 		t.SetText("Add time to log")
 		t.OnClick = func() {
-			Debug = append(Debug, fmt.Sprintf("Time: %v", time.Now()))
+			AddInfo("Time: %v", time.Now())
 		}
 		logList.Add(&t)
 
@@ -1308,7 +1322,7 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 		go func() {
 			for {
 				<-time.After(time.Millisecond * 500)
-				txt.SetText(strings.Join(Debug, "\n"))
+				txt.SetText(strings.Join(Info, "\n"))
 			}
 		}()
 		logList.Add(&txt)
@@ -1341,7 +1355,7 @@ func convertUint(str string) (ids []uint) {
 	for i := range fs {
 		u, err := strconv.ParseUint(fs[i], 10, 64)
 		if err != nil {
-			Debug = append(Debug, fmt.Sprintln("convertUint error: ", err))
+			AddInfo("convertUint error: %v", err)
 			continue
 		}
 		ids = append(ids, uint(u))
