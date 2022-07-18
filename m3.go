@@ -23,7 +23,9 @@ const fontSize = int32(12)
 type Opengl struct {
 	window *glfw.Window
 
-	model  *Model
+	// TODO mesh Mesh
+	model *Model
+
 	change func()
 
 	// for 3d view
@@ -43,8 +45,6 @@ type Opengl struct {
 	// mouses
 	mouses   [3]Mouse  // left, middle, right
 	mouseMid MouseRoll // middle scroll
-
-	pause bool
 }
 
 func (op *Opengl) Init() {
@@ -155,9 +155,6 @@ func (op *Opengl) Run() {
 		if op.model != nil {
 			DrawText(fmt.Sprintf("Nodes     : %6d", len(op.model.Coords)), 0, 1*fontSize)
 			DrawText(fmt.Sprintf("Elements  : %6d", len(op.model.Elements)), 0, 2*fontSize)
-		}
-		for op.pause {
-			<-time.After(100 * time.Millisecond)
 		}
 
 		for i := range op.mouses {
@@ -830,14 +827,9 @@ func (op *Opengl) SelectScreen(from, to [2]int32) {
 		}
 		switch m := op.mouses[i].(type) {
 		case *MouseSelect:
-			op.pause = true
-			defer func() {
-				op.pause = false
-			}()
 			m.Reset()
 			m.Press(from[0], from[1])
 			m.Release(to[0], to[1])
-			m.Action(op)
 		}
 	}
 }
@@ -964,7 +956,6 @@ func (m2 *Mouse2P) ReadyAction() bool {
 	if !m2.fromAdd || !m2.toAdd {
 		return false
 	}
-	m2.Reset()
 	return true
 }
 
@@ -973,6 +964,10 @@ type MouseSelect struct {
 }
 
 func (ms *MouseSelect) Preview() {
+	if !ms.ReadyPreview() {
+		return
+	}
+
 	// draw select rectangle
 	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
@@ -1000,6 +995,11 @@ func (ms *MouseSelect) Preview() {
 }
 
 func (ms *MouseSelect) Action(op *Opengl) {
+	if !ms.ReadyAction() {
+		return
+	}
+	defer ms.Reset()
+
 	for c := 0; c < 2; c++ {
 		if ms.to[c] < ms.from[c] {
 			// swap
@@ -1102,11 +1102,6 @@ func (ms *MouseSelect) Action(op *Opengl) {
 	}
 }
 
-func SelectPoint(x, y int32) int {
-	// TODO
-	return -1
-}
-
 type MouseRotate struct {
 	Mouse2P
 }
@@ -1114,6 +1109,11 @@ type MouseRotate struct {
 func (mr *MouseRotate) Preview() {}
 
 func (mr *MouseRotate) Action(op *Opengl) {
+	if !mr.ReadyAction() {
+		return
+	}
+	defer mr.Reset()
+	// action
 	const angle = 15.0
 	switch {
 	case mr.to[0] < mr.from[0]:
@@ -1136,6 +1136,11 @@ type MouseMove struct {
 func (mr *MouseMove) Preview() {}
 
 func (mr *MouseMove) Action(op *Opengl) {
+	if !mr.ReadyAction() {
+		return
+	}
+	defer mr.Reset()
+	// action
 	const factor = 0.05
 	switch {
 	case mr.to[0] < mr.from[0]:
@@ -1151,58 +1156,52 @@ func (mr *MouseMove) Action(op *Opengl) {
 	}
 }
 
-type MouseSelectClick struct {
-	Mouse2P
-}
-
-func (msc *MouseSelectClick) Press(x, y int32) {
-	msc.Mouse2P.Press(x, y)
-	msc.Mouse2P.Release(x, y)
-	msc.Reset()
-}
-
 type MouseAdd struct {
-	LC  LeftCursor
-	pos int
-	ps  []int
+	MouseSelect
+
+	LC LeftCursor
+	ps []uint
 }
 
-func (ma *MouseAdd) Press(x, y int32) {
-	if ma.LC.AmountNodes() == len(ma.ps) {
-		// all points are ready
-		return
-	}
-	// select point
-	index := SelectPoint(x, y)
-	if index < 0 {
-		return
-	}
-	// store point
-	ma.ps = append(ma.ps, index)
-	// prepare for next point
-	ma.pos++
-}
-func (ma *MouseAdd) Update(x, y int32)  {}
-func (ma *MouseAdd) Release(x, y int32) {}
-func (ma *MouseAdd) ReadyPreview() bool { return false }
-func (ma *MouseAdd) Preview()           {}
-func (ma *MouseAdd) ReadyAction() bool  { return ma.LC.AmountNodes() == len(ma.ps) }
 func (ma *MouseAdd) Action(op *Opengl) {
+	if !ma.ReadyAction() {
+		return
+	}
+	defer ma.MouseSelect.Reset()
+
+	// store node
+	op.model.DeselectAll()
+	ma.MouseSelect.Action(op)
+	ids := op.model.SelectNodes(Single)
+	if len(ids) != 1 {
+		return
+	}
+	ma.ps = append(ma.ps, ids[0])
+	// TODO : add preview indicated points
+	op.model.DeselectAll()
+
+	if len(ma.ps) != ma.LC.AmountNodes() {
+		return
+	}
+	// action
 	switch ma.LC {
 	case AddLinesLC:
 		op.model.AddLineByNodeNumber(
-			uint(ma.ps[0]),
-			uint(ma.ps[1]),
+			ma.ps[0],
+			ma.ps[1],
 		)
 	case AddTrianglesLC:
 		op.model.AddTriangle3ByNodeNumber(
-			uint(ma.ps[0]),
-			uint(ma.ps[1]),
-			uint(ma.ps[2]),
+			ma.ps[0],
+			ma.ps[1],
+			ma.ps[2],
 		)
 	}
+	ma.Reset()
+	return
 }
-func (mal *MouseAdd) Reset() {
-	mal.pos = 0
-	mal.ps = nil
+
+func (ma *MouseAdd) Reset() {
+	ma.ps = nil
+	ma.MouseSelect.Reset()
 }

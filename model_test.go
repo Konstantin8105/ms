@@ -145,7 +145,7 @@ func TestIntegration(t *testing.T) {
 		<-time.After(300 * time.Millisecond)
 		AddInfo("SelectScreen")
 		mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300})
-		<-time.After(2 * time.Second)
+		<-time.After(3 * time.Second)
 		{
 			els := mm.SelectElements(Many)
 			AddInfo("SelectElements")
