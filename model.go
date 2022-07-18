@@ -20,9 +20,9 @@ type object3d struct {
 type ElType uint8
 
 const (
-	Line2 ElType = iota + 1
-	Triangle3
-	ElRemove
+	Line2     ElType = iota + 1 // 1
+	Triangle3                   // 2
+	ElRemove                    // 3
 )
 
 // Element is typical element for FEM. Examples:

@@ -415,8 +415,8 @@ func (op *Opengl) model3d(s viewState, parent string) {
 			panic(fmt.Errorf("not valid select element: %v", s))
 		}
 		// select points
-		switch s {
-		case selectLines, selectTriangles:
+		if (s == selectLines && el.ElementType == Line2) ||
+			(s == selectTriangles && el.ElementType == Triangle3) {
 			gl.Begin(gl.POINTS)
 			for _, p := range el.Indexes {
 				gl.Vertex3d(op.model.Coords[p].X, op.model.Coords[p].Y, op.model.Coords[p].Z)
@@ -974,37 +974,45 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		}
 	}
 
-	var found bool
-	// empty pattern
-	// empty := make([][]bool, ms.to[1]+1)
-	// for i := range empty {
-	// 	empty[i] = make([]bool, ms.to[0]+1)
-	// }
-
 	for _, s := range []struct {
 		st viewState
 		sf func(index int) (found bool)
 	}{
 		{st: selectPoints, sf: func(index int) bool {
-			if index < 0 || len(op.model.Coords) <= index {
+			if index < 0 {
+				return false
+			}
+			if len(op.model.Coords) <= index {
+				AddInfo("selectPoints index outside: %d", index)
 				return false
 			}
 			op.model.Coords[index].selected = true
 			return true
 		}}, {st: selectLines, sf: func(index int) bool {
-			if index < 0 || len(op.model.Elements) <= index {
+			if index < 0 {
+				return false
+			}
+			if len(op.model.Elements) <= index {
+				AddInfo("selectLines index outside: %d", index)
 				return false
 			}
 			if op.model.Elements[index].ElementType != Line2 {
+				AddInfo("selectLines index is not line: %d. %v",
+					index, op.model.Elements[index])
 				return false
 			}
 			op.model.Elements[index].selected = true
 			return true
 		}}, {st: selectTriangles, sf: func(index int) bool {
-			if index < 0 || len(op.model.Elements) <= index {
+			if index < 0 {
+				return false
+			}
+			if len(op.model.Elements) <= index {
+				AddInfo("selectTriangles index outside: %d", index)
 				return false
 			}
 			if op.model.Elements[index].ElementType != Triangle3 {
+				AddInfo("selectTriangles index is not triangle: %d", index)
 				return false
 			}
 			op.model.Elements[index].selected = true
@@ -1014,25 +1022,10 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		if op.cursorLeft&s.st == 0 {
 			continue
 		}
-		AddInfo("Type selection: %d", s.st)
-
-		// empty pattern prepare data
-		//	for r := range empty {
-		//		for c := range empty[r] {
-		//			empty[r][c] = true
-		//		}
-		//	}
-		//	for x := ms.from[0]; x <= ms.to[0]; x++ {
-		//		for y := ms.from[1]; y <= ms.to[1]; y++ {
-		//			empty[y][x] = false
-		//		}
-		//	}
 
 		// find selection
-		found = true
+		found := true
 		for found { // TODO : infinite loop
-			AddInfo("try found: %s", s.st)
-
 			found = false
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 			gl.ClearColorxOES(0, 0, 0, 0)
@@ -1047,49 +1040,27 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			// TODO : screen coordinates
 			// TODO : openGlScreenCoordinate(window)
 			// TODO :
-			// gl.Flush()
 
-			counter := 0
+			gl.Flush()
+			gl.Finish()
 
 			// color selection
-			color := make([]uint8, 4)
-			for x := ms.from[0]; x <= ms.to[0]; x++ {
-				for y := ms.from[1]; y <= ms.to[1]; y++ {
-					//	if empty[y][x] {
-					//		continue
-					//	}
-					// func ReadPixels(
-					//	x int32, y int32,
-					//	width int32, height int32,
-					//	format uint32, xtype uint32, pixels unsafe.Pointer)
-					gl.ReadPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE,
-						gl.Ptr(&color[0]))
-					index := convertToIndex(color)
-					counter++
-					// AddInfo("read")
-					if s.sf(index) {
-						AddInfo("Found: %d %v", index, color)
-						found = true
-					}
-					// add to empty pattern
-					//	if color[0] == 0 && color[1] == 0 && color[2] == 0 {
-					//		empty[y][x] = true
-					//	}
+			sizeX := (ms.to[0] - ms.from[0] + 1)
+			sizeY := (ms.to[1] - ms.from[1] + 1)
+			size := sizeX * sizeY
+			color := make([]uint8, 4*size)
+			gl.ReadPixels(ms.from[0], ms.from[1], sizeX, sizeY,
+				gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&color[0]))
+			for i := 0; i < len(color)-1; i += 4 {
+				index := convertToIndex(color[i : i+4])
+				if s.sf(index) {
+					found = true
 				}
 			}
-			AddInfo("Counters : %d", counter)
+
 			// if any find selection, then try again
 		}
 	}
-
-	// TODO remove
-	amount := 0
-	for i := range op.model.Coords {
-		if op.model.Coords[i].selected {
-			amount++
-		}
-	}
-	AddInfo("amount selected coordinates %d", amount)
 }
 
 type MouseRotate struct {
