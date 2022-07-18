@@ -114,12 +114,16 @@ func NewOpengl() (op *Opengl, err error) {
 	gl.Disable(gl.LIGHTING)
 
 	// mouse initialize
+	op.MouseDefault()
+
+	return
+}
+
+func (op *Opengl) MouseDefault() {
 	op.mouses[0] = new(MouseSelect) // left button
 	op.mouses[1] = new(MouseMove)   // right button
 	op.mouses[2] = new(MouseRotate) // middle button
 	op.mouseMid = new(MouseZoom)    // middle scroll
-
-	return
 }
 
 func (op *Opengl) Run() {
@@ -770,6 +774,7 @@ func (op *Opengl) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 			}
 			op.mouses[i].Reset()
 		}
+		op.MouseDefault()
 	}
 }
 
@@ -835,6 +840,40 @@ func (op *Opengl) SelectScreen(from, to [2]int32) {
 			m.Action(op)
 		}
 	}
+}
+
+type LeftCursor uint8
+
+const (
+	AddLinesLC = iota
+	AddTrianglesLC
+	endLC
+)
+
+func (lc LeftCursor) AmountNodes() int {
+	switch lc {
+	case AddLinesLC:
+		return 2
+	case AddTrianglesLC:
+		return 3
+	}
+	return -1
+}
+
+func (lc LeftCursor) String() string {
+	switch lc {
+	case AddLinesLC:
+		return "Lines"
+	case AddTrianglesLC:
+		return "Triangles"
+	}
+	return "Undefined"
+}
+
+func (op *Opengl) AddLeftCursor(lc LeftCursor) {
+	var ma MouseAdd
+	ma.LC = lc
+	op.mouses[0] = &ma
 }
 
 type MouseRoll interface {
@@ -1063,6 +1102,11 @@ func (ms *MouseSelect) Action(op *Opengl) {
 	}
 }
 
+func SelectPoint(x, y int32) int {
+	// TODO
+	return -1
+}
+
 type MouseRotate struct {
 	Mouse2P
 }
@@ -1105,4 +1149,60 @@ func (mr *MouseMove) Action(op *Opengl) {
 	case mr.from[1] < mr.to[1]:
 		op.camera.moveY += op.camera.R * factor
 	}
+}
+
+type MouseSelectClick struct {
+	Mouse2P
+}
+
+func (msc *MouseSelectClick) Press(x, y int32) {
+	msc.Mouse2P.Press(x, y)
+	msc.Mouse2P.Release(x, y)
+	msc.Reset()
+}
+
+type MouseAdd struct {
+	LC  LeftCursor
+	pos int
+	ps  []int
+}
+
+func (ma *MouseAdd) Press(x, y int32) {
+	if ma.LC.AmountNodes() == len(ma.ps) {
+		// all points are ready
+		return
+	}
+	// select point
+	index := SelectPoint(x, y)
+	if index < 0 {
+		return
+	}
+	// store point
+	ma.ps = append(ma.ps, index)
+	// prepare for next point
+	ma.pos++
+}
+func (ma *MouseAdd) Update(x, y int32)  {}
+func (ma *MouseAdd) Release(x, y int32) {}
+func (ma *MouseAdd) ReadyPreview() bool { return false }
+func (ma *MouseAdd) Preview()           {}
+func (ma *MouseAdd) ReadyAction() bool  { return ma.LC.AmountNodes() == len(ma.ps) }
+func (ma *MouseAdd) Action(op *Opengl) {
+	switch ma.LC {
+	case AddLinesLC:
+		op.model.AddLineByNodeNumber(
+			uint(ma.ps[0]),
+			uint(ma.ps[1]),
+		)
+	case AddTrianglesLC:
+		op.model.AddTriangle3ByNodeNumber(
+			uint(ma.ps[0]),
+			uint(ma.ps[1]),
+			uint(ma.ps[2]),
+		)
+	}
+}
+func (mal *MouseAdd) Reset() {
+	mal.pos = 0
+	mal.ps = nil
 }

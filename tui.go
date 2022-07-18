@@ -340,7 +340,7 @@ type AddRemovable interface {
 	AddLineByNodeNumber(n1, n2 uint) (id uint)
 	AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint)
 
-	// AddLeftCursor(nodes, lines, tria bool)
+	AddLeftCursor(lc LeftCursor)
 	// RemoveLeftCursor(nodes, lines, tria bool)
 
 	// TODO REMOVE AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
@@ -447,6 +447,27 @@ func init() {
 			}
 			list.Add(&bi)
 
+			return &list
+		}}, {
+		Name: "Left cursor adding",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var names []string
+			for i := 0; i < endLC; i++ {
+				names = append(names, LeftCursor(i).String())
+			}
+
+			var rg vl.RadioGroup
+			rg.SetText(names)
+			list.Add(&rg)
+
+			var b vl.Button
+			b.SetText("Change")
+			b.OnClick = func() {
+				m.AddLeftCursor(LeftCursor(rg.GetPos()))
+			}
+			list.Add(&b)
 			return &list
 		}}, {
 		Name: "Merge nodes",

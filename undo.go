@@ -111,6 +111,10 @@ func (u *Undo) UnhideAll() {
 	u.model.UnhideAll()
 }
 
+func (u *Undo) AddLeftCursor(lc LeftCursor) {
+	u.model.AddLeftCursor(lc)
+}
+
 func (u *Undo) SelectLeftCursor(nodes, lines, tria bool) {
 	u.model.SelectLeftCursor(nodes, lines, tria)
 }

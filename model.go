@@ -331,6 +331,10 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 	return uint(len(mm.Elements) - 1)
 }
 
+func (mm *Model) AddLeftCursor(lc LeftCursor) {
+	mm.op.AddLeftCursor(lc)
+}
+
 func (mm *Model) Remove(nodes, elements []uint) {
 	// it is part/model
 	// do not remove nodes in ignore list
