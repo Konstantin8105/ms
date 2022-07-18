@@ -580,6 +580,30 @@ func (mm *Model) DeselectAll() {
 	}
 }
 
+func (mm *Model) SelectAll(nodes, lines, tria bool) {
+	if nodes {
+		for i := range mm.Coords {
+			mm.Coords[i].selected = true
+		}
+	}
+	if lines {
+		for i := range mm.Elements {
+			if mm.Elements[i].ElementType != Line2 {
+				continue
+			}
+			mm.Elements[i].selected = true
+		}
+	}
+	if tria {
+		for i := range mm.Elements {
+			if mm.Elements[i].ElementType != Triangle3 {
+				continue
+			}
+			mm.Elements[i].selected = true
+		}
+	}
+}
+
 func (mm *Model) SelectScreen(from, to [2]int32) {
 	mm.op.SelectScreen(from, to)
 }

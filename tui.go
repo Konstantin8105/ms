@@ -611,14 +611,11 @@ type Selectable interface {
 	SelectLinesOrtho(x, y, z bool)
 	SelectLinesOnPlane(xoy, xoz, yoz bool)
 
+	SelectAll(nodes, lines, tria bool)
 	DeselectAll()
 
 	SelectScreen(from, to [2]int32)
 
-	// SelectAll
-	// SelectLinesAll
-	// SelectTrianglesAll
-	//
 	// SelectLinesParallel
 	// SelectLinesByLenght
 	// SelectLinesRadiant
@@ -734,6 +731,43 @@ func init() {
 			}
 			list.Add(&b)
 
+			return &list
+		}}, {
+		Name: "Deselect all",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var b vl.Button
+			b.SetText("Deselect all")
+			b.OnClick = func() {
+				m.DeselectAll()
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Select all",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var nodes vl.CheckBox
+			nodes.SetText("Nodes")
+			list.Add(&nodes)
+
+			var lines vl.CheckBox
+			lines.SetText("Lines")
+			list.Add(&lines)
+
+			var tris vl.CheckBox
+			tris.SetText("Triangles")
+			list.Add(&tris)
+
+			var b vl.Button
+			b.SetText(name)
+			b.OnClick = func() {
+				m.SelectAll(nodes.Checked, lines.Checked, tris.Checked)
+			}
+			list.Add(&b)
 			return &list
 		}},
 	}

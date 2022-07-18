@@ -151,6 +151,10 @@ func (u *Undo) DeselectAll() {
 	u.model.DeselectAll()
 }
 
+func (u *Undo) SelectAll(nodes, lines, triangles bool) {
+	u.model.SelectAll(nodes, lines, triangles)
+}
+
 func (u *Undo) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
 	u.addToUndo() // store
 	u.model.SplitLinesByDistance(lines, distance, atBegin)
