@@ -350,6 +350,11 @@ type AddRemovable interface {
 	// AddGroup
 	// AddCrossSections
 
+	// Lines offset by direction
+	// 2D offset
+	// Offset inside/outside triangle/triangles
+	// Split triangle inside triangle
+
 	MergeNodes(minDistance float64)
 	// MergeLines()
 	// MergeTriangles()
@@ -1024,6 +1029,7 @@ type Checkable interface {
 	// Plate duplicate
 	// Zero length beam
 	// Zero length plates
+	// Check FE on Indexes lenght
 	// Plates not valid FE
 	// Overlapping Collinear beams
 	// Empty loads
@@ -1071,14 +1077,12 @@ type Pluginable interface {
 	// Chamfer plates
 	// Fillet plates
 	// Explode plates
-	// Lines offset by direction
 	// Split plates by lines
 	// Split lines by plates
 	// Convert triangles to rectangles
 	// Convert rectangles to triangles
 	// Plate bending
 	// Triangulation
-	// 2D offset
 	// Twist
 	// Extrude
 	// Hole circle, square, rectangle on direction
