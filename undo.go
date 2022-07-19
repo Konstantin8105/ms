@@ -3,14 +3,33 @@ package ms
 import (
 	"container/list"
 	"encoding/json"
+	"sync"
 )
 
 type Undo struct {
 	list *list.List
 
+	mu sync.Mutex
+
 	model *Model  // actual model
 	op    *Opengl // for 3d
 	tui   *Tui    // for terminal ui
+}
+
+func (u *Undo) sync(isUndo bool) (pre, post func()) {
+	return func() {
+			// Lock/Unlock model for avoid concurrency problems
+			// with Opengl drawing
+			u.op.Lock() // freeze Opengl
+			u.mu.Lock() // mutex lock evethink
+			if !isUndo {
+				u.addToUndo() // store model in undo list
+			}
+		}, func() {
+			u.op.UpdateModel() // update camera view
+			u.op.Unlock()      // unfreeze Opengl
+			u.mu.Unlock()      // mutex unlock everythink
+		}
 }
 
 func (u *Undo) addToUndo() {
@@ -27,7 +46,11 @@ func (u *Undo) addToUndo() {
 }
 
 func (u *Undo) Undo() {
-	u.model.DeselectAll()
+	// sync
+	pre, post := u.sync(true)
+	pre()
+	defer post()
+	// action
 	el := u.list.Back()
 	if el == nil {
 		return
@@ -75,23 +98,33 @@ func (u *Undo) ColorEdge(isColor bool) {
 	u.op.ColorEdge(isColor)
 }
 
+func (u *Undo) ViewAll(centerCorrection bool) {
+	u.op.ViewAll(centerCorrection)
+}
+
 func (u *Undo) AddNode(X, Y, Z float64) (id uint) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	return u.model.AddNode(X, Y, Z)
 }
 
 func (u *Undo) AddLineByNodeNumber(n1, n2 uint) (id uint) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	return u.model.AddLineByNodeNumber(n1, n2)
 }
 
 func (u *Undo) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	return u.model.AddTriangle3ByNodeNumber(n1, n2, n3)
 }
@@ -105,15 +138,19 @@ func (u *Undo) GetElements() []Element {
 }
 
 func (u *Undo) IgnoreModelElements(ids []uint) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.IgnoreModelElements(ids)
 }
 
 func (u *Undo) Unignore() {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.Unignore()
 }
@@ -139,8 +176,10 @@ func (u *Undo) SelectLeftCursor(nodes, lines, tria bool) {
 }
 
 func (u *Undo) AddModel(m Model) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.AddModel(m)
 }
@@ -186,61 +225,82 @@ func (u *Undo) SelectAll(nodes, lines, triangles bool) {
 }
 
 func (u *Undo) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
 	u.model.SplitLinesByDistance(lines, distance, atBegin)
 }
 
 func (u *Undo) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.SplitLinesByRatio(lines, proportional, atBegin)
 }
 
 func (u *Undo) SplitLinesByEqualParts(lines []uint, parts uint) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.SplitLinesByEqualParts(lines, parts)
 }
 
 func (u *Undo) SplitTri3To3Tri3(tris []uint) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.SplitTri3To3Tri3(tris)
 }
 
 func (u *Undo) MergeNodes(minDistance float64) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.MergeNodes(minDistance)
 }
 
 func (u *Undo) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.MoveCopyNodesDistance(nodes, elements, coordinates, copy, addLines, addTri)
 }
 
 func (u *Undo) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.MoveCopyNodesN1N2(nodes, elements, from, to, copy, addLines, addTri)
 }
 
 func (u *Undo) DemoSpiral() {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.DemoSpiral()
 }
 
 func (u *Undo) Remove(nodes, elements []uint) {
-	u.addToUndo()            // store
-	defer u.op.UpdateModel() // update camera view
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
 	// action
 	u.model.Remove(nodes, elements)
 }

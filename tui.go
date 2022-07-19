@@ -273,6 +273,7 @@ type Viewable interface {
 	// Solid mode
 	StandardView(view SView)
 	ColorEdge(isColor bool)
+	ViewAll(centerCorrection bool)
 	// Isometric views
 	// View node number
 	// View line number

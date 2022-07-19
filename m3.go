@@ -25,6 +25,10 @@ type Opengl struct {
 
 	mesh Mesh
 
+	lock   bool
+	isLock bool
+	lockCh *chan bool
+
 	// for 3d view
 	state       viewState
 	cursorLeft  viewState
@@ -166,6 +170,30 @@ func (op *Opengl) Run() {
 		op.window.SwapBuffers()
 
 		op.fps.EndFrame()
+
+		if op.lock {
+			if op.lockCh == nil {
+				lc := make(chan bool, 1)
+				op.lockCh = &lc
+			}
+			op.isLock = true
+			_ = <-(*op.lockCh)
+		}
+	}
+}
+
+func (op *Opengl) Lock() {
+	op.lock = true
+	for !op.isLock {
+		<-time.After(100 * time.Millisecond)
+	}
+}
+
+func (op *Opengl) Unlock() {
+	op.lock = false
+	op.isLock = false
+	if op.lockCh != nil {
+		(*op.lockCh) <- false
 	}
 }
 
@@ -209,6 +237,54 @@ func angle_norm(a float64) float64 {
 		return a + 360.0
 	}
 	return a
+}
+
+// TODO: aadd to TUI and other
+func (op *Opengl) ViewAll(centerCorrection bool) {
+	// take only coordinates, because all element are limit be coordinates
+	cos := op.mesh.GetCoords()
+	// for empty coordinate no need to do anythink
+	var initialized bool
+	var xmin, xmax, ymin, ymax, zmin, zmax float64
+	for i := range cos {
+		if cos[i].hided {
+			continue
+		}
+		if cos[i].Removed {
+			continue
+		}
+		if !initialized {
+			initialized = true
+			xmin = cos[i].X
+			xmax = cos[i].X
+			ymin = cos[i].Y
+			ymax = cos[i].Y
+			zmin = cos[i].Z
+			zmax = cos[i].Z
+		}
+		// find extemal values
+		xmin = math.Min(xmin, cos[i].X)
+		ymin = math.Min(ymin, cos[i].Y)
+		zmin = math.Min(zmin, cos[i].Z)
+		xmax = math.Max(xmax, cos[i].X)
+		ymax = math.Max(ymax, cos[i].Y)
+		zmax = math.Max(zmax, cos[i].Z)
+	}
+	if len(cos) == 0 || !initialized {
+		op.camera.R = 1.0
+		return
+	}
+	// update camera
+	op.camera.R = math.Max(xmax-xmin, math.Max(ymax-ymin, zmax-zmin))
+	if centerCorrection {
+		op.camera.center = Coordinate{
+			X: (xmax + xmin) / 2.0,
+			Y: (ymax + ymin) / 2.0,
+			Z: (zmax + zmin) / 2.0,
+		}
+		return
+	}
+	// without center correction
 }
 
 func (op *Opengl) UpdateModel() {
@@ -1175,7 +1251,16 @@ func (ma *MouseAdd) Action(op *Opengl) {
 	if len(ids) != 1 {
 		return
 	}
-	ma.ps = append(ma.ps, ids[0])
+	// nodes is not same
+	var same bool
+	for i := range ma.ps {
+		if ma.ps[i] == ids[0] {
+			same = true
+		}
+	}
+	if !same {
+		ma.ps = append(ma.ps, ids[0])
+	}
 	// TODO : add preview indicated points
 	op.mesh.DeselectAll()
 
