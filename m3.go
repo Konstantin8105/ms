@@ -23,10 +23,7 @@ const fontSize = int32(12)
 type Opengl struct {
 	window *glfw.Window
 
-	// TODO mesh Mesh
-	model *Model
-
-	change func()
+	mesh Mesh
 
 	// for 3d view
 	state       viewState
@@ -55,16 +52,10 @@ func (op *Opengl) Init() {
 	op.cursorLeft = selectPoints
 }
 
-func (op *Opengl) ChangeModel(model *Model) {
-	op.change = func() {
-		op.model = model
-		op.model.op = op
-	}
-}
-
-func NewOpengl() (op *Opengl, err error) {
+func NewOpengl(m Mesh) (op *Opengl, err error) {
 	op = new(Opengl)
 	op.Init()
+	op.mesh = m
 
 	if err = glfw.Init(); err != nil {
 		err = fmt.Errorf("failed to initialize glfw: %v", err)
@@ -132,10 +123,6 @@ func (op *Opengl) Run() {
 		glfw.Terminate()
 	}()
 	for !op.window.ShouldClose() {
-		if op.change != nil {
-			op.change()
-			op.change = nil
-		}
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
@@ -151,10 +138,13 @@ func (op *Opengl) Run() {
 		// draw axe coordinates
 		op.drawAxes()
 		// minimal screen notes
-		DrawText(fmt.Sprintf("FPS       : %6.2f", op.fps.Get()), 0, 0*fontSize)
-		if op.model != nil {
-			DrawText(fmt.Sprintf("Nodes     : %6d", len(op.model.Coords)), 0, 1*fontSize)
-			DrawText(fmt.Sprintf("Elements  : %6d", len(op.model.Elements)), 0, 2*fontSize)
+		DrawText(fmt.Sprintf("FPS       : %6.2f",
+			op.fps.Get()), 0, 0*fontSize)
+		if op.mesh != nil {
+			DrawText(fmt.Sprintf("Nodes     : %6d",
+				len(op.mesh.GetCoords())), 0, 1*fontSize)
+			DrawText(fmt.Sprintf("Elements  : %6d",
+				len(op.mesh.GetElements())), 0, 2*fontSize)
 		}
 
 		for i := range op.mouses {
@@ -221,6 +211,11 @@ func angle_norm(a float64) float64 {
 	return a
 }
 
+func (op *Opengl) UpdateModel() {
+	op.updateModel = true
+	// TODO  add logic
+}
+
 func (op *Opengl) cameraView() {
 	// better angle value
 	op.camera.alpha = angle_norm(op.camera.alpha)
@@ -268,7 +263,7 @@ func (op *Opengl) cameraView() {
 }
 
 func (op *Opengl) model3d(s viewState, parent string) {
-	if op.model == nil {
+	if op.mesh == nil {
 		return
 	}
 	// 	defer func() {
@@ -287,6 +282,8 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		gl.PopMatrix()
 	}()
 
+	cos, els := op.mesh.GetCoords(), op.mesh.GetElements()
+
 	if op.updateModel {
 		op.updateModel = false
 
@@ -298,11 +295,11 @@ func (op *Opengl) model3d(s viewState, parent string) {
 
 		// distance from center to camera
 		op.camera.R = 1.0
-		if len(op.model.Coords) == 0 {
+		if len(cos) == 0 {
 			return
 		}
 		// renaming
-		ps := op.model.Coords
+		ps := cos
 		// calculate radius
 		var (
 			xmin = ps[0].X
@@ -330,7 +327,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		}
 	}
 
-	// TODO: if op.model.Coords[i].Hided {
+	// TODO: if cos[i].Hided {
 	// TODO: 	continue
 	// TODO: }
 
@@ -339,35 +336,35 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	switch s {
 	case normal, colorEdgeElements:
 		gl.Begin(gl.POINTS)
-		for i := range op.model.Coords {
-			if op.model.Coords[i].Removed {
+		for i := range cos {
+			if cos[i].Removed {
 				continue
 			}
-			if op.model.Coords[i].hided {
+			if cos[i].hided {
 				continue
 			}
-			if op.model.Coords[i].selected {
+			if cos[i].selected {
 				gl.Color3ub(255, 1, 1)
 			} else {
 				gl.Color3ub(1, 1, 1)
 			}
-			gl.Vertex3d(op.model.Coords[i].X, op.model.Coords[i].Y, op.model.Coords[i].Z)
+			gl.Vertex3d(cos[i].X, cos[i].Y, cos[i].Z)
 		}
 		gl.End()
 	case selectPoints:
 		gl.Begin(gl.POINTS)
-		for i := range op.model.Coords {
-			if op.model.Coords[i].Removed {
+		for i := range cos {
+			if cos[i].Removed {
 				continue
 			}
-			if op.model.Coords[i].hided {
+			if cos[i].hided {
 				continue
 			}
-			if op.model.Coords[i].selected {
+			if cos[i].selected {
 				continue
 			}
 			convertToColor(i)
-			gl.Vertex3d(op.model.Coords[i].X, op.model.Coords[i].Y, op.model.Coords[i].Z)
+			gl.Vertex3d(cos[i].X, cos[i].Y, cos[i].Z)
 		}
 		gl.End()
 	case selectLines, selectTriangles: // do nothing
@@ -377,8 +374,8 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	// Elements
 	gl.PointSize(2) // default points size
 	gl.LineWidth(3) // default lines width
-	for i, el := range op.model.Elements {
-		if op.model.IsIgnore(uint(i)) {
+	for i, el := range els {
+		if op.mesh.IsIgnore(uint(i)) {
 			continue
 		}
 		// do not show selected elements in Select case
@@ -420,7 +417,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 			(s == selectTriangles && el.ElementType == Triangle3) {
 			gl.Begin(gl.POINTS)
 			for _, p := range el.Indexes {
-				gl.Vertex3d(op.model.Coords[p].X, op.model.Coords[p].Y, op.model.Coords[p].Z)
+				gl.Vertex3d(cos[p].X, cos[p].Y, cos[p].Z)
 			}
 			gl.End()
 		}
@@ -430,7 +427,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 			if s == normal || s == selectLines || (s == colorEdgeElements && el.selected) {
 				gl.Begin(gl.LINES)
 				for _, k := range el.Indexes {
-					c := op.model.Coords[k]
+					c := cos[k]
 					gl.Vertex3d(c.X, c.Y, c.Z)
 				}
 				gl.End()
@@ -439,7 +436,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				gl.Begin(gl.LINES)
 				for i, k := range el.Indexes {
 					edgeColor(i)
-					c := op.model.Coords[k]
+					c := cos[k]
 					gl.Vertex3d(c.X, c.Y, c.Z)
 				}
 				gl.End()
@@ -457,13 +454,13 @@ func (op *Opengl) model3d(s viewState, parent string) {
 						to = el.Indexes[to]
 					}
 					gl.Vertex3d(
-						op.model.Coords[from].X,
-						op.model.Coords[from].Y,
-						op.model.Coords[from].Z)
+						cos[from].X,
+						cos[from].Y,
+						cos[from].Z)
 					gl.Vertex3d(
-						op.model.Coords[to].X,
-						op.model.Coords[to].Y,
-						op.model.Coords[to].Z)
+						cos[to].X,
+						cos[to].Y,
+						cos[to].Z)
 				}
 				gl.End()
 			}
@@ -478,9 +475,9 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				gl.Begin(gl.TRIANGLES)
 				for _, p := range el.Indexes {
 					gl.Vertex3d(
-						op.model.Coords[p].X,
-						op.model.Coords[p].Y,
-						op.model.Coords[p].Z)
+						cos[p].X,
+						cos[p].Y,
+						cos[p].Z)
 				}
 				gl.End()
 			}
@@ -489,9 +486,9 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				for i, p := range el.Indexes {
 					edgeColor(i)
 					gl.Vertex3d(
-						op.model.Coords[p].X,
-						op.model.Coords[p].Y,
-						op.model.Coords[p].Z)
+						cos[p].X,
+						cos[p].Y,
+						cos[p].Z)
 				}
 				gl.End()
 			}
@@ -764,7 +761,7 @@ func (op *Opengl) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Ac
 	case glfw.KeyEscape:
 		// deselect all
 		op.Init()
-		op.model.DeselectAll()
+		op.mesh.DeselectAll()
 		for i := range op.mouses {
 			if op.mouses[i] == nil {
 				continue
@@ -1013,6 +1010,8 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		}
 	}
 
+	cos, els := op.mesh.GetCoords(), op.mesh.GetElements()
+
 	for _, s := range []struct {
 		st viewState
 		sf func(index int) (found bool)
@@ -1021,40 +1020,40 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			if index < 0 {
 				return false
 			}
-			if len(op.model.Coords) <= index {
+			if len(cos) <= index {
 				AddInfo("selectPoints index outside: %d", index)
 				return false
 			}
-			op.model.Coords[index].selected = true
+			cos[index].selected = true
 			return true
 		}}, {st: selectLines, sf: func(index int) bool {
 			if index < 0 {
 				return false
 			}
-			if len(op.model.Elements) <= index {
+			if len(els) <= index {
 				AddInfo("selectLines index outside: %d", index)
 				return false
 			}
-			if op.model.Elements[index].ElementType != Line2 {
+			if els[index].ElementType != Line2 {
 				AddInfo("selectLines index is not line: %d. %v",
-					index, op.model.Elements[index])
+					index, els[index])
 				return false
 			}
-			op.model.Elements[index].selected = true
+			els[index].selected = true
 			return true
 		}}, {st: selectTriangles, sf: func(index int) bool {
 			if index < 0 {
 				return false
 			}
-			if len(op.model.Elements) <= index {
+			if len(els) <= index {
 				AddInfo("selectTriangles index outside: %d", index)
 				return false
 			}
-			if op.model.Elements[index].ElementType != Triangle3 {
+			if els[index].ElementType != Triangle3 {
 				AddInfo("selectTriangles index is not triangle: %d", index)
 				return false
 			}
-			op.model.Elements[index].selected = true
+			els[index].selected = true
 			return true
 		}},
 	} {
@@ -1170,15 +1169,15 @@ func (ma *MouseAdd) Action(op *Opengl) {
 	defer ma.MouseSelect.Reset()
 
 	// store node
-	op.model.DeselectAll()
+	op.mesh.DeselectAll()
 	ma.MouseSelect.Action(op)
-	ids := op.model.SelectNodes(Single)
+	ids := op.mesh.SelectNodes(Single)
 	if len(ids) != 1 {
 		return
 	}
 	ma.ps = append(ma.ps, ids[0])
 	// TODO : add preview indicated points
-	op.model.DeselectAll()
+	op.mesh.DeselectAll()
 
 	if len(ma.ps) != ma.LC.AmountNodes() {
 		return
@@ -1186,12 +1185,12 @@ func (ma *MouseAdd) Action(op *Opengl) {
 	// action
 	switch ma.LC {
 	case AddLinesLC:
-		op.model.AddLineByNodeNumber(
+		op.mesh.AddLineByNodeNumber(
 			ma.ps[0],
 			ma.ps[1],
 		)
 	case AddTrianglesLC:
-		op.model.AddTriangle3ByNodeNumber(
+		op.mesh.AddTriangle3ByNodeNumber(
 			ma.ps[0],
 			ma.ps[1],
 			ma.ps[2],

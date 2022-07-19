@@ -339,6 +339,7 @@ type AddRemovable interface {
 	AddNode(X, Y, Z float64) (id uint)
 	AddLineByNodeNumber(n1, n2 uint) (id uint)
 	AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint)
+	AddModel(m Model)
 
 	AddLeftCursor(lc LeftCursor)
 	// RemoveLeftCursor(nodes, lines, tria bool)
@@ -362,6 +363,9 @@ type AddRemovable interface {
 	// Scale by direction on 2 nodes
 
 	Remove(nodes, elements []uint)
+
+	GetCoords() []Coordinate
+	GetElements() []Element
 }
 
 func init() {
@@ -522,6 +526,7 @@ func init() {
 
 type Ignorable interface {
 	IgnoreModelElements(ids []uint)
+	IsIgnore(elID uint) bool
 	Unignore()
 }
 
@@ -1287,11 +1292,6 @@ type Tui struct {
 
 	mesh   Mesh
 	Change func(*Opengl)
-}
-
-func (tui *Tui) ChangeModel(model *Model) {
-	tui.mesh = model
-	model.tui = tui
 }
 
 func (tui *Tui) Run(quit <-chan struct{}) error {

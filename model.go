@@ -91,9 +91,6 @@ type Model struct {
 	Coords   []Coordinate
 
 	Parts []Part
-
-	op  *Opengl // for 3d
-	tui *Tui    // for terminal ui
 }
 
 type Part struct {
@@ -193,7 +190,6 @@ func (mm *Model) AddModel(m Model) {
 			panic(fmt.Errorf("not implemented %v", el))
 		}
 	}
-	mm.op.updateModel = true // Update camera parameter
 }
 
 func (mm *Model) DemoSpiral() {
@@ -264,7 +260,6 @@ func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 	}
 	// append
 	mm.Coords = append(mm.Coords, Coordinate{X: X, Y: Y, Z: Z})
-	mm.op.updateModel = true // Update camera parameter
 	return uint(len(mm.Coords) - 1)
 }
 
@@ -289,7 +284,6 @@ func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 		ElementType: Line2,
 		Indexes:     []int{ni1, ni2},
 	})
-	mm.op.updateModel = true // Update camera parameter
 	return uint(len(mm.Elements) - 1)
 }
 
@@ -327,12 +321,19 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 		ElementType: Triangle3,
 		Indexes:     []int{ni1, ni2, ni3},
 	})
-	mm.op.updateModel = true // Update camera parameter
 	return uint(len(mm.Elements) - 1)
 }
 
 func (mm *Model) AddLeftCursor(lc LeftCursor) {
-	mm.op.AddLeftCursor(lc)
+	AddInfo("Model not implemented AddLeftCursor: %v", lc)
+}
+
+func (mm *Model) GetCoords() []Coordinate {
+	return mm.Coords
+}
+
+func (mm *Model) GetElements() []Element {
+	return mm.Elements
 }
 
 func (mm *Model) Remove(nodes, elements []uint) {
@@ -399,7 +400,7 @@ func (mm *Model) IsIgnore(elID uint) bool {
 }
 
 func (mm *Model) ColorEdge(isColor bool) {
-	mm.op.ColorEdge(isColor)
+	AddInfo("Model not implemented ColorEdge: %v", isColor)
 }
 
 func (mm *Model) IgnoreModelElements(ids []uint) {
@@ -430,7 +431,8 @@ func (mm *Model) Unignore() {
 }
 
 func (mm *Model) SelectLeftCursor(nodes, lines, tria bool) {
-	mm.op.SelectLeftCursor(nodes, lines, tria)
+	AddInfo("Model not implemented SelectLeftCursor: %v %v %v",
+		nodes, lines, tria)
 }
 
 func (mm *Model) SelectNodes(single bool) (ids []uint) {
@@ -609,7 +611,7 @@ func (mm *Model) SelectAll(nodes, lines, tria bool) {
 }
 
 func (mm *Model) SelectScreen(from, to [2]int32) {
-	mm.op.SelectScreen(from, to)
+	AddInfo("Model is not implement SelectScreen: %v %v", from, to)
 }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
@@ -1013,7 +1015,7 @@ func (mm *Model) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, 
 }
 
 func (mm *Model) StandardView(view SView) {
-	mm.op.StandardView(view)
+	AddInfo("Model not implemented StandardView: %v", view)
 }
 
 //
@@ -1160,32 +1162,30 @@ func Run(quit <-chan struct{}) (err error) {
 			err = fmt.Errorf("%v\n%v\n%v", err, r, string(debug.Stack()))
 		}
 	}()
+	// initialize undo chain
 	var mm Undo
 	mm.model = new(Model)
-
+	// initialize tui
 	tui, err := NewTui(&mm)
 	if err != nil {
 		return
 	}
-
-	op, err := NewOpengl()
+	mm.tui = tui
+	// initialize opengl view
+	op, err := NewOpengl(&mm)
 	if err != nil {
 		return
 	}
-
-	op.ChangeModel(mm.model)
-	tui.ChangeModel(mm.model)
-
+	mm.op = op
+	// run test function
 	go func() {
 		if testCoverageFunc == nil {
 			return
 		}
 		testCoverageFunc(&mm)
 	}()
-
-	go func() {
-		op.Run()
-	}()
-
+	// run opengl
+	go func() { op.Run() }()
+	// run tui
 	return tui.Run(quit)
 }
