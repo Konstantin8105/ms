@@ -17,17 +17,16 @@ type Undo struct {
 }
 
 func (u *Undo) sync(isUndo bool) (pre, post func()) {
+	// no need opengl lock, because used panic-free model
 	return func() {
 			// Lock/Unlock model for avoid concurrency problems
 			// with Opengl drawing
-			u.op.Lock() // freeze Opengl
 			u.mu.Lock() // mutex lock evethink
 			if !isUndo {
 				u.addToUndo() // store model in undo list
 			}
 		}, func() {
 			u.op.UpdateModel() // update camera view
-			u.op.Unlock()      // unfreeze Opengl
 			u.mu.Unlock()      // mutex unlock everythink
 		}
 }

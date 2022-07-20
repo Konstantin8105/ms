@@ -25,10 +25,6 @@ type Opengl struct {
 
 	mesh Mesh
 
-	lock   bool
-	isLock bool
-	lockCh *chan bool
-
 	// for 3d view
 	state       viewState
 	cursorLeft  viewState
@@ -135,34 +131,46 @@ func (op *Opengl) Run() {
 		gl.Enable(gl.BLEND) // Transparency
 		gl.Enable(gl.LINE_SMOOTH)
 
-		op.cameraView()
-		op.model3d(op.state, "run")
+		// Avoid panics if Model is changed.
+		// Main problem of synchronization.
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					// safety ignore panic
+					<-time.After(100 * time.Millisecond)
+					AddInfo("Safety ignore panic: %s", r)
+				}
+			}()
 
-		// screen coordinates
-		openGlScreenCoordinate(op.window)
-		// draw axe coordinates
-		op.drawAxes()
-		// minimal screen notes
-		DrawText(fmt.Sprintf("FPS       : %6.2f",
-			op.fps.Get()), 0, 0*fontSize)
-		if op.mesh != nil {
-			DrawText(fmt.Sprintf("Nodes     : %6d",
-				len(op.mesh.GetCoords())), 0, 1*fontSize)
-			DrawText(fmt.Sprintf("Elements  : %6d",
-				len(op.mesh.GetElements())), 0, 2*fontSize)
-		}
+			op.cameraView()
+			op.model3d(op.state, "run")
 
-		for i := range op.mouses {
-			if op.mouses[i] == nil {
-				continue
+			// screen coordinates
+			openGlScreenCoordinate(op.window)
+			// draw axe coordinates
+			op.drawAxes()
+			// minimal screen notes
+			DrawText(fmt.Sprintf("FPS       : %6.2f",
+				op.fps.Get()), 0, 0*fontSize)
+			if op.mesh != nil {
+				DrawText(fmt.Sprintf("Nodes     : %6d",
+					len(op.mesh.GetCoords())), 0, 1*fontSize)
+				DrawText(fmt.Sprintf("Elements  : %6d",
+					len(op.mesh.GetElements())), 0, 2*fontSize)
 			}
-			if op.mouses[i].ReadyAction() {
-				op.mouses[i].Action(op)
+
+			for i := range op.mouses {
+				if op.mouses[i] == nil {
+					continue
+				}
+				if op.mouses[i].ReadyAction() {
+					op.mouses[i].Action(op)
+				}
+				if op.mouses[i].ReadyPreview() {
+					op.mouses[i].Preview()
+				}
 			}
-			if op.mouses[i].ReadyPreview() {
-				op.mouses[i].Preview()
-			}
-		}
+		}()
 
 		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
 		// TODO : REMOVE: ui(window)
@@ -171,30 +179,6 @@ func (op *Opengl) Run() {
 		op.window.SwapBuffers()
 
 		op.fps.EndFrame()
-
-		if op.lock {
-			if op.lockCh == nil {
-				lc := make(chan bool, 1)
-				op.lockCh = &lc
-			}
-			op.isLock = true
-			_ = <-(*op.lockCh)
-		}
-	}
-}
-
-func (op *Opengl) Lock() {
-	op.lock = true
-	for !op.isLock {
-		<-time.After(100 * time.Millisecond)
-	}
-}
-
-func (op *Opengl) Unlock() {
-	op.lock = false
-	op.isLock = false
-	if op.lockCh != nil {
-		(*op.lockCh) <- false
 	}
 }
 
