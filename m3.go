@@ -479,7 +479,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				if el.selected {
 					gl.Color3ub(255, 1, 1)
 				} else {
-					//gl.Color3ub(153, 0, 153)
+					// gl.Color3ub(153, 0, 153)
 					gl.Color4ub(153, 0, 153, 200)
 				}
 			default:
@@ -1148,6 +1148,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			// gl.ClearColor(1, 1, 1, 1)
 			gl.Enable(gl.DEPTH_TEST)
 			gl.Disable(gl.LINE_SMOOTH)
+			gl.Disable(gl.BLEND) // Transparency
 			op.cameraView()
 			// color initialize
 
@@ -1192,17 +1193,29 @@ func (mr *MouseRotate) Action(op *Opengl) {
 	defer mr.Reset()
 	// action
 	const angle = 15.0
-	switch {
-	case mr.to[0] < mr.from[0]:
-		op.camera.alpha -= angle
-	case mr.from[0] < mr.to[0]:
-		op.camera.alpha += angle
+
+	dx := mr.to[0] - mr.from[0]
+	dy := mr.to[1] - mr.from[1]
+	if dx < 0 {
+		dx = -dx
 	}
-	switch {
-	case mr.to[1] < mr.from[1]:
-		op.camera.betta += angle
-	case mr.from[1] < mr.to[1]:
-		op.camera.betta -= angle
+	if dy < 0 {
+		dy = -dy
+	}
+	if dy < dx {
+		switch {
+		case mr.to[0] < mr.from[0]:
+			op.camera.alpha -= angle
+		case mr.from[0] < mr.to[0]:
+			op.camera.alpha += angle
+		}
+	} else {
+		switch {
+		case mr.to[1] < mr.from[1]:
+			op.camera.betta += angle
+		case mr.from[1] < mr.to[1]:
+			op.camera.betta -= angle
+		}
 	}
 }
 
