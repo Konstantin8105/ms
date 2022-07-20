@@ -132,6 +132,7 @@ func (op *Opengl) Run() {
 		gl.ClearColor(1, 1, 1, 1)
 
 		gl.Enable(gl.DEPTH_TEST)
+		gl.Enable(gl.BLEND) // Transparency
 		gl.Enable(gl.LINE_SMOOTH)
 
 		op.cameraView()
@@ -478,7 +479,8 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				if el.selected {
 					gl.Color3ub(255, 1, 1)
 				} else {
-					gl.Color3ub(153, 0, 153)
+					//gl.Color3ub(153, 0, 153)
+					gl.Color4ub(153, 0, 153, 200)
 				}
 			default:
 				panic(fmt.Errorf("not valid element type: %v", el))
