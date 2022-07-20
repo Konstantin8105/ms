@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -287,6 +288,39 @@ func TestIntegration(t *testing.T) {
 		<-time.After(2 * time.Second)
 		close(quit)
 	}
+	// create a new model
+	if err := Run(quit); err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+		os.Exit(1)
+	}
+}
+
+func TestAddInfo(t *testing.T) {
+	defer func() {
+		t.Logf("%s", PrintInfo())
+	}()
+
+	// tests movements
+	quit := make(chan struct{})
+
+	size := 10
+	var wg sync.WaitGroup
+	wg.Add(size)
+	for i := 0; i < size; i++ {
+		go func() {
+			for i := 0; i < 10; i++ {
+				AddInfo("StandardView")
+			}
+			wg.Done()
+		}()
+	}
+
+	testCoverageFunc = func(mm Mesh) {
+		wg.Wait()
+		// quit
+		close(quit)
+	}
+
 	// create a new model
 	if err := Run(quit); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
