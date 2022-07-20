@@ -22,7 +22,6 @@ const (
 	AddRemove
 	Ignore
 	Hide
-	Split
 	MoveCopy
 	// 	TypModels
 	// 	Check
@@ -46,8 +45,6 @@ func (g GroupId) String() string {
 		return "Ignore"
 	case Hide:
 		return "Hide"
-	case Split:
-		return "Split"
 	case MoveCopy:
 		return "Move/Copy"
 		// 	case Check:
@@ -355,6 +352,21 @@ type AddRemovable interface {
 	// Offset inside/outside triangle/triangles
 	// Split triangle inside triangle
 
+	SplitLinesByDistance(lines []uint, distance float64, atBegin bool)
+	SplitLinesByRatio(lines []uint, proportional float64, atBegin bool)
+	SplitLinesByEqualParts(lines []uint, parts uint)
+	SplitTri3To3Tri3(tris []uint)
+	// SplitTri3To4Tri3(tris []uint)
+	// TODO REMOVE SplitTri3To3Quadr4(tris string)
+	// SplitTri3To2Tri3(tris string, side uint)
+	// SplitQuadr4To2Quadr4(q4s string, side uint)
+	// Quadr4 to 4 Triangle3
+	// Quadr4 to 4 Quadr4
+	// Triangles3, Quadrs4 by Lines2
+	// TODO Intersection
+	// Beam intersection
+	// Plate intersection
+
 	MergeNodes(minDistance float64)
 	// MergeLines()
 	// MergeTriangles()
@@ -364,9 +376,17 @@ type AddRemovable interface {
 	// Triangulation exist plates by area
 	// Smooth mesh
 
+	// Parabola
+	// Hyperbola
+	// Shell roof
+
 	// Scale by ratio [sX,sY,sZ] and node
 	// Scale by cylinder system coordinate
 	// Scale by direction on 2 nodes
+
+	// Chamfer plates
+	// Fillet plates
+	// Explode plates
 
 	Remove(nodes, elements []uint)
 
@@ -459,7 +479,7 @@ func init() {
 
 			return &list
 		}}, {
-		Name: "Left cursor adding",
+		Name: "Add by left cursor button",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
@@ -478,6 +498,89 @@ func init() {
 				m.AddLeftCursor(LeftCursor(rg.GetPos()))
 			}
 			list.Add(&b)
+			return &list
+		}}, {
+		Name: "Split line2 by distance from node",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			s, sgt := Select("Select lines", Many, m.SelectLines)
+			list.Add(s)
+			d, dgt := InputFloat("Distance", "meter")
+			list.Add(d)
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"from line begin", "from line end"})
+			list.Add(&rg)
+
+			var bi vl.Button
+			bi.SetText("Split")
+			bi.OnClick = func() {
+				d, ok := dgt()
+				if !ok {
+					return
+				}
+				m.SplitLinesByDistance(sgt(), d, rg.GetPos() == 0)
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Name: "Split Line2 by ratio",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			s, sgt := Select("Select line", Many, m.SelectLines)
+			list.Add(s)
+			d, dgt := InputFloat("Ratio", "")
+			list.Add(d)
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"from line begin", "from line end"})
+			list.Add(&rg)
+
+			var bi vl.Button
+			bi.SetText("Split")
+			bi.OnClick = func() {
+				r, ok := dgt()
+				if !ok {
+					return
+				}
+				m.SplitLinesByRatio(sgt(), r, rg.GetPos() == 0)
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Name: "Split Line2 to equal parts",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			ns, nsgt := Select("Select lines", Many, m.SelectLines)
+			list.Add(ns)
+
+			r, rgt := InputUnsigned("Amount parts", "")
+			list.Add(r)
+
+			var bi vl.Button
+			bi.SetText("Split")
+			bi.OnClick = func() {
+				m.SplitLinesByEqualParts(nsgt(), rgt())
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Name: "Split Triangle3 to 3 Triangle3",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+			ns, nsgt := Select("Select triangles3", Many, m.SelectTriangles)
+			list.Add(ns)
+
+			var bi vl.Button
+			bi.SetText("Split")
+			bi.OnClick = func() {
+				m.SplitTri3To3Tri3(nsgt())
+			}
+			list.Add(&bi)
+
 			return &list
 		}}, {
 		Name: "Merge nodes",
@@ -648,6 +751,8 @@ type Selectable interface {
 
 	SelectScreen(from, to [2]int32)
 
+	// Zoom
+
 	// SelectLinesParallel
 	// SelectLinesByLenght
 	// SelectLinesRadiant
@@ -809,114 +914,6 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-type Splitable interface {
-	SplitLinesByDistance(lines []uint, distance float64, atBegin bool)
-	SplitLinesByRatio(lines []uint, proportional float64, atBegin bool)
-	SplitLinesByEqualParts(lines []uint, parts uint)
-	SplitTri3To3Tri3(tris []uint)
-	// TODO REMOVE SplitTri3To3Quadr4(tris string)
-	// SplitTri3To2Tri3(tris string, side uint)
-	// SplitQuadr4To2Quadr4(q4s string, side uint)
-	// Quadr4 to 4 Triangle3
-	// Quadr4 to 4 Quadr4
-	// Triangles3, Quadrs4 by Lines2
-	// TODO Intersection
-	// Beam intersection
-	// Plate intersection
-}
-
-func init() {
-	ops := []Operation{{
-		Name: "Line2 by distance from node",
-		Part: func(m Mesh) (w vl.Widget) {
-			var list vl.List
-			s, sgt := Select("Select lines", Many, m.SelectLines)
-			list.Add(s)
-			d, dgt := InputFloat("Distance", "meter")
-			list.Add(d)
-
-			var rg vl.RadioGroup
-			rg.SetText([]string{"from line begin", "from line end"})
-			list.Add(&rg)
-
-			var bi vl.Button
-			bi.SetText("Split")
-			bi.OnClick = func() {
-				d, ok := dgt()
-				if !ok {
-					return
-				}
-				m.SplitLinesByDistance(sgt(), d, rg.GetPos() == 0)
-			}
-			list.Add(&bi)
-
-			return &list
-		}}, {
-		Name: "Line2 by ratio",
-		Part: func(m Mesh) (w vl.Widget) {
-			var list vl.List
-			s, sgt := Select("Select line", Many, m.SelectLines)
-			list.Add(s)
-			d, dgt := InputFloat("Ratio", "")
-			list.Add(d)
-
-			var rg vl.RadioGroup
-			rg.SetText([]string{"from line begin", "from line end"})
-			list.Add(&rg)
-
-			var bi vl.Button
-			bi.SetText("Split")
-			bi.OnClick = func() {
-				r, ok := dgt()
-				if !ok {
-					return
-				}
-				m.SplitLinesByRatio(sgt(), r, rg.GetPos() == 0)
-			}
-			list.Add(&bi)
-
-			return &list
-		}}, {
-		Name: "Line2 to equal parts",
-		Part: func(m Mesh) (w vl.Widget) {
-			var list vl.List
-			ns, nsgt := Select("Select lines", Many, m.SelectLines)
-			list.Add(ns)
-
-			r, rgt := InputUnsigned("Amount parts", "")
-			list.Add(r)
-
-			var bi vl.Button
-			bi.SetText("Split")
-			bi.OnClick = func() {
-				m.SplitLinesByEqualParts(nsgt(), rgt())
-			}
-			list.Add(&bi)
-
-			return &list
-		}}, {
-		Name: "Triangle3 to 3 Triangle3",
-		Part: func(m Mesh) (w vl.Widget) {
-			var list vl.List
-			ns, nsgt := Select("Select triangles3", Many, m.SelectTriangles)
-			list.Add(ns)
-
-			var bi vl.Button
-			bi.SetText("Split")
-			bi.OnClick = func() {
-				m.SplitTri3To3Tri3(nsgt())
-			}
-			list.Add(&bi)
-
-			return &list
-		}},
-	}
-	for i := range ops {
-		ops[i].Group = Split
-	}
-	Operations = append(Operations, ops...)
-}
-
 type MoveCopyble interface {
 	MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool)
 	MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool)
@@ -1069,20 +1066,18 @@ type Pluginable interface {
 	// Cone
 	// Disk
 	// Cube
+	// Torus
 	// Pipe branch
-	// Frame
+	// Frame with different I-height
+	// Nano aerodymanic
 	// Beam-beam connection
 	// Column-beam connection
 	// Column-column connection
-	// Chamfer plates
-	// Fillet plates
-	// Explode plates
 	// Split plates by lines
 	// Split lines by plates
 	// Convert triangles to rectangles
 	// Convert rectangles to triangles
 	// Plate bending
-	// Triangulation
 	// Twist
 	// Extrude
 	// Hole circle, square, rectangle on direction
@@ -1091,6 +1086,7 @@ type Pluginable interface {
 	// Stamping by point
 	// Stiffening rib
 	// Weld
+	// Group
 }
 
 func init() {
@@ -1123,7 +1119,6 @@ type Mesh interface {
 	Ignorable
 	Hidable
 	Selectable
-	Splitable
 	MoveCopyble
 	Checkable
 	Pluginable
