@@ -915,8 +915,10 @@ func init() {
 }
 
 type MoveCopyble interface {
-	MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool)
-	MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool)
+	MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64,
+		copy, addLines, addTri bool)
+	MoveCopyNodesN1N2(nodes, elements []uint, from, to uint,
+		copy, addLines, addTri bool)
 	// Move/Copy to specific plane",
 	// Rotate",
 	// Mirror",
