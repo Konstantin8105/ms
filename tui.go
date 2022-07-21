@@ -1205,10 +1205,12 @@ func SelectAll(m Mesh) (
 	const Default = "NONE"
 
 	var coords vl.Text
+	coords.SetLinesLimit(3)
 	coords.SetText(Default)
 	l.Add(&coords)
 
 	var els vl.Text
+	els.SetLinesLimit(3)
 	els.SetText(Default)
 	l.Add(&els)
 
@@ -1248,6 +1250,7 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 
 	// TODO: Maximal lines of text
 
+	id.SetLinesLimit(3)
 	id.SetText(Default)
 	l.Add(&id)
 	var b vl.Button
