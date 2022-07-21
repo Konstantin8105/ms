@@ -211,6 +211,18 @@ func (u *Undo) SelectLinesOnPlane(xoy, xoz, yoz bool) {
 	u.model.SelectLinesOnPlane(xoy, xoz, yoz)
 }
 
+func (u *Undo) SelectLinesParallel(lines []uint) {
+	u.model.SelectLinesParallel(lines)
+}
+
+func (u *Undo) SelectLinesByLenght(more bool, lenght float64) {
+	u.model.SelectLinesByLenght(more, lenght)
+}
+
+func (u *Undo) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction) {
+	u.model.SelectLinesCylindrical(node, radiant, conc, axe)
+}
+
 func (u *Undo) SelectScreen(from, to [2]int32) {
 	u.op.SelectScreen(from, to)
 }

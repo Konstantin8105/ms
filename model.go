@@ -450,10 +450,11 @@ func (mm *Model) SelectNodes(single bool) (ids []uint) {
 
 func (mm *Model) SelectLines(single bool) (ids []uint) {
 	for i, el := range mm.Elements {
-		if !el.selected {
+		vis, ok := mm.IsVisibleLine(uint(i))
+		if !vis || !ok {
 			continue
 		}
-		if el.ElementType != Line2 {
+		if !el.selected {
 			continue
 		}
 		ids = append(ids, uint(i))
@@ -519,27 +520,25 @@ func (mm *Model) SelectLinesOrtho(x, y, z bool) {
 		return
 	}
 	for i, el := range mm.Elements {
-		if el.hided {
+		vis, ok := mm.IsVisibleLine(uint(i))
+		if !vis || !ok {
 			continue
 		}
 		if el.selected {
 			continue
 		}
-		if el.ElementType != Line2 {
-			continue
-		}
 		var (
-			dX = math.Abs(mm.Coords[el.Indexes[1]].X - mm.Coords[el.Indexes[0]].X)
-			dY = math.Abs(mm.Coords[el.Indexes[1]].Y - mm.Coords[el.Indexes[0]].Y)
-			dZ = math.Abs(mm.Coords[el.Indexes[1]].Z - mm.Coords[el.Indexes[0]].Z)
+			dx = math.Abs(mm.Coords[el.Indexes[1]].X - mm.Coords[el.Indexes[0]].X)
+			dy = math.Abs(mm.Coords[el.Indexes[1]].Y - mm.Coords[el.Indexes[0]].Y)
+			dz = math.Abs(mm.Coords[el.Indexes[1]].Z - mm.Coords[el.Indexes[0]].Z)
 		)
-		if x && dY < distanceError && dZ < distanceError {
+		if x && dy < distanceError && dz < distanceError {
 			mm.Elements[i].selected = true
 		}
-		if y && dX < distanceError && dZ < distanceError {
+		if y && dx < distanceError && dz < distanceError {
 			mm.Elements[i].selected = true
 		}
-		if z && dX < distanceError && dY < distanceError {
+		if z && dx < distanceError && dy < distanceError {
 			mm.Elements[i].selected = true
 		}
 	}
@@ -550,13 +549,11 @@ func (mm *Model) SelectLinesOnPlane(xoy, yoz, xoz bool) {
 		return
 	}
 	for i, el := range mm.Elements {
-		if el.hided {
+		vis, ok := mm.IsVisibleLine(uint(i))
+		if !vis || !ok {
 			continue
 		}
 		if el.selected {
-			continue
-		}
-		if el.ElementType != Line2 {
 			continue
 		}
 		var (
@@ -574,6 +571,211 @@ func (mm *Model) SelectLinesOnPlane(xoy, yoz, xoz bool) {
 			mm.Elements[i].selected = true
 		}
 	}
+}
+
+func (mm *Model) SelectLinesParallel(lines []uint) {
+	// check input data
+	for _, p := range lines {
+		if len(mm.Elements) <= int(p) || int(p) < 0 {
+			AddInfo("SelectLinesParallel: not valid index %d", p)
+			return
+		}
+		if mm.Elements[p].ElementType != Line2 {
+			AddInfo("SelectLinesParallel: is not line %v", mm.Elements[p])
+			return
+		}
+	}
+	// selection
+	type ratio struct{ dx, dy, dz float64 }
+
+	toOne := func(el Element) (r ratio, ok bool) {
+		r.dx = mm.Coords[el.Indexes[0]].X - mm.Coords[el.Indexes[1]].X
+		r.dy = mm.Coords[el.Indexes[0]].Y - mm.Coords[el.Indexes[1]].Y
+		r.dz = mm.Coords[el.Indexes[0]].Z - mm.Coords[el.Indexes[1]].Z
+		if math.Abs(r.dx) < distanceError &&
+			math.Abs(r.dy) < distanceError &&
+			math.Abs(r.dz) < distanceError {
+			// ignore zero lines
+			return
+		}
+		amplitude := math.Sqrt(pow.E2(r.dx) + pow.E2(r.dy) + pow.E2(r.dz))
+		r.dx /= amplitude
+		r.dy /= amplitude
+		r.dz /= amplitude
+		return r, true
+	}
+
+	compare := func(r1, r2 ratio) bool {
+		if distanceError < math.Abs(r1.dx-r2.dx) {
+			return false
+		}
+		if distanceError < math.Abs(r1.dy-r2.dy) {
+			return false
+		}
+		if distanceError < math.Abs(r1.dz-r2.dz) {
+			return false
+		}
+		return true
+	}
+
+	var ratios []ratio
+	for _, p := range lines {
+		vis, ok := mm.IsVisibleLine(p)
+		if !vis || !ok {
+			continue
+		}
+		r, ok := toOne(mm.Elements[p])
+		if !ok {
+			continue
+		}
+		ratios = append(ratios, r)
+	}
+
+	for i, el := range mm.Elements {
+		vis, ok := mm.IsVisibleLine(uint(i))
+		if !ok || !vis {
+			continue
+		}
+		if el.selected {
+			continue
+		}
+		var found bool
+		for _, p := range lines {
+			if int(p) == i {
+				found = true
+				mm.Elements[p].selected = true
+				break
+			}
+		}
+		if found {
+			continue
+		}
+		re, ok := toOne(el)
+		if !ok {
+			continue
+		}
+		for ri := range ratios {
+			if compare(re, ratios[ri]) {
+				mm.Elements[i].selected = true
+			}
+		}
+	}
+}
+
+func (mm *Model) SelectLinesByLenght(more bool, lenght float64) {
+	if lenght <= 0.0 {
+		return
+	}
+	for i, el := range mm.Elements {
+		vis, ok := mm.IsVisibleLine(uint(i))
+		if !vis || !ok {
+			continue
+		}
+		if el.selected {
+			continue
+		}
+		var (
+			dx = mm.Coords[el.Indexes[0]].X - mm.Coords[el.Indexes[1]].X
+			dy = mm.Coords[el.Indexes[0]].Y - mm.Coords[el.Indexes[1]].Y
+			dz = mm.Coords[el.Indexes[0]].Z - mm.Coords[el.Indexes[1]].Z
+		)
+		if math.Abs(dx) < distanceError &&
+			math.Abs(dy) < distanceError &&
+			math.Abs(dz) < distanceError {
+			// ignore zero lines
+			continue
+		}
+		L := math.Sqrt(pow.E2(dx) + pow.E2(dy) + pow.E2(dz))
+		if (more && lenght <= L) || (!more && L <= lenght) {
+			mm.Elements[i].selected = true
+		}
+	}
+}
+
+func (mm *Model) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction) {
+	if int(node) < 0 || len(mm.Coords) <= int(node) {
+		AddInfo("SelectLinesCylindrical: not valid node %d", node)
+		return
+	}
+	for i, el := range mm.Elements {
+		vis, ok := mm.IsVisibleLine(uint(i))
+		if !vis || !ok {
+			continue
+		}
+		if el.selected {
+			continue
+		}
+		var r0, r1, dr float64
+		var a0, a1, da float64
+		switch axe {
+		case DirX:
+			r0 = math.Sqrt(
+				pow.E2(mm.Coords[el.Indexes[0]].Z-mm.Coords[node].Z) +
+					pow.E2(mm.Coords[el.Indexes[0]].Y-mm.Coords[node].Y))
+			r1 = math.Sqrt(
+				pow.E2(mm.Coords[el.Indexes[1]].Z-mm.Coords[node].Z) +
+					pow.E2(mm.Coords[el.Indexes[1]].Y-mm.Coords[node].Y))
+			a0 = math.Atan2(
+				pow.E2(mm.Coords[el.Indexes[0]].Z-mm.Coords[node].Z),
+				pow.E2(mm.Coords[el.Indexes[0]].Y-mm.Coords[node].Y))
+			a1 = math.Atan2(
+				pow.E2(mm.Coords[el.Indexes[1]].Z-mm.Coords[node].Z),
+				pow.E2(mm.Coords[el.Indexes[1]].Y-mm.Coords[node].Y))
+		case DirY:
+			r0 = math.Sqrt(
+				pow.E2(mm.Coords[el.Indexes[0]].X-mm.Coords[node].X) +
+					pow.E2(mm.Coords[el.Indexes[0]].Z-mm.Coords[node].Y))
+			r1 = math.Sqrt(
+				pow.E2(mm.Coords[el.Indexes[1]].X-mm.Coords[node].X) +
+					pow.E2(mm.Coords[el.Indexes[1]].Z-mm.Coords[node].Z))
+			a0 = math.Atan2(
+				pow.E2(mm.Coords[el.Indexes[0]].X-mm.Coords[node].X),
+				pow.E2(mm.Coords[el.Indexes[0]].Z-mm.Coords[node].Z))
+			a1 = math.Atan2(
+				pow.E2(mm.Coords[el.Indexes[1]].X-mm.Coords[node].X),
+				pow.E2(mm.Coords[el.Indexes[1]].Z-mm.Coords[node].Z))
+		case DirZ:
+			r0 = math.Sqrt(
+				pow.E2(mm.Coords[el.Indexes[0]].X-mm.Coords[node].X) +
+					pow.E2(mm.Coords[el.Indexes[0]].Y-mm.Coords[node].Y))
+			r1 = math.Sqrt(
+				pow.E2(mm.Coords[el.Indexes[1]].X-mm.Coords[node].X) +
+					pow.E2(mm.Coords[el.Indexes[1]].Y-mm.Coords[node].Y))
+			a0 = math.Atan2(
+				pow.E2(mm.Coords[el.Indexes[0]].X-mm.Coords[node].X),
+				pow.E2(mm.Coords[el.Indexes[0]].Y-mm.Coords[node].Y))
+			a1 = math.Atan2(
+				pow.E2(mm.Coords[el.Indexes[1]].X-mm.Coords[node].X),
+				pow.E2(mm.Coords[el.Indexes[1]].Y-mm.Coords[node].Y))
+		}
+		dr = math.Abs(r0 - r1)
+		da = math.Abs(a0 - a1)
+		if da < distanceError && radiant {
+			mm.Elements[i].selected = true
+		}
+		if dr < distanceError && conc {
+			mm.Elements[i].selected = true
+		}
+	}
+}
+
+func (mm *Model) IsVisibleLine(p uint) (visible, ok bool) {
+	if int(p) < 0 || len(mm.Elements) <= int(p) {
+		AddInfo("IsVisibleLine: not valid index %d", p)
+		return
+	}
+	if mm.Elements[p].ElementType != Line2 {
+		return
+	}
+	ok = true
+	if mm.Elements[p].hided {
+		return
+	}
+	if mm.IsIgnore(uint(p)) {
+		return
+	}
+	visible = true
+	return
 }
 
 func (mm *Model) DeselectAll() {

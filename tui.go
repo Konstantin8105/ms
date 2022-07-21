@@ -733,6 +733,26 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
+type Direction uint8
+
+const (
+	DirX Direction = iota
+	DirY
+	DirZ
+)
+
+func (d Direction) String() string {
+	switch d {
+	case DirX:
+		return "X direction"
+	case DirY:
+		return "Y direction"
+	case DirZ:
+		return "Z direction"
+	}
+	return "Undefined direction"
+}
+
 type Selectable interface {
 	SelectLeftCursor(nodes, lines, tria bool)
 
@@ -745,6 +765,10 @@ type Selectable interface {
 
 	SelectLinesOrtho(x, y, z bool)
 	SelectLinesOnPlane(xoy, xoz, yoz bool)
+	SelectLinesParallel(lines []uint)
+	SelectLinesByLenght(more bool, lenght float64)
+	SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction)
+	// SelectLinesSpherical
 
 	SelectAll(nodes, lines, tria bool)
 	DeselectAll()
@@ -753,11 +777,6 @@ type Selectable interface {
 
 	// Zoom
 
-	// SelectLinesParallel
-	// SelectLinesByLenght
-	// SelectLinesRadiant
-	// SelectLinesCurc
-	//
 	// SelectPlatesWithAngle
 	// SelectPlatesParallel// XY, YZ, XZ
 	// SelectPlatesByArea
@@ -865,6 +884,90 @@ func init() {
 			b.SetText(name)
 			b.OnClick = func() {
 				m.SelectLinesOnPlane(xoy.Checked, yoz.Checked, xoz.Checked)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Select lines parallel lines",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			lf, lfgt := Select("Lines", Many, m.SelectLines)
+			list.Add(lf)
+
+			var b vl.Button
+			b.SetText("Select")
+			b.OnClick = func() {
+				ls := lfgt()
+				if len(ls) == 0 {
+					return
+				}
+				m.SelectLinesParallel(ls)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Select lines by lenght",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var rg vl.RadioGroup
+			rg.SetText([]string{"More", "Less"})
+			list.Add(&rg)
+
+			d, dgt := InputFloat("Lenght", "meter")
+			list.Add(d)
+
+			var b vl.Button
+			b.SetText("Select")
+			b.OnClick = func() {
+				l, ok := dgt()
+				if !ok {
+					return
+				}
+				if l <= 0 {
+					return
+				}
+				m.SelectLinesByLenght(rg.GetPos() == 0, l)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Select lines in cylinder system coordinate",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			nf, nfgt := Select("Node", Single, m.SelectNodes)
+			list.Add(nf)
+
+			list.Add(vl.TextStatic("Lines:"))
+
+			var radiant vl.CheckBox
+			radiant.SetText("Radiant")
+			list.Add(&radiant)
+
+			var conc vl.CheckBox
+			conc.SetText("Concentric lines")
+			list.Add(&conc)
+
+			list.Add(vl.TextStatic("Direction:"))
+			var drg vl.RadioGroup
+			drg.SetText([]string{DirX.String(), DirY.String(), DirZ.String()})
+			list.Add(&drg)
+
+			var b vl.Button
+			b.SetText("Select")
+			b.OnClick = func() {
+				n := nfgt()
+				if len(n) != 1 {
+					return
+				}
+				m.SelectLinesCylindrical(
+					n[0], radiant.Checked, conc.Checked,
+					Direction(drg.GetPos()))
 			}
 			list.Add(&b)
 
@@ -1247,8 +1350,6 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 	// 	id.Filter(tf.UnsignedInteger)
 
 	const Default = "NONE"
-
-	// TODO: Maximal lines of text
 
 	id.SetLinesLimit(3)
 	id.SetText(Default)
