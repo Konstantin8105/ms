@@ -96,21 +96,29 @@ func init() {
 			lh.Add(&name)
 			list.Add(&lh)
 
+			update := func() {
+				if r := recover(); r != nil {
+					// safety ignore panic
+					AddInfo("Safety ignore panic: %s", r)
+				}
+				id := m.PartPresent()
+				ns := m.PartsName()
+				part := ns[id]
+				if part == "" {
+					part = defaultPartName(int(id))
+				}
+				prefix := "Base model"
+				if 0 < id {
+					prefix = "Submodel"
+				}
+				pre.SetText(fmt.Sprintf("№%02d. %s", id, prefix))
+				name.SetText(part)
+			}
+
 			go func() {
 				for {
 					<-time.After(1 * time.Second)
-					id := m.PartPresent()
-					ns := m.PartsName()
-					part := ns[id]
-					if part == "" {
-						part = defaultPartName(int(id))
-					}
-					prefix := "Base model"
-					if 0 < id {
-						prefix = "Submodel"
-					}
-					pre.SetText(fmt.Sprintf("№%02d. %s", id, prefix))
-					name.SetText(part)
+					update()
 				}
 			}()
 			return &list
@@ -122,21 +130,29 @@ func init() {
 			var rg vl.RadioGroup
 			list.Add(&rg)
 
+			update := func() {
+				if r := recover(); r != nil {
+					// safety ignore panic
+					AddInfo("Safety ignore panic: %s", r)
+				}
+				ns := m.PartsName()
+				for i := range ns {
+					if ns[i] != "" {
+						continue
+					}
+					if i == 0 {
+						ns[i] = "base model"
+						continue
+					}
+					ns[i] = fmt.Sprintf("part %02d", i)
+				}
+				rg.SetText(ns)
+			}
+
 			go func() {
 				for {
 					<-time.After(1 * time.Second)
-					ns := m.PartsName()
-					for i := range ns {
-						if ns[i] != "" {
-							continue
-						}
-						if i == 0 {
-							ns[i] = "base model"
-							continue
-						}
-						ns[i] = fmt.Sprintf("part %02d", i)
-					}
-					rg.SetText(ns)
+					update()
 				}
 			}()
 
@@ -182,17 +198,26 @@ func init() {
 			list.Add(&listH)
 
 			lastId := uint(0)
+
+			update := func() {
+				if r := recover(); r != nil {
+					// safety ignore panic
+					AddInfo("Safety ignore panic: %s", r)
+				}
+				id := m.PartPresent()
+				if lastId != id {
+					ns := m.PartsName()
+					name.SetText(ns[id])
+					lastId = id
+					return
+				}
+				m.PartRename(id, name.GetText())
+			}
+
 			go func() {
 				for {
 					<-time.After(2 * time.Second)
-					id := m.PartPresent()
-					if lastId != id {
-						ns := m.PartsName()
-						name.SetText(ns[id])
-						lastId = id
-						continue
-					}
-					m.PartRename(id, name.GetText())
+					update()
 				}
 			}()
 
@@ -1343,7 +1368,6 @@ func SelectAll(m Mesh) (
 		els          vl.Text
 	)
 
-
 	verticalList.Add(vl.TextStatic("Select:"))
 
 	l1.Add(vl.TextStatic("Nodes:"))
@@ -1531,10 +1555,19 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 
 		var txt vl.Text
 		txt.SetText("Logger")
+
+		update := func() {
+			if r := recover(); r != nil {
+				// safety ignore panic
+				AddInfo("Safety ignore panic: %s", r)
+			}
+			txt.SetText(strings.Join(Info, "\n"))
+		}
+
 		go func() {
 			for {
 				<-time.After(time.Millisecond * 500)
-				txt.SetText(strings.Join(Info, "\n"))
+				update()
 			}
 		}()
 		logList.Add(&txt)
