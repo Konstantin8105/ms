@@ -280,22 +280,30 @@ func (u *Undo) MergeNodes(minDistance float64) {
 	u.model.MergeNodes(minDistance)
 }
 
-func (u *Undo) MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64, copy, addLines, addTri bool) {
+func (u *Undo) MoveCopyDistance(nodes, elements []uint, coordinate [3]float64,
+	intermediantParts uint,
+	copy, addLines, addTri bool) {
 	// sync
 	pre, post := u.sync(false)
 	pre()
 	defer post()
 	// action
-	u.model.MoveCopyNodesDistance(nodes, elements, coordinates, copy, addLines, addTri)
+	u.model.MoveCopyDistance(nodes, elements, coordinate,
+		intermediantParts,
+		copy, addLines, addTri)
 }
 
-func (u *Undo) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
+func (u *Undo) MoveCopyN1N2(nodes, elements []uint, from, to uint,
+	intermediantParts uint,
+	copy, addLines, addTri bool) {
 	// sync
 	pre, post := u.sync(false)
 	pre()
 	defer post()
 	// action
-	u.model.MoveCopyNodesN1N2(nodes, elements, from, to, copy, addLines, addTri)
+	u.model.MoveCopyN1N2(nodes, elements, from, to,
+		intermediantParts,
+		copy, addLines, addTri)
 }
 
 func (u *Undo) DemoSpiral() {

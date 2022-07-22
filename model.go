@@ -1121,7 +1121,9 @@ func (mm *Model) UnhideAll() {
 	}
 }
 
-func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coords [3]float64, copy, addLines, addTri bool) {
+func (mm *Model) MoveCopyDistance(nodes, elements []uint, coords [3]float64,
+	intermediantParts uint,
+	copy, addLines, addTri bool) {
 	defer mm.DeselectAll() // deselect
 	if distance := math.Sqrt(pow.E2(coords[0]) + pow.E2(coords[1]) + pow.E2(coords[2])); distance < distanceError {
 		return
@@ -1146,16 +1148,31 @@ func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coords [3]float64
 		return
 	}
 	// add nodes
-	newNodes := make([]int, len(mm.Coords))
+	newNodes := make([][]uint, len(mm.Coords))
 	for _, p := range nodes {
-		id := mm.AddNode(
-			mm.Coords[p].X+coords[0],
-			mm.Coords[p].Y+coords[1],
-			mm.Coords[p].Z+coords[2],
-		)
-		newNodes[p] = int(id)
-		if addLines {
-			mm.AddLineByNodeNumber(p, id)
+		for i := uint(0); i <= intermediantParts; i++ {
+			factor := float64(i+1) / float64(intermediantParts+1)
+			if i == intermediantParts {
+				factor = 1.0
+			}
+			id := mm.AddNode(
+				mm.Coords[p].X+coords[0]*factor,
+				mm.Coords[p].Y+coords[1]*factor,
+				mm.Coords[p].Z+coords[2]*factor,
+			)
+			newNodes[p] = append(newNodes[p], id)
+		}
+	}
+	// add intermediant lines
+	if addLines {
+		for i := range newNodes {
+			for j, p := range newNodes[i] {
+				if j == 0 {
+					mm.AddLineByNodeNumber(uint(i), p)
+					continue
+				}
+				mm.AddLineByNodeNumber(newNodes[i][j-1], p)
+			}
 		}
 	}
 	// add elements
@@ -1165,16 +1182,20 @@ func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coords [3]float64
 		case ElRemove:
 			// do nothing
 		case Line2:
-			mm.AddLineByNodeNumber(
-				uint(newNodes[el.Indexes[0]]),
-				uint(newNodes[el.Indexes[1]]),
-			)
+			for i := uint(0); i <= intermediantParts; i++ {
+				mm.AddLineByNodeNumber(
+					newNodes[el.Indexes[0]][i],
+					newNodes[el.Indexes[1]][i],
+				)
+			}
 		case Triangle3:
-			mm.AddTriangle3ByNodeNumber(
-				uint(newNodes[el.Indexes[0]]),
-				uint(newNodes[el.Indexes[1]]),
-				uint(newNodes[el.Indexes[2]]),
-			)
+			for i := uint(0); i <= intermediantParts; i++ {
+				mm.AddTriangle3ByNodeNumber(
+					newNodes[el.Indexes[0]][i],
+					newNodes[el.Indexes[1]][i],
+					newNodes[el.Indexes[2]][i],
+				)
+			}
 		default:
 			// TODO:
 			panic(fmt.Errorf("add implementation: %v", el))
@@ -1187,33 +1208,45 @@ func (mm *Model) MoveCopyNodesDistance(nodes, elements []uint, coords [3]float64
 			if el.ElementType != Line2 {
 				continue
 			}
-			mm.AddTriangle3ByNodeNumber(
-				uint(el.Indexes[0]),
-				uint(el.Indexes[1]),
-				uint(newNodes[el.Indexes[1]]),
-			)
-			mm.AddTriangle3ByNodeNumber(
-				uint(el.Indexes[0]),
-				uint(newNodes[el.Indexes[1]]),
-				uint(newNodes[el.Indexes[0]]),
-			)
+			//  before0-------------->after0	//
+			//	|                     |     	//
+			//	|                     |         //
+			//	before1-------------->after1	//
+			for i := uint(0); i <= intermediantParts; i++ {
+				var before [2]uint
+				if i == 0 {
+					before[0] = uint(el.Indexes[0])
+					before[1] = uint(el.Indexes[1])
+				} else {
+					before[0] = newNodes[el.Indexes[0]][i-1]
+					before[1] = newNodes[el.Indexes[1]][i-1]
+				}
+				after := [2]uint{
+					newNodes[el.Indexes[0]][i],
+					newNodes[el.Indexes[1]][i],
+				}
+				mm.AddTriangle3ByNodeNumber(before[0], before[1], after[1])
+				mm.AddTriangle3ByNodeNumber(before[0], after[1], after[0])
+			}
 		}
 	}
 	// TODO check triangles on one line
 }
 
-func (mm *Model) MoveCopyNodesN1N2(nodes, elements []uint, from, to uint, copy, addLines, addTri bool) {
+func (mm *Model) MoveCopyN1N2(nodes, elements []uint, from, to uint,
+	intermediantParts uint,
+	copy, addLines, addTri bool) {
 	if len(mm.Coords) <= int(from) {
 		return
 	}
 	if len(mm.Coords) <= int(to) {
 		return
 	}
-	mm.MoveCopyNodesDistance(nodes, elements, [3]float64{
+	mm.MoveCopyDistance(nodes, elements, [3]float64{
 		mm.Coords[to].X - mm.Coords[from].X,
 		mm.Coords[to].Y - mm.Coords[from].Y,
 		mm.Coords[to].Z - mm.Coords[from].Z,
-	}, copy, addLines, addTri)
+	}, intermediantParts, copy, addLines, addTri)
 }
 
 func (mm *Model) StandardView(view SView) {

@@ -402,6 +402,7 @@ func init() {
 			var list vl.List
 
 			w, gt := Input3Float(
+				"Coordinate:",
 				[3]string{"X", "Y", "Z"},
 				[3]string{"meter", "meter", "meter"},
 			)
@@ -754,6 +755,8 @@ func (d Direction) String() string {
 }
 
 type Selectable interface {
+	// TODO select deeper or only first iteration
+
 	SelectLeftCursor(nodes, lines, tria bool)
 
 	SelectNodes(single bool) (ids []uint)
@@ -768,7 +771,15 @@ type Selectable interface {
 	SelectLinesParallel(lines []uint)
 	SelectLinesByLenght(more bool, lenght float64)
 	SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction)
-	// SelectLinesSpherical
+	// SelectLinesSpherical(node uint, radiant, conc bool)
+
+	// SelectPlatesWithAngle
+	// SelectPlatesParallel// XY, YZ, XZ
+	// SelectPlatesByArea
+	// SelectPlatesByAngle
+
+	// Select Snow/Wind elements
+	// SelectByGroup
 
 	SelectAll(nodes, lines, tria bool)
 	DeselectAll()
@@ -776,14 +787,6 @@ type Selectable interface {
 	SelectScreen(from, to [2]int32)
 
 	// Zoom
-
-	// SelectPlatesWithAngle
-	// SelectPlatesParallel// XY, YZ, XZ
-	// SelectPlatesByArea
-	// SelectPlatesByAngle
-	//
-	// Select Snow/Wind elements
-	// SelectByGroup
 }
 
 func init() {
@@ -1018,17 +1021,33 @@ func init() {
 }
 
 type MoveCopyble interface {
-	MoveCopyNodesDistance(nodes, elements []uint, coordinates [3]float64,
+	MoveCopyDistance(nodes, elements []uint, coordinate [3]float64,
+		intermediantParts uint,
 		copy, addLines, addTri bool)
-	MoveCopyNodesN1N2(nodes, elements []uint, from, to uint,
+	MoveCopyN1N2(nodes, elements []uint, from, to uint,
+		intermediantParts uint,
 		copy, addLines, addTri bool)
-	// Move/Copy to specific plane",
-	// Rotate",
-	// Mirror",
+	//	MoveCopyOnPlane(nodes, elements []uint, coordinate [3]float64,
+	//		plane Plane,
+	//		intermediantParts uint,
+	//		copy, addLines, addTri bool)
+	//	Rotate(nodes, elements []uint, center [3]float64,
+	//		angle float64,
+	//		intermediantParts uint,
+	//		distance float64, direction Direction, // Twist/Spiral
+	//		copy, addLines, addTri bool)
+	//	Mirror(nodes, elements []uint, center [3]float64,
+	//		plane Plane,
+	//		intermediantParts uint,
+	//		copy, addLines, addTri bool)
+	//	CopyByPath(nodes, elements []uint,
+	//		path []uint, // lines path
+	//		withRotation bool,
+	//		copy, addLines, addTri bool) // Copy by line path
 	// Bend
-	// Copy by line path",
-	// Translational repeat",
-	// Circular repeat/Spiral",
+	// Loft
+	// Translational repeat
+	// Circular repeat/Spiral
 }
 
 func init() {
@@ -1041,6 +1060,7 @@ func init() {
 			list.Add(ns)
 
 			w, gt := Input3Float(
+				"Coordinate different:",
 				[3]string{"dX", "dY", "dZ"},
 				[3]string{"meter", "meter", "meter"},
 			)
@@ -1053,6 +1073,9 @@ func init() {
 			var chTriangles vl.CheckBox
 			chTriangles.SetText("Add intermediant triangles")
 			list.Add(&chTriangles)
+
+			r, rgt := InputUnsigned("Amount intermediant parts", "")
+			list.Add(r)
 
 			var rg vl.RadioGroup
 			rg.SetText([]string{"Move", "Copy"})
@@ -1069,7 +1092,7 @@ func init() {
 						return
 					}
 				}
-				m.MoveCopyNodesDistance(coordgt(), elgt(), vs, rg.GetPos() == 1,
+				m.MoveCopyDistance(coordgt(), elgt(), vs, rgt(), rg.GetPos() == 1,
 					chLines.Checked, chTriangles.Checked)
 			}
 			list.Add(&b)
@@ -1096,6 +1119,9 @@ func init() {
 			chTriangles.SetText("Add intermediant triangles")
 			list.Add(&chTriangles)
 
+			r, rgt := InputUnsigned("Amount intermediant parts", "")
+			list.Add(r)
+
 			var rg vl.RadioGroup
 			rg.SetText([]string{"Move", "Copy"})
 			list.Add(&rg)
@@ -1111,7 +1137,7 @@ func init() {
 				if len(t) != 1 {
 					return
 				}
-				m.MoveCopyNodesN1N2(coordgt(), elgt(), f[0], t[0], rg.GetPos() == 1,
+				m.MoveCopyN1N2(coordgt(), elgt(), f[0], t[0], rgt(), rg.GetPos() == 1,
 					chLines.Checked, chTriangles.Checked)
 			}
 			list.Add(&b)
@@ -1125,18 +1151,19 @@ func init() {
 }
 
 type Checkable interface {
-	// Multiple structures
-	// Node duplicate
-	// Beam duplicate
-	// Plate duplicate
-	// Zero length beam
-	// Zero length plates
-	// Check FE on Indexes lenght
-	// Plates not valid FE
-	// Overlapping Collinear beams
+	// CheckSingleStructure()     // Multiple structures
+	// CheckDuplicateNodes()      // Node duplicate
+	// CheckDuplicateLines()      // Beam duplicate
+	// CheckDuplicateTriangles()  // Plate duplicate
+	// CheckZeroLenghtLine()      // Zero length beam
+	// CheckZeroLenghtTriangles() // Zero length plates
+	// CheckElementsIndexes()     // Check FE on Indexes lenght
+	// CheckTriangleOnOneLine()   // Plates not valid FE
+	// CheckLinesOverlapping()    // Overlapping Collinear beams
+	// CheckFreeNodes()           // Not connected nodes
+	// CheckValidCoordinates()    // no NaN, infinite
 	// Empty loads
 	// Empty combinations
-	// Not connected nodes
 	// Unused supports
 	// Unused beam properties
 	// All ortho elements
@@ -1288,8 +1315,12 @@ func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() (_ float64,
 	}
 }
 
-func Input3Float(prefix, postfix [3]string) (w vl.Widget, gettext [3]func() (float64, bool)) {
+func Input3Float(header string, prefix, postfix [3]string) (
+	w vl.Widget,
+	gettext [3]func() (float64, bool),
+) {
 	var list vl.List
+	list.Add(vl.TextStatic(header))
 	for i := 0; i < 3; i++ {
 		w, gt := InputFloat(prefix[i], postfix[i])
 		list.Add(w)
@@ -1303,21 +1334,25 @@ func SelectAll(m Mesh) (
 	getCoords func() []uint,
 	getElements func() []uint,
 ) {
-	var l vl.ListH
-	l.Add(vl.TextStatic("Select nodes and elements"))
+	var (
+		verticalList vl.List
+		l1           vl.ListH
+		coords       vl.Text
+		b            vl.Button
+		l2           vl.ListH
+		els          vl.Text
+	)
+
+
+	verticalList.Add(vl.TextStatic("Select:"))
+
+	l1.Add(vl.TextStatic("Nodes:"))
 	const Default = "NONE"
 
-	var coords vl.Text
 	coords.SetLinesLimit(3)
 	coords.SetText(Default)
-	l.Add(&coords)
+	l1.Add(&coords)
 
-	var els vl.Text
-	els.SetLinesLimit(3)
-	els.SetText(Default)
-	l.Add(&els)
-
-	var b vl.Button
 	b.SetText("Select")
 	b.OnClick = func() {
 		coordinates := m.SelectNodes(Many)
@@ -1328,8 +1363,19 @@ func SelectAll(m Mesh) (
 		coords.SetText(fmt.Sprintf("%v", coordinates))
 		els.SetText(fmt.Sprintf("%v", elements))
 	}
-	l.Add(&b)
-	return &l, func() (ids []uint) {
+	l1.Add(&b)
+	verticalList.Add(&l1)
+
+	l2.Add(vl.TextStatic("Elements:"))
+
+	els.SetLinesLimit(3)
+	els.SetText(Default)
+	l2.Add(&els)
+
+	l2.Add(vl.TextStatic(""))
+	verticalList.Add(&l2)
+
+	return &verticalList, func() (ids []uint) {
 			return convertUint(coords.GetText())
 		}, func() (ids []uint) {
 			return convertUint(els.GetText())
@@ -1352,6 +1398,9 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 	const Default = "NONE"
 
 	id.SetLinesLimit(3)
+	if single {
+		id.SetLinesLimit(1)
+	}
 	id.SetText(Default)
 	l.Add(&id)
 	var b vl.Button

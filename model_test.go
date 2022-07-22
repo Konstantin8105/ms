@@ -259,7 +259,8 @@ func TestIntegration(t *testing.T) {
 			t.Fatalf("No 4")
 		}
 		<-time.After(300 * time.Millisecond)
-		mm.MoveCopyNodesDistance(nil, tris, [3]float64{4, 0, 0},
+		mm.MoveCopyDistance(nil, tris, [3]float64{4, 0, 0},
+			0,
 			true, true, true)
 		AddInfo("MoveCopyNodesDistance")
 		// view
