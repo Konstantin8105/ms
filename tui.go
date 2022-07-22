@@ -97,10 +97,12 @@ func init() {
 			list.Add(&lh)
 
 			update := func() {
-				if r := recover(); r != nil {
-					// safety ignore panic
-					AddInfo("Safety ignore panic: %s", r)
-				}
+				defer func() {
+					if r := recover(); r != nil {
+						// safety ignore panic
+						AddInfo("Safety ignore panic: %s", r)
+					}
+				}()
 				id := m.PartPresent()
 				ns := m.PartsName()
 				part := ns[id]
@@ -131,10 +133,12 @@ func init() {
 			list.Add(&rg)
 
 			update := func() {
-				if r := recover(); r != nil {
-					// safety ignore panic
-					AddInfo("Safety ignore panic: %s", r)
-				}
+				defer func() {
+					if r := recover(); r != nil {
+						// safety ignore panic
+						AddInfo("Safety ignore panic: %s", r)
+					}
+				}()
 				ns := m.PartsName()
 				for i := range ns {
 					if ns[i] != "" {
@@ -200,10 +204,12 @@ func init() {
 			lastId := uint(0)
 
 			update := func() {
-				if r := recover(); r != nil {
-					// safety ignore panic
-					AddInfo("Safety ignore panic: %s", r)
-				}
+				defer func() {
+					if r := recover(); r != nil {
+						// safety ignore panic
+						AddInfo("Safety ignore panic: %s", r)
+					}
+				}()
 				id := m.PartPresent()
 				if lastId != id {
 					ns := m.PartsName()
@@ -1557,10 +1563,12 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 		txt.SetText("Logger")
 
 		update := func() {
-			if r := recover(); r != nil {
-				// safety ignore panic
-				AddInfo("Safety ignore panic: %s", r)
-			}
+			defer func() {
+				if r := recover(); r != nil {
+					// safety ignore panic
+					AddInfo("Safety ignore panic: %s", r)
+				}
+			}()
 			txt.SetText(strings.Join(Info, "\n"))
 		}
 
