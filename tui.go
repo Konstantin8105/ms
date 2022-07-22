@@ -1101,6 +1101,8 @@ func init() {
 			)
 			list.Add(w)
 
+			list.Add(vl.TextStatic("\nIntermediant elements:"))
+
 			var chLines vl.CheckBox
 			chLines.SetText("Add intermediant lines")
 			list.Add(&chLines)
@@ -1149,6 +1151,8 @@ func init() {
 
 			nt, ntgt := Select("To node", Single, m.SelectNodes)
 			list.Add(nt)
+
+			list.Add(vl.TextStatic("\nIntermediant elements:"))
 
 			var chLines vl.CheckBox
 			chLines.SetText("Add intermediant lines")
