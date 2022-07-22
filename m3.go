@@ -461,7 +461,8 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				}
 			case Triangle3:
 				if el.selected {
-					gl.Color3ub(255, 91, 91)
+					// gl.Color3ub(255, 91, 91)
+					gl.Color4ub(255, 91, 91, 200)
 				} else {
 					// gl.Color3ub(153, 0, 153)
 					gl.Color4ub(153, 0, 153, 200)
