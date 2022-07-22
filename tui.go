@@ -594,7 +594,11 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Split")
 			bi.OnClick = func() {
-				m.SplitLinesByEqualParts(nsgt(), rgt())
+				parts, ok := rgt()
+				if !ok {
+					return
+				}
+				m.SplitLinesByEqualParts(nsgt(), parts)
 			}
 			list.Add(&bi)
 
@@ -1123,7 +1127,11 @@ func init() {
 						return
 					}
 				}
-				m.MoveCopyDistance(coordgt(), elgt(), vs, rgt(), rg.GetPos() == 1,
+				parts, ok := rgt()
+				if !ok {
+					return
+				}
+				m.MoveCopyDistance(coordgt(), elgt(), vs, parts, rg.GetPos() == 1,
 					chLines.Checked, chTriangles.Checked)
 			}
 			list.Add(&b)
@@ -1168,7 +1176,11 @@ func init() {
 				if len(t) != 1 {
 					return
 				}
-				m.MoveCopyN1N2(coordgt(), elgt(), f[0], t[0], rgt(), rg.GetPos() == 1,
+				parts, ok := rgt()
+				if !ok {
+					return
+				}
+				m.MoveCopyN1N2(coordgt(), elgt(), f[0], t[0], parts, rg.GetPos() == 1,
 					chLines.Checked, chTriangles.Checked)
 			}
 			list.Add(&b)
@@ -1301,7 +1313,7 @@ type Operation struct {
 
 var Operations []Operation
 
-func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() uint) {
+func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() (_ uint, ok bool)) {
 	var (
 		list vl.ListH
 		in   vl.Inputbox
@@ -1311,13 +1323,13 @@ func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() uint) {
 	in.Filter(tf.UnsignedInteger)
 	list.Add(&in)
 	list.Add(vl.TextStatic(postfix))
-	return &list, func() uint {
+	return &list, func() (uint, bool) {
 		text := in.GetText()
 		value, err := strconv.ParseUint(text, 10, 64)
 		if err != nil {
-			return 0
+			return 0, false
 		}
-		return uint(value)
+		return uint(value), true
 	}
 }
 
@@ -1604,6 +1616,9 @@ func clearValue(str *string) {
 
 func convertUint(str string) (ids []uint) {
 	clearValue(&str)
+	if str == "NONE" {
+		return
+	}
 	fs := strings.Fields(str)
 	for i := range fs {
 		u, err := strconv.ParseUint(fs[i], 10, 64)
