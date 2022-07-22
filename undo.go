@@ -280,6 +280,15 @@ func (u *Undo) MergeNodes(minDistance float64) {
 	u.model.MergeNodes(minDistance)
 }
 
+func (u *Undo) Intersection(nodes, elements []uint) {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.Intersection(nodes, elements)
+}
+
 func (u *Undo) MoveCopyDistance(nodes, elements []uint, coordinate [3]float64,
 	intermediantParts uint,
 	copy, addLines, addTri bool) {

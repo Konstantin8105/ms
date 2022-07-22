@@ -1063,6 +1063,14 @@ func (mm *Model) MergeNodes(minDistance float64) {
 	// TODO loads merge
 }
 
+func (mm *Model) Intersection(nodes, elements []uint) {
+	// TODO Intersection Coordinate-Coordinate
+	// TODO Intersection Coordinate-Line2
+	// TODO Intersection Coordinate-Triangle3
+	// TODO Intersection Line2     -Triangle3
+	//
+}
+
 func (mm *Model) SplitTri3To3Tri3(tris []uint) {
 	defer mm.DeselectAll() // deselect
 	if len(tris) == 0 {

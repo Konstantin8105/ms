@@ -394,9 +394,8 @@ type AddRemovable interface {
 	// Quadr4 to 4 Triangle3
 	// Quadr4 to 4 Quadr4
 	// Triangles3, Quadrs4 by Lines2
-	// TODO Intersection
-	// Beam intersection
-	// Plate intersection
+
+	Intersection(nodes, elements []uint)
 
 	MergeNodes(minDistance float64)
 	// MergeLines()
