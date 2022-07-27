@@ -722,28 +722,28 @@ func (mm *Model) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direc
 				pow.E2(ci0.Point3d[1]-ccn.Point3d[1]))
 			r1 = math.Sqrt(pow.E2(ci1.Point3d[2]-ccn.Point3d[2]) +
 				pow.E2(ci1.Point3d[1]-ccn.Point3d[1]))
-			a0 = math.Atan2(pow.E2(ci0.Point3d[2]-ccn.Point3d[2]),
-				pow.E2(ci0.Point3d[1]-ccn.Point3d[1]))
-			a1 = math.Atan2(pow.E2(ci1.Point3d[2]-ccn.Point3d[2]),
-				pow.E2(ci1.Point3d[1]-ccn.Point3d[1]))
+			a0 = math.Atan2(ci0.Point3d[2]-ccn.Point3d[2],
+				ci0.Point3d[1]-ccn.Point3d[1])
+			a1 = math.Atan2(ci1.Point3d[2]-ccn.Point3d[2],
+				ci1.Point3d[1]-ccn.Point3d[1])
 		case DirY:
 			r0 = math.Sqrt(pow.E2(ci0.Point3d[0]-ccn.Point3d[0]) +
 				pow.E2(ci0.Point3d[2]-ccn.Point3d[2]))
 			r1 = math.Sqrt(pow.E2(ci1.Point3d[0]-ccn.Point3d[0]) +
 				pow.E2(ci1.Point3d[2]-ccn.Point3d[2]))
-			a0 = math.Atan2(pow.E2(ci0.Point3d[0]-ccn.Point3d[0]),
-				pow.E2(ci0.Point3d[2]-ccn.Point3d[2]))
-			a1 = math.Atan2(pow.E2(ci1.Point3d[0]-ccn.Point3d[0]),
-				pow.E2(ci1.Point3d[2]-ccn.Point3d[2]))
+			a0 = math.Atan2(ci0.Point3d[0]-ccn.Point3d[0],
+				ci0.Point3d[2]-ccn.Point3d[2])
+			a1 = math.Atan2(ci1.Point3d[0]-ccn.Point3d[0],
+				ci1.Point3d[2]-ccn.Point3d[2])
 		case DirZ:
 			r0 = math.Sqrt(pow.E2(ci0.Point3d[0]-ccn.Point3d[0]) +
 				pow.E2(ci0.Point3d[1]-ccn.Point3d[1]))
 			r1 = math.Sqrt(pow.E2(ci1.Point3d[0]-ccn.Point3d[0]) +
 				pow.E2(ci1.Point3d[1]-ccn.Point3d[1]))
-			a0 = math.Atan2(pow.E2(ci0.Point3d[0]-ccn.Point3d[0]),
-				pow.E2(ci0.Point3d[1]-ccn.Point3d[1]))
-			a1 = math.Atan2(pow.E2(ci1.Point3d[0]-ccn.Point3d[0]),
-				pow.E2(ci1.Point3d[1]-ccn.Point3d[1]))
+			a0 = math.Atan2(ci0.Point3d[0]-ccn.Point3d[0],
+				ci0.Point3d[1]-ccn.Point3d[1])
+			a1 = math.Atan2(ci1.Point3d[0]-ccn.Point3d[0],
+				ci1.Point3d[1]-ccn.Point3d[1])
 		}
 		dr = math.Abs(r0 - r1)
 		da = math.Abs(a0 - a1)
@@ -898,10 +898,10 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 			continue
 		}
 		el := mm.Elements[il]
-		length := math.Sqrt(
-			pow.E2(cs[el.Indexes[0]].Point3d[0]-cs[el.Indexes[1]].Point3d[0]) +
-				pow.E2(cs[el.Indexes[0]].Point3d[1]-cs[el.Indexes[1]].Point3d[1]) +
-				pow.E2(cs[el.Indexes[0]].Point3d[2]-cs[el.Indexes[1]].Point3d[2]))
+		length := gog.Distance3d(
+			cs[el.Indexes[0]].Point3d,
+			cs[el.Indexes[1]].Point3d,
+		)
 		if length < distanceError {
 			// do nothing
 			continue
@@ -927,10 +927,10 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 			continue
 		}
 		el := mm.Elements[il]
-		length := math.Sqrt(
-			pow.E2(cs[el.Indexes[0]].Point3d[0]-cs[el.Indexes[1]].Point3d[0]) +
-				pow.E2(cs[el.Indexes[0]].Point3d[1]-cs[el.Indexes[1]].Point3d[1]) +
-				pow.E2(cs[el.Indexes[0]].Point3d[2]-cs[el.Indexes[1]].Point3d[2]))
+		length := gog.Distance3d(
+			cs[el.Indexes[0]].Point3d,
+			cs[el.Indexes[1]].Point3d,
+		)
 		if length < distanceError {
 			// do nothing
 			continue
@@ -1149,7 +1149,10 @@ func (mm *Model) MoveCopyDistance(nodes, elements []uint, coords [3]float64,
 	intermediantParts uint,
 	copy, addLines, addTri bool) {
 	defer mm.DeselectAll() // deselect
-	if distance := math.Sqrt(pow.E2(coords[0]) + pow.E2(coords[1]) + pow.E2(coords[2])); distance < distanceError {
+	if distance := gog.Distance3d(
+		gog.Point3d{coords[0], coords[1], coords[2]},
+		gog.Point3d{0, 0, 0},
+	); distance < distanceError {
 		return
 	}
 	// nodes appending
