@@ -396,6 +396,9 @@ type AddRemovable interface {
 	// Triangles3, Quadrs4 by Lines2
 
 	Intersection(nodes, elements []uint)
+	// Intersections outside of FE
+
+	// Engineering change coordinates with precision 0.5 mm = 0.0005 meter
 
 	MergeNodes(minDistance float64)
 	// MergeLines()

@@ -315,6 +315,7 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 		if el.Indexes[0] == ni1 && el.Indexes[1] == ni3 && el.Indexes[2] == ni2 {
 			return uint(i)
 		}
+		// TODO is 3 points on 1 line
 	}
 	// append
 	mm.Elements = append(mm.Elements, Element{
@@ -1064,11 +1065,41 @@ func (mm *Model) MergeNodes(minDistance float64) {
 }
 
 func (mm *Model) Intersection(nodes, elements []uint) {
+	// using 2D package `gog` for 3D system
+
+	// 	type InterElEl struct{ elID0, elID1 int }
+	// 	cies := make(chan InterElEl, 10) // chan intersection elements-elements
+	//
+	// 	size := runtime.NumCPU() - 1
+	// 	if size < 1 {
+	// 		size = 1
+	// 	}
+	// 	var wg sync.WaitGroup
+	// 	wg.Add(size)
+	// 	for cpu := 0; cpu < size; cpu++ {
+	// 		go func() {
+	// 			wg.Done()
+	// 		}()
+	// 	}
+	//
+	// 	//
+	// 	for _, p0 := range elements {
+	// 		for _, p1 := range elements {
+	// 			cies <- InterElEl{p0, p1}
+	// 		}
+	// 	}
+	// 	close(cies)
+	//
+	// 	wg.Wait()
+
+	// Result list (element)-(intermediant points)
+
 	// TODO Intersection Coordinate-Coordinate
 	// TODO Intersection Coordinate-Line2
 	// TODO Intersection Coordinate-Triangle3
-	// TODO Intersection Line2     -Triangle3
-	//
+	// TODO Intersection Line2-Line2
+	// TODO Intersection Line2-Triangle3
+	// TODO Intersection Triangle3-Triangle3
 }
 
 func (mm *Model) SplitTri3To3Tri3(tris []uint) {

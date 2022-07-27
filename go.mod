@@ -3,6 +3,7 @@ module github.com/Konstantin8105/ms
 go 1.18
 
 require (
+	github.com/Konstantin8105/gog v0.0.0-20220727122332-0f279f29e7e3
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20220721103236-83ad8d7b923c
 	github.com/Konstantin8105/vl v0.0.0-20220721103346-6ebf5156e369
@@ -13,6 +14,8 @@ require (
 )
 
 require (
+	github.com/Konstantin8105/errors v0.1.0 // indirect
+	github.com/Konstantin8105/tree v0.1.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
