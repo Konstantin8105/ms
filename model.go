@@ -419,12 +419,26 @@ func (mm *Model) RemoveSameCoordinates() {
 			if i <= j {
 				continue
 			}
-			if gog.SamePoints3d(
+			if !gog.SamePoints3d(
 				mm.Coords[i].Point3d,
 				mm.Coords[j].Point3d,
 			) {
-				mm.Coords[j].Removed = true
+				continue
 			}
+			// fix coordinate index in elements
+			from, to := j, i
+			for k, el := range mm.Elements {
+				if el.ElementType == ElRemove {
+					continue
+				}
+				for g := range el.Indexes {
+					if el.Indexes[g] == from {
+						mm.Elements[k].Indexes[g] = to
+					}
+				}
+			}
+			// remove coordinate
+			mm.Coords[j].Removed = true
 		}
 	}
 }
@@ -1116,7 +1130,6 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 	{
 		var wg sync.WaitGroup
 		fs := []func(){
-			mm.RemoveSameCoordinates,
 			mm.RemoveZeroLines,
 			mm.RemoveZeroTriangles,
 		}
@@ -1128,6 +1141,8 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 		}
 		wg.Wait()
 	}
+	mm.RemoveSameCoordinates()
+
 	// using 2D package `gog` for 3D system
 	// 	type InterElEl struct{ elID0, elID1 int }
 	// 	cies := make(chan InterElEl, 10) // chan intersection elements-elements
