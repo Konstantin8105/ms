@@ -1094,6 +1094,8 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 
 	// Result list (element)-(intermediant points)
 
+	// ZeroLine3d
+	// ZeroTriangle3d
 	// TODO Intersection Coordinate-Coordinate
 	// TODO Intersection Coordinate-Line2
 	// TODO Intersection Coordinate-Triangle3
