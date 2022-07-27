@@ -119,7 +119,7 @@ func (u *Undo) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 	return u.model.AddLineByNodeNumber(n1, n2)
 }
 
-func (u *Undo) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
+func (u *Undo) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -331,4 +331,31 @@ func (u *Undo) Remove(nodes, elements []uint) {
 	defer post()
 	// action
 	u.model.Remove(nodes, elements)
+}
+
+func (u *Undo) RemoveSameCoordinates() {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.RemoveSameCoordinates()
+}
+
+func (u *Undo) RemoveZeroLines() {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.RemoveZeroLines()
+}
+
+func (u *Undo) RemoveZeroTriangles() {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.RemoveZeroTriangles()
 }

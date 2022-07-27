@@ -367,7 +367,7 @@ func init() {
 type AddRemovable interface {
 	AddNode(X, Y, Z float64) (id uint)
 	AddLineByNodeNumber(n1, n2 uint) (id uint)
-	AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint)
+	AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool)
 	AddModel(m Model)
 
 	AddLeftCursor(lc LeftCursor)
@@ -422,6 +422,10 @@ type AddRemovable interface {
 	// Explode plates
 
 	Remove(nodes, elements []uint)
+
+	RemoveSameCoordinates()
+	RemoveZeroLines()
+	RemoveZeroTriangles()
 
 	GetCoords() []Coordinate
 	GetElements() []Element
@@ -641,6 +645,45 @@ func init() {
 				m.MergeNodes(d)
 			}
 			list.Add(&b)
+			return &list
+		}}, {
+		Name: "Remove nodes with same coordinates",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var bi vl.Button
+			bi.SetText("Remove")
+			bi.OnClick = func() {
+				m. RemoveSameCoordinates()
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Name: "Remove lines with zero lenght",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var bi vl.Button
+			bi.SetText("Remove")
+			bi.OnClick = func() {
+				m. RemoveZeroLines()
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Name: "Remove triangles with zero area",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var bi vl.Button
+			bi.SetText("Remove")
+			bi.OnClick = func() {
+				m. RemoveZeroTriangles()
+			}
+			list.Add(&bi)
+
 			return &list
 		}}, {
 		Name: "Remove selected",

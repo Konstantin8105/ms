@@ -292,33 +292,46 @@ func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 	return uint(len(mm.Elements) - 1)
 }
 
-func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
+func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 	// type convection
 	ni1 := int(n1)
 	ni2 := int(n2)
 	ni3 := int(n3)
+	if mm.Coords[ni1].Removed || mm.Coords[ni2].Removed || mm.Coords[ni3].Removed {
+		AddInfo("AddTriangle3ByNodeNumber: removed coordinate")
+		return
+	}
+	// triangle not on one line
+	if gog.ZeroTriangle3d(
+		mm.Coords[ni1].Point3d,
+		mm.Coords[ni2].Point3d,
+		mm.Coords[ni3].Point3d,
+	) {
+		AddInfo("AddTriangle3ByNodeNumber: ZeroTriangle3d")
+		return
+	}
 	// check is this coordinate exist?
 	for i, el := range mm.Elements {
 		if el.ElementType != Triangle3 {
 			continue
 		}
 		if el.Indexes[0] == ni1 && el.Indexes[1] == ni2 && el.Indexes[2] == ni3 {
-			return uint(i)
+			return uint(i), true
 		}
 		if el.Indexes[0] == ni2 && el.Indexes[1] == ni3 && el.Indexes[2] == ni1 {
-			return uint(i)
+			return uint(i), true
 		}
 		if el.Indexes[0] == ni3 && el.Indexes[1] == ni1 && el.Indexes[2] == ni2 {
-			return uint(i)
+			return uint(i), true
 		}
 		if el.Indexes[0] == ni3 && el.Indexes[1] == ni2 && el.Indexes[2] == ni1 {
-			return uint(i)
+			return uint(i), true
 		}
 		if el.Indexes[0] == ni2 && el.Indexes[1] == ni1 && el.Indexes[2] == ni3 {
-			return uint(i)
+			return uint(i), true
 		}
 		if el.Indexes[0] == ni1 && el.Indexes[1] == ni3 && el.Indexes[2] == ni2 {
-			return uint(i)
+			return uint(i), true
 		}
 		// TODO is 3 points on 1 line
 	}
@@ -327,7 +340,7 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint) {
 		ElementType: Triangle3,
 		Indexes:     []int{ni1, ni2, ni3},
 	})
-	return uint(len(mm.Elements) - 1)
+	return uint(len(mm.Elements) - 1), true
 }
 
 func (mm *Model) AddLeftCursor(lc LeftCursor) {
@@ -391,6 +404,57 @@ func (mm *Model) Remove(nodes, elements []uint) {
 	for _, p := range elements {
 		mm.Elements[p].ElementType = ElRemove
 		mm.Elements[p].Indexes = nil
+	}
+}
+
+func (mm *Model) RemoveSameCoordinates() {
+	for i := range mm.Coords {
+		if mm.Coords[i].Removed {
+			continue
+		}
+		for j := range mm.Coords {
+			if mm.Coords[j].Removed {
+				continue
+			}
+			if i <= j {
+				continue
+			}
+			if gog.SamePoints3d(
+				mm.Coords[i].Point3d,
+				mm.Coords[j].Point3d,
+			) {
+				mm.Coords[j].Removed = true
+			}
+		}
+	}
+}
+
+func (mm *Model) RemoveZeroLines() {
+	for i, el := range mm.Elements {
+		if el.ElementType != Line2 {
+			continue
+		}
+		if gog.ZeroLine3d(
+			mm.Coords[el.Indexes[0]].Point3d,
+			mm.Coords[el.Indexes[1]].Point3d,
+		) {
+			mm.Elements[i].ElementType = ElRemove
+		}
+	}
+}
+
+func (mm *Model) RemoveZeroTriangles() {
+	for i, el := range mm.Elements {
+		if el.ElementType != Triangle3 {
+			continue
+		}
+		if gog.ZeroTriangle3d(
+			mm.Coords[el.Indexes[0]].Point3d,
+			mm.Coords[el.Indexes[1]].Point3d,
+			mm.Coords[el.Indexes[2]].Point3d,
+		) {
+			mm.Elements[i].ElementType = ElRemove
+		}
 	}
 }
 
@@ -1048,8 +1112,12 @@ func (mm *Model) MergeNodes(minDistance float64) {
 }
 
 func (mm *Model) Intersection(nodes, elements []uint) {
-	// using 2D package `gog` for 3D system
+	// remove not valid coordinates and elements
+	mm.RemoveSameCoordinates()
+	mm.RemoveZeroLines()
+	mm.RemoveZeroTriangles()
 
+	// using 2D package `gog` for 3D system
 	// 	type InterElEl struct{ elID0, elID1 int }
 	// 	cies := make(chan InterElEl, 10) // chan intersection elements-elements
 	//
