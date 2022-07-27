@@ -12,10 +12,10 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-type GroupId uint8
+type GroupID uint8
 
 const (
-	File GroupId = iota
+	File GroupID = iota
 	Edit
 	View
 	Selection
@@ -29,7 +29,7 @@ const (
 	endGroup
 )
 
-func (g GroupId) String() string {
+func (g GroupID) String() string {
 	switch g {
 	case File:
 		return "File"
@@ -201,7 +201,7 @@ func init() {
 
 			list.Add(&listH)
 
-			lastId := uint(0)
+			lastID := uint(0)
 
 			update := func() {
 				defer func() {
@@ -211,10 +211,10 @@ func init() {
 					}
 				}()
 				id := m.PartPresent()
-				if lastId != id {
+				if lastID != id {
 					ns := m.PartsName()
 					name.SetText(ns[id])
-					lastId = id
+					lastID = id
 					return
 				}
 				m.PartRename(id, name.GetText())
@@ -1312,7 +1312,7 @@ const (
 )
 
 type Operation struct {
-	Group GroupId
+	Group GroupID
 	Name  string
 	Part  func(m Mesh) (w vl.Widget)
 }
@@ -1524,14 +1524,14 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 	view := make([]bool, len(Operations))
 	colHeader := make([]vl.CollapsingHeader, endGroup)
 	for g := range colHeader {
-		colHeader[g].SetText(GroupId(g).String())
+		colHeader[g].SetText(GroupID(g).String())
 		var sublist vl.List
 		colHeader[g].Root = &sublist
 		list.Add(&colHeader[g])
 	}
 	for g := range colHeader {
 		for i := range Operations {
-			if Operations[i].Group != GroupId(g) {
+			if Operations[i].Group != GroupID(g) {
 				continue
 			}
 			var c vl.CollapsingHeader

@@ -208,14 +208,14 @@ func (f *Fps) EndFrame() {
 	f.framesCount++
 }
 
-// Draw text on the screen
+// DrawText text on the screen
 func DrawText(str string, x, y int32) {
 	gl.Color4ub(0, 0, 0, 255)
 	gl.LoadIdentity()
 	font.Printf(float32(x), float32(y), str)
 }
 
-func angle_norm(a float64) float64 {
+func angle360(a float64) float64 {
 	if 360.0 < a {
 		return a - 360.0
 	}
@@ -280,8 +280,8 @@ func (op *Opengl) UpdateModel() {
 
 func (op *Opengl) cameraView() {
 	// better angle value
-	op.camera.alpha = angle_norm(op.camera.alpha)
-	op.camera.betta = angle_norm(op.camera.betta)
+	op.camera.alpha = angle360(op.camera.alpha)
+	op.camera.betta = angle360(op.camera.betta)
 
 	w, h := op.window.GetSize()
 	gl.Viewport(0, 0, int32(w), int32(h))
@@ -1291,7 +1291,6 @@ func (ma *MouseAdd) Action(op *Opengl) {
 		)
 	}
 	ma.Reset()
-	return
 }
 
 func (ma *MouseAdd) Reset() {
