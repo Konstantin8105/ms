@@ -625,6 +625,26 @@ func init() {
 
 			return &list
 		}}, {
+		Name: "Intersection between nodes and elements",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			ns, coordgt, elgt := SelectAll(m)
+			list.Add(ns)
+
+			var b vl.Button
+			b.SetText("Intersect")
+			b.OnClick = func() {
+				cs := coordgt()
+				es := elgt()
+				if len(cs) == 0 && len(es) == 0 {
+					return
+				}
+				m.Intersection(cs, es)
+			}
+			list.Add(&b)
+			return &list
+		}}, {
 		Name: "Merge nodes",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
@@ -654,7 +674,7 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
-				m. RemoveSameCoordinates()
+				m.RemoveSameCoordinates()
 			}
 			list.Add(&bi)
 
@@ -667,7 +687,7 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
-				m. RemoveZeroLines()
+				m.RemoveZeroLines()
 			}
 			list.Add(&bi)
 
@@ -680,7 +700,7 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
-				m. RemoveZeroTriangles()
+				m.RemoveZeroTriangles()
 			}
 			list.Add(&bi)
 

@@ -1113,10 +1113,21 @@ func (mm *Model) MergeNodes(minDistance float64) {
 
 func (mm *Model) Intersection(nodes, elements []uint) {
 	// remove not valid coordinates and elements
-	mm.RemoveSameCoordinates()
-	mm.RemoveZeroLines()
-	mm.RemoveZeroTriangles()
-
+	{
+		var wg sync.WaitGroup
+		fs := []func(){
+			mm.RemoveSameCoordinates,
+			mm.RemoveZeroLines,
+			mm.RemoveZeroTriangles,
+		}
+		wg.Add(len(fs))
+		for i := range fs {
+			go func(i int) {
+				fs[i]()
+			}(i)
+		}
+		wg.Wait()
+	}
 	// using 2D package `gog` for 3D system
 	// 	type InterElEl struct{ elID0, elID1 int }
 	// 	cies := make(chan InterElEl, 10) // chan intersection elements-elements
