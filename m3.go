@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/Konstantin8105/gog"
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/gltext"
@@ -32,7 +33,7 @@ type Opengl struct {
 	camera      struct {
 		alpha, betta float64
 		R            float64
-		center       Coordinate
+		center       gog.Point3d
 		moveX, moveY float64
 	}
 
@@ -240,20 +241,20 @@ func (op *Opengl) ViewAll(centerCorrection bool) {
 		}
 		if !initialized {
 			initialized = true
-			xmin = cos[i].X
-			xmax = cos[i].X
-			ymin = cos[i].Y
-			ymax = cos[i].Y
-			zmin = cos[i].Z
-			zmax = cos[i].Z
+			xmin = cos[i].Point3d[0]
+			xmax = cos[i].Point3d[0]
+			ymin = cos[i].Point3d[1]
+			ymax = cos[i].Point3d[1]
+			zmin = cos[i].Point3d[2]
+			zmax = cos[i].Point3d[2]
 		}
 		// find extemal values
-		xmin = math.Min(xmin, cos[i].X)
-		ymin = math.Min(ymin, cos[i].Y)
-		zmin = math.Min(zmin, cos[i].Z)
-		xmax = math.Max(xmax, cos[i].X)
-		ymax = math.Max(ymax, cos[i].Y)
-		zmax = math.Max(zmax, cos[i].Z)
+		xmin = math.Min(xmin, cos[i].Point3d[0])
+		ymin = math.Min(ymin, cos[i].Point3d[1])
+		zmin = math.Min(zmin, cos[i].Point3d[2])
+		xmax = math.Max(xmax, cos[i].Point3d[0])
+		ymax = math.Max(ymax, cos[i].Point3d[1])
+		zmax = math.Max(zmax, cos[i].Point3d[2])
 	}
 	if len(cos) == 0 || !initialized {
 		op.camera.R = 1.0
@@ -262,10 +263,10 @@ func (op *Opengl) ViewAll(centerCorrection bool) {
 	// update camera
 	op.camera.R = math.Max(xmax-xmin, math.Max(ymax-ymin, zmax-zmin))
 	if centerCorrection {
-		op.camera.center = Coordinate{
-			X: (xmax + xmin) / 2.0,
-			Y: (ymax + ymin) / 2.0,
-			Z: (zmax + zmin) / 2.0,
+		op.camera.center = gog.Point3d{
+			(xmax + xmin) / 2.0,
+			(ymax + ymin) / 2.0,
+			(zmax + zmin) / 2.0,
 		}
 		return
 	}
@@ -291,9 +292,9 @@ func (op *Opengl) cameraView() {
 		// for avoid 3D cutting back model
 		const Zzoom float64 = 100.0
 		// renaming
-		cx := op.camera.center.X
-		cy := op.camera.center.Y
-		cz := op.camera.center.Z
+		cx := op.camera.center[0]
+		cy := op.camera.center[1]
+		cz := op.camera.center[2]
 		// scaling monitor 3d model on screen
 		if w < h {
 			ratio = float64(w) / float64(h)
@@ -312,10 +313,18 @@ func (op *Opengl) cameraView() {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
 
-	gl.Translated(op.camera.center.X, op.camera.center.Y, op.camera.center.Z)
+	gl.Translated(
+		op.camera.center[0],
+		op.camera.center[1],
+		op.camera.center[2],
+	)
 	gl.Rotated(op.camera.betta, 1.0, 0.0, 0.0)
 	gl.Rotated(op.camera.alpha, 0.0, 1.0, 0.0)
-	gl.Translated(-op.camera.center.X, -op.camera.center.Y, -op.camera.center.Z)
+	gl.Translated(
+		-op.camera.center[0],
+		-op.camera.center[1],
+		-op.camera.center[2],
+	)
 
 	// minimal R
 	if op.camera.R < 0.1 {
@@ -363,28 +372,28 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		ps := cos
 		// calculate radius
 		var (
-			xmin = ps[0].X
-			xmax = ps[0].X
-			ymin = ps[0].Y
-			ymax = ps[0].Y
-			zmin = ps[0].Z
-			zmax = ps[0].Z
+			xmin = ps[0].Point3d[0]
+			xmax = ps[0].Point3d[0]
+			ymin = ps[0].Point3d[1]
+			ymax = ps[0].Point3d[1]
+			zmin = ps[0].Point3d[2]
+			zmax = ps[0].Point3d[2]
 		)
 		for i := range ps {
-			xmin = math.Min(xmin, ps[i].X)
-			ymin = math.Min(ymin, ps[i].Y)
-			zmin = math.Min(zmin, ps[i].Z)
-			xmax = math.Max(xmax, ps[i].X)
-			ymax = math.Max(ymax, ps[i].Y)
-			zmax = math.Max(zmax, ps[i].Z)
+			xmin = math.Min(xmin, ps[i].Point3d[0])
+			ymin = math.Min(ymin, ps[i].Point3d[1])
+			zmin = math.Min(zmin, ps[i].Point3d[2])
+			xmax = math.Max(xmax, ps[i].Point3d[0])
+			ymax = math.Max(ymax, ps[i].Point3d[1])
+			zmax = math.Max(zmax, ps[i].Point3d[2])
 		}
 		op.camera.R = math.Max(xmax-xmin, op.camera.R)
 		op.camera.R = math.Max(ymax-ymin, op.camera.R)
 		op.camera.R = math.Max(zmax-zmin, op.camera.R)
-		op.camera.center = Coordinate{
-			X: (xmax + xmin) / 2.0,
-			Y: (ymax + ymin) / 2.0,
-			Z: (zmax + zmin) / 2.0,
+		op.camera.center = gog.Point3d{
+			(xmax + xmin) / 2.0,
+			(ymax + ymin) / 2.0,
+			(zmax + zmin) / 2.0,
 		}
 	}
 
@@ -409,7 +418,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 			} else {
 				gl.Color3ub(1, 1, 1)
 			}
-			gl.Vertex3d(cos[i].X, cos[i].Y, cos[i].Z)
+			gl.Vertex3d(cos[i].Point3d[0], cos[i].Point3d[1], cos[i].Point3d[2])
 		}
 		gl.End()
 	case selectPoints:
@@ -425,7 +434,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				continue
 			}
 			convertToColor(i)
-			gl.Vertex3d(cos[i].X, cos[i].Y, cos[i].Z)
+			gl.Vertex3d(cos[i].Point3d[0], cos[i].Point3d[1], cos[i].Point3d[2])
 		}
 		gl.End()
 	case selectLines, selectTriangles: // do nothing
@@ -480,7 +489,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 			(s == selectTriangles && el.ElementType == Triangle3) {
 			gl.Begin(gl.POINTS)
 			for _, p := range el.Indexes {
-				gl.Vertex3d(cos[p].X, cos[p].Y, cos[p].Z)
+				gl.Vertex3d(cos[p].Point3d[0], cos[p].Point3d[1], cos[p].Point3d[2])
 			}
 			gl.End()
 		}
@@ -491,7 +500,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				gl.Begin(gl.LINES)
 				for _, k := range el.Indexes {
 					c := cos[k]
-					gl.Vertex3d(c.X, c.Y, c.Z)
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
 				}
 				gl.End()
 			}
@@ -500,7 +509,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				for i, k := range el.Indexes {
 					edgeColor(i)
 					c := cos[k]
-					gl.Vertex3d(c.X, c.Y, c.Z)
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
 				}
 				gl.End()
 			}
@@ -517,13 +526,13 @@ func (op *Opengl) model3d(s viewState, parent string) {
 						to = el.Indexes[to]
 					}
 					gl.Vertex3d(
-						cos[from].X,
-						cos[from].Y,
-						cos[from].Z)
+						cos[from].Point3d[0],
+						cos[from].Point3d[1],
+						cos[from].Point3d[2])
 					gl.Vertex3d(
-						cos[to].X,
-						cos[to].Y,
-						cos[to].Z)
+						cos[to].Point3d[0],
+						cos[to].Point3d[1],
+						cos[to].Point3d[2])
 				}
 				gl.End()
 			}
@@ -538,9 +547,9 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				gl.Begin(gl.TRIANGLES)
 				for _, p := range el.Indexes {
 					gl.Vertex3d(
-						cos[p].X,
-						cos[p].Y,
-						cos[p].Z)
+						cos[p].Point3d[0],
+						cos[p].Point3d[1],
+						cos[p].Point3d[2])
 				}
 				gl.End()
 			}
@@ -549,9 +558,9 @@ func (op *Opengl) model3d(s viewState, parent string) {
 				for i, p := range el.Indexes {
 					edgeColor(i)
 					gl.Vertex3d(
-						cos[p].X,
-						cos[p].Y,
-						cos[p].Z)
+						cos[p].Point3d[0],
+						cos[p].Point3d[1],
+						cos[p].Point3d[2])
 				}
 				gl.End()
 			}

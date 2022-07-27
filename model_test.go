@@ -13,11 +13,27 @@ import (
 
 func Example() {
 	var mm Model
-	mm.Coords = append(mm.Coords,
-		Coordinate{X: 0, Y: 0, Z: 0},
-		Coordinate{X: math.Pi, Y: 2, Z: 1},
-		Coordinate{X: 6, Y: 5, Z: 4},
-	)
+	{
+		var c Coordinate
+		c.Point3d[0] = 0
+		c.Point3d[1] = 0
+		c.Point3d[2] = 0
+		mm.Coords = append(mm.Coords, c)
+	}
+	{
+		var c Coordinate
+		c.Point3d[0] = math.Pi
+		c.Point3d[1] = 2
+		c.Point3d[2] = 1
+		mm.Coords = append(mm.Coords, c)
+	}
+	{
+		var c Coordinate
+		c.Point3d[0] = 6
+		c.Point3d[1] = 5
+		c.Point3d[2] = 2
+		mm.Coords = append(mm.Coords, c)
+	}
 	mm.Elements = append(mm.Elements,
 		Element{ElementType: Line2, Indexes: []int{0, 1}},
 	)
@@ -67,22 +83,28 @@ func Example() {
 	//   ],
 	//   "Coords": [
 	//     {
-	//       "Removed": false,
-	//       "X": 0,
-	//       "Y": 0,
-	//       "Z": 0
+	//       "Point3d": [
+	//         0,
+	//         0,
+	//         0
+	//       ],
+	//       "Removed": false
 	//     },
 	//     {
-	//       "Removed": false,
-	//       "X": 3.141592653589793,
-	//       "Y": 2,
-	//       "Z": 1
+	//       "Point3d": [
+	//         3.141592653589793,
+	//         2,
+	//         1
+	//       ],
+	//       "Removed": false
 	//     },
 	//     {
-	//       "Removed": false,
-	//       "X": 6,
-	//       "Y": 5,
-	//       "Z": 4
+	//       "Point3d": [
+	//         6,
+	//         5,
+	//         2
+	//       ],
+	//       "Removed": false
 	//     }
 	//   ],
 	//   "Parts": [
