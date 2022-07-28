@@ -1137,11 +1137,173 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 		for i := range fs {
 			go func(i int) {
 				fs[i]()
+				wg.Done()
 			}(i)
 		}
 		wg.Wait()
 	}
+	// remove not valid coordinates
 	mm.RemoveSameCoordinates()
+	// New intersections points
+	var newPoints []gog.Point3d
+	var LLTT = [3][2]int{{0, 1}, {1, 2}, {2, 0}}
+	for i0, tr0 := range elements {
+		if len(mm.Elements) <= int(tr0) {
+			continue
+		}
+		if mm.Elements[tr0].ElementType != Triangle3 {
+			continue
+		}
+		// Triangle3-Triangle3
+		for i1, tr1 := range elements {
+			if len(mm.Elements) <= int(tr1) {
+				continue
+			}
+			if mm.Elements[tr1].ElementType != Triangle3 {
+				continue
+			}
+			if i0 <= i1 {
+				continue
+			}
+			if intersect, pi := gog.TriangleTriangle3d(
+				// coordinates triangle 0
+				mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d,
+				mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d,
+				mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d,
+				// coordinates triangle 1
+				mm.Coords[mm.Elements[tr1].Indexes[0]].Point3d,
+				mm.Coords[mm.Elements[tr1].Indexes[1]].Point3d,
+				mm.Coords[mm.Elements[tr1].Indexes[2]].Point3d,
+			); intersect {
+				newPoints = append(newPoints, pi...)
+			}
+			// Triangle edges
+			for _, v0 := range LLTT {
+				for _, v1 := range LLTT {
+					var (
+						a0 = mm.Coords[mm.Elements[tr0].Indexes[v0[0]]].Point3d
+						a1 = mm.Coords[mm.Elements[tr0].Indexes[v0[1]]].Point3d
+						b0 = mm.Coords[mm.Elements[tr1].Indexes[v1[0]]].Point3d
+						b1 = mm.Coords[mm.Elements[tr1].Indexes[v1[1]]].Point3d
+					)
+					rA, rB, intersect := gog.LineLine3d(a0, a1, b0, b1)
+					if !intersect {
+						continue
+					}
+					if 0 < rA && rA < 1 {
+						newPoints = append(newPoints,
+							gog.PointLineRatio3d(a0, a1, rA))
+					}
+					if 0 < rB && rB < 1 {
+						newPoints = append(newPoints,
+							gog.PointLineRatio3d(b0, b1, rB))
+					}
+				}
+			}
+		}
+		// Line2-Triangle3
+		for _, li1 := range elements {
+			if len(mm.Elements) < int(li1) {
+				continue
+			}
+			if mm.Elements[li1].ElementType != Line2 {
+				continue
+			}
+			for _, f := range [2]func(
+				gog.Point3d, gog.Point3d, gog.Point3d, gog.Point3d, gog.Point3d,
+			) (bool, []gog.Point3d){
+				gog.LineTriangle3dI1,
+				gog.LineTriangle3dI2,
+			} {
+				if intersect, pi := f(
+					// Line2
+					mm.Coords[mm.Elements[li1].Indexes[0]].Point3d,
+					mm.Coords[mm.Elements[li1].Indexes[1]].Point3d,
+					// Triangle3
+					mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d,
+					mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d,
+					mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d,
+				); intersect {
+					newPoints = append(newPoints, pi...)
+				}
+			}
+		}
+	}
+	// Line2-Line2
+	for i0, li0 := range elements {
+		if len(mm.Elements) < int(li0) {
+			continue
+		}
+		if mm.Elements[li0].ElementType != Line2 {
+			continue
+		}
+		for i1, li1 := range elements {
+			if len(mm.Elements) < int(li1) {
+				continue
+			}
+			if mm.Elements[li1].ElementType != Line2 {
+				continue
+			}
+			if i0 <= i1 {
+				continue
+			}
+			var (
+				a0 = mm.Coords[mm.Elements[li0].Indexes[0]].Point3d
+				a1 = mm.Coords[mm.Elements[li0].Indexes[1]].Point3d
+				b0 = mm.Coords[mm.Elements[li1].Indexes[0]].Point3d
+				b1 = mm.Coords[mm.Elements[li1].Indexes[1]].Point3d
+			)
+			if rA, rB, intersect := gog.LineLine3d(
+				a0, a1,
+				b0, b1,
+			); intersect {
+				if 0 < rA && rA < 1 {
+					newPoints = append(newPoints,
+						gog.PointLineRatio3d(a0, a1, rA))
+				}
+				if 0 < rB && rB < 1 {
+					newPoints = append(newPoints,
+						gog.PointLineRatio3d(b0, b1, rB))
+				}
+			}
+		}
+	}
+
+	// add nodes into newPoints
+	for _, pn := range nodes {
+		if len(mm.Coords) <= pn {
+			continue
+		}
+		if mm.Coords[pn].Removed {
+			continue
+		}
+		newPoints = append(newPoints, mm.Coords[pn].Point3d)
+	}
+
+	// Coordinate-Coordinate
+	// remove same points at list of new points
+	nodes = nil
+	for i := range newPoints {
+		nodes = append(nodes, mm.AddNode(
+			newPoints[i][0],
+			newPoints[i][1],
+			newPoints[i][2],
+		))
+	}
+
+	// Coordinate-Triangle3
+	// split Triangle3
+
+	// Coordinate-Line2
+	// split Line2
+
+	for i := range newPoints {
+		mm.AddNode(
+			newPoints[i][0],
+			newPoints[i][1],
+			newPoints[i][2],
+		)
+	}
 
 	// using 2D package `gog` for 3D system
 	// 	type InterElEl struct{ elID0, elID1 int }

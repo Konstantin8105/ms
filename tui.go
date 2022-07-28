@@ -427,6 +427,8 @@ type AddRemovable interface {
 	RemoveZeroLines()
 	RemoveZeroTriangles()
 
+	// Remove Nodes without elements
+
 	GetCoords() []Coordinate
 	GetElements() []Element
 }
