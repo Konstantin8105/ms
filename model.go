@@ -1396,14 +1396,20 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 						}
 						// point on triangle edge
 						nt, ok := mm.AddTriangle3ByNodeNumber(
-							uint(mm.Elements[pe].Indexes[v[0]]),
 							n,
+							uint(mm.Elements[pe].Indexes[v[1]]),
 							uint(mm.Elements[pe].Indexes[v[2]]),
 						)
 						if !ok {
 							AddInfo("Intersection: split point on triangle edge invalid")
 							continue
 						}
+						AddInfo("%v :: %v %v %v", 
+							mm.Coords[n].Point3d,
+							mm.Coords[mm.Elements[pe].Indexes[v[0]]].Point3d,
+							mm.Coords[mm.Elements[pe].Indexes[v[1]]].Point3d,
+							mm.Coords[mm.Elements[pe].Indexes[v[2]]].Point3d,
+						)
 						mm.Elements[pe].Indexes[v[1]] = int(n)
 						newElements = append(newElements, nt)
 					}
