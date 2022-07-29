@@ -1287,7 +1287,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 			}
 		}
 	}
-	AddInfo("Intersection: add %d points", len(newPoints))
+	AddInfo("Intersection: find bew %d points", len(newPoints))
 
 	// add nodes into newPoints
 	for _, pn := range nodes {
@@ -1320,6 +1320,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 		)
 		nodes = append(nodes, id)
 	}
+	AddInfo("Intersection: %d nodes", len(nodes))
 
 	for iter := 0; ; iter++ { // TODO avoid infinite
 		var newElements []uint
@@ -1404,12 +1405,12 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 							AddInfo("Intersection: split point on triangle edge invalid")
 							continue
 						}
-						AddInfo("%v :: %v %v %v", 
-							mm.Coords[n].Point3d,
-							mm.Coords[mm.Elements[pe].Indexes[v[0]]].Point3d,
-							mm.Coords[mm.Elements[pe].Indexes[v[1]]].Point3d,
-							mm.Coords[mm.Elements[pe].Indexes[v[2]]].Point3d,
-						)
+						// TODO AddInfo("%v :: %v %v %v",
+						// TODO 	mm.Coords[n].Point3d,
+						// TODO 	mm.Coords[mm.Elements[pe].Indexes[v[0]]].Point3d,
+						// TODO 	mm.Coords[mm.Elements[pe].Indexes[v[1]]].Point3d,
+						// TODO 	mm.Coords[mm.Elements[pe].Indexes[v[2]]].Point3d,
+						// TODO )
 						mm.Elements[pe].Indexes[v[1]] = int(n)
 						newElements = append(newElements, nt)
 					}
