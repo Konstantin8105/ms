@@ -5,6 +5,8 @@ github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibU
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
 github.com/Konstantin8105/gog v0.0.0-20220729121848-0395f5a09315 h1:/pci+JtkBtRJN9ZOVb/tFhTmBDUK/i6ewrAhWFRR20Y=
 github.com/Konstantin8105/gog v0.0.0-20220729121848-0395f5a09315/go.mod h1:lECN7ur7B+Jy6dgggiJWuV6Ierk4QGqDtPEaJw9c0b8=
+github.com/Konstantin8105/gog v0.0.0-20220729161819-c866ff13e7bc h1:0WEopxFRIvJooQI6rh/koVal/vFUjE6jyXuz2Jzyyak=
+github.com/Konstantin8105/gog v0.0.0-20220729161819-c866ff13e7bc/go.mod h1:lECN7ur7B+Jy6dgggiJWuV6Ierk4QGqDtPEaJw9c0b8=
 github.com/Konstantin8105/pow v0.1.0 h1:1FBuKD4UEXKRsP0snDUGqbok5LcwYPUbq5ClVOW++cE=
 github.com/Konstantin8105/pow v0.1.0/go.mod h1:4Xe+OUZ7jwe74BFzgLepZw57cSFWba1/o6gTk53RBdI=
 github.com/Konstantin8105/tf v0.0.0-20220721103236-83ad8d7b923c h1:nnYYtBUgGgTgpBAUwMjjBd34R1M8wYRkiVXAUqQoTyM=

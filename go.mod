@@ -3,7 +3,7 @@ module github.com/Konstantin8105/ms
 go 1.18
 
 require (
-	github.com/Konstantin8105/gog v0.0.0-20220729121848-0395f5a09315
+	github.com/Konstantin8105/gog v0.0.0-20220729161819-c866ff13e7bc
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20220721103236-83ad8d7b923c
 	github.com/Konstantin8105/vl v0.0.0-20220729084604-f718b6e50c33

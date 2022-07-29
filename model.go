@@ -1178,112 +1178,268 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 		elements = ne
 	}
 	// New intersections points
+
+	chNewPoints := make(chan gog.Point3d)
+	stop := make(chan struct{})
 	var newPoints []gog.Point3d
-	var LLTT = [3][2]int{{0, 1}, {1, 2}, {2, 0}}
-	for i0, tr0 := range elements {
-		if mm.Elements[tr0].ElementType != Triangle3 {
-			continue
+	go func() {
+		for p := range chNewPoints {
+			newPoints = append(newPoints, p)
 		}
-		// Triangle3-Triangle3
-		for i1, tr1 := range elements {
-			if mm.Elements[tr1].ElementType != Triangle3 {
-				continue
-			}
-			if i0 <= i1 {
-				continue
-			}
-			if intersect, pi := gog.TriangleTriangle3d(
-				// coordinates triangle 0
-				mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d,
-				mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d,
-				mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d,
-				// coordinates triangle 1
-				mm.Coords[mm.Elements[tr1].Indexes[0]].Point3d,
-				mm.Coords[mm.Elements[tr1].Indexes[1]].Point3d,
-				mm.Coords[mm.Elements[tr1].Indexes[2]].Point3d,
-			); intersect {
-				newPoints = append(newPoints, pi...)
-			}
-			// Triangle edges
-			for _, v0 := range LLTT {
-				for _, v1 := range LLTT {
-					var (
-						a0 = mm.Coords[mm.Elements[tr0].Indexes[v0[0]]].Point3d
-						a1 = mm.Coords[mm.Elements[tr0].Indexes[v0[1]]].Point3d
-						b0 = mm.Coords[mm.Elements[tr1].Indexes[v1[0]]].Point3d
-						b1 = mm.Coords[mm.Elements[tr1].Indexes[v1[1]]].Point3d
-					)
-					rA, rB, intersect := gog.LineLine3d(a0, a1, b0, b1)
-					if !intersect {
+		close(stop)
+	}()
+
+	var wg sync.WaitGroup
+
+	var LLTT = [3][2]int{{0, 1}, {1, 2}, {2, 0}}
+	intersectElements := []func(_, _ int){
+		func(div, ost int) {
+			for i0, tr0 := range elements {
+				if mm.Elements[tr0].ElementType != Triangle3 {
+					continue
+				}
+				if i0%div != ost {
+					continue
+				}
+				// Triangle3-Triangle3
+				for i1, tr1 := range elements {
+					if mm.Elements[tr1].ElementType != Triangle3 {
 						continue
 					}
-					if 0 < rA && rA < 1 && 0 < rB && rB < 1 {
-						newPoints = append(newPoints,
-							gog.PointLineRatio3d(a0, a1, rA))
-						newPoints = append(newPoints,
-							gog.PointLineRatio3d(b0, b1, rB))
+					if i0 <= i1 {
+						continue
+					}
+					// Intersection of boxes
+					outside := false
+					for i := 0; i < 3; i++ {
+						c0 := max(
+							mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d[i],
+							mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d[i],
+							mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d[i],
+						)
+						c1 := min(
+							mm.Coords[mm.Elements[tr1].Indexes[0]].Point3d[i],
+							mm.Coords[mm.Elements[tr1].Indexes[1]].Point3d[i],
+							mm.Coords[mm.Elements[tr1].Indexes[2]].Point3d[i],
+						)
+						if c0 < c1 {
+							outside = true
+							break
+						}
+						c2 := min(
+							mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d[i],
+							mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d[i],
+							mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d[i],
+						)
+						c3 := max(
+							mm.Coords[mm.Elements[tr1].Indexes[0]].Point3d[i],
+							mm.Coords[mm.Elements[tr1].Indexes[1]].Point3d[i],
+							mm.Coords[mm.Elements[tr1].Indexes[2]].Point3d[i],
+						)
+						if c3 < c2 {
+							outside = true
+							break
+						}
+					}
+					if outside {
+						continue
+					}
+
+					if intersect, pi := gog.TriangleTriangle3d(
+						// coordinates triangle 0
+						mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d,
+						mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d,
+						mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d,
+						// coordinates triangle 1
+						mm.Coords[mm.Elements[tr1].Indexes[0]].Point3d,
+						mm.Coords[mm.Elements[tr1].Indexes[1]].Point3d,
+						mm.Coords[mm.Elements[tr1].Indexes[2]].Point3d,
+					); intersect {
+						for _, p := range pi {
+							chNewPoints <- p
+						}
+					}
+					// Triangle edges
+					for _, v0 := range LLTT {
+						for _, v1 := range LLTT {
+							var (
+								a0 = mm.Coords[mm.Elements[tr0].Indexes[v0[0]]].Point3d
+								a1 = mm.Coords[mm.Elements[tr0].Indexes[v0[1]]].Point3d
+								b0 = mm.Coords[mm.Elements[tr1].Indexes[v1[0]]].Point3d
+								b1 = mm.Coords[mm.Elements[tr1].Indexes[v1[1]]].Point3d
+							)
+							rA, rB, intersect := gog.LineLine3d(a0, a1, b0, b1)
+							if !intersect {
+								continue
+							}
+							if 0 < rA && rA < 1 && 0 < rB && rB < 1 {
+								chNewPoints <- gog.PointLineRatio3d(a0, a1, rA)
+								chNewPoints <- gog.PointLineRatio3d(b0, b1, rB)
+							}
+						}
 					}
 				}
 			}
-		}
-		// Line2-Triangle3
-		for _, li1 := range elements {
-			if mm.Elements[li1].ElementType != Line2 {
-				continue
-			}
-			for _, f := range [...]func(
-				gog.Point3d, gog.Point3d, gog.Point3d, gog.Point3d, gog.Point3d,
-			) (bool, []gog.Point3d){
-				gog.LineTriangle3dI1,
-				gog.LineTriangle3dI2,
-			} {
-				l0 := mm.Coords[mm.Elements[li1].Indexes[0]].Point3d
-				l1 := mm.Coords[mm.Elements[li1].Indexes[1]].Point3d
+		},
+		func(div, ost int) {
+			for i0, tr0 := range elements {
+				if mm.Elements[tr0].ElementType != Triangle3 {
+					continue
+				}
+				if i0%div != ost {
+					continue
+				}
+				// Line2-Triangle3
+				for _, li1 := range elements {
+					if mm.Elements[li1].ElementType != Line2 {
+						continue
+					}
+					// Intersection of boxes
+					outside := false
+					for i := 0; i < 3; i++ {
+						c0 := max(
+							mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d[i],
+							mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d[i],
+							mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d[i],
+						)
+						c1 := min(
+							mm.Coords[mm.Elements[li1].Indexes[0]].Point3d[i],
+							mm.Coords[mm.Elements[li1].Indexes[1]].Point3d[i],
+						)
+						if c0 < c1 {
+							outside = true
+							break
+						}
+						c2 := min(
+							mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d[i],
+							mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d[i],
+							mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d[i],
+						)
+						c3 := max(
+							mm.Coords[mm.Elements[li1].Indexes[0]].Point3d[i],
+							mm.Coords[mm.Elements[li1].Indexes[1]].Point3d[i],
+						)
+						if c3 < c2 {
+							outside = true
+							break
+						}
+					}
+					if outside {
+						continue
+					}
+					// Intersection
+					for _, f := range [...]func(
+						gog.Point3d, gog.Point3d, gog.Point3d, gog.Point3d, gog.Point3d,
+					) (bool, []gog.Point3d){
+						gog.LineTriangle3dI1,
+						gog.LineTriangle3dI2,
+					} {
+						l0 := mm.Coords[mm.Elements[li1].Indexes[0]].Point3d
+						l1 := mm.Coords[mm.Elements[li1].Indexes[1]].Point3d
 
-				if intersect, pi := f(
-					// Line2
-					l0, l1,
-					// Triangle3
-					mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d,
-					mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d,
-					mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d,
-				); intersect {
-					newPoints = append(newPoints, pi...)
+						if intersect, pi := f(
+							// Line2
+							l0, l1,
+							// Triangle3
+							mm.Coords[mm.Elements[tr0].Indexes[0]].Point3d,
+							mm.Coords[mm.Elements[tr0].Indexes[1]].Point3d,
+							mm.Coords[mm.Elements[tr0].Indexes[2]].Point3d,
+						); intersect {
+							for _, p := range pi {
+								chNewPoints <- p
+							}
+						}
+					}
 				}
 			}
-		}
-	}
-	// Line2-Line2
-	for i0, li0 := range elements {
-		if mm.Elements[li0].ElementType != Line2 {
-			continue
-		}
-		for i1, li1 := range elements {
-			if mm.Elements[li1].ElementType != Line2 {
-				continue
-			}
-			if i0 <= i1 {
-				continue
-			}
-			var (
-				a0 = mm.Coords[mm.Elements[li0].Indexes[0]].Point3d
-				a1 = mm.Coords[mm.Elements[li0].Indexes[1]].Point3d
-				b0 = mm.Coords[mm.Elements[li1].Indexes[0]].Point3d
-				b1 = mm.Coords[mm.Elements[li1].Indexes[1]].Point3d
-			)
-			if rA, rB, intersect := gog.LineLine3d(
-				a0, a1,
-				b0, b1,
-			); intersect {
-				if 0 < rA && rA < 1 && 0 < rB && rB < 1 {
-					newPoints = append(newPoints,
-						gog.PointLineRatio3d(a0, a1, rA))
-					newPoints = append(newPoints,
-						gog.PointLineRatio3d(b0, b1, rB))
+		},
+		func(div, ost int) {
+			// Line2-Line2
+			for i0, li0 := range elements {
+				if mm.Elements[li0].ElementType != Line2 {
+					continue
+				}
+				if i0%div != ost {
+					continue
+				}
+				for i1, li1 := range elements {
+					if mm.Elements[li1].ElementType != Line2 {
+						continue
+					}
+					if i0 <= i1 {
+						continue
+					}
+					// Intersection of boxes
+					if gog.SamePoints3d(
+						mm.Coords[mm.Elements[li0].Indexes[0]].Point3d,
+						mm.Coords[mm.Elements[li1].Indexes[0]].Point3d,
+					) {
+						continue
+					}
+					if gog.SamePoints3d(
+						mm.Coords[mm.Elements[li0].Indexes[1]].Point3d,
+						mm.Coords[mm.Elements[li1].Indexes[0]].Point3d,
+					) {
+						continue
+					}
+					if gog.SamePoints3d(
+						mm.Coords[mm.Elements[li0].Indexes[0]].Point3d,
+						mm.Coords[mm.Elements[li1].Indexes[1]].Point3d,
+					) {
+						continue
+					}
+					if gog.SamePoints3d(
+						mm.Coords[mm.Elements[li0].Indexes[1]].Point3d,
+						mm.Coords[mm.Elements[li1].Indexes[1]].Point3d,
+					) {
+						continue
+					}
+					// Intersection
+					var (
+						a0 = mm.Coords[mm.Elements[li0].Indexes[0]].Point3d
+						a1 = mm.Coords[mm.Elements[li0].Indexes[1]].Point3d
+						b0 = mm.Coords[mm.Elements[li1].Indexes[0]].Point3d
+						b1 = mm.Coords[mm.Elements[li1].Indexes[1]].Point3d
+					)
+					if rA, rB, intersect := gog.LineLine3d(
+						a0, a1,
+						b0, b1,
+					); intersect {
+						if 0 < rA && rA < 1 && 0 < rB && rB < 1 {
+							chNewPoints <- gog.PointLineRatio3d(a0, a1, rA)
+							chNewPoints <- gog.PointLineRatio3d(b0, b1, rB)
+						}
+					}
 				}
 			}
-		}
+		},
 	}
+
+	wg.Add(len(intersectElements) * 4)
+	for i := range intersectElements {
+		go func(i int) {
+			intersectElements[i](4, 0)
+			wg.Done()
+		}(i)
+		go func(i int) {
+			intersectElements[i](4, 1)
+			wg.Done()
+		}(i)
+		go func(i int) {
+			intersectElements[i](4, 2)
+			wg.Done()
+		}(i)
+		go func(i int) {
+			intersectElements[i](4, 3)
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+	close(chNewPoints)
+	_ = <-stop
+
+	AddInfo("Intersection: find new %d points", len(newPoints))
+
 	// fix zero coordinates
 	for i := range newPoints {
 		for j := range newPoints[i] {
@@ -1292,7 +1448,6 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 			}
 		}
 	}
-	AddInfo("Intersection: find new %d points", len(newPoints))
 
 	// add nodes into newPoints
 	for _, pn := range nodes {
@@ -1407,6 +1562,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 						}
 						ind[1] = int(n)
 						newElements = append(newElements, nt)
+						continue
 					}
 					if gog.PointLine3d(
 						mm.Coords[n].Point3d,
@@ -1422,6 +1578,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 						}
 						ind[2] = int(n)
 						newElements = append(newElements, nt)
+						continue
 					}
 					if gog.PointLine3d(
 						mm.Coords[n].Point3d,
@@ -1437,6 +1594,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 						}
 						ind[2] = int(n)
 						newElements = append(newElements, nt)
+						continue
 					}
 
 				default:
@@ -1647,6 +1805,28 @@ func (mm *Model) MoveCopyN1N2(nodes, elements []uint, from, to uint,
 
 func (mm *Model) StandardView(view SView) {
 	AddInfo("Model not implemented StandardView: %v", view)
+}
+
+func max(xs ...float64) (res float64) {
+	if len(xs) == 0 {
+		panic("not valid: zero lenght")
+	}
+	res = xs[0]
+	for i := range xs {
+		res = math.Max(res, xs[i])
+	}
+	return
+}
+
+func min(xs ...float64) (res float64) {
+	if len(xs) == 0 {
+		panic("not valid: zero lenght")
+	}
+	res = xs[0]
+	for i := range xs {
+		res = math.Min(res, xs[i])
+	}
+	return
 }
 
 //
