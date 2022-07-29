@@ -1415,24 +1415,15 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 		},
 	}
 
-	wg.Add(len(intersectElements) * 4)
+	const size = 10
+	wg.Add(len(intersectElements) * size)
 	for i := range intersectElements {
-		go func(i int) {
-			intersectElements[i](4, 0)
-			wg.Done()
-		}(i)
-		go func(i int) {
-			intersectElements[i](4, 1)
-			wg.Done()
-		}(i)
-		go func(i int) {
-			intersectElements[i](4, 2)
-			wg.Done()
-		}(i)
-		go func(i int) {
-			intersectElements[i](4, 3)
-			wg.Done()
-		}(i)
+		for k := 0; k < size; k++ {
+			go func(i, k int) {
+				intersectElements[i](size, k)
+				wg.Done()
+			}(i, k)
+		}
 	}
 	wg.Wait()
 	close(chNewPoints)
