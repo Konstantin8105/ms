@@ -1796,6 +1796,17 @@ func Run(quit <-chan struct{}) (err error) {
 	// initialize undo chain
 	var mm Undo
 	mm.model = new(Model)
+	// { // only for debug
+	// 	b, err := ioutil.ReadFile("./testdata/IntersectionTriangleTriangle")
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	var actual Model
+	// 	if err := json.Unmarshal(b, &actual); err != nil {
+	// 		panic(err)
+	// 	}
+	// 	mm.model = &actual
+	// }
 	// initialize tui
 	tui, err := NewTui(&mm)
 	if err != nil {

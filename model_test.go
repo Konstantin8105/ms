@@ -411,8 +411,8 @@ func TestModel(t *testing.T) {
 			mm: func() Model {
 				var (
 					mm   Model
-					a0   = mm.AddNode(-1.1, 0, -1)
-					a1   = mm.AddNode(1.10, 0, -1)
+					a0   = mm.AddNode(-2.0, 0, -1)
+					a1   = mm.AddNode(2.00, 0, -1)
 					a2   = mm.AddNode(0.00, 0, 1.)
 					b0   = mm.AddNode(-1.0, -1, 0)
 					b1   = mm.AddNode(1.00, -1, 0)
