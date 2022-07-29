@@ -1306,7 +1306,7 @@ type Measurementable interface {
 // }
 
 type Pluginable interface {
-	DemoSpiral()
+	DemoSpiral(levels uint)
 	// Cylinder
 	// Sphere
 	// Cone
@@ -1342,10 +1342,20 @@ func init() {
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
+			r, rgt := InputUnsigned("Amount levels", "")
+			list.Add(r)
+
 			var b vl.Button
 			b.SetText("Add")
 			b.OnClick = func() {
-				m.DemoSpiral()
+				n, ok := rgt()
+				if !ok {
+					return
+				}
+				if n < 1 {
+					return
+				}
+				m.DemoSpiral(n)
 			}
 			list.Add(&b)
 			return &list

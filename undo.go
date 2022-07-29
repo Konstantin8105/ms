@@ -315,13 +315,13 @@ func (u *Undo) MoveCopyN1N2(nodes, elements []uint, from, to uint,
 		copy, addLines, addTri)
 }
 
-func (u *Undo) DemoSpiral() {
+func (u *Undo) DemoSpiral(n uint) {
 	// sync
 	pre, post := u.sync(false)
 	pre()
 	defer post()
 	// action
-	u.model.DemoSpiral()
+	u.model.DemoSpiral(n)
 }
 
 func (u *Undo) Remove(nodes, elements []uint) {

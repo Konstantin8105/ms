@@ -159,11 +159,11 @@ func TestIntegration(t *testing.T) {
 	testCoverageFunc = func(mm Mesh) {
 		// draw spiral
 		<-time.After(500 * time.Millisecond)
-		mm.DemoSpiral()
+		mm.DemoSpiral(26)
 		AddInfo("add DemoSpiral")
 		// draw clone spiral
 		<-time.After(500 * time.Millisecond)
-		mm.DemoSpiral()
+		mm.DemoSpiral(27)
 		AddInfo("add DemoSpiral again")
 		// select
 		<-time.After(300 * time.Millisecond)
@@ -375,6 +375,17 @@ func showExampleIntersection(f func() Model) {
 	fmt.Fprintf(os.Stdout, "%s\n", string(b))
 
 	fmt.Fprintf(os.Stdout, "%s\n", PrintInfo())
+}
+
+func BenchmarkIntersection(b *testing.B) {
+	var mm Model
+	mm.DemoSpiral(50)
+	for n := 0; n < b.N; n++ {
+		mm.SelectAll(true, true, true)
+		els := mm.SelectElements(false)
+		ns := mm.SelectNodes(false)
+		mm.Intersection(ns, els)
+	}
 }
 
 const (

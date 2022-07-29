@@ -193,7 +193,7 @@ func (mm *Model) AddModel(m Model) {
 	}
 }
 
-func (mm *Model) DemoSpiral() {
+func (mm *Model) DemoSpiral(n uint) {
 	var m Model
 	var (
 		Ri     = 0.5
@@ -201,13 +201,13 @@ func (mm *Model) DemoSpiral() {
 		dR     = 0.0
 		da     = 30.0 // degree
 		dy     = 0.2
-		levels = 25
+		levels = n
 		//    8 = FPS 61.0
 		//   80 = FPS 58.0
 		//  800 = FPS 25.0
 		// 8000 = FPS  5.5 --- 16000 points
 	)
-	for i := 0; i < levels; i++ {
+	for i := 0; i < int(levels); i++ {
 		Ro += dR
 		Ri += dR
 		angle := float64(i) * da * math.Pi / 180.0
