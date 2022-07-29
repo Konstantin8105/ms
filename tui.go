@@ -466,9 +466,9 @@ func init() {
 		Name: "Add line2 by nodes",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
-			b, bgt := Select("Select node1", Single, m.SelectNodes)
+			b, bgt := Select("Select node1", Single, m.GetSelectNodes)
 			list.Add(b)
-			e, egt := Select("Select node2", Single, m.SelectNodes)
+			e, egt := Select("Select node2", Single, m.GetSelectNodes)
 			list.Add(e)
 
 			var bi vl.Button
@@ -491,11 +491,11 @@ func init() {
 		Name: "Add triangle3 by nodes",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
-			n1, n1gt := Select("Select node1", Single, m.SelectNodes)
+			n1, n1gt := Select("Select node1", Single, m.GetSelectNodes)
 			list.Add(n1)
-			n2, n2gt := Select("Select node2", Single, m.SelectNodes)
+			n2, n2gt := Select("Select node2", Single, m.GetSelectNodes)
 			list.Add(n2)
-			n3, n3gt := Select("Select node3", Single, m.SelectNodes)
+			n3, n3gt := Select("Select node3", Single, m.GetSelectNodes)
 			list.Add(n3)
 
 			var bi vl.Button
@@ -543,7 +543,7 @@ func init() {
 		Name: "Split line2 by distance from node",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
-			s, sgt := Select("Select lines", Many, m.SelectLines)
+			s, sgt := Select("Select lines", Many, m.GetSelectLines)
 			list.Add(s)
 			d, dgt := InputFloat("Distance", "meter")
 			list.Add(d)
@@ -568,7 +568,7 @@ func init() {
 		Name: "Split Line2 by ratio",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
-			s, sgt := Select("Select line", Many, m.SelectLines)
+			s, sgt := Select("Select line", Many, m.GetSelectLines)
 			list.Add(s)
 			d, dgt := InputFloat("Ratio", "")
 			list.Add(d)
@@ -593,7 +593,7 @@ func init() {
 		Name: "Split Line2 to equal parts",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
-			ns, nsgt := Select("Select lines", Many, m.SelectLines)
+			ns, nsgt := Select("Select lines", Many, m.GetSelectLines)
 			list.Add(ns)
 
 			r, rgt := InputUnsigned("Amount parts", "")
@@ -615,7 +615,7 @@ func init() {
 		Name: "Split Triangle3 to 3 Triangle3",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
-			ns, nsgt := Select("Select triangles3", Many, m.SelectTriangles)
+			ns, nsgt := Select("Select triangles3", Many, m.GetSelectTriangles)
 			list.Add(ns)
 
 			var bi vl.Button
@@ -750,7 +750,7 @@ func init() {
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
-			elf, elfgt := Select("Select elements", Many, m.SelectElements)
+			elf, elfgt := Select("Select elements", Many, m.GetSelectElements)
 			list.Add(elf)
 
 			var b vl.Button
@@ -861,10 +861,10 @@ type Selectable interface {
 
 	SelectLeftCursor(nodes, lines, tria bool)
 
-	SelectNodes(single bool) (ids []uint)
-	SelectLines(single bool) (ids []uint)
-	SelectTriangles(single bool) (ids []uint)
-	SelectElements(single bool) (ids []uint)
+	GetSelectNodes(single bool) (ids []uint)
+	GetSelectLines(single bool) (ids []uint)
+	GetSelectTriangles(single bool) (ids []uint)
+	GetSelectElements(single bool) (ids []uint)
 
 	InvertSelect(nodes, lines, triangles bool)
 
@@ -998,7 +998,7 @@ func init() {
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
-			lf, lfgt := Select("Lines", Many, m.SelectLines)
+			lf, lfgt := Select("Lines", Many, m.GetSelectLines)
 			list.Add(lf)
 
 			var b vl.Button
@@ -1045,7 +1045,7 @@ func init() {
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
 
-			nf, nfgt := Select("Node", Single, m.SelectNodes)
+			nf, nfgt := Select("Node", Single, m.GetSelectNodes)
 			list.Add(nf)
 
 			list.Add(vl.TextStatic("Lines:"))
@@ -1213,10 +1213,10 @@ func init() {
 			ns, coordgt, elgt := SelectAll(m)
 			list.Add(ns)
 
-			nf, nfgt := Select("From node", Single, m.SelectNodes)
+			nf, nfgt := Select("From node", Single, m.GetSelectNodes)
 			list.Add(nf)
 
-			nt, ntgt := Select("To node", Single, m.SelectNodes)
+			nt, ntgt := Select("To node", Single, m.GetSelectNodes)
 			list.Add(nt)
 
 			list.Add(vl.TextStatic("\nIntermediant elements:"))
@@ -1478,8 +1478,8 @@ func SelectAll(m Mesh) (
 
 	b.SetText("Select")
 	b.OnClick = func() {
-		coordinates := m.SelectNodes(Many)
-		elements := m.SelectElements(Many)
+		coordinates := m.GetSelectNodes(Many)
+		elements := m.GetSelectElements(Many)
 		if len(coordinates) == 0 && len(elements) == 0 {
 			return
 		}

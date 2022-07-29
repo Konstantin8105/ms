@@ -183,20 +183,20 @@ func (u *Undo) AddModel(m Model) {
 	u.model.AddModel(m)
 }
 
-func (u *Undo) SelectNodes(single bool) (ids []uint) {
-	return u.model.SelectNodes(single)
+func (u *Undo) GetSelectNodes(single bool) (ids []uint) {
+	return u.model.GetSelectNodes(single)
 }
 
-func (u *Undo) SelectLines(single bool) (ids []uint) {
-	return u.model.SelectLines(single)
+func (u *Undo) GetSelectLines(single bool) (ids []uint) {
+	return u.model.GetSelectLines(single)
 }
 
-func (u *Undo) SelectTriangles(single bool) (ids []uint) {
-	return u.model.SelectTriangles(single)
+func (u *Undo) GetSelectTriangles(single bool) (ids []uint) {
+	return u.model.GetSelectTriangles(single)
 }
 
-func (u *Undo) SelectElements(single bool) (ids []uint) {
-	return u.model.SelectElements(single)
+func (u *Undo) GetSelectElements(single bool) (ids []uint) {
+	return u.model.GetSelectElements(single)
 }
 
 func (u *Undo) InvertSelect(nodes, lines, triangles bool) {

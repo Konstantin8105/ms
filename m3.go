@@ -1280,7 +1280,7 @@ func (ma *MouseAdd) Action(op *Opengl) {
 	// store node
 	op.mesh.DeselectAll()
 	ma.MouseSelect.Action(op)
-	ids := op.mesh.SelectNodes(Single)
+	ids := op.mesh.GetSelectNodes(Single)
 	if len(ids) != 1 {
 		return
 	}

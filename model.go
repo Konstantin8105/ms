@@ -524,7 +524,7 @@ func (mm *Model) SelectLeftCursor(nodes, lines, tria bool) {
 		nodes, lines, tria)
 }
 
-func (mm *Model) SelectNodes(single bool) (ids []uint) {
+func (mm *Model) GetSelectNodes(single bool) (ids []uint) {
 	for i := range mm.Coords {
 		if !mm.Coords[i].selected {
 			continue
@@ -537,7 +537,7 @@ func (mm *Model) SelectNodes(single bool) (ids []uint) {
 	return
 }
 
-func (mm *Model) SelectLines(single bool) (ids []uint) {
+func (mm *Model) GetSelectLines(single bool) (ids []uint) {
 	for i, el := range mm.Elements {
 		vis, ok := mm.IsVisibleLine(uint(i))
 		if !vis || !ok {
@@ -551,7 +551,7 @@ func (mm *Model) SelectLines(single bool) (ids []uint) {
 	return
 }
 
-func (mm *Model) SelectTriangles(single bool) (ids []uint) {
+func (mm *Model) GetSelectTriangles(single bool) (ids []uint) {
 	for i, el := range mm.Elements {
 		if !el.selected {
 			continue
@@ -564,7 +564,7 @@ func (mm *Model) SelectTriangles(single bool) (ids []uint) {
 	return
 }
 
-func (mm *Model) SelectElements(single bool) (ids []uint) {
+func (mm *Model) GetSelectElements(single bool) (ids []uint) {
 	for i, el := range mm.Elements {
 		if el.ElementType == ElRemove {
 			continue

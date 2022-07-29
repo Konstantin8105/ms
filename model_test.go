@@ -174,7 +174,7 @@ func TestIntegration(t *testing.T) {
 		mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300})
 		<-time.After(3 * time.Second)
 		{
-			els := mm.SelectElements(Many)
+			els := mm.GetSelectElements(Many)
 			AddInfo("SelectElements")
 			if len(els) == 0 {
 				AddInfo("Error: SelectElements is zero")
@@ -203,7 +203,7 @@ func TestIntegration(t *testing.T) {
 		mm.InvertSelect(true, true, true)
 		AddInfo("InvertSelect")
 		<-time.After(300 * time.Millisecond)
-		els := mm.SelectElements(Many)
+		els := mm.GetSelectElements(Many)
 		AddInfo("SelectElements")
 		if len(els) == 0 {
 			close(quit)
@@ -221,7 +221,7 @@ func TestIntegration(t *testing.T) {
 		mm.SelectLinesOrtho(true, true, true)
 		AddInfo("SelectLinesOrtho")
 		<-time.After(300 * time.Millisecond)
-		els = mm.SelectElements(Many)
+		els = mm.GetSelectElements(Many)
 		AddInfo("SelectElements")
 		if len(els) == 0 {
 			close(quit)
@@ -256,7 +256,7 @@ func TestIntegration(t *testing.T) {
 		mm.InvertSelect(true, true, true)
 		AddInfo("InvertSelect")
 		<-time.After(300 * time.Millisecond)
-		tris := mm.SelectTriangles(Many)
+		tris := mm.GetSelectTriangles(Many)
 		AddInfo("SelectTriangles")
 		if len(tris) == 0 {
 			close(quit)
@@ -278,7 +278,7 @@ func TestIntegration(t *testing.T) {
 		mm.InvertSelect(true, false, true)
 		AddInfo("InvertSelect")
 		<-time.After(300 * time.Millisecond)
-		tris = mm.SelectElements(Many)
+		tris = mm.GetSelectElements(Many)
 		AddInfo("SelectElements")
 		if len(tris) == 0 {
 			close(quit)
@@ -361,10 +361,10 @@ func showExampleIntersection(f func() Model) {
 	mm := f()
 
 	mm.SelectAll(false, true, true)
-	els := mm.SelectElements(false)
+	els := mm.GetSelectElements(false)
 	mm.DeselectAll()
 	mm.SelectAll(true, false, false)
-	ns := mm.SelectNodes(false)
+	ns := mm.GetSelectNodes(false)
 	mm.Intersection(ns, els)
 
 	b, err := json.MarshalIndent(mm, "", "  ")
@@ -382,8 +382,8 @@ func BenchmarkIntersection(b *testing.B) {
 	mm.DemoSpiral(50)
 	for n := 0; n < b.N; n++ {
 		mm.SelectAll(true, true, true)
-		els := mm.SelectElements(false)
-		ns := mm.SelectNodes(false)
+		els := mm.GetSelectElements(false)
+		ns := mm.GetSelectNodes(false)
 		mm.Intersection(ns, els)
 	}
 }
@@ -411,8 +411,8 @@ func TestModel(t *testing.T) {
 					_, _ = mm.AddTriangle3ByNodeNumber(L0, L2, R2)
 				)
 				mm.SelectAll(true, true, true)
-				els := mm.SelectElements(false)
-				ns := mm.SelectNodes(false)
+				els := mm.GetSelectElements(false)
+				ns := mm.GetSelectNodes(false)
 				mm.Intersection(ns, els)
 				return mm
 			},
@@ -432,8 +432,8 @@ func TestModel(t *testing.T) {
 					_, _ = mm.AddTriangle3ByNodeNumber(b0, b1, b2)
 				)
 				mm.SelectAll(true, true, true)
-				els := mm.SelectElements(false)
-				ns := mm.SelectNodes(false)
+				els := mm.GetSelectElements(false)
+				ns := mm.GetSelectNodes(false)
 				mm.Intersection(ns, els)
 				return mm
 			},
