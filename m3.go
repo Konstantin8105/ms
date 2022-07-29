@@ -139,7 +139,7 @@ func (op *Opengl) Run() {
 				if r := recover(); r != nil {
 					// safety ignore panic
 					<-time.After(100 * time.Millisecond)
-					AddInfo("Safety ignore panic: %s", r)
+					AddInfo("Opengl: safety ignore panic: %s", r)
 				}
 			}()
 
@@ -561,6 +561,30 @@ func (op *Opengl) model3d(s viewState, parent string) {
 						cos[p].Point3d[0],
 						cos[p].Point3d[1],
 						cos[p].Point3d[2])
+				}
+				gl.End()
+			}
+			if s == normal {
+				gl.Color4ub(123, 0, 123, 200)
+				gl.LineWidth(1)
+				gl.Begin(gl.LINES)
+				for p := range el.Indexes {
+					from, to := p, p+1
+					if to == len(el.Indexes) {
+						from = el.Indexes[from]
+						to = el.Indexes[0]
+					} else {
+						from = el.Indexes[from]
+						to = el.Indexes[to]
+					}
+					gl.Vertex3d(
+						cos[from].Point3d[0],
+						cos[from].Point3d[1],
+						cos[from].Point3d[2])
+					gl.Vertex3d(
+						cos[to].Point3d[0],
+						cos[to].Point3d[1],
+						cos[to].Point3d[2])
 				}
 				gl.End()
 			}

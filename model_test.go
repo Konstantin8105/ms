@@ -4,14 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
 )
 
 func Example() {
+	ResetInfo()
+	defer ResetInfo()
 	var mm Model
 	{
 		var c Coordinate
@@ -348,5 +352,131 @@ func TestAddInfo(t *testing.T) {
 	if err := Run(quit); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
+	}
+}
+
+func showExampleIntersection(f func() Model) {
+	ResetInfo()
+	defer ResetInfo()
+	mm := f()
+
+	mm.SelectAll(false, true, true)
+	els := mm.SelectElements(false)
+	mm.DeselectAll()
+	mm.SelectAll(true, false, false)
+	ns := mm.SelectNodes(false)
+	mm.Intersection(ns, els)
+
+	b, err := json.MarshalIndent(mm, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Fprintf(os.Stdout, "%s\n", string(b))
+
+	fmt.Fprintf(os.Stdout, "%s\n", PrintInfo())
+}
+
+const (
+	testdata = "testdata"
+)
+
+func TestModel(t *testing.T) {
+	tcs := []struct {
+		name string
+		mm   func() Model
+	}{
+		{
+			name: "IntersectionPointTriangle",
+			mm: func() Model {
+				var (
+					mm   Model
+					L0   = mm.AddNode(0, 0, 0)
+					L2   = mm.AddNode(0, 2, 0)
+					R2   = mm.AddNode(2, 2, 0)
+					_    = mm.AddNode(0, 1, 0)
+					_    = mm.AddNode(1, 2, 0)
+					_    = mm.AddNode(1, 1, 0)
+					_, _ = mm.AddTriangle3ByNodeNumber(L0, L2, R2)
+				)
+				mm.SelectAll(true, true, true)
+				els := mm.SelectElements(false)
+				ns := mm.SelectNodes(false)
+				mm.Intersection(ns, els)
+				return mm
+			},
+		},
+		{
+			name: "IntersectionTriangleTriangle",
+			mm: func() Model {
+				var (
+					mm   Model
+					a0   = mm.AddNode(-1.1, 0, -1)
+					a1   = mm.AddNode(1.10, 0, -1)
+					a2   = mm.AddNode(0.00, 0, 1.)
+					b0   = mm.AddNode(-1.0, -1, 0)
+					b1   = mm.AddNode(1.00, -1, 0)
+					b2   = mm.AddNode(0.00, 1., 0)
+					_, _ = mm.AddTriangle3ByNodeNumber(a0, a1, a2)
+					_, _ = mm.AddTriangle3ByNodeNumber(b0, b1, b2)
+				)
+				mm.SelectAll(true, true, true)
+				els := mm.SelectElements(false)
+				ns := mm.SelectNodes(false)
+				mm.Intersection(ns, els)
+				return mm
+			},
+		},
+	}
+
+	compare := func(name string, actual []byte) {
+		var (
+			filename = filepath.Join(testdata, name)
+		)
+		// for update test screens run in console:
+		// UPDATE=true go test
+		if os.Getenv("UPDATE") == "true" {
+			if err := ioutil.WriteFile(filename, actual, 0644); err != nil {
+				t.Fatalf("Cannot write snapshot to file: %v", err)
+			}
+		}
+		// get expect result
+		expect, err := ioutil.ReadFile(filename)
+		if err != nil {
+			t.Fatalf("Cannot read snapshot file: %v", err)
+		}
+		// compare
+		if !bytes.Equal(actual, expect) {
+			f2 := filename + ".new"
+			if err := ioutil.WriteFile(f2, actual, 0644); err != nil {
+				t.Fatalf("Cannot write snapshot to file new: %v", err)
+			}
+			size := 1000
+			if size < len(actual) {
+				actual = actual[:size]
+			}
+			if size < len(expect) {
+				expect = expect[:size]
+			}
+			t.Errorf("Snapshots is not same:\nActual:\n%s\nExpect:\n%s\nmeld %s %s",
+				actual,
+				expect,
+				filename, f2,
+			)
+		}
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			mm := tc.mm()
+
+			b, err := json.MarshalIndent(mm, "", "  ")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			compare(tc.name, b)
+		})
 	}
 }
