@@ -1136,6 +1136,15 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
+// diffCoordinate is different of coordinate
+//	0 - dX
+//	1 - dY
+//	2 - dZ
+//	3 - angle around X
+//	4 - angle around Y
+//	5 - angle around Z
+type diffCoordinate [6]float64
+
 type MoveCopyble interface {
 	MoveCopyDistance(nodes, elements []uint, coordinate [3]float64,
 		intermediantParts uint,
@@ -1175,28 +1184,77 @@ func init() {
 			ns, coordgt, elgt := SelectAll(m)
 			list.Add(ns)
 
-			w, gt := Input3Float(
-				"Coordinate different:",
-				[3]string{"dX", "dY", "dZ"},
-				[3]string{"meter", "meter", "meter"},
-			)
-			list.Add(w)
+			list.Add(new(vl.Separator))
+			list.Add(vl.TextStatic("Choose parameters:"))
 
-			list.Add(vl.TextStatic("\nIntermediant elements:"))
+			var param vl.RadioGroup
+			{
+				var ch vl.CollapsingHeader
+				var list vl.List
 
-			var chLines vl.CheckBox
-			chLines.SetText("Add intermediant lines")
-			list.Add(&chLines)
+				ch.SetText("From node to node:")
 
-			var chTriangles vl.CheckBox
-			chTriangles.SetText("Add intermediant triangles")
-			list.Add(&chTriangles)
+				nf, _ := Select("From node", Single, m.GetSelectNodes)
+				list.Add(nf)
 
-			r, rgt := InputUnsigned("Amount intermediant parts", "")
-			list.Add(r)
+				nt, _ := Select("To node", Single, m.GetSelectNodes)
+				list.Add(nt)
+
+				ch.Root= &list
+
+
+				param.Add(&ch)
+			}
+
+			var gt [3]func() (float64, bool)
+			{
+				var ch vl.CollapsingHeader
+				var list vl.List
+
+				ch.SetText("Coordinate different:")
+
+				var w vl.Widget
+				w, gt = Input3Float(
+					"",
+					[3]string{"dX", "dY", "dZ"},
+					[3]string{"meter", "meter", "meter"},
+				)
+				list.Add(w)
+
+				ch.Root = &list
+
+				param.Add(&ch)
+			}
+			list.Add(&param)
+
+			list.Add(new(vl.Separator))
+			list.Add(vl.TextStatic("Choose move or copy:"))
 
 			var rg vl.RadioGroup
-			rg.SetText([]string{"Move", "Copy"})
+			rg.Add(vl.TextStatic("Move"))
+
+			var rgt func() (_ uint, ok bool)
+			var chLines vl.CheckBox
+			var chTriangles vl.CheckBox
+			{
+				var list vl.List
+				list.Add(vl.TextStatic("Copy"))
+
+				list.Add(vl.TextStatic("Intermediant elements:"))
+
+				chLines.SetText("Add intermediant lines")
+				list.Add(&chLines)
+
+				chTriangles.SetText("Add intermediant triangles")
+				list.Add(&chTriangles)
+
+				var r vl.Widget
+				r, rgt = InputUnsigned("Amount intermediant parts", "")
+				list.Add(r)
+
+				rg.Add(&list)
+			}
+			// rg.SetText([]string{"Move", "Copy"})
 			list.Add(&rg)
 
 			var b vl.Button
