@@ -1510,6 +1510,60 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 					newElements = append(newElements, nl)
 
 				case Triangle3:
+					// split point on Triangle3 edge
+					ind := mm.Elements[pe].Indexes
+					if gog.PointLine3d(
+						mm.Coords[n].Point3d,
+						mm.Coords[ind[0]].Point3d,
+						mm.Coords[ind[1]].Point3d,
+					) {
+						nt, ok := mm.AddTriangle3ByNodeNumber(
+							n, uint(ind[1]), uint(ind[2]),
+						)
+						// AddInfo("Intersection 0-1: %v", ok)
+						if !ok {
+							AddInfo("Intersection: split point on triangle edge 01 invalid")
+							continue
+						}
+						ind[1] = int(n)
+						newElements = append(newElements, nt)
+						continue
+					}
+					if gog.PointLine3d(
+						mm.Coords[n].Point3d,
+						mm.Coords[ind[1]].Point3d,
+						mm.Coords[ind[2]].Point3d,
+					) {
+						nt, ok := mm.AddTriangle3ByNodeNumber(
+							n, uint(ind[0]), uint(ind[2]),
+						)
+						// AddInfo("Intersection 1-2: %v", ok)
+						if !ok {
+							AddInfo("Intersection: split point on triangle edge 12 invalid")
+							continue
+						}
+						ind[2] = int(n)
+						newElements = append(newElements, nt)
+						continue
+					}
+					if gog.PointLine3d(
+						mm.Coords[n].Point3d,
+						mm.Coords[ind[2]].Point3d,
+						mm.Coords[ind[0]].Point3d,
+					) {
+						nt, ok := mm.AddTriangle3ByNodeNumber(
+							n, uint(ind[1]), uint(ind[2]),
+						)
+						// AddInfo("Intersection 2-0: %v", ok)
+						if !ok {
+							AddInfo("Intersection: split point on triangle edge 20 invalid")
+							continue
+						}
+						ind[2] = int(n)
+						newElements = append(newElements, nt)
+						continue
+					}
+
 					// Coordinate-Triangle3
 					if gog.PointTriangle3d(
 						mm.Coords[n].Point3d,
@@ -1528,63 +1582,13 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 							uint(mm.Elements[pe].Indexes[1]),
 							uint(mm.Elements[pe].Indexes[2]),
 						)
+						// AddInfo("Intersection Coordinate-Triangle: %v %v", ok0, ok1)
 						if !(ok0 && ok1) {
 							AddInfo("Intersection: not valid triangles")
 							continue
 						}
 						mm.Elements[pe].Indexes[1] = int(n)
 						newElements = append(newElements, t0, t1)
-						continue
-					}
-
-					// split point on Triangle3 edge
-					ind := mm.Elements[pe].Indexes
-					if gog.PointLine3d(
-						mm.Coords[n].Point3d,
-						mm.Coords[ind[0]].Point3d,
-						mm.Coords[ind[1]].Point3d,
-					) {
-						nt, ok := mm.AddTriangle3ByNodeNumber(
-							n, uint(ind[1]), uint(ind[2]),
-						)
-						if !ok {
-							AddInfo("Intersection: split point on triangle edge 01 invalid")
-							continue
-						}
-						ind[1] = int(n)
-						newElements = append(newElements, nt)
-						continue
-					}
-					if gog.PointLine3d(
-						mm.Coords[n].Point3d,
-						mm.Coords[ind[1]].Point3d,
-						mm.Coords[ind[2]].Point3d,
-					) {
-						nt, ok := mm.AddTriangle3ByNodeNumber(
-							uint(ind[0]), n, uint(ind[2]),
-						)
-						if !ok {
-							AddInfo("Intersection: split point on triangle edge 12 invalid")
-							continue
-						}
-						ind[2] = int(n)
-						newElements = append(newElements, nt)
-						continue
-					}
-					if gog.PointLine3d(
-						mm.Coords[n].Point3d,
-						mm.Coords[ind[2]].Point3d,
-						mm.Coords[ind[0]].Point3d,
-					) {
-						nt, ok := mm.AddTriangle3ByNodeNumber(
-							uint(ind[1]), uint(ind[2]), n,
-						)
-						if !ok {
-							AddInfo("Intersection: split point on triangle edge 20 invalid")
-							continue
-						}
-						ind[2] = int(n)
-						newElements = append(newElements, nt)
 						continue
 					}
 
@@ -1968,7 +1972,7 @@ func Run(quit <-chan struct{}) (err error) {
 	var mm Undo
 	mm.model = new(Model)
 	// { // only for debug
-	// 	b, err := ioutil.ReadFile("./testdata/IntersectionTriangleTriangle")
+	// 	b, err := ioutil.ReadFile("./testdata/IntersectionSpiral")
 	// 	if err != nil {
 	// 		panic(err)
 	// 	}

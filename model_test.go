@@ -355,28 +355,6 @@ func TestAddInfo(t *testing.T) {
 	}
 }
 
-func showExampleIntersection(f func() Model) {
-	ResetInfo()
-	defer ResetInfo()
-	mm := f()
-
-	mm.SelectAll(false, true, true)
-	els := mm.GetSelectElements(false)
-	mm.DeselectAll()
-	mm.SelectAll(true, false, false)
-	ns := mm.GetSelectNodes(false)
-	mm.Intersection(ns, els)
-
-	b, err := json.MarshalIndent(mm, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Fprintf(os.Stdout, "%s\n", string(b))
-
-	fmt.Fprintf(os.Stdout, "%s\n", PrintInfo())
-}
-
 func BenchmarkIntersection(b *testing.B) {
 	var mm Model
 	mm.DemoSpiral(50)
@@ -438,6 +416,22 @@ func TestModel(t *testing.T) {
 				return mm
 			},
 		},
+		{
+			name: "IntersectionSpiral",
+			mm: func() Model {
+				var mm Model
+				mm.DemoSpiral(3)
+				mm.SelectAll(true, true, true)
+				els := mm.GetSelectElements(false)
+				mm.DeselectAll()
+				mm.SplitLinesByEqualParts(els, 4)
+				mm.SelectAll(true, true, true)
+				els = mm.GetSelectElements(false)
+				ns := mm.GetSelectNodes(false)
+				mm.Intersection(ns, els)
+				return mm
+			},
+		},
 	}
 
 	compare := func(name string, actual []byte) {
@@ -479,6 +473,8 @@ func TestModel(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
+			ResetInfo()
+			defer ResetInfo()
 			mm := tc.mm()
 
 			b, err := json.MarshalIndent(mm, "", "  ")
@@ -487,6 +483,7 @@ func TestModel(t *testing.T) {
 				return
 			}
 
+			t.Logf("%s\n", PrintInfo())
 			compare(tc.name, b)
 		})
 	}

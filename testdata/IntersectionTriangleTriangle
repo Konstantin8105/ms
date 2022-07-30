@@ -53,33 +53,33 @@
     {
       "ElementType": 2,
       "Indexes": [
-        3,
         6,
+        3,
         7
       ]
     },
     {
       "ElementType": 2,
       "Indexes": [
-        6,
         8,
+        6,
         1
       ]
     },
     {
       "ElementType": 2,
       "Indexes": [
-        6,
         9,
+        6,
         8
       ]
     },
     {
       "ElementType": 2,
       "Indexes": [
+        7,
         6,
-        5,
-        7
+        5
       ]
     }
   ],

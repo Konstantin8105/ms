@@ -442,9 +442,9 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		panic(fmt.Errorf("not valid selection : %v", s))
 	}
 	// Elements
+	for i, el := range els {
 	gl.PointSize(2) // default points size
 	gl.LineWidth(3) // default lines width
-	for i, el := range els {
 		if op.mesh.IsIgnore(uint(i)) {
 			continue
 		}
