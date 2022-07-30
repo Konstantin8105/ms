@@ -815,6 +815,23 @@ func init() {
 
 			return &list
 		}}, {
+		Name: "Show only selected",
+		Part: func(m Mesh) (w vl.Widget) {
+			var list vl.List
+
+			var b vl.Button
+			b.SetText("Show only selected")
+			b.OnClick = func() {
+				m.InvertSelect(true, true, true)
+				ns := m.GetSelectNodes(Many)
+				es := m.GetSelectElements(Many)
+				m.DeselectAll()
+				m.Hide(ns, es)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
 		Name: "Unhide all",
 		Part: func(m Mesh) (w vl.Widget) {
 			var list vl.List
@@ -827,7 +844,6 @@ func init() {
 			list.Add(&b)
 
 			return &list
-
 		}},
 	}
 	for i := range ops {
