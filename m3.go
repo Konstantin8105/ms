@@ -132,6 +132,12 @@ func (op *Opengl) Run() {
 		gl.Enable(gl.BLEND) // Transparency
 		gl.Enable(gl.LINE_SMOOTH)
 
+		// switch to wireframe mode
+		// gl.PolygonMode( gl.FRONT_AND_BACK, gl.LINE );
+		// switch off wireframe
+		// gl.PolygonMode( gl.FRONT_AND_BACK, gl.FILL );
+		// gl.PolygonMode( gl.FRONT_AND_BACK, gl.POINT );
+
 		// Avoid panics if Model is changed.
 		// Main problem of synchronization.
 		func() {
@@ -332,6 +338,9 @@ func (op *Opengl) cameraView() {
 	}
 }
 
+
+// https://blog.jayway.com/2009/12/04/opengl-es-tutorial-for-android-part-ii-building-a-polygon/
+// http://web.archive.org/web/20120527185124/http://cgg-journal.com/2008-2/06/index.html
 func (op *Opengl) model3d(s viewState, parent string) {
 	if op.mesh == nil {
 		return
