@@ -124,22 +124,6 @@ func (op *Opengl) Run() {
 		glfw.Terminate()
 	}()
 	for !op.window.ShouldClose() {
-		glfw.PollEvents()
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-		gl.ClearColor(1, 1, 1, 1)
-
-		gl.Enable(gl.DEPTH_TEST)
-		gl.Enable(gl.BLEND) // Transparency
-		gl.Enable(gl.LINE_SMOOTH)
-
-		// switch to wireframe mode
-		// gl.PolygonMode( gl.FRONT_AND_BACK, gl.LINE );
-		// switch off wireframe
-		// gl.PolygonMode( gl.FRONT_AND_BACK, gl.FILL );
-		// gl.PolygonMode( gl.FRONT_AND_BACK, gl.POINT );
-
-		// Avoid panics if Model is changed.
-		// Main problem of synchronization.
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
@@ -148,6 +132,23 @@ func (op *Opengl) Run() {
 					AddInfo("Opengl: safety ignore panic: %s", r)
 				}
 			}()
+
+			glfw.PollEvents()
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+			gl.ClearColor(1, 1, 1, 1)
+
+			gl.Enable(gl.DEPTH_TEST)
+			gl.Enable(gl.BLEND) // Transparency
+			gl.Enable(gl.LINE_SMOOTH)
+
+			// switch to wireframe mode
+			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.LINE );
+			// switch off wireframe
+			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.FILL );
+			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.POINT );
+
+			// Avoid panics if Model is changed.
+			// Main problem of synchronization.
 
 			op.cameraView()
 			op.model3d(op.state, "run")
@@ -177,15 +178,15 @@ func (op *Opengl) Run() {
 					op.mouses[i].Preview()
 				}
 			}
+
+			// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
+			// TODO : REMOVE: ui(window)
+
+			op.window.MakeContextCurrent()
+			op.window.SwapBuffers()
+
+			op.fps.EndFrame()
 		}()
-
-		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
-		// TODO : REMOVE: ui(window)
-
-		op.window.MakeContextCurrent()
-		op.window.SwapBuffers()
-
-		op.fps.EndFrame()
 	}
 }
 
@@ -338,23 +339,12 @@ func (op *Opengl) cameraView() {
 	}
 }
 
-
 // https://blog.jayway.com/2009/12/04/opengl-es-tutorial-for-android-part-ii-building-a-polygon/
 // http://web.archive.org/web/20120527185124/http://cgg-journal.com/2008-2/06/index.html
 func (op *Opengl) model3d(s viewState, parent string) {
 	if op.mesh == nil {
 		return
 	}
-	// 	defer func() {
-	// 		if r := recover(); r != nil {
-	// 			Debug = append(Debug, fmt.Sprintf("%v\n%v", r, string(debug.Stack())))
-	// 		}
-	// 	}()
-
-	//	AddInfo("model3d at begin : %v %s", s, parent)
-	//	defer func() {
-	//		AddInfo("model3d at end : %v %s", s, parent)
-	//	}()
 
 	gl.PushMatrix()
 	defer func() {
@@ -452,8 +442,8 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	}
 	// Elements
 	for i, el := range els {
-	gl.PointSize(2) // default points size
-	gl.LineWidth(3) // default lines width
+		gl.PointSize(2) // default points size
+		gl.LineWidth(3) // default lines width
 		if op.mesh.IsIgnore(uint(i)) {
 			continue
 		}

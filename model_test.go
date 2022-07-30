@@ -371,6 +371,13 @@ const (
 )
 
 func TestModel(t *testing.T) {
+	{
+		old := IntersectionThreads
+		IntersectionThreads = 1
+		defer func() {
+			IntersectionThreads = old
+		}()
+	}
 	tcs := []struct {
 		name string
 		mm   func() Model

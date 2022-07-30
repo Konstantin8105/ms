@@ -1130,6 +1130,8 @@ func (mm *Model) MergeNodes(minDistance float64) {
 	// TODO loads merge
 }
 
+var IntersectionThreads = 6
+
 func (mm *Model) Intersection(nodes, elements []uint) {
 	mm.DeselectAll()
 	// remove not valid coordinates and elements
@@ -1415,7 +1417,10 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 		},
 	}
 
-	const size = 10
+	var size = IntersectionThreads
+	if size < 1 {
+		size = 1
+	}
 	wg.Add(len(intersectElements) * size)
 	for i := range intersectElements {
 		for k := 0; k < size; k++ {
