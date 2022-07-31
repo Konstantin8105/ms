@@ -2,6 +2,7 @@ package ms
 
 import (
 	"fmt"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -101,7 +102,7 @@ func init() {
 				defer func() {
 					if r := recover(); r != nil {
 						// safety ignore panic
-						AddInfo("Safety ignore panic: %s", r)
+						AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 					}
 				}()
 				id := m.PartPresent()
@@ -137,7 +138,7 @@ func init() {
 				defer func() {
 					if r := recover(); r != nil {
 						// safety ignore panic
-						AddInfo("Safety ignore panic: %s", r)
+						AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 					}
 				}()
 				ns := m.PartsName()
@@ -206,7 +207,7 @@ func init() {
 				defer func() {
 					if r := recover(); r != nil {
 						// safety ignore panic
-						AddInfo("Safety ignore panic: %s", r)
+						AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 					}
 				}()
 				id := m.PartPresent()
@@ -1564,17 +1565,12 @@ func init() {
 			var b vl.Button
 			b.SetText("Repeat")
 			b.OnClick = func() {
-				_ = coordgt
-				_ = elgt
-				_ = lines
-				_ = tris
-				// TODO
-				// pos := param.GetPos()
-				// bp, p, ok := paths[pos].getC()
-				// if !ok {
-				// 	return
-				// }
-				// m.Move(coordgt(), elgt(), bp, p)
+				pos := param.GetPos()
+				bp, ps, ok := paths[pos].getC()
+				if !ok {
+					return
+				}
+				m.Copy(coordgt(), elgt(), bp, ps, lines.Checked, tris.Checked)
 			}
 			list.Add(&b)
 			return &list
@@ -1914,7 +1910,7 @@ func (tui *Tui) Run(quit <-chan struct{}) error {
 	defer func() {
 		if r := recover(); r != nil {
 			// safety ignore panic
-			AddInfo("Safety ignore panic: %s", r)
+			AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 		}
 	}()
 	defer func() {
@@ -2003,7 +1999,7 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 			defer func() {
 				if r := recover(); r != nil {
 					// safety ignore panic
-					AddInfo("Safety ignore panic: %s", r)
+					AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 				}
 			}()
 			txt.SetText(strings.Join(Info, "\n"))

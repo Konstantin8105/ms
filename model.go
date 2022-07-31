@@ -165,27 +165,20 @@ func (mm *Model) AddModel(m Model) {
 		)
 		newID[i] = int(id)
 	}
-	for k := range m.Elements {
-		el := m.Elements[k]
-		for p := range el.Indexes {
-			el.Indexes[p] = newID[el.Indexes[p]]
-		}
-	}
-	for i := range m.Elements {
-		el := m.Elements[i]
+	for _, el := range m.Elements {
 		switch el.ElementType {
 		case ElRemove:
 			// do nothing
 		case Line2:
 			mm.AddLineByNodeNumber(
-				uint(el.Indexes[0]),
-				uint(el.Indexes[1]),
+				uint(newID[el.Indexes[0]]),
+				uint(newID[el.Indexes[1]]),
 			)
 		case Triangle3:
 			mm.AddTriangle3ByNodeNumber(
-				uint(el.Indexes[0]),
-				uint(el.Indexes[1]),
-				uint(el.Indexes[2]),
+				uint(newID[el.Indexes[0]]),
+				uint(newID[el.Indexes[1]]),
+				uint(newID[el.Indexes[2]]),
 			)
 		default:
 			panic(fmt.Errorf("not implemented %v", el))
@@ -1784,138 +1777,42 @@ func (mm *Model) Copy(nodes, elements []uint,
 			// do nothing
 			continue
 		}
-		var newE Element
-		newE.ElementType = el.ElementType
-		newE.Indexes = make([]int, len(el.Indexes))
-		for i := range newE.Indexes {
+		ids := make([]uint, len(el.Indexes))
+		for i := range ids {
 			id := cModel.AddNode(
 				mm.Coords[el.Indexes[i]].Point3d[0],
 				mm.Coords[el.Indexes[i]].Point3d[1],
 				mm.Coords[el.Indexes[i]].Point3d[2],
 			)
-			newE.Indexes[i] = int(id)
+			ids[i] = id
 		}
-	}
-
-	// TODO
-}
-
-/*
-func (mm *Model) MoveCopyDistance(nodes, elements []uint, coords [3]float64,
-	intermediantParts uint,
-	copy, addLines, addTri bool) {
-	defer mm.DeselectAll() // deselect
-	if distance := gog.Distance3d(
-		gog.Point3d{coords[0], coords[1], coords[2]},
-		gog.Point3d{0, 0, 0},
-	); distance < distanceError {
-		return
-	}
-	// nodes appending
-	for _, ie := range elements {
-		for _, ind := range mm.Elements[ie].Indexes {
-			nodes = append(nodes, uint(ind))
-		}
-	}
-	nodes = uniqUint(nodes)
-	elements = uniqUint(elements)
-	if len(nodes) == 0 && len(elements) == 0 {
-		return
-	}
-	if !copy { // move
-		for _, id := range nodes {
-			mm.Coords[id].Point3d[0] += coords[0]
-			mm.Coords[id].Point3d[1] += coords[1]
-			mm.Coords[id].Point3d[2] += coords[2]
-		}
-		return
-	}
-	// add nodes
-	newNodes := make([][]uint, len(mm.Coords))
-	for _, p := range nodes {
-		for i := uint(0); i <= intermediantParts; i++ {
-			factor := float64(i+1) / float64(intermediantParts+1)
-			if i == intermediantParts {
-				factor = 1.0
-			}
-			id := mm.AddNode(
-				mm.Coords[p].Point3d[0]+coords[0]*factor,
-				mm.Coords[p].Point3d[1]+coords[1]*factor,
-				mm.Coords[p].Point3d[2]+coords[2]*factor,
-			)
-			newNodes[p] = append(newNodes[p], id)
-		}
-	}
-	// add intermediant lines
-	if addLines {
-		for i := range newNodes {
-			for j, p := range newNodes[i] {
-				if j == 0 {
-					mm.AddLineByNodeNumber(uint(i), p)
-					continue
-				}
-				mm.AddLineByNodeNumber(newNodes[i][j-1], p)
-			}
-		}
-	}
-	// add elements
-	for _, p := range elements {
-		el := mm.Elements[p]
 		switch el.ElementType {
-		case ElRemove:
-			// do nothing
 		case Line2:
-			for i := uint(0); i <= intermediantParts; i++ {
-				mm.AddLineByNodeNumber(
-					newNodes[el.Indexes[0]][i],
-					newNodes[el.Indexes[1]][i],
-				)
-			}
+			cModel.AddLineByNodeNumber(ids[0], ids[1])
 		case Triangle3:
-			for i := uint(0); i <= intermediantParts; i++ {
-				mm.AddTriangle3ByNodeNumber(
-					newNodes[el.Indexes[0]][i],
-					newNodes[el.Indexes[1]][i],
-					newNodes[el.Indexes[2]][i],
-				)
-			}
+			cModel.AddTriangle3ByNodeNumber(ids[0], ids[1], ids[2])
 		default:
-			// TODO:
-			panic(fmt.Errorf("add implementation: %v", el))
+			panic(fmt.Errorf("Undefined: %v", el.ElementType))
 		}
 	}
-	// add intermediant triangles for Line2
-	if addTri {
-		for _, p := range elements {
-			el := mm.Elements[p]
-			if el.ElementType != Line2 {
-				continue
-			}
-			//  before0-------------->after0	//
-			//	|                     |     	//
-			//	|                     |         //
-			//	before1-------------->after1	//
-			for i := uint(0); i <= intermediantParts; i++ {
-				var before [2]uint
-				if i == 0 {
-					before[0] = uint(el.Indexes[0])
-					before[1] = uint(el.Indexes[1])
-				} else {
-					before[0] = newNodes[el.Indexes[0]][i-1]
-					before[1] = newNodes[el.Indexes[1]][i-1]
-				}
-				after := [2]uint{
-					newNodes[el.Indexes[0]][i],
-					newNodes[el.Indexes[1]][i],
-				}
-				mm.AddTriangle3ByNodeNumber(before[0], before[1], after[1])
-				mm.AddTriangle3ByNodeNumber(before[0], after[1], after[0])
-			}
+	// main model
+	for _, path := range paths {
+		for i := range cModel.Coords {
+			from := [3]float64(cModel.Coords[i].Point3d)
+			move(&from, basePoint, path)
+			cModel.Coords[i].Point3d = from
 		}
+		copyBase := [3]float64{
+			basePoint[0],
+			basePoint[1],
+			basePoint[2],
+		}
+		move(&copyBase, basePoint, path)
+
+		mm.AddModel(cModel)
 	}
-	// TODO check triangles on one line
+	// TODO addLines. addTri
 }
-*/
 
 func (mm *Model) StandardView(view SView) {
 	AddInfo("Model not implemented StandardView: %v", view)
