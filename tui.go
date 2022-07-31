@@ -1469,6 +1469,10 @@ func init() {
 						if !ok {
 							return
 						}
+						parts, pok := partsgt()
+						if !pok {
+							return
+						}
 						basePoint = c
 						for i := 0; i <= int(parts); i++ {
 							dcs = append(dcs, diffCoordinate([6]float64{
