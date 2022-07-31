@@ -1706,41 +1706,43 @@ func (mm *Model) Move(nodes, elements []uint,
 		{
 			// around X
 			point := gog.Point{
-				X: m.Coords[id].Point3d[1], // Y
-				Y: m.Coords[id].Point3d[2], // Z
+				X: mm.Coords[id].Point3d[1], // Y
+				Y: mm.Coords[id].Point3d[2], // Z
 			}
 			point = gog.Rotate(
 				basePoint[1], basePoint[2],
-				path[3], point)
-			m.Coords[id].Point3d[1] = point.X
-			m.Coords[id].Point3d[2] = point.Y
+				path[3] * radToDegree, point)
+			mm.Coords[id].Point3d[1] = point.X
+			mm.Coords[id].Point3d[2] = point.Y
 		}
 		{
 			// around Y
 			point := gog.Point{
-				X: m.Coords[id].Point3d[0], // X
-				Y: m.Coords[id].Point3d[2], // Z
+				X: mm.Coords[id].Point3d[0], // X
+				Y: mm.Coords[id].Point3d[2], // Z
 			}
 			point = gog.Rotate(
 				basePoint[0], basePoint[2],
-				path[4], point)
-			m.Coords[id].Point3d[0] = point.X
-			m.Coords[id].Point3d[2] = point.Y
+				path[4] * radToDegree, point)
+			mm.Coords[id].Point3d[0] = point.X
+			mm.Coords[id].Point3d[2] = point.Y
 		}
 		{
 			// around Z
 			point := gog.Point{
-				X: m.Coords[id].Point3d[0], // X
-				Y: m.Coords[id].Point3d[1], // Y
+				X: mm.Coords[id].Point3d[0], // X
+				Y: mm.Coords[id].Point3d[1], // Y
 			}
 			point = gog.Rotate(
 				basePoint[0], basePoint[1],
-				path[5], point)
-			m.Coords[id].Point3d[0] = point.X
-			m.Coords[id].Point3d[1] = point.Y
+				path[5] * radToDegree, point)
+			mm.Coords[id].Point3d[0] = point.X
+			mm.Coords[id].Point3d[1] = point.Y
 		}
 	}
 }
+
+const radToDegree = math.Pi / 180.0
 
 func (mm *Model) Copy(nodes, elements []uint,
 	basePoint [3]float64,
