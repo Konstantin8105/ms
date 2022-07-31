@@ -306,6 +306,18 @@ func (u *Undo) Move(nodes, elements []uint,
 	u.model.Move(nodes, elements, basePoint, path)
 }
 
+func (u *Undo) Copy(nodes, elements []uint,
+	basePoint [3]float64,
+	paths []diffCoordinate,
+	addLines, addTri bool) {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.Copy(nodes, elements, basePoint, paths, addLines, addTri)
+}
+
 func (u *Undo) MoveCopyDistance(nodes, elements []uint, coordinate [3]float64,
 	intermediantParts uint,
 	copy, addLines, addTri bool) {

@@ -1688,6 +1688,13 @@ func (mm *Model) Move(nodes, elements []uint,
 	// TODO
 }
 
+func (mm *Model) Copy(nodes, elements []uint,
+	basePoint [3]float64,
+	paths []diffCoordinate,
+	addLines, addTri bool) {
+	// TODO
+}
+
 func (mm *Model) MoveCopyDistance(nodes, elements []uint, coords [3]float64,
 	intermediantParts uint,
 	copy, addLines, addTri bool) {
