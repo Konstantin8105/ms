@@ -1685,6 +1685,7 @@ func (mm *Model) UnhideAll() {
 func (mm *Model) Move(nodes, elements []uint,
 	basePoint [3]float64,
 	path diffCoordinate) {
+	defer mm.DeselectAll() // deselect
 	// nodes appending
 	for _, ie := range elements {
 		for _, ind := range mm.Elements[ie].Indexes {
@@ -1692,53 +1693,58 @@ func (mm *Model) Move(nodes, elements []uint,
 		}
 	}
 	nodes = uniqUint(nodes)
-	elements = uniqUint(elements)
-	if len(nodes) == 0 && len(elements) == 0 {
+	if len(nodes) == 0 {
 		return
 	}
 	// moving
 	for _, id := range nodes {
-		// moving
-		mm.Coords[id].Point3d[0] += path[0]
-		mm.Coords[id].Point3d[1] += path[1]
-		mm.Coords[id].Point3d[2] += path[2]
-		// rotate
-		{
-			// around X
-			point := gog.Point{
-				X: mm.Coords[id].Point3d[1], // Y
-				Y: mm.Coords[id].Point3d[2], // Z
-			}
-			point = gog.Rotate(
-				basePoint[1], basePoint[2],
-				path[3] * radToDegree, point)
-			mm.Coords[id].Point3d[1] = point.X
-			mm.Coords[id].Point3d[2] = point.Y
+		from := [3]float64(mm.Coords[id].Point3d)
+		move(&from, basePoint, path)
+		mm.Coords[id].Point3d = from
+	}
+}
+
+func move(coord *[3]float64, basePoint [3]float64, dc diffCoordinate) {
+	// moving
+	coord[0] += dc[0]
+	coord[1] += dc[1]
+	coord[2] += dc[2]
+	// rotate
+	{
+		// around X
+		point := gog.Point{
+			X: coord[1], // Y
+			Y: coord[2], // Z
 		}
-		{
-			// around Y
-			point := gog.Point{
-				X: mm.Coords[id].Point3d[0], // X
-				Y: mm.Coords[id].Point3d[2], // Z
-			}
-			point = gog.Rotate(
-				basePoint[0], basePoint[2],
-				path[4] * radToDegree, point)
-			mm.Coords[id].Point3d[0] = point.X
-			mm.Coords[id].Point3d[2] = point.Y
+		point = gog.Rotate(
+			basePoint[1], basePoint[2],
+			dc[3]*radToDegree, point)
+		coord[1] = point.X
+		coord[2] = point.Y
+	}
+	{
+		// around Y
+		point := gog.Point{
+			X: coord[0], // X
+			Y: coord[2], // Z
 		}
-		{
-			// around Z
-			point := gog.Point{
-				X: mm.Coords[id].Point3d[0], // X
-				Y: mm.Coords[id].Point3d[1], // Y
-			}
-			point = gog.Rotate(
-				basePoint[0], basePoint[1],
-				path[5] * radToDegree, point)
-			mm.Coords[id].Point3d[0] = point.X
-			mm.Coords[id].Point3d[1] = point.Y
+		point = gog.Rotate(
+			basePoint[0], basePoint[2],
+			dc[4]*radToDegree, point)
+		coord[0] = point.X
+		coord[2] = point.Y
+	}
+	{
+		// around Z
+		point := gog.Point{
+			X: coord[0], // X
+			Y: coord[1], // Y
 		}
+		point = gog.Rotate(
+			basePoint[0], basePoint[1],
+			dc[5]*radToDegree, point)
+		coord[0] = point.X
+		coord[1] = point.Y
 	}
 }
 
@@ -1748,6 +1754,49 @@ func (mm *Model) Copy(nodes, elements []uint,
 	basePoint [3]float64,
 	paths []diffCoordinate,
 	addLines, addTri bool) {
+	defer mm.DeselectAll() // deselect
+	// nodes appending
+	for _, ie := range elements {
+		for _, ind := range mm.Elements[ie].Indexes {
+			nodes = append(nodes, uint(ind))
+		}
+	}
+	nodes = uniqUint(nodes)
+	elements = uniqUint(elements)
+	if len(nodes) == 0 || len(elements) == 0 {
+		return
+	}
+	if len(paths) == 0 {
+		return
+	}
+	// create copy of model
+	var cModel Model
+	for _, n := range nodes { // add all points
+		cModel.AddNode(
+			mm.Coords[n].Point3d[0],
+			mm.Coords[n].Point3d[1],
+			mm.Coords[n].Point3d[2],
+		)
+	}
+	for _, pe := range elements { // add all elements
+		el := mm.Elements[pe]
+		if el.ElementType == ElRemove {
+			// do nothing
+			continue
+		}
+		var newE Element
+		newE.ElementType = el.ElementType
+		newE.Indexes = make([]int, len(el.Indexes))
+		for i := range newE.Indexes {
+			id := cModel.AddNode(
+				mm.Coords[el.Indexes[i]].Point3d[0],
+				mm.Coords[el.Indexes[i]].Point3d[1],
+				mm.Coords[el.Indexes[i]].Point3d[2],
+			)
+			newE.Indexes[i] = int(id)
+		}
+	}
+
 	// TODO
 }
 
