@@ -1685,7 +1685,61 @@ func (mm *Model) UnhideAll() {
 func (mm *Model) Move(nodes, elements []uint,
 	basePoint [3]float64,
 	path diffCoordinate) {
-	// TODO
+	// nodes appending
+	for _, ie := range elements {
+		for _, ind := range mm.Elements[ie].Indexes {
+			nodes = append(nodes, uint(ind))
+		}
+	}
+	nodes = uniqUint(nodes)
+	elements = uniqUint(elements)
+	if len(nodes) == 0 && len(elements) == 0 {
+		return
+	}
+	// moving
+	for _, id := range nodes {
+		// moving
+		mm.Coords[id].Point3d[0] += path[0]
+		mm.Coords[id].Point3d[1] += path[1]
+		mm.Coords[id].Point3d[2] += path[2]
+		// rotate
+		{
+			// around X
+			point := gog.Point{
+				X: m.Coords[id].Point3d[1], // Y
+				Y: m.Coords[id].Point3d[2], // Z
+			}
+			point = gog.Rotate(
+				basePoint[1], basePoint[2],
+				path[3], point)
+			m.Coords[id].Point3d[1] = point.X
+			m.Coords[id].Point3d[2] = point.Y
+		}
+		{
+			// around Y
+			point := gog.Point{
+				X: m.Coords[id].Point3d[0], // X
+				Y: m.Coords[id].Point3d[2], // Z
+			}
+			point = gog.Rotate(
+				basePoint[0], basePoint[2],
+				path[4], point)
+			m.Coords[id].Point3d[0] = point.X
+			m.Coords[id].Point3d[2] = point.Y
+		}
+		{
+			// around Z
+			point := gog.Point{
+				X: m.Coords[id].Point3d[0], // X
+				Y: m.Coords[id].Point3d[1], // Y
+			}
+			point = gog.Rotate(
+				basePoint[0], basePoint[1],
+				path[5], point)
+			m.Coords[id].Point3d[0] = point.X
+			m.Coords[id].Point3d[1] = point.Y
+		}
+	}
 }
 
 func (mm *Model) Copy(nodes, elements []uint,
@@ -1695,6 +1749,7 @@ func (mm *Model) Copy(nodes, elements []uint,
 	// TODO
 }
 
+/*
 func (mm *Model) MoveCopyDistance(nodes, elements []uint, coords [3]float64,
 	intermediantParts uint,
 	copy, addLines, addTri bool) {
@@ -1809,22 +1864,7 @@ func (mm *Model) MoveCopyDistance(nodes, elements []uint, coords [3]float64,
 	}
 	// TODO check triangles on one line
 }
-
-func (mm *Model) MoveCopyN1N2(nodes, elements []uint, from, to uint,
-	intermediantParts uint,
-	copy, addLines, addTri bool) {
-	if len(mm.Coords) <= int(from) {
-		return
-	}
-	if len(mm.Coords) <= int(to) {
-		return
-	}
-	mm.MoveCopyDistance(nodes, elements, [3]float64{
-		mm.Coords[to].Point3d[0] - mm.Coords[from].Point3d[0],
-		mm.Coords[to].Point3d[1] - mm.Coords[from].Point3d[1],
-		mm.Coords[to].Point3d[2] - mm.Coords[from].Point3d[2],
-	}, intermediantParts, copy, addLines, addTri)
-}
+*/
 
 func (mm *Model) StandardView(view SView) {
 	AddInfo("Model not implemented StandardView: %v", view)

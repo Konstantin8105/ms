@@ -1157,22 +1157,7 @@ type MoveCopyble interface {
 	// 		plane [3][3]float64,
 	// 		copy bool)
 
-	MoveCopyDistance(nodes, elements []uint, coordinate [3]float64,
-		intermediantParts uint,
-		copy, addLines, addTri bool)
-	MoveCopyN1N2(nodes, elements []uint, from, to uint,
-		intermediantParts uint,
-		copy, addLines, addTri bool)
 	//	MoveCopyOnPlane(nodes, elements []uint, coordinate [3]float64,
-	//		plane Plane,
-	//		intermediantParts uint,
-	//		copy, addLines, addTri bool)
-	//	Rotate(nodes, elements []uint, center [3]float64,
-	//		angle float64,
-	//		intermediantParts uint,
-	//		distance float64, direction Direction, // Twist/Spiral
-	//		copy, addLines, addTri bool)
-	//	Mirror(nodes, elements []uint, center [3]float64,
 	//		plane Plane,
 	//		intermediantParts uint,
 	//		copy, addLines, addTri bool)
@@ -1294,11 +1279,11 @@ func init() {
 						if !aok {
 							return
 						}
-						ok = true
 						c, ok := m.GetCoordByID(n[0])
 						if !ok {
 							return
 						}
+						ok = true
 						basePoint = c
 						dc[3] = as[0]
 						dc[4] = as[1]

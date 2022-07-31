@@ -318,32 +318,6 @@ func (u *Undo) Copy(nodes, elements []uint,
 	u.model.Copy(nodes, elements, basePoint, paths, addLines, addTri)
 }
 
-func (u *Undo) MoveCopyDistance(nodes, elements []uint, coordinate [3]float64,
-	intermediantParts uint,
-	copy, addLines, addTri bool) {
-	// sync
-	pre, post := u.sync(false)
-	pre()
-	defer post()
-	// action
-	u.model.MoveCopyDistance(nodes, elements, coordinate,
-		intermediantParts,
-		copy, addLines, addTri)
-}
-
-func (u *Undo) MoveCopyN1N2(nodes, elements []uint, from, to uint,
-	intermediantParts uint,
-	copy, addLines, addTri bool) {
-	// sync
-	pre, post := u.sync(false)
-	pre()
-	defer post()
-	// action
-	u.model.MoveCopyN1N2(nodes, elements, from, to,
-		intermediantParts,
-		copy, addLines, addTri)
-}
-
 func (u *Undo) DemoSpiral(n uint) {
 	// sync
 	pre, post := u.sync(false)
