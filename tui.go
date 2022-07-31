@@ -1483,7 +1483,21 @@ func init() {
 				paths = append(paths, path{
 					w: &ch,
 					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
-						// TODO
+						ind := dir.GetPos()
+						var vs []float64
+						for i := range dgt {
+							v, vok := dgt[i]()
+							if !vok {
+								return
+							}
+							vs = append(vs, v)
+						}
+						ok = true
+						for i := range vs {
+							var dc diffCoordinate
+							dc[ind] = vs[i]
+							dcs = append(dcs, dc)
+						}
 						return
 					},
 				})
