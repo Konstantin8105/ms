@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Konstantin8105/gog"
 	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
 	"github.com/gdamore/tcell/v2"
@@ -427,6 +428,8 @@ type AddRemovable interface {
 
 	// Remove Nodes without elements
 
+	GetCoordByID(id uint) (c gog.Point3d, ok bool)
+
 	GetCoords() []Coordinate
 	GetElements() []Element
 }
@@ -448,13 +451,9 @@ func init() {
 			var b vl.Button
 			b.SetText("Add")
 			b.OnClick = func() {
-				var vs [3]float64
-				var ok bool
-				for i := range vs {
-					vs[i], ok = gt[i]()
-					if !ok {
-						return
-					}
+				vs, ok := gt()
+				if !ok {
+					return
 				}
 				m.AddNode(vs[0], vs[1], vs[2])
 			}
@@ -1146,6 +1145,10 @@ func init() {
 type diffCoordinate [6]float64
 
 type MoveCopyble interface {
+	Move(nodes, elements []uint,
+		basePoint [3]float64,
+		path diffCoordinate)
+
 	MoveCopyDistance(nodes, elements []uint, coordinate [3]float64,
 		intermediantParts uint,
 		copy, addLines, addTri bool)
@@ -1176,7 +1179,161 @@ type MoveCopyble interface {
 }
 
 func init() {
+
+	// 	Copy := func(nodes, elements []uint,
+	// 		basePoint [3]float64,
+	// 		paths []diffCoordinate,
+	// 		copy, addLines, addTri bool) {
+	// 	}
+	//
+	// 	Mirror := func(nodes, elements []uint,
+	// 		plane [3][3]float64,
+	// 		copy bool) {
+	// 	}
+
 	ops := []Operation{{
+		Name: "Move/Rotate",
+		Part: func(m Mesh, actions chan func()) (w vl.Widget) {
+			var list vl.List
+
+			ns, coordgt, elgt := SelectAll(m)
+			list.Add(ns)
+
+			type path struct {
+				w    vl.Widget
+				getC func() (basePoint [3]float64, dc diffCoordinate, ok bool)
+			}
+			var paths []path
+			{ // from node to node
+				var ch vl.CollapsingHeader
+				ch.SetText("Move from node to node with equal parts:")
+
+				var list vl.List
+				nf, nfgt := Select("From node", Single, m.GetSelectNodes)
+				list.Add(nf)
+				nt, ntgt := Select("To node", Single, m.GetSelectNodes)
+				list.Add(nt)
+
+				ch.Root = &list
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (basePoint [3]float64, dc diffCoordinate, ok bool) {
+						f := nfgt()
+						if len(f) != 1 {
+							return
+						}
+						t := ntgt()
+						if len(t) != 1 {
+							return
+						}
+						fc, ok := m.GetCoordByID(f[0])
+						if !ok {
+							return
+						}
+						tc, ok := m.GetCoordByID(t[0])
+						if !ok {
+							return
+						}
+						ok = true
+						basePoint = fc
+						dc[0] = tc[0] - fc[0]
+						dc[1] = tc[1] - fc[1]
+						dc[2] = tc[2] - fc[2]
+						return
+					},
+				})
+			}
+			{ // different coordinates
+				var ch vl.CollapsingHeader
+				ch.SetText("Move by coordinate different [dX,dY,dZ]:")
+
+				w, gt := Input3Float(
+					"",
+					[3]string{"dX", "dY", "dZ"},
+					[3]string{"meter", "meter", "meter"},
+				)
+
+				ch.Root = w
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (basePoint [3]float64, dc diffCoordinate, ok bool) {
+						vs, vok := gt()
+						if !vok {
+							return
+						}
+						ok = true
+						dc[0] = vs[0]
+						dc[1] = vs[1]
+						dc[2] = vs[2]
+						return
+					},
+				})
+			}
+			{ // rotate
+				var ch vl.CollapsingHeader
+				ch.SetText("Rotate around node:")
+
+				var list vl.List
+
+				nt, ntgt := Select("Center of rotation", Single, m.GetSelectNodes)
+				list.Add(nt)
+
+				list.Add(new(vl.Separator))
+				w, gt := Input3Float(
+					"Angle of rotation",
+					[3]string{"around axe X", "around axe Y", "around axe Z"},
+					[3]string{"degree", "degree", "degree"},
+				)
+				list.Add(w)
+
+				ch.Root = &list
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (basePoint [3]float64, dc diffCoordinate, ok bool) {
+						n := ntgt()
+						if len(n) != 1 {
+							return
+						}
+						as, aok := gt()
+						if !aok {
+							return
+						}
+						ok = true
+						c, ok := m.GetCoordByID(n[0])
+						if !ok {
+							return
+						}
+						basePoint = c
+						dc[3] = as[0]
+						dc[4] = as[1]
+						dc[5] = as[2]
+						return
+					},
+				})
+			}
+			// radio group for paths
+			list.Add(new(vl.Separator))
+			list.Add(vl.TextStatic("Choose parameters:"))
+			var param vl.RadioGroup
+			for i := range paths {
+				param.Add(paths[i].w)
+			}
+			list.Add(&param)
+			// operation
+			list.Add(new(vl.Separator))
+			var b vl.Button
+			b.SetText("Move/Rotate")
+			b.OnClick = func() {
+				pos := param.GetPos()
+				bp, p, ok := paths[pos].getC()
+				if !ok {
+					return
+				}
+				m.Move(coordgt(), elgt(), bp, p)
+			}
+			list.Add(&b)
+			return &list
+		}}, {
 		Name: "Move/Copy by distance [dX,dY,dZ]",
 		Part: func(m Mesh, actions chan func()) (w vl.Widget) {
 			var list vl.List
@@ -1187,43 +1344,111 @@ func init() {
 			list.Add(new(vl.Separator))
 			list.Add(vl.TextStatic("Choose parameters:"))
 
-			var param vl.RadioGroup
-			{
+			type path struct {
+				w    vl.Widget
+				getC func() (dc diffCoordinate, ok bool)
+			}
+			var paths []path
+			{ // from node to node with equal parts
 				var ch vl.CollapsingHeader
+				ch.SetText("From node to node with equal parts:")
+
 				var list vl.List
-
-				ch.SetText("From node to node:")
-
-				nf, _ := Select("From node", Single, m.GetSelectNodes)
+				nf, nfgt := Select("From node", Single, m.GetSelectNodes)
 				list.Add(nf)
-
-				nt, _ := Select("To node", Single, m.GetSelectNodes)
+				nt, ntgt := Select("To node", Single, m.GetSelectNodes)
 				list.Add(nt)
 
-				ch.Root= &list
-
-
-				param.Add(&ch)
+				ch.Root = &list
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (dc diffCoordinate, ok bool) {
+						f := nfgt()
+						if len(f) != 1 {
+							return
+						}
+						t := ntgt()
+						if len(t) != 1 {
+							return
+						}
+						fc, ok := m.GetCoordByID(f[0])
+						if !ok {
+							return
+						}
+						tc, ok := m.GetCoordByID(t[0])
+						if !ok {
+							return
+						}
+						ok = true
+						dc[0] = tc[0] - fc[0]
+						dc[1] = tc[1] - fc[1]
+						dc[2] = tc[2] - fc[2]
+						return
+					},
+				})
 			}
-
-			var gt [3]func() (float64, bool)
-			{
+			{ // different coordinates with equal parts
 				var ch vl.CollapsingHeader
-				var list vl.List
+				ch.SetText("Coordinate different with equal parts:")
 
-				ch.SetText("Coordinate different:")
-
-				var w vl.Widget
-				w, gt = Input3Float(
+				w, gt := Input3Float(
 					"",
 					[3]string{"dX", "dY", "dZ"},
 					[3]string{"meter", "meter", "meter"},
 				)
+
+				ch.Root = w
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (dc diffCoordinate, ok bool) {
+						vs, vok := gt()
+						if !vok {
+							return
+						}
+						ok = true
+						dc[0] = vs[0]
+						dc[1] = vs[1]
+						dc[2] = vs[2]
+						return
+					},
+				})
+			}
+			{ // rotate with equal parts
+				var ch vl.CollapsingHeader
+				ch.SetText("Rotate with equal parts:")
+
+				var list vl.List
+
+				nt, ntgt := Select("Center of rotation", Single, m.GetSelectNodes)
+				list.Add(nt)
+
+				w, gt := Input3Float(
+					"",
+					[3]string{"around axe X", "around axe Y", "around axe Z"},
+					[3]string{"degree", "degree", "degree"},
+				)
 				list.Add(w)
 
 				ch.Root = &list
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (dc diffCoordinate, ok bool) {
+						as, aok := gt()
+						if !aok {
+							return
+						}
+						ok = true
+						_ = as
+						_ = ntgt
+						// TODO
+						return
+					},
+				})
+			}
 
-				param.Add(&ch)
+			var param vl.RadioGroup
+			for i := range paths {
+				param.Add(paths[i].w)
 			}
 			list.Add(&param)
 
@@ -1231,14 +1456,23 @@ func init() {
 			list.Add(vl.TextStatic("Choose move or copy:"))
 
 			var rg vl.RadioGroup
-			rg.Add(vl.TextStatic("Move"))
+			{
+				var ch vl.CollapsingHeader
+				ch.SetText("Move")
+
+				ch.Root = vl.TextStatic("Move operation")
+
+				rg.Add(&ch)
+			}
 
 			var rgt func() (_ uint, ok bool)
 			var chLines vl.CheckBox
 			var chTriangles vl.CheckBox
 			{
+				var ch vl.CollapsingHeader
+				ch.SetText("Copy")
+
 				var list vl.List
-				list.Add(vl.TextStatic("Copy"))
 
 				list.Add(vl.TextStatic("Intermediant elements:"))
 
@@ -1252,7 +1486,9 @@ func init() {
 				r, rgt = InputUnsigned("Amount intermediant parts", "")
 				list.Add(r)
 
-				rg.Add(&list)
+				ch.Root = &list
+
+				rg.Add(&ch)
 			}
 			// rg.SetText([]string{"Move", "Copy"})
 			list.Add(&rg)
@@ -1260,20 +1496,23 @@ func init() {
 			var b vl.Button
 			b.SetText("Move/Copy")
 			b.OnClick = func() {
-				var vs [3]float64
-				var ok bool
-				for i := range vs {
-					vs[i], ok = gt[i]()
-					if !ok {
-						return
-					}
-				}
-				parts, ok := rgt()
-				if !ok {
-					return
-				}
-				m.MoveCopyDistance(coordgt(), elgt(), vs, parts, rg.GetPos() == 1,
-					chLines.Checked, chTriangles.Checked)
+				_ = coordgt
+				_ = elgt
+				_ = rgt
+				// 				var vs [3]float64
+				// 				var ok bool
+				// 				for i := range vs {
+				// 					vs[i], ok = gt[i]()
+				// 					if !ok {
+				// 						return
+				// 					}
+				// 				}
+				// 				parts, ok := rgt()
+				// 				if !ok {
+				// 					return
+				// 				}
+				// 				m.MoveCopyDistance(coordgt(), elgt(), vs, parts, rg.GetPos() == 1,
+				// 					chLines.Checked, chTriangles.Checked)
 			}
 			list.Add(&b)
 			return &list
@@ -1513,16 +1752,27 @@ func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() (_ float64,
 
 func Input3Float(header string, prefix, postfix [3]string) (
 	w vl.Widget,
-	gettext [3]func() (float64, bool),
+	gettext func() (_ [3]float64, ok bool),
 ) {
 	var list vl.List
 	list.Add(vl.TextStatic(header))
+	var gt [3]func() (_ float64, ok bool)
 	for i := 0; i < 3; i++ {
-		w, gt := InputFloat(prefix[i], postfix[i])
+		w, wgt := InputFloat(prefix[i], postfix[i])
 		list.Add(w)
-		gettext[i] = gt
+		gt[i] = wgt
 	}
-	return &list, gettext
+	return &list, func() (vs [3]float64, ok bool) {
+		for i := 0; i < 3; i++ {
+			v, vok := gt[i]()
+			if !vok {
+				return
+			}
+			vs[i] = v
+		}
+		ok = true
+		return
+	}
 }
 
 func SelectAll(m Mesh) (

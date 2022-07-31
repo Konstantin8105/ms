@@ -352,6 +352,16 @@ func (mm *Model) AddLeftCursor(lc LeftCursor) {
 	AddInfo("Model not implemented AddLeftCursor: %v", lc)
 }
 
+func (mm *Model) GetCoordByID(id uint) (c gog.Point3d, ok bool) {
+	if len(mm.Coords) <= int(id) {
+		return
+	}
+	if mm.Coords[id].Removed {
+		return
+	}
+	return mm.Coords[id].Point3d, true
+}
+
 func (mm *Model) GetCoords() []Coordinate {
 	return mm.Coords
 }
@@ -1670,6 +1680,12 @@ func (mm *Model) UnhideAll() {
 	for i := range mm.Elements {
 		mm.Elements[i].hided = false
 	}
+}
+
+func (mm *Model) Move(nodes, elements []uint,
+	basePoint [3]float64,
+	path diffCoordinate) {
+	// TODO
 }
 
 func (mm *Model) MoveCopyDistance(nodes, elements []uint, coords [3]float64,

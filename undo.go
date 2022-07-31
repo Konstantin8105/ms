@@ -4,6 +4,8 @@ import (
 	"container/list"
 	"encoding/json"
 	"sync"
+
+	"github.com/Konstantin8105/gog"
 )
 
 type Undo struct {
@@ -126,6 +128,10 @@ func (u *Undo) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 	defer post()
 	// action
 	return u.model.AddTriangle3ByNodeNumber(n1, n2, n3)
+}
+
+func (u *Undo) GetCoordByID(id uint) (_ gog.Point3d, ok bool) {
+	return u.model.GetCoordByID(id)
 }
 
 func (u *Undo) GetCoords() []Coordinate {
@@ -287,6 +293,17 @@ func (u *Undo) Intersection(nodes, elements []uint) {
 	defer post()
 	// action
 	u.model.Intersection(nodes, elements)
+}
+
+func (u *Undo) Move(nodes, elements []uint,
+	basePoint [3]float64,
+	path diffCoordinate) {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.Move(nodes, elements, basePoint, path)
 }
 
 func (u *Undo) MoveCopyDistance(nodes, elements []uint, coordinate [3]float64,
