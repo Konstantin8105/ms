@@ -1392,6 +1392,46 @@ func init() {
 					},
 				})
 			}
+			{ // different coordinates
+
+				var ch vl.CollapsingHeader
+				ch.SetText("Move by coordinate different [dX,dY,dZ] with equal parts:")
+
+				var list vl.List
+				w, gt := Input3Float(
+					"",
+					[3]string{"dX", "dY", "dZ"},
+					[3]string{"meter", "meter", "meter"},
+				)
+				list.Add(w)
+
+				parts, partsgt := InputUnsigned("Amount equal parts", "items")
+				list.Add(parts)
+
+				ch.Root = &list
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
+						vs, vok := gt()
+						if !vok {
+							return
+						}
+						parts, pok := partsgt()
+						if !pok {
+							return
+						}
+						ok = true
+						for i := 0; i <= int(parts); i++ {
+							dcs = append(dcs, diffCoordinate([6]float64{
+								vs[0] / float64(parts+1),
+								vs[1] / float64(parts+1),
+								vs[2] / float64(parts+1),
+							}))
+						}
+						return
+					},
+				})
+			}
 
 			// TODO
 
