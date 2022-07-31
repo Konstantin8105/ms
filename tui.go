@@ -1202,7 +1202,7 @@ func init() {
 			var paths []path
 			{ // from node to node
 				var ch vl.CollapsingHeader
-				ch.SetText("Move from node to node with equal parts:")
+				ch.SetText("Move from node to node:")
 
 				var list vl.List
 				nf, nfgt := Select("From node", Single, m.GetSelectNodes)
@@ -1342,6 +1342,56 @@ func init() {
 				getC func() (basePoint [3]float64, dcs []diffCoordinate, ok bool)
 			}
 			var paths []path
+			{ // from node to node with equal parts
+				var ch vl.CollapsingHeader
+				ch.SetText("Move from node to node with equal parts:")
+
+				var list vl.List
+				nf, nfgt := Select("From node", Single, m.GetSelectNodes)
+				list.Add(nf)
+				nt, ntgt := Select("To node", Single, m.GetSelectNodes)
+				list.Add(nt)
+
+				parts, partsgt := InputUnsigned("Amount equal parts", "items")
+				list.Add(parts)
+
+				ch.Root = &list
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
+						f := nfgt()
+						if len(f) != 1 {
+							return
+						}
+						t := ntgt()
+						if len(t) != 1 {
+							return
+						}
+						fc, ok := m.GetCoordByID(f[0])
+						if !ok {
+							return
+						}
+						tc, ok := m.GetCoordByID(t[0])
+						if !ok {
+							return
+						}
+						parts, pok := partsgt()
+						if !pok {
+							return
+						}
+						ok = true
+						basePoint = fc
+						for i := 0; i <= int(parts); i++ {
+							dcs = append(dcs, diffCoordinate([6]float64{
+								(tc[0] - fc[0]) / float64(parts+1),
+								(tc[1] - fc[1]) / float64(parts+1),
+								(tc[2] - fc[2]) / float64(parts+1),
+							}))
+						}
+						return
+					},
+				})
+			}
 
 			// TODO
 
@@ -1353,6 +1403,13 @@ func init() {
 				param.Add(paths[i].w)
 			}
 			list.Add(&param)
+			// intermediant
+			var lines vl.CheckBox
+			lines.SetText("Add intermediant lines")
+			list.Add(&lines)
+			var tris vl.CheckBox
+			tris.SetText("Add intermediant triangles")
+			list.Add(&tris)
 			// operation
 			list.Add(new(vl.Separator))
 			var b vl.Button
@@ -1360,6 +1417,8 @@ func init() {
 			b.OnClick = func() {
 				_ = coordgt
 				_ = elgt
+				_ = lines
+				_ = tris
 				// TODO
 				// pos := param.GetPos()
 				// bp, p, ok := paths[pos].getC()
