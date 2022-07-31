@@ -1344,7 +1344,7 @@ func init() {
 			var paths []path
 			{ // from node to node with equal parts
 				var ch vl.CollapsingHeader
-				ch.SetText("Move from node to node with equal parts:")
+				ch.SetText("Copy from node to node with equal parts:")
 
 				var list vl.List
 				nf, nfgt := Select("From node", Single, m.GetSelectNodes)
@@ -1395,7 +1395,7 @@ func init() {
 			{ // different coordinates
 
 				var ch vl.CollapsingHeader
-				ch.SetText("Move by coordinate different [dX,dY,dZ] with equal parts:")
+				ch.SetText("Copy by coordinate different [dX,dY,dZ] with equal parts:")
 
 				var list vl.List
 				w, gt := Input3Float(
@@ -1426,6 +1426,56 @@ func init() {
 								vs[0] / float64(parts+1),
 								vs[1] / float64(parts+1),
 								vs[2] / float64(parts+1),
+							}))
+						}
+						return
+					},
+				})
+			}
+			{ // rotate
+				var ch vl.CollapsingHeader
+				ch.SetText("Circular repeat around node:")
+
+				var list vl.List
+
+				nt, ntgt := Select("Center of rotation", Single, m.GetSelectNodes)
+				list.Add(nt)
+
+				list.Add(new(vl.Separator))
+				w, gt := Input3Float(
+					"Angle of rotation",
+					[3]string{"around axe X", "around axe Y", "around axe Z"},
+					[3]string{"degree", "degree", "degree"},
+				)
+				list.Add(w)
+
+				parts, partsgt := InputUnsigned("Amount equal parts", "items")
+				list.Add(parts)
+
+				ch.Root = &list
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
+						n := ntgt()
+						if len(n) != 1 {
+							return
+						}
+						as, aok := gt()
+						if !aok {
+							return
+						}
+						ok = true
+						c, ok := m.GetCoordByID(n[0])
+						if !ok {
+							return
+						}
+						basePoint = c
+						for i := 0; i <= int(parts); i++ {
+							dcs = append(dcs, diffCoordinate([6]float64{
+								0, 0, 0,
+								as[0] / float64(parts+1),
+								as[1] / float64(parts+1),
+								as[2] / float64(parts+1),
 							}))
 						}
 						return
