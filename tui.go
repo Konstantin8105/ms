@@ -1432,6 +1432,62 @@ func init() {
 					},
 				})
 			}
+			{ // Translational repeat
+				var ch vl.CollapsingHeader
+				ch.SetText("Triangulation repeat:")
+
+				var list vl.List
+
+				list.Add(vl.TextStatic("Direction of repeat:"))
+				var dir vl.RadioGroup
+				dir.SetText([]string{
+					DirX.String(),
+					DirY.String(),
+					DirZ.String(),
+				})
+				list.Add(&dir)
+
+				list.Add(new(vl.Separator))
+				list.Add(vl.TextStatic("List of distances:"))
+
+				var distances vl.List
+				var dgt []func() (_ float64, ok bool)
+				var bAdd vl.Button
+				bAdd.SetText("Add distance")
+				bAdd.OnClick = func() {
+					w, gt := InputFloat(
+						fmt.Sprintf("%d", distances.Size()+1),
+						"meter",
+					)
+					distances.Add(w)
+					dgt = append(dgt, gt)
+				}
+				var bClear vl.Button
+				bClear.SetText("Clear")
+				bClear.OnClick = func() {
+					distances.Clear()
+					dgt = nil
+					bAdd.OnClick() // one empty distance
+				}
+				bClear.OnClick() // default clear
+				list.Add(&distances)
+				{
+					var h vl.ListH
+					h.Add(&bAdd)
+					h.Add(&bClear)
+					list.Add(&h)
+				}
+
+				ch.Root = &list
+
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
+						// TODO
+						return
+					},
+				})
+			}
 			{ // rotate
 				var ch vl.CollapsingHeader
 				ch.SetText("Circular repeat around node:")
