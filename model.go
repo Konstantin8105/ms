@@ -1796,12 +1796,35 @@ func (mm *Model) Copy(nodes, elements []uint,
 		}
 	}
 	// main model
+	var (
+		beginCoord = make([]Coordinate, len(cModel.Coords))
+		endCoord   = make([]Coordinate, len(cModel.Coords))
+	)
+	copy(beginCoord, cModel.Coords)
 	for _, path := range paths {
 		for i := range cModel.Coords {
 			from := [3]float64(cModel.Coords[i].Point3d)
 			move(&from, basePoint, path)
 			cModel.Coords[i].Point3d = from
 		}
+		if addLines {
+			copy(endCoord, cModel.Coords)
+			for i := range beginCoord {
+				beginID := mm.AddNode(
+					beginCoord[i].Point3d[0],
+					beginCoord[i].Point3d[1],
+					beginCoord[i].Point3d[2],
+				)
+				endID := mm.AddNode(
+					endCoord[i].Point3d[0],
+					endCoord[i].Point3d[1],
+					endCoord[i].Point3d[2],
+				)
+				mm.AddLineByNodeNumber(beginID, endID)
+			}
+			beginCoord, endCoord = endCoord, beginCoord
+		}
+
 		copyBase := [3]float64{
 			basePoint[0],
 			basePoint[1],

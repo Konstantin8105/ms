@@ -1904,6 +1904,7 @@ type Tui struct {
 	mesh    Mesh
 	actions chan func()
 	Change  func(*Opengl)
+	quit    bool
 }
 
 func (tui *Tui) Run(quit <-chan struct{}) error {
@@ -1914,13 +1915,21 @@ func (tui *Tui) Run(quit <-chan struct{}) error {
 		}
 	}()
 	defer func() {
-		close(tui.actions)
+		tui.quit = true
+		// TODO: <-time.After(5 * time.Second)
+		// TODO: close(tui.actions)
 	}()
 	// TODO remove key close
 	return vl.Run(tui.root, tui.actions, quit, tcell.KeyCtrlC)
 }
 
 func NewTui(mesh Mesh) (tui *Tui, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			// safety ignore panic
+			AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+		}
+	}()
 	tui = new(Tui)
 	tui.mesh = mesh
 	tui.actions = make(chan func())
@@ -2008,6 +2017,9 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 		go func() {
 			for {
 				<-time.After(time.Millisecond * 500)
+				if tui.quit {
+					return
+				}
 				tui.actions <- update
 			}
 		}()
