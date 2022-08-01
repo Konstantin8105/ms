@@ -1807,23 +1807,59 @@ func (mm *Model) Copy(nodes, elements []uint,
 			move(&from, basePoint, path)
 			cModel.Coords[i].Point3d = from
 		}
+		copy(endCoord, cModel.Coords)
+
 		if addLines {
-			copy(endCoord, cModel.Coords)
+			var pre Model
 			for i := range beginCoord {
-				beginID := mm.AddNode(
+				beginID := pre.AddNode(
 					beginCoord[i].Point3d[0],
 					beginCoord[i].Point3d[1],
 					beginCoord[i].Point3d[2],
 				)
-				endID := mm.AddNode(
+				endID := pre.AddNode(
 					endCoord[i].Point3d[0],
 					endCoord[i].Point3d[1],
 					endCoord[i].Point3d[2],
 				)
-				mm.AddLineByNodeNumber(beginID, endID)
+				pre.AddLineByNodeNumber(beginID, endID)
 			}
-			beginCoord, endCoord = endCoord, beginCoord
+			mm.AddModel(pre)
 		}
+		if addTri {
+			var pre Model
+			for _, el := range cModel.Elements {
+				if el.ElementType != Line2 {
+					continue
+				}
+				var (
+					begin0 = pre.AddNode(
+						beginCoord[el.Indexes[0]].Point3d[0],
+						beginCoord[el.Indexes[0]].Point3d[1],
+						beginCoord[el.Indexes[0]].Point3d[2],
+					)
+					begin1 = pre.AddNode(
+						beginCoord[el.Indexes[1]].Point3d[0],
+						beginCoord[el.Indexes[1]].Point3d[1],
+						beginCoord[el.Indexes[1]].Point3d[2],
+					)
+					end0 = pre.AddNode(
+						endCoord[el.Indexes[0]].Point3d[0],
+						endCoord[el.Indexes[0]].Point3d[1],
+						endCoord[el.Indexes[0]].Point3d[2],
+					)
+					end1 = pre.AddNode(
+						endCoord[el.Indexes[1]].Point3d[0],
+						endCoord[el.Indexes[1]].Point3d[1],
+						endCoord[el.Indexes[1]].Point3d[2],
+					)
+				)
+				pre.AddTriangle3ByNodeNumber(begin0, begin1, end1)
+				pre.AddTriangle3ByNodeNumber(end1, end0, begin0)
+			}
+			mm.AddModel(pre)
+		}
+		beginCoord, endCoord = endCoord, beginCoord
 
 		copyBase := [3]float64{
 			basePoint[0],
@@ -1834,7 +1870,6 @@ func (mm *Model) Copy(nodes, elements []uint,
 
 		mm.AddModel(cModel)
 	}
-	// TODO addLines. addTri
 }
 
 func (mm *Model) StandardView(view SView) {
