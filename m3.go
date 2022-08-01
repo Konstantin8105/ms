@@ -139,7 +139,9 @@ func (op *Opengl) Run() {
 
 			gl.Enable(gl.DEPTH_TEST)
 			gl.Enable(gl.BLEND) // Transparency
-			gl.Enable(gl.LINE_SMOOTH)
+			// gl.Enable(gl.LINE_SMOOTH)
+
+			// TODO transperency on back side
 
 			// switch to wireframe mode
 			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.LINE );
@@ -400,6 +402,9 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	// TODO: 	continue
 	// TODO: }
 
+	// TODO CREATE A GREAT LINES
+	gl.Disable(gl.POLYGON_OFFSET_FILL)
+
 	// Point
 	gl.PointSize(5)
 	switch s {
@@ -443,7 +448,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	// Elements
 	for i, el := range els {
 		gl.PointSize(2) // default points size
-		gl.LineWidth(3) // default lines width
+		gl.LineWidth(1) // TODO GREAT LINES 3) // default lines width
 		if op.mesh.IsIgnore(uint(i)) {
 			continue
 		}
@@ -538,6 +543,11 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		default:
 			panic(fmt.Errorf("not valid element: %v", el))
 		}
+
+		// TODO CREATE A GREAT LINES
+		gl.Enable(gl.POLYGON_OFFSET_FILL)
+		gl.PolygonOffset(1.0, 1.0)
+
 		// draw triangles in 3D
 		switch el.ElementType {
 		case Line2: // do nothing
