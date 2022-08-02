@@ -402,8 +402,10 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	// TODO: 	continue
 	// TODO: }
 
-	// TODO CREATE A GREAT LINES
-	gl.Disable(gl.POLYGON_OFFSET_FILL)
+	if !(s == selectTriangles || s == selectLines || s == selectPoints) {
+		// TODO CREATE A GREAT LINES
+		gl.Disable(gl.POLYGON_OFFSET_FILL)
+	}
 
 	// Point
 	gl.PointSize(5)
@@ -545,8 +547,10 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		}
 
 		// TODO CREATE A GREAT LINES
-		gl.Enable(gl.POLYGON_OFFSET_FILL)
-		gl.PolygonOffset(1.0, 1.0)
+		if !(s == selectTriangles || s == selectLines || s == selectPoints) {
+			gl.Enable(gl.POLYGON_OFFSET_FILL)
+			gl.PolygonOffset(1.0, 1.0)
+		}
 
 		// draw triangles in 3D
 		switch el.ElementType {
