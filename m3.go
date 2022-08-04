@@ -138,7 +138,7 @@ func (op *Opengl) Run() {
 			gl.ClearColor(1, 1, 1, 1)
 
 			gl.Enable(gl.DEPTH_TEST)
-			gl.Enable(gl.BLEND) // Transparency
+			// gl.Enable(gl.BLEND) // Transparency
 			// gl.Enable(gl.LINE_SMOOTH)
 
 			// TODO transperency on back side
@@ -580,8 +580,23 @@ func (op *Opengl) model3d(s viewState, parent string) {
 			if s == normal {
 				gl.Color4ub(123, 0, 123, 200)
 				gl.LineWidth(1)
-				gl.Begin(gl.LINES)
+
+				mid := [3]float64{
+					(cos[el.Indexes[0]].Point3d[0] +
+						cos[el.Indexes[1]].Point3d[0] +
+						cos[el.Indexes[2]].Point3d[0]) * 1.0 / 3.0,
+					(cos[el.Indexes[0]].Point3d[1] +
+						cos[el.Indexes[1]].Point3d[1] +
+						cos[el.Indexes[2]].Point3d[1]) * 1.0 / 3.0,
+					(cos[el.Indexes[0]].Point3d[2] +
+						cos[el.Indexes[1]].Point3d[2] +
+						cos[el.Indexes[2]].Point3d[2]) * 1.0 / 3.0,
+				}
+
 				for p := range el.Indexes {
+					gl.LineWidth(float32(p * 2))
+					gl.Begin(gl.LINES)
+
 					from, to := p, p+1
 					if to == len(el.Indexes) {
 						from = el.Indexes[from]
@@ -598,8 +613,20 @@ func (op *Opengl) model3d(s viewState, parent string) {
 						cos[to].Point3d[0],
 						cos[to].Point3d[1],
 						cos[to].Point3d[2])
+
+					gl.Vertex3d(
+						0.1*mid[0]+0.9*cos[from].Point3d[0],
+						0.1*mid[1]+0.9*cos[from].Point3d[1],
+						0.1*mid[2]+0.9*cos[from].Point3d[2],
+					)
+					gl.Vertex3d(
+						0.1*mid[0]+0.9*cos[to].Point3d[0],
+						0.1*mid[1]+0.9*cos[to].Point3d[1],
+						0.1*mid[2]+0.9*cos[to].Point3d[2],
+					)
+					gl.End()
 				}
-				gl.End()
+
 			}
 		default:
 			panic(fmt.Errorf("not valid element: %v", el))
