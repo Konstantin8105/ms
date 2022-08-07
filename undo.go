@@ -327,6 +327,18 @@ func (u *Undo) Copy(nodes, elements []uint,
 	u.model.Copy(nodes, elements, basePoint, paths, addLines, addTri)
 }
 
+func (u *Undo) Mirror(nodes, elements []uint,
+	basePoint [3][3]float64,
+	copy bool,
+	addLines, addTri bool) {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.Mirror(nodes, elements, basePoint, copy, addLines, addTri)
+}
+
 func (u *Undo) DemoSpiral(n uint) {
 	// sync
 	pre, post := u.sync(false)

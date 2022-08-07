@@ -48,7 +48,7 @@ func (g GroupID) String() string {
 	case Hide:
 		return "Hide"
 	case MoveCopy:
-		return "Move/Copy"
+		return "Move/Copy/Mirror"
 		// 	case Check:
 		// 		return "Check"
 		// 	case TypModels:
@@ -428,8 +428,6 @@ type AddRemovable interface {
 	RemoveSameCoordinates()
 	RemoveZeroLines()
 	RemoveZeroTriangles()
-
-	// Remove Nodes without elements
 
 	GetCoordByID(id uint) (c gog.Point3d, ok bool)
 
@@ -888,6 +886,26 @@ const (
 	DirZ
 )
 
+type Plane uint8
+
+const (
+	PlaneXOY Plane = iota
+	PlaneXOZ
+	PlaneYOZ
+)
+
+func (p Plane) String() string {
+	switch p {
+	case PlaneXOY:
+		return "XOY"
+	case PlaneXOZ:
+		return "XOZ"
+	case PlaneYOZ:
+		return "YOZ"
+	}
+	return "Undefined plane"
+}
+
 func (d Direction) String() string {
 	switch d {
 	case DirX:
@@ -1183,10 +1201,10 @@ type MoveCopyble interface {
 		basePoint [3]float64,
 		paths []diffCoordinate,
 		addLines, addTri bool)
-
-	// 	Mirror(nodes, elements []uint,
-	// 		plane [3][3]float64,
-	// 		copy bool)
+	Mirror(nodes, elements []uint,
+		basePoint [3][3]float64,
+		copy bool,
+		addLines, addTri bool)
 
 	//	MoveCopyOnPlane(nodes, elements []uint, coordinate [3]float64,
 	//		plane Plane,
@@ -1601,6 +1619,182 @@ func init() {
 					return
 				}
 				m.Copy(coordgt(), elgt(), bp, ps, lines.Checked, tris.Checked)
+			}
+			list.Add(&b)
+			return &list
+		}}, {
+		Name: "Mirror",
+		Part: func(m Mesh, actions chan func()) (w vl.Widget) {
+			var list vl.List
+
+			ns, coordgt, elgt := SelectAll(m)
+			list.Add(ns)
+
+			type path struct {
+				w    vl.Widget
+				getC func() (basePoint [3][3]float64, ok bool)
+			}
+			var paths []path
+			{
+				var ch vl.CollapsingHeader
+				ch.SetText("Node and plane:")
+
+				var list vl.List
+
+				n, ngt := Select("Select node", Single, m.GetSelectNodes)
+				list.Add(n)
+
+				list.Add(new(vl.Separator))
+				list.Add(vl.TextStatic("Choose plane:"))
+				var plane vl.RadioGroup
+				plane.SetText([]string{
+					PlaneXOY.String(),
+					PlaneXOZ.String(),
+					PlaneYOZ.String(),
+				})
+
+				list.Add(&plane)
+				ch.Root = &list
+
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (basePoint [3][3]float64, ok bool) {
+						ns := ngt()
+						if len(ns) != 1 {
+							return
+						}
+						coord, ok := m.GetCoordByID(ns[0])
+						if !ok {
+							return
+						}
+						switch Plane(plane.GetPos()) {
+						case PlaneXOY:
+							basePoint[0] = coord
+							basePoint[1] = [3]float64{
+								coord[0] + 1, coord[1], coord[2],
+							}
+							basePoint[2] = [3]float64{
+								coord[0], coord[1] + 1, coord[2],
+							}
+							ok = true
+						case PlaneXOZ:
+							basePoint[0] = coord
+							basePoint[1] = [3]float64{
+								coord[0] + 1, coord[1], coord[2],
+							}
+							basePoint[2] = [3]float64{
+								coord[0], coord[1], coord[2] + 1,
+							}
+							ok = true
+						case PlaneYOZ:
+							basePoint[0] = coord
+							basePoint[1] = [3]float64{
+								coord[0], coord[1] + 1, coord[2],
+							}
+							basePoint[2] = [3]float64{
+								coord[0], coord[1], coord[2] + 1,
+							}
+							ok = true
+						}
+						return
+					},
+				})
+			}
+			{
+				var ch vl.CollapsingHeader
+				ch.SetText("Plane by 3 points:")
+
+				var list vl.List
+
+				n0, ngt0 := Select("Select node 1:", Single, m.GetSelectNodes)
+				list.Add(n0)
+				n1, ngt1 := Select("Select node 2:", Single, m.GetSelectNodes)
+				list.Add(n1)
+				n2, ngt2 := Select("Select node 3:", Single, m.GetSelectNodes)
+				list.Add(n2)
+
+				ch.Root = &list
+
+				paths = append(paths, path{
+					w: &ch,
+					getC: func() (basePoint [3][3]float64, ok bool) {
+						n0 := ngt0()
+						if len(n0) != 1 {
+							return
+						}
+						c0, ok := m.GetCoordByID(n0[0])
+						if !ok {
+							return
+						}
+
+						n1 := ngt1()
+						if len(n1) != 1 {
+							return
+						}
+						c1, ok := m.GetCoordByID(n1[0])
+						if !ok {
+							return
+						}
+
+						n2 := ngt2()
+						if len(n2) != 1 {
+							return
+						}
+						c2, ok := m.GetCoordByID(n2[0])
+						if !ok {
+							return
+						}
+
+						basePoint[0] = c0
+						basePoint[1] = c1
+						basePoint[2] = c2
+						ok = true
+						return
+					},
+				})
+			}
+
+			// radio group for paths
+			list.Add(new(vl.Separator))
+			list.Add(vl.TextStatic("Choose parameters:"))
+			var param vl.RadioGroup
+			for i := range paths {
+				param.Add(paths[i].w)
+			}
+			list.Add(&param)
+			// intermediant
+
+			// copy or move mirror
+			var mir vl.RadioGroup
+			mir.Add(vl.TextStatic("Move - no copy"))
+
+			var cop vl.List
+			var lines vl.CheckBox
+			lines.SetText("Add intermediant lines")
+			cop.Add(&lines)
+			var tris vl.CheckBox
+			tris.SetText("Add intermediant triangles")
+			cop.Add(&tris)
+			mir.Add(&cop)
+
+			list.Add(&mir)
+
+			// operation
+			list.Add(new(vl.Separator))
+			var b vl.Button
+			b.SetText("Repeat")
+			b.OnClick = func() {
+				pos := param.GetPos()
+
+				bp, ok := paths[pos].getC()
+				if !ok {
+					return
+				}
+
+				m.Mirror(coordgt(), elgt(),
+					bp,
+					mir.GetPos() == 1,
+					lines.Checked, tris.Checked)
 			}
 			list.Add(&b)
 			return &list

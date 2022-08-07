@@ -462,7 +462,7 @@ func (mm *Model) RemoveNodesWithoutElements() {
 		}
 	}
 	for i := range connect {
-		if connect[i]{
+		if connect[i] {
 			continue
 		}
 		mm.Coords[i].Removed = true
@@ -1942,6 +1942,13 @@ func (mm *Model) Copy(nodes, elements []uint,
 
 		mm.AddModel(cModel)
 	}
+}
+
+func (mm *Model) Mirror(nodes, elements []uint,
+	basePoint [3][3]float64,
+	copy bool,
+	addLines, addTri bool) {
+	// TODO
 }
 
 func (mm *Model) StandardView(view SView) {
