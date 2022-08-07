@@ -1133,6 +1133,60 @@ func (mm *Model) MergeNodes(minDistance float64) {
 	// TODO loads merge
 }
 
+func (mm *Model) MergeLines(lines []uint) {
+	// 2 lines merged in case:
+	//	* common point of 2 that lines
+	//	* common point not removed at the end
+	lines = uniqUint(lines)
+
+	counter := 1 // default value
+	for iter := 0; 0 < counter; iter++ {
+		counter = 0
+		for i := range lines {
+			eli := mm.Elements[lines[i]]
+			if eli.ElementType != Line2 {
+				continue
+			}
+			for j := range lines {
+				if i <= j {
+					continue
+				}
+				elj := mm.Elements[lines[j]]
+				if elj.ElementType != Line2 {
+					continue
+				}
+				var ok bool
+				switch {
+				case eli.Indexes[0] == elj.Indexes[0]:
+					eli.Indexes[0] = elj.Indexes[1]
+					ok = true
+
+				case eli.Indexes[1] == elj.Indexes[0]:
+					eli.Indexes[1] = elj.Indexes[1]
+					ok = true
+
+				case eli.Indexes[0] == elj.Indexes[1]:
+					eli.Indexes[0] = elj.Indexes[0]
+					ok = true
+
+				case eli.Indexes[1] == elj.Indexes[1]:
+					eli.Indexes[1] = elj.Indexes[0]
+					ok = true
+				}
+				if ok {
+					mm.Elements[lines[j]].ElementType = ElRemove
+					counter++
+					break
+				}
+			}
+		}
+		if 1000 < iter {
+			AddInfo("Too many iterations in MergeLines")
+			break
+		}
+	}
+}
+
 var IntersectionThreads = 6
 
 func (mm *Model) Intersection(nodes, elements []uint) {

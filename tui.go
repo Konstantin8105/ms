@@ -394,6 +394,7 @@ type AddRemovable interface {
 	// Quadr4 to 4 Triangle3
 	// Quadr4 to 4 Quadr4
 	// Triangles3, Quadrs4 by Lines2
+	// LeftCursor split triangle by edge
 
 	Intersection(nodes, elements []uint)
 	// Intersections outside of FE
@@ -401,7 +402,7 @@ type AddRemovable interface {
 	// Engineering change coordinates with precision 0.5 mm = 0.0005 meter
 
 	MergeNodes(minDistance float64)
-	// MergeLines()
+	MergeLines(lines []uint)
 	// MergeTriangles()
 	// MergeMesh()
 
@@ -663,6 +664,21 @@ func init() {
 					return
 				}
 				m.MergeNodes(d)
+			}
+			list.Add(&b)
+			return &list
+		}}, {
+		Name: "Merge lines",
+		Part: func(m Mesh, actions chan func()) (w vl.Widget) {
+			var list vl.List
+
+			s, sgt := Select("Select lines", Many, m.GetSelectLines)
+			list.Add(s)
+
+			var b vl.Button
+			b.SetText("Merge")
+			b.OnClick = func() {
+				m.MergeLines(sgt())
 			}
 			list.Add(&b)
 			return &list
@@ -1543,7 +1559,7 @@ func init() {
 				})
 			}
 
-			// TODO
+			// TODO spiral
 
 			// radio group for paths
 			list.Add(new(vl.Separator))
@@ -1625,6 +1641,7 @@ type Measurementable interface {
 
 type Pluginable interface {
 	DemoSpiral(levels uint)
+	// Tubesheet inline and staggered
 	// Cylinder
 	// Sphere
 	// Cone

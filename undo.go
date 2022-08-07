@@ -286,6 +286,15 @@ func (u *Undo) MergeNodes(minDistance float64) {
 	u.model.MergeNodes(minDistance)
 }
 
+func (u *Undo) MergeLines(lines []uint) {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.MergeLines(lines)
+}
+
 func (u *Undo) Intersection(nodes, elements []uint) {
 	// sync
 	pre, post := u.sync(false)
