@@ -1948,7 +1948,7 @@ func (mm *Model) Mirror(nodes, elements []uint,
 	basePoint [3][3]float64,
 	copy bool,
 	addLines, addTri bool) {
-	// TODO
+	// TODO gog.Mirror3d for points
 }
 
 func (mm *Model) StandardView(view SView) {
