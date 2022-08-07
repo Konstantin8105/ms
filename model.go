@@ -451,6 +451,24 @@ func (mm *Model) RemoveSameCoordinates() {
 	}
 }
 
+func (mm *Model) RemoveNodesWithoutElements() {
+	connect := make([]bool, len(mm.Coords))
+	for _, el := range mm.Elements {
+		if el.ElementType == ElRemove {
+			continue
+		}
+		for i := range el.Indexes {
+			connect[el.Indexes[i]] = true
+		}
+	}
+	for i := range connect {
+		if connect[i]{
+			continue
+		}
+		mm.Coords[i].Removed = true
+	}
+}
+
 func (mm *Model) RemoveZeroLines() {
 	for i, el := range mm.Elements {
 		if el.ElementType != Line2 {

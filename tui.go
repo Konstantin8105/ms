@@ -424,6 +424,7 @@ type AddRemovable interface {
 
 	Remove(nodes, elements []uint)
 
+	RemoveNodesWithoutElements()
 	RemoveSameCoordinates()
 	RemoveZeroLines()
 	RemoveZeroTriangles()
@@ -691,6 +692,19 @@ func init() {
 			bi.SetText("Remove")
 			bi.OnClick = func() {
 				m.RemoveSameCoordinates()
+			}
+			list.Add(&bi)
+
+			return &list
+		}}, {
+		Name: "Remove nodes without connection to element",
+		Part: func(m Mesh, actions chan func()) (w vl.Widget) {
+			var list vl.List
+
+			var bi vl.Button
+			bi.SetText("Remove")
+			bi.OnClick = func() {
+				m.RemoveNodesWithoutElements()
 			}
 			list.Add(&bi)
 

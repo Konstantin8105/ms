@@ -354,6 +354,15 @@ func (u *Undo) RemoveSameCoordinates() {
 	u.model.RemoveSameCoordinates()
 }
 
+func (u *Undo) RemoveNodesWithoutElements() {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.RemoveNodesWithoutElements()
+}
+
 func (u *Undo) RemoveZeroLines() {
 	// sync
 	pre, post := u.sync(false)
