@@ -418,9 +418,16 @@ type AddRemovable interface {
 	// Scale by cylinder system coordinate
 	// Scale by direction on 2 nodes
 
+	// Convert 3D to 2D
+	// Convert 2D to 3D
+
+	// Connect 2 lines - find intersections
+
 	// Chamfer plates
 	// Fillet plates
 	// Explode plates
+
+	// create section by plane
 
 	Remove(nodes, elements []uint)
 
