@@ -38,7 +38,6 @@ func main() {
 	}
 	window.MakeContextCurrent()
 
-	// 	op.window.SetMouseButtonCallback(op.mouseButton)
 	// 	op.window.SetScrollCallback(op.scroll)
 	// 	op.window.SetCursorPosCallback(op.cursorPos)
 	// 	op.window.SetKeyCallback(op.key)
@@ -84,34 +83,70 @@ func main() {
 	root, action := vl.Demo()
 	_ = action
 
+	screen := vl.Screen{
+		Root: root,
+	}
+	var cells [][]vl.Cell
+
+	var widthSymbol uint
+	var heightSymbol uint
+	var w, h int
+
+	window.SetMouseButtonCallback(func(
+		w *glfw.Window,
+		button glfw.MouseButton,
+		action glfw.Action,
+		mods glfw.ModifierKey,
+	) {
+		// convert button
+		var bm tcell.ButtonMask
+		switch button {
+		case glfw.MouseButton1:
+			bm = tcell.Button1
+		case glfw.MouseButton2:
+			bm = tcell.Button2
+		case glfw.MouseButton3:
+			bm = tcell.Button3
+		default:
+			return
+		}
+		// calculate position
+		x, y := w.GetCursorPos()
+		xs := int(x / float64(fontSize))
+		ys := int(y / float64(fontSize))
+		// create event
+		switch action {
+		case glfw.Press:
+			screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
+		case glfw.Release:
+
+		default:
+			// case glfw.Repeat:
+			// do nothing
+		}
+	})
+
 	for !window.ShouldClose() {
 		// windows
-		w, h := window.GetSize()
+		w, h = window.GetSize()
 		gl.Viewport(0, 0, int32(w), int32(h))
 
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.ClearColor(1, 1, 1, 1)
 
-		gl.Enable(gl.DEPTH_TEST)
-		// gl.Enable(gl.BLEND) // Transparency
-		// gl.Enable(gl.LINE_SMOOTH)
-
-		// minimal screen notes
-		// DrawText("Text UNICODE", 0, 0*fontSize)
-
-		var widthSymbol uint = uint(w) / uint(fontSize)
-		_ = root.Render(widthSymbol,
-			func(row, col uint, st tcell.Style, r rune) {
-				//	if row < 0 || uint(height) < row {
-				//		return
-				//	}
-				//	if col < 0 || uint(width) < col {
-				//		return
-				//	}
-				DrawText(string(r), int32(col)*fontSize, int32(row)*fontSize)
-				// screen.SetCell(int(col), int(row), st, r)
-			})
+		widthSymbol = uint(w) / uint(fontSize)
+		heightSymbol = uint(h) / uint(fontSize)
+		screen.SetHeight(heightSymbol)
+		screen.GetContents(widthSymbol, &cells)
+		for r := 0; r < len(cells); r++ {
+			if len(cells[r]) == 0 {
+				continue
+			}
+			for c := 0; c < len(cells[r]); c++ {
+				DrawText(string(cells[r][c].R), int32(c)*fontSize, int32(r)*fontSize)
+			}
+		}
 
 		// end
 		window.MakeContextCurrent()
