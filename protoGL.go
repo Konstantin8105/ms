@@ -20,7 +20,7 @@ func init() {
 
 var font *gltext.Font
 
-const fontSize = int32(12)
+const fontSize = int32(16)
 
 func main() {
 	if err := glfw.Init(); err != nil {
@@ -48,13 +48,6 @@ func main() {
 
 	glfw.SwapInterval(1) // Enable vsync
 
-	// DrawText text on the screen
-	DrawText := func(str string, x, y int32) {
-		gl.Color4ub(0, 0, 0, 255)
-		gl.LoadIdentity()
-		font.Printf(float32(x), float32(y), str)
-	}
-
 	// create new Font from given filename (.ttf expected)
 	fd, err := os.Open("/home/konstantin/.fonts/Go-Mono-Bold.ttf") // fontfile
 	if err != nil {
@@ -69,6 +62,13 @@ func main() {
 		return
 	}
 	// font is prepared
+
+	// DrawText text on the screen
+	DrawText := func(cell vl.Cell, x, y int32) {
+		gl.Color4ub(0, 0, 0, 255)
+		gl.LoadIdentity()
+		font.Printf(float32(x), float32(y), string(cell.R))
+	}
 
 	// 	op.fps.Init()
 
@@ -144,7 +144,7 @@ func main() {
 				continue
 			}
 			for c := 0; c < len(cells[r]); c++ {
-				DrawText(string(cells[r][c].R), int32(c)*fontSize, int32(r)*fontSize)
+				DrawText(cells[r][c], int32(c)*fontSize, int32(r)*fontSize)
 			}
 		}
 
