@@ -3,8 +3,6 @@ github.com/Konstantin8105/binaryexpr v0.1.0/go.mod h1:prPPFcv/zGCwhx78QW299JwMKP
 github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b h1:IZkvBy8TJTxpPHjOW1R5KqIgVF2lVk8isx9iQBHnOnw=
 github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibUOtOpkg=
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
-github.com/Konstantin8105/gog v0.0.0-20220729161819-c866ff13e7bc h1:0WEopxFRIvJooQI6rh/koVal/vFUjE6jyXuz2Jzyyak=
-github.com/Konstantin8105/gog v0.0.0-20220729161819-c866ff13e7bc/go.mod h1:lECN7ur7B+Jy6dgggiJWuV6Ierk4QGqDtPEaJw9c0b8=
 github.com/Konstantin8105/gog v0.0.0-20220807220206-1f87d328b68d h1:Vgs1XO5OlOwXmDf3rTwNtUJwEYZMyAOTpkgv56z7lgA=
 github.com/Konstantin8105/gog v0.0.0-20220807220206-1f87d328b68d/go.mod h1:lECN7ur7B+Jy6dgggiJWuV6Ierk4QGqDtPEaJw9c0b8=
 github.com/Konstantin8105/pow v0.1.0 h1:1FBuKD4UEXKRsP0snDUGqbok5LcwYPUbq5ClVOW++cE=
