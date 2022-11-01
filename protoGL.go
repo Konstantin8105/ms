@@ -18,8 +18,6 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var font *gltext.Font
-
 const fontSize = int32(16)
 
 func main() {
@@ -53,7 +51,7 @@ func main() {
 	if err != nil {
 		return
 	}
-	font, err = gltext.LoadTruetype(fd, fontSize, 32, 127, gltext.LeftToRight)
+	font, err := gltext.LoadTruetype(fd, fontSize, 32, 127, gltext.LeftToRight)
 	if err != nil {
 		return
 	}
@@ -65,9 +63,35 @@ func main() {
 
 	// DrawText text on the screen
 	DrawText := func(cell vl.Cell, x, y int32) {
-		gl.Color4ub(0, 0, 0, 255)
+
+		// We need to offset each string by the height of the
+		// font. To ensure they don't overlap each other.
+		//	_, h := font.GlyphBounds()
+
+		// Draw a rectangular backdrop using the string's metrics.
+		//sw, sh := font.Metrics(string(cell.R))
+		//_ = sw
+		//_ = sh
+		//gl.Color4ub(uint8(x%255), uint8(y%255), 1, 122)
+		//var x1, y1, x2, y2 float32 = float32(x), float32(y), float32(x + int32(sw)), float32(y + int32(sh))
+		//gl.Rectf(x1/600.,y1/800., x2/600., y2/800.)
+		//fmt.Println(x, y, sw, sh, ">>>>", x1, y1, x2, y2)
+
+		// Render the string.
+		// gl.Color4f(255, 1, 1, 255)
+		// err := font.Printf(float32(x), float32(y), string(cell.R))
+		// if err != nil {
+		// 	panic(err)
+		// 	// return err
+		// }
+
+		gl.Color4ub(255, 0, 0, 255)
 		gl.LoadIdentity()
-		font.Printf(float32(x), float32(y), string(cell.R))
+		err := font.Printf(float32(x), float32(y), string(cell.R))
+		if err != nil {
+			panic(err)
+			// return err
+		}
 	}
 
 	// 	op.fps.Init()
