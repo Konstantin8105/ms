@@ -16,7 +16,7 @@ import (
 
 const (
 	runeStart = 32
-	runeEnd   = 5000
+	runeEnd   = 127
 )
 
 func init() {
@@ -29,7 +29,7 @@ func main() {
 	var action chan func()
 
 	// vl demo
-	//root, action := vl.Demo()
+	root, action = vl.Demo()
 
 	// unicode table
 	//	{
