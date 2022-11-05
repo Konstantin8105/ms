@@ -186,8 +186,8 @@ func main() {
 	var heightSymbol uint
 	var w, h int
 
-	window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-		screen.Event(tcell.NewEventKey(tcell.KeyRune, rune('R'), tcell.ModNone)) // TODO add for arrow
+	window.SetCharCallback(func(w *glfw.Window, r rune) {
+		screen.Event(tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone))
 	})
 
 	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
