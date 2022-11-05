@@ -14,6 +14,11 @@ import (
 	"github.com/go-gl/gltext"
 )
 
+const (
+	runeStart = 32
+	runeEnd   = 5000
+)
+
 func init() {
 	runtime.LockOSThread()
 }
@@ -62,7 +67,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			return
 		}
 		const fontSize = int32(16)
-		font, err = gltext.LoadTruetype(fd, fontSize, 32, 127, gltext.LeftToRight)
+		font, err = gltext.LoadTruetype(fd, fontSize, runeStart, runeEnd, gltext.LeftToRight)
 		if err != nil {
 			return
 		}
@@ -76,6 +81,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	color := func(c tcell.Color) (R, G, B float32) {
 		switch c {
+		case tcell.ColorRed:
+			R, G, B = 1, 0.3, 0.3
 		case tcell.ColorBlack:
 			R, G, B = 0, 0, 0
 		case tcell.ColorWhite:
@@ -106,65 +113,67 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		_ = bg
 		_ = attr
 
-		// rectangle
-		var vp [4]int32
-		gl.GetIntegerv(gl.VIEWPORT, &vp[0])
+		if bg != tcell.ColorWhite {
+			// rectangle
+			var vp [4]int32
+			gl.GetIntegerv(gl.VIEWPORT, &vp[0])
 
-		gl.PushAttrib(gl.TRANSFORM_BIT)
-		gl.MatrixMode(gl.PROJECTION)
-		gl.PushMatrix()
-		gl.LoadIdentity()
-		gl.Ortho(float64(vp[0]), float64(vp[2]), float64(vp[1]), float64(vp[3]), 0, 1)
-		gl.PopAttrib()
-
-		gl.PushAttrib(gl.LIST_BIT | gl.CURRENT_BIT | gl.ENABLE_BIT | gl.TRANSFORM_BIT)
-		{
-			gl.MatrixMode(gl.MODELVIEW)
-			gl.Disable(gl.LIGHTING)
-			gl.Disable(gl.DEPTH_TEST)
-			gl.Enable(gl.BLEND)
-			gl.Enable(gl.TEXTURE_2D)
-
-			gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-			gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-			//gl.BindTexture(gl.TEXTURE_2D, f.texture)
-			//gl.ListBase(f.listbase)
-
-			var mv [16]float32
-			gl.GetFloatv(gl.MODELVIEW_MATRIX, &mv[0])
+			gl.PushAttrib(gl.TRANSFORM_BIT)
+			gl.MatrixMode(gl.PROJECTION)
 			gl.PushMatrix()
+			gl.LoadIdentity()
+			gl.Ortho(float64(vp[0]), float64(vp[2]), float64(vp[1]), float64(vp[3]), 0, 1)
+			gl.PopAttrib()
+
+			gl.PushAttrib(gl.LIST_BIT | gl.CURRENT_BIT | gl.ENABLE_BIT | gl.TRANSFORM_BIT)
 			{
-				gl.LoadIdentity()
+				gl.MatrixMode(gl.MODELVIEW)
+				gl.Disable(gl.LIGHTING)
+				gl.Disable(gl.DEPTH_TEST)
+				gl.Enable(gl.BLEND)
+				gl.Enable(gl.TEXTURE_2D)
 
-				//mgw := float32(gw) // f.maxGlyphWidth)
-				mgh := float32(gh) // f.maxGlyphHeight)
+				gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+				gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
+				//gl.BindTexture(gl.TEXTURE_2D, f.texture)
+				//gl.ListBase(f.listbase)
 
-				//switch f.config.Dir {
-				//case LeftToRight, TopToBottom:
-				gl.Translatef(float32(x), float32(vp[3])-float32(y)-mgh, 0)
-				//case RightToLeft:
-				//	gl.Translatef(x-mgw, float32(vp[3])-y-mgh, 0)
-				//}
+				var mv [16]float32
+				gl.GetFloatv(gl.MODELVIEW_MATRIX, &mv[0])
+				gl.PushMatrix()
+				{
+					gl.LoadIdentity()
 
-				//fmt.Println(cell.S)
-				r, g, b := color(bg)
-				gl.Color4f(r, g, b, 1)
+					//mgw := float32(gw) // f.maxGlyphWidth)
+					mgh := float32(gh) // f.maxGlyphHeight)
 
-				gl.Rectf(0, 0, float32(gw), float32(gh))
+					//switch f.config.Dir {
+					//case LeftToRight, TopToBottom:
+					gl.Translatef(float32(x), float32(vp[3])-float32(y)-mgh, 0)
+					//case RightToLeft:
+					//	gl.Translatef(x-mgw, float32(vp[3])-y-mgh, 0)
+					//}
 
-				gl.MultMatrixf(&mv[0])
-				//gl.CallLists(int32(len(indices)), gl.UNSIGNED_INT, unsafe.Pointer(&indices[0]))
+					//fmt.Println(cell.S)
+					r, g, b := color(bg)
+					gl.Color4f(r, g, b, 1)
+
+					gl.Rectf(0, 0, float32(gw), float32(gh))
+
+					gl.MultMatrixf(&mv[0])
+					//gl.CallLists(int32(len(indices)), gl.UNSIGNED_INT, unsafe.Pointer(&indices[0]))
+				}
+				gl.PopMatrix()
 			}
+			gl.PopAttrib()
+
+			gl.PushAttrib(gl.TRANSFORM_BIT)
+			gl.MatrixMode(gl.PROJECTION)
 			gl.PopMatrix()
+			gl.PopAttrib()
+
+			gl.LoadIdentity()
 		}
-		gl.PopAttrib()
-
-		gl.PushAttrib(gl.TRANSFORM_BIT)
-		gl.MatrixMode(gl.PROJECTION)
-		gl.PopMatrix()
-		gl.PopAttrib()
-
-		gl.LoadIdentity()
 
 		str := string(cell.R)
 
@@ -260,10 +269,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-		gl.ClearColor(1, 1, 1, 1)
-
-		gl.Color4f(0.9, 0.9, 0.8, 0.9)
-		gl.Rectf(-0.5, -0.5, 0.5, 0.5)
+		r,g,b := color(tcell.ColorWhite)
+		gl.ClearColor(r, g, b, 1)
 
 		widthSymbol = uint(w) / uint(gw)
 		heightSymbol = uint(h) / uint(gh)
