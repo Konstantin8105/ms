@@ -19,7 +19,19 @@ func init() {
 }
 
 func main() {
-	if err := glfw.Init(); err != nil {
+	// vl demo
+	root, action := vl.Demo()
+
+	// run vl widget in OpenGL
+	err := Run(root, action)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+		return
+	}
+}
+
+func Run(root vl.Widget, action chan func()) (err error) {
+	if err = glfw.Init(); err != nil {
 		err = fmt.Errorf("failed to initialize glfw: %v", err)
 		return
 	}
@@ -28,15 +40,12 @@ func main() {
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 
-	window, err := glfw.CreateWindow(800, 600, "3D model", nil, nil)
+	var window *glfw.Window
+	window, err = glfw.CreateWindow(800, 600, "3D model", nil, nil)
 	if err != nil {
 		return
 	}
 	window.MakeContextCurrent()
-
-	// 	op.window.SetScrollCallback(op.scroll)
-	// 	op.window.SetCursorPosCallback(op.cursorPos)
-	// 	op.window.SetKeyCallback(op.key)
 
 	if err = gl.Init(); err != nil {
 		return
@@ -45,18 +54,22 @@ func main() {
 	glfw.SwapInterval(1) // Enable vsync
 
 	// create new Font from given filename (.ttf expected)
-	fd, err := os.Open("/home/konstantin/.fonts/Go-Mono-Bold.ttf") // fontfile
-	if err != nil {
-		return
-	}
-	const fontSize = int32(16)
-	font, err := gltext.LoadTruetype(fd, fontSize, 32, 127, gltext.LeftToRight)
-	if err != nil {
-		return
-	}
-	err = fd.Close()
-	if err != nil {
-		return
+	var font *gltext.Font
+	{
+		var fd *os.File
+		fd, err = os.Open("/home/konstantin/.fonts/Go-Mono-Bold.ttf") // fontfile
+		if err != nil {
+			return
+		}
+		const fontSize = int32(16)
+		font, err = gltext.LoadTruetype(fd, fontSize, 32, 127, gltext.LeftToRight)
+		if err != nil {
+			return
+		}
+		err = fd.Close()
+		if err != nil {
+			return
+		}
 	}
 	gw, gh := font.GlyphBounds()
 	// font is prepared
@@ -172,10 +185,6 @@ func main() {
 		glfw.Terminate()
 	}()
 
-	// vl demo
-	root, action := vl.Demo()
-	_ = action
-
 	screen := vl.Screen{
 		Root: root,
 	}
@@ -273,4 +282,5 @@ func main() {
 		window.MakeContextCurrent()
 		window.SwapBuffers()
 	}
+	return
 }
