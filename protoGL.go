@@ -24,8 +24,25 @@ func init() {
 }
 
 func main() {
+	// initialize
+	var root vl.Widget
+	var action chan func()
+
 	// vl demo
-	root, action := vl.Demo()
+	//root, action := vl.Demo()
+
+	// unicode table
+	//	{
+	//		var t vl.Text
+	//		var str string
+	//		for i := runeStart; i < runeEnd; i++ {
+	//			str += " " + string(rune(i))
+	//		}
+	//		t.SetText(str)
+	//		var sc vl.Scroll
+	//		sc.Root = &t
+	//		root = &sc
+	//	}
 
 	// run vl widget in OpenGL
 	err := Run(root, action)
@@ -269,7 +286,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-		r,g,b := color(tcell.ColorWhite)
+		r, g, b := color(tcell.ColorWhite)
 		gl.ClearColor(r, g, b, 1)
 
 		widthSymbol = uint(w) / uint(gw)
