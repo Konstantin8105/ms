@@ -58,6 +58,7 @@ func main() {
 	if err != nil {
 		return
 	}
+	gw, gh := font.GlyphBounds()
 	// font is prepared
 
 	color := func(c tcell.Color) (R, G, B float32) {
@@ -83,8 +84,6 @@ func main() {
 
 		// We need to offset each string by the height of the
 		// font. To ensure they don't overlap each other.
-		gw, gh := font.GlyphBounds()
-
 		x *= gw
 		y *= gh
 
@@ -192,7 +191,6 @@ func main() {
 
 	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
 		x, y := w.GetCursorPos()
-		gw, gh := font.GlyphBounds()
 		xs := int(x / float64(gw))
 		ys := int(y / float64(gh))
 
@@ -232,11 +230,8 @@ func main() {
 		}
 		// calculate position
 		x, y := w.GetCursorPos()
-		gw, gh := font.GlyphBounds()
 		xs := int(x / float64(gw))
 		ys := int(y / float64(gh))
-		_ = gh
-		_ = gw
 		// create event
 		switch action {
 		case glfw.Press:
@@ -261,7 +256,6 @@ func main() {
 		gl.Color4f(0.9, 0.9, 0.8, 0.9)
 		gl.Rectf(-0.5, -0.5, 0.5, 0.5)
 
-		gw, gh := font.GlyphBounds()
 		widthSymbol = uint(w) / uint(gw)
 		heightSymbol = uint(h) / uint(gh)
 		screen.SetHeight(heightSymbol)
