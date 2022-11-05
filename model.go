@@ -3,12 +3,14 @@ package ms
 import (
 	"fmt"
 	"math"
+	"os"
 	"runtime"
 	"runtime/debug"
 	"strings"
 	"sync"
 
 	"github.com/Konstantin8105/gog"
+	"github.com/Konstantin8105/msh"
 	"github.com/Konstantin8105/pow"
 )
 
@@ -2115,7 +2117,7 @@ func min(xs ...float64) (res float64) {
 
 var testCoverageFunc func(m Mesh)
 
-func Run(quit <-chan struct{}) (err error) {
+func Run(filename string, quit <-chan struct{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v\n%v\n%v", err, r, string(debug.Stack()))
@@ -2124,6 +2126,47 @@ func Run(quit <-chan struct{}) (err error) {
 	// initialize undo chain
 	var mm Undo
 	mm.model = new(Model)
+	// filename MSH22
+	if filename != "" {
+		var geo []byte
+		geo, err = os.ReadFile(filename)
+		if err != nil {
+			return
+		}
+		var mesh *msh.Msh
+		mesh, err = msh.New(string(geo))
+		if err != nil {
+			return
+		}
+		for _, n := range mesh.Nodes {
+			var node Coordinate
+			node.Point3d[0] = n.Coord[0]
+			node.Point3d[1] = n.Coord[1]
+			node.Point3d[2] = n.Coord[2]
+			mm.model.Coords = append(mm.model.Coords, node)
+		}
+		for _, e := range mesh.Elements {
+			switch e.EType {
+			case msh.Line:
+				var el Element
+				el.ElementType = Line2
+				el.Indexes = e.NodeId
+				for i := range el.Indexes {
+					el.Indexes[i] -= 1
+				}
+				mm.model.Elements = append(mm.model.Elements, el)
+			case msh.Triangle:
+				var el Element
+				el.ElementType = Triangle3
+				el.Indexes = e.NodeId
+				for i := range el.Indexes {
+					el.Indexes[i] -= 1
+				}
+				mm.model.Elements = append(mm.model.Elements, el)
+			}
+		}
+	}
+
 	// { // only for debug
 	// 	b, err := ioutil.ReadFile("./testdata/IntersectionSpiral")
 	// 	if err != nil {
