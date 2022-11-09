@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	runeStart = 32
-	runeEnd   = 127
+	runeStart = rune(byte(32))
+	runeEnd   = rune('■')
 )
 
 func init() {
@@ -79,7 +79,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	var font *gltext.Font
 	{
 		var fd *os.File
-		fd, err = os.Open("/home/konstantin/.fonts/Go-Mono-Bold.ttf") // fontfile
+		fd, err = os.Open("/home/konstantin/.fonts/Go-Mono.ttf") // fontfile
 		if err != nil {
 			return
 		}
@@ -94,6 +94,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		}
 	}
 	gw, gh := font.GlyphBounds()
+	// gw -= 3
+	 gh -= 5
 	// font is prepared
 
 	color := func(c tcell.Color) (R, G, B float32) {
@@ -194,11 +196,13 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 		str := string(cell.R)
 
-		r, g, b := color(fg)
-		gl.Color4f(r, g, b, 1)
-		err = font.Printf(float32(x), float32(y), str)
-		if err != nil {
-			panic(err)
+		if str != " " {
+			r, g, b := color(fg)
+			gl.Color4f(r, g, b, 1)
+			err = font.Printf(float32(x), float32(y), str)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 
@@ -295,6 +299,10 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 		widthSymbol = uint(w) / uint(gw)
 		heightSymbol = uint(h) / uint(gh)
+		// root wigdets
+		if _, ok := screen.Root.(vl.VerticalFix); ok {
+			screen.Root.(vl.VerticalFix).SetHeight(heightSymbol)
+		}
 		screen.SetHeight(heightSymbol)
 		screen.GetContents(widthSymbol, &cells)
 		for r := 0; r < len(cells); r++ {
