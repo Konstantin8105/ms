@@ -299,10 +299,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 		widthSymbol = uint(w) / uint(gw)
 		heightSymbol = uint(h) / uint(gh)
-		// root wigdets
-		if _, ok := screen.Root.(vl.VerticalFix); ok {
-			screen.Root.(vl.VerticalFix).SetHeight(heightSymbol)
-		}
 		screen.SetHeight(heightSymbol)
 		screen.GetContents(widthSymbol, &cells)
 		for r := 0; r < len(cells); r++ {
