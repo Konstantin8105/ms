@@ -31,6 +31,7 @@ const (
 	endGroup
 )
 
+
 func (g GroupID) String() string {
 	switch g {
 	case File:
@@ -1212,7 +1213,7 @@ type MoveCopyble interface {
 		basePoint [3][3]float64,
 		copy bool,
 		addLines, addTri bool)
-
+// TODO do not copy lines Collinear on copy direction
 	//	MoveCopyOnPlane(nodes, elements []uint, coordinate [3]float64,
 	//		plane Plane,
 	//		intermediantParts uint,
