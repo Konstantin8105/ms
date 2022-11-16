@@ -87,7 +87,7 @@ func NewOpengl(m Mesh) (op *Opengl, err error) {
 	// ???
 
 	// create new Font from given filename (.ttf expected)
-	fd, err := os.Open("/home/konstantin/.fonts/Go-Mono-Bold.ttf") // fontfile
+	fd, err := os.Open("ProggyClean.ttf") // fontfile
 	if err != nil {
 		return
 	}

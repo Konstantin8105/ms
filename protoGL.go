@@ -79,7 +79,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	var font *gltext.Font
 	{
 		var fd *os.File
-		fd, err = os.Open("/home/konstantin/.fonts/Go-Mono.ttf") // fontfile
+		fd, err = os.Open("ProggyClean.ttf") // fontfile
 		if err != nil {
 			return
 		}
