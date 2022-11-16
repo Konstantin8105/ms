@@ -95,7 +95,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	}
 	gw, gh := font.GlyphBounds()
 	// gw -= 3
-	gh -= 5
+	// gh -= 5
 	// font is prepared
 
 	color := func(c tcell.Color) (R, G, B float32) {
