@@ -226,7 +226,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	window.SetCharCallback(func(w *glfw.Window, r rune) {
 		// rune limit
-		if r < runeStart || runeEnd < r {
+		if !(runeStart <= r && r <= runeEnd) {
 			return
 		}
 		screen.Event(tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone))
