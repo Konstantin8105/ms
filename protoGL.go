@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"sync"
 
 	"github.com/Konstantin8105/vl"
 	"github.com/gdamore/tcell/v2"
@@ -53,6 +54,9 @@ func main() {
 }
 
 func Run(root vl.Widget, action chan func()) (err error) {
+	//mutex
+	var mutex sync.Mutex
+
 	if err = glfw.Init(); err != nil {
 		err = fmt.Errorf("failed to initialize glfw: %v", err)
 		return
@@ -225,6 +229,11 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	var w, h int
 
 	window.SetCharCallback(func(w *glfw.Window, r rune) {
+		//mutex
+		mutex.Lock()
+		defer mutex.Unlock()
+		//action
+
 		// rune limit
 		if !(runeStart <= r && r <= runeEnd) {
 			return
@@ -233,6 +242,11 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	})
 
 	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
+		//mutex
+		mutex.Lock()
+		defer mutex.Unlock()
+		//action
+
 		x, y := w.GetCursorPos()
 		xs := int(x / float64(gw))
 		ys := int(y / float64(gh))
@@ -259,6 +273,11 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		action glfw.Action,
 		mods glfw.ModifierKey,
 	) {
+		//mutex
+		mutex.Lock()
+		defer mutex.Unlock()
+		//action
+
 		// convert button
 		var bm tcell.ButtonMask
 		switch button {
