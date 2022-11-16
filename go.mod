@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/Konstantin8105/gog v0.0.0-20221011134020-d25f31641629
+	github.com/Konstantin8105/msh v0.0.0-20221116084107-20c8859b38d8
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20220721103236-83ad8d7b923c
 	github.com/Konstantin8105/vl v0.0.0-20221110150242-9ad2ebf70cfa
@@ -15,13 +16,12 @@ require (
 
 require (
 	github.com/Konstantin8105/errors v0.1.0 // indirect
-	github.com/Konstantin8105/msh v0.0.0-20221026115753-b1782060274d // indirect
 	github.com/Konstantin8105/tree v0.1.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
-	github.com/rivo/uniseg v0.4.2 // indirect
+	github.com/rivo/uniseg v0.4.3 // indirect
 	golang.org/x/image v0.1.0 // indirect
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
