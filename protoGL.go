@@ -24,6 +24,8 @@ func init() {
 	runtime.LockOSThread()
 }
 
+var WindowRatio float64 = 0.5
+
 func main() {
 	// initialize
 	var root vl.Widget
@@ -210,8 +212,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		}
 	}
 
-	// 	op.fps.Init()
-
 	gl.Disable(gl.LIGHTING)
 
 	defer func() {
@@ -309,14 +309,34 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	for !window.ShouldClose() {
 		// windows
 		w, h = window.GetSize()
-		gl.Viewport(0, 0, int32(w), int32(h))
+		x := int(float64(w) * WindowRatio)
 
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		r, g, b := color(tcell.ColorWhite)
 		gl.ClearColor(r, g, b, 1)
 
-		widthSymbol = uint(w) / uint(gw)
+		// Opengl
+		gl.Viewport(int32(x), 0, int32(w-x), int32(h))
+		gl.MatrixMode(gl.PROJECTION)
+		gl.LoadIdentity()
+
+		gl.Begin(gl.QUADS)
+		gl.Color3d(0.8, 0.1, 0.1)
+		{
+			gl.Vertex2d(-0.99, -0.99)
+			gl.Vertex2d(-0.99, +0.99)
+			gl.Vertex2d(+0.99, +0.99)
+			gl.Vertex2d(+0.99, -0.99)
+		}
+		gl.End()
+
+		// gui
+		gl.Viewport(0, 0, int32(x), int32(h))
+		gl.MatrixMode(gl.MODELVIEW)
+		gl.LoadIdentity()
+
+		widthSymbol = uint(float64(w) / float64(gw) * WindowRatio)
 		heightSymbol = uint(h) / uint(gh)
 		screen.SetHeight(heightSymbol)
 		screen.GetContents(widthSymbol, &cells)
