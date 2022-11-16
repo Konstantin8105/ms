@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/Konstantin8105/gog v0.0.0-20221011134020-d25f31641629
-	github.com/Konstantin8105/msh v0.0.0-20221116084107-20c8859b38d8
+	github.com/Konstantin8105/msh v0.0.0-20221116085012-6b55b746780c
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20220721103236-83ad8d7b923c
 	github.com/Konstantin8105/vl v0.0.0-20221110150242-9ad2ebf70cfa
