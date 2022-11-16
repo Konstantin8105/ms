@@ -87,7 +87,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		if err != nil {
 			return
 		}
-		const fontSize = int32(12)
+		const fontSize = int32(16)
 		font, err = gltext.LoadTruetype(fd, fontSize, runeStart, runeEnd, gltext.LeftToRight)
 		if err != nil {
 			return
@@ -316,7 +316,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		r, g, b := color(tcell.ColorWhite)
 		gl.ClearColor(r, g, b, 1)
 
-		widthSymbol = uint(w) / uint(gw) / 2
+		widthSymbol = uint(w) / uint(gw)
 		heightSymbol = uint(h) / uint(gh)
 		screen.SetHeight(heightSymbol)
 		screen.GetContents(widthSymbol, &cells)
