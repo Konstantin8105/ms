@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"runtime"
 	"sync"
@@ -330,6 +331,102 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			gl.Vertex2d(+0.99, -0.99)
 		}
 		gl.End()
+		{
+			// screen coordinates
+			// openGlScreenCoordinate(op.window)
+			gl.Disable(gl.DEPTH_TEST)
+			gl.Disable(gl.TEXTURE_2D)
+
+			//w, h := window.GetSize()
+			//gl.Viewport(0, 0, int32(w), int32(h))
+			gl.MatrixMode(gl.PROJECTION)
+			gl.LoadIdentity()
+			gl.Ortho(0, float64(w), 0, float64(h), float64(-100.0), float64(100.0))
+
+			gl.MatrixMode(gl.MODELVIEW)
+			gl.LoadIdentity()
+		}
+		{
+			// draw axe coordinates
+			// op.drawAxes()
+			//w, h := op.window.GetSize()
+
+			s := math.Max(50.0, float64(h)/8.0)
+			b := 5.0 // distance from window border
+
+			centerX := float64(w) - b - s/2.0
+			centerY := b + s/2.0
+			gl.Begin(gl.QUADS)
+			gl.Color3d(0.8, 0.8, 0.8)
+			{
+				gl.Vertex2d(centerX-s/2, centerY-s/2)
+				gl.Vertex2d(centerX+s/2, centerY-s/2)
+				gl.Vertex2d(centerX+s/2, centerY+s/2)
+				gl.Vertex2d(centerX-s/2, centerY+s/2)
+			}
+			gl.End()
+			gl.LineWidth(1)
+			gl.Begin(gl.LINES)
+			gl.Color3d(0.1, 0.1, 0.1)
+			{
+				gl.Vertex2d(centerX-s/2, centerY-s/2)
+				gl.Vertex2d(centerX+s/2, centerY-s/2)
+				gl.Vertex2d(centerX+s/2, centerY-s/2)
+				gl.Vertex2d(centerX+s/2, centerY+s/2)
+				gl.Vertex2d(centerX+s/2, centerY+s/2)
+				gl.Vertex2d(centerX-s/2, centerY+s/2)
+				gl.Vertex2d(centerX-s/2, centerY+s/2)
+				gl.Vertex2d(centerX-s/2, centerY-s/2)
+			}
+			gl.End()
+
+			gl.Translated(centerX, centerY, 0)
+			betta := 30.0
+			alpha := 10.0
+			 gl.Rotated(betta, 1.0, 0.0, 0.0)
+			 gl.Rotated(alpha, 0.0, 1.0, 0.0)
+			gl.LineWidth(1)
+			gl.Begin(gl.LINES)
+			{
+				factor := 2.5
+				A := s / factor * 1.0 / 4.0
+				// X - red
+				gl.Color3d(1, 0, 0)
+				{
+					gl.Vertex3d(0, 0, 0)
+					gl.Vertex3d(A*2.0, 0, 0)
+					gl.Vertex3d(A*3.0, -A*0.5, 0)
+					gl.Vertex3d(A*4.0, +A*0.5, 0)
+					gl.Vertex3d(A*4.0, -A*0.5, 0)
+					gl.Vertex3d(A*3.0, +A*0.5, 0)
+				}
+				// Y - green
+				gl.Color3d(0, 1, 0)
+				{
+					gl.Vertex3d(0, 0, 0)
+					gl.Vertex3d(0, A*2.0, 0)
+					gl.Vertex3d(0, A*3.0, 0)
+					gl.Vertex3d(0, A*3.5, 0)
+					gl.Vertex3d(0, A*3.5, 0)
+					gl.Vertex3d(-A*0.5, A*4.0, 0)
+					gl.Vertex3d(0, A*3.5, 0)
+					gl.Vertex3d(+A*0.5, A*4.0, 0)
+				}
+				// Z - blue
+				gl.Color3d(0, 0, 1)
+				{
+					gl.Vertex3d(0, 0, 0)
+					gl.Vertex3d(0, 0, A*2.0)
+					gl.Vertex3d(0, +0.5*A, A*3.0)
+					gl.Vertex3d(0, +0.5*A, A*4.0)
+					gl.Vertex3d(0, -0.5*A, A*3.0)
+					gl.Vertex3d(0, -0.5*A, A*4.0)
+					gl.Vertex3d(0, +0.5*A, A*3.0)
+					gl.Vertex3d(0, -0.5*A, A*4.0)
+				}
+			}
+			gl.End()
+		}
 
 		// gui
 		gl.Viewport(0, 0, int32(x), int32(h))
