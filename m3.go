@@ -2,15 +2,12 @@ package ms
 
 import (
 	"fmt"
-	_ "image/png"
-	"log"
 	"math"
 	"os"
 	"runtime"
 	"time"
 
-	"github.com/Konstantin8105/vl"
-	"github.com/gdamore/tcell/v2"
+	"github.com/Konstantin8105/gog"
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/gltext"
@@ -20,91 +17,178 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var (
-	font     *Font
-	fontSize int = 12
-)
+var font *gltext.Font
 
-var fps Fps
+const fontSize = int32(12)
 
-func M3() {
-	if err := glfw.Init(); err != nil {
-		log.Fatalln("failed to initialize glfw:", err)
+type Opengl struct {
+	window *glfw.Window
+
+	mesh Mesh
+
+	// for 3d view
+	state       viewState
+	cursorLeft  viewState
+	updateModel bool
+	camera      struct {
+		alpha, betta float64
+		R            float64
+		center       gog.Point3d
+		moveX, moveY float64
 	}
-	defer glfw.Terminate()
+
+	// calculate data for FPS
+	fps Fps
+
+	// mouses
+	mouses   [3]Mouse  // left, middle, right
+	mouseMid MouseRoll // middle scroll
+}
+
+func (op *Opengl) Init() {
+	op.updateModel = true
+	if op.state != normal && op.state != colorEdgeElements {
+		op.state = normal
+	}
+	op.cursorLeft = selectPoints
+}
+
+func NewOpengl(m Mesh) (op *Opengl, err error) {
+	op = new(Opengl)
+	op.Init()
+	op.mesh = m
+
+	if err = glfw.Init(); err != nil {
+		err = fmt.Errorf("failed to initialize glfw: %v", err)
+		return
+	}
 
 	glfw.WindowHint(glfw.Resizable, glfw.True)
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 
-	window, err := glfw.CreateWindow(800, 600, "3D model", nil, nil)
+	op.window, err = glfw.CreateWindow(800, 600, "3D model", nil, nil)
 	if err != nil {
-		panic(err)
+		return
 	}
-	window.MakeContextCurrent()
+	op.window.MakeContextCurrent()
 
-	window.SetMouseButtonCallback(mouseButtonCallback)
-	window.SetScrollCallback(scrollCallback)
-	window.SetCursorPosCallback(cursorPosCallback)
-	window.SetKeyCallback(keyCallback)
+	op.window.SetMouseButtonCallback(op.mouseButton)
+	op.window.SetScrollCallback(op.scroll)
+	op.window.SetCursorPosCallback(op.cursorPos)
+	op.window.SetKeyCallback(op.key)
 
-	if err := gl.Init(); err != nil {
-		panic(err)
+	if err = gl.Init(); err != nil {
+		return
 	}
 
 	glfw.SwapInterval(1) // Enable vsync
 
 	// ???
 
-	file := "/home/konstantin/.fonts/Go-Mono-Bold.ttf"
-	font, err = NewFont(file, fontSize)
+	// create new Font from given filename (.ttf expected)
+	fd, err := os.Open("ProggyClean.ttf") // fontfile
 	if err != nil {
-		panic(err)
+		return
 	}
+	font, err = gltext.LoadTruetype(fd, fontSize, 32, 127, gltext.LeftToRight)
+	if err != nil {
+		return
+	}
+	err = fd.Close()
+	if err != nil {
+		return
+	}
+	// font is prepared
 
-	fps.Init()
+	op.fps.Init()
 
 	gl.Disable(gl.LIGHTING)
 
-	for !window.ShouldClose() {
-		glfw.PollEvents()
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-		gl.ClearColor(1, 1, 1, 1)
+	// mouse initialize
+	op.MouseDefault()
 
-		gl.Enable(gl.DEPTH_TEST)
-		gl.Enable(gl.LINE_SMOOTH)
+	return
+}
 
-		cameraView(window)
-		model3d(window, selectNone)
+func (op *Opengl) MouseDefault() {
+	op.mouses[0] = new(MouseSelect) // left button
+	op.mouses[1] = new(MouseMove)   // right button
+	op.mouses[2] = new(MouseRotate) // middle button
+	op.mouseMid = new(MouseZoom)    // middle scroll
+}
 
-		// check select rectangle
-		if selectObjects.fromAdd && selectObjects.toAdd {
-			selectByRectangle(window)
-			selectObjects.fromAdd = false
-			selectObjects.toAdd = false
-			selectObjects.toUpdate = false
-			continue
-		}
+func (op *Opengl) Run() {
+	defer func() {
+		// 3D window is close
+		glfw.Terminate()
+	}()
+	for !op.window.ShouldClose() {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					// safety ignore panic
+					<-time.After(100 * time.Millisecond)
+					AddInfo("Opengl: safety ignore panic: %s", r)
+				}
+			}()
 
-		// screen coordinates
-		openGlScreenCoordinate(window)
-		// select rectangle
-		drawSelectRectangle(window)
-		// draw axe coordinates
-		drawAxes(window)
-		// minimal screen notes
-		font.Draw(fmt.Sprintf("FPS       : %6.2f", fps.Get()), 0, 0*fontSize)
-		font.Draw(fmt.Sprintf("Nodes     : %6d", len(model.Points)), 0, 1*fontSize)
-		font.Draw(fmt.Sprintf("Lines     : %6d", len(model.Lines)), 0, 2*fontSize)
-		font.Draw(fmt.Sprintf("Triangles3: %6d", len(model.Triangles)), 0, 3*fontSize)
+			glfw.PollEvents()
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+			gl.ClearColor(1, 1, 1, 1)
 
-		// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
-		// TODO : REMOVE: ui(window)
+			gl.Enable(gl.DEPTH_TEST)
+			// gl.Enable(gl.BLEND) // Transparency
+			// gl.Enable(gl.LINE_SMOOTH)
 
-		window.MakeContextCurrent()
-		window.SwapBuffers()
+			// TODO transperency on back side
 
-		fps.EndFrame()
+			// switch to wireframe mode
+			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.LINE );
+			// switch off wireframe
+			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.FILL );
+			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.POINT );
+
+			// Avoid panics if Model is changed.
+			// Main problem of synchronization.
+
+			op.cameraView()
+			op.model3d(op.state, "run")
+
+			// screen coordinates
+			openGlScreenCoordinate(op.window)
+			// draw axe coordinates
+			op.drawAxes()
+			// minimal screen notes
+			DrawText(fmt.Sprintf("FPS       : %6.2f",
+				op.fps.Get()), 0, 0*fontSize)
+			if op.mesh != nil {
+				DrawText(fmt.Sprintf("Nodes     : %6d",
+					len(op.mesh.GetCoords())), 0, 1*fontSize)
+				DrawText(fmt.Sprintf("Elements  : %6d",
+					len(op.mesh.GetElements())), 0, 2*fontSize)
+			}
+
+			for i := range op.mouses {
+				if op.mouses[i] == nil {
+					continue
+				}
+				if op.mouses[i].ReadyAction() {
+					op.mouses[i].Action(op)
+				}
+				if op.mouses[i].ReadyPreview() {
+					op.mouses[i].Preview()
+				}
+			}
+
+			// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
+			// TODO : REMOVE: ui(window)
+
+			op.window.MakeContextCurrent()
+			op.window.SwapBuffers()
+
+			op.fps.EndFrame()
+		}()
 	}
 }
 
@@ -119,7 +203,7 @@ func (f *Fps) Init() {
 }
 
 func (f *Fps) Get() float32 {
-	ms := time.Now().Sub(f.framesTime).Milliseconds()
+	ms := time.Since(f.framesTime).Milliseconds()
 	if ms < 1000 && f.framesCount < 100 {
 		return f.last
 	}
@@ -133,114 +217,14 @@ func (f *Fps) EndFrame() {
 	f.framesCount++
 }
 
-// Font handle
-type Font struct {
-	Handle *gltext.Font
-}
-
-// NewFont create new Font from given filename (.ttf expected)
-func NewFont(filename string, size int) (*Font, error) {
-	fd, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
-	font, _ := gltext.LoadTruetype(fd, int32(size), 32, 127, gltext.LeftToRight)
-	return &Font{Handle: font}, nil
-}
-
-// Draw text on the screen
-func (f *Font) Draw(str string, x, y int) { // , c Color) {
+// DrawText text on the screen
+func DrawText(str string, x, y int32) {
 	gl.Color4ub(0, 0, 0, 255)
 	gl.LoadIdentity()
-	f.Handle.Printf(float32(x), float32(y), str)
+	font.Printf(float32(x), float32(y), str)
 }
 
-func (f *Font) Metrics(text string) (int, int) {
-	return f.Handle.Metrics(text)
-}
-
-var cells [][]vl.Cell
-
-var screen vl.Screen
-
-func init() {
-	root, _, err := UserInterface()
-	if err != nil {
-		panic(err)
-	}
-	screen.Root = root
-}
-
-func ui(window *glfw.Window) {
-	// OpenGl implementation of vl.Drawer
-	// Drawer = func(row, col uint, s tcell.Style, r rune)
-	w, h := window.GetSize()
-
-	gw, gh := font.Metrics(" ")
-
-	runeW := uint(w / gw / 2)
-	runeH := uint(h / gh)
-
-	// panic (fmt.Errorf("%v %v", runeW, runeH))
-
-	screen.SetHeight(runeH)
-	screen.GetContents(runeW, &cells)
-
-	for r := range cells {
-		for c := range cells[r] {
-			cell := cells[r][c]
-
-			gw, gh := font.Metrics(string(cell.R))
-
-			// background
-			fg, bg, _ := cell.S.Decompose()
-			_ = fg // TODO
-
-			switch bg {
-			case tcell.ColorYellow:
-				gl.Color3d(1, 1, 0)
-			case tcell.ColorViolet:
-				gl.Color3d(0.5, 0, 1)
-			case tcell.ColorWhite:
-				gl.Color3d(1, 1, 1)
-			case tcell.ColorBlack:
-				gl.Color3d(0, 0, 0)
-			default:
-				gl.Color3d(1, 0, 0)
-			}
-			gl.Begin(gl.QUADS)
-			{
-				// func Vertex2i(x int32, y int32)
-				gl.Vertex2i(int32((c+0)*gw), int32(h-(r+0)*gh))
-				gl.Vertex2i(int32((c+1)*gw), int32(h-(r+0)*gh))
-				gl.Vertex2i(int32((c+1)*gw), int32(h-(r+1)*gh))
-				gl.Vertex2i(int32((c+0)*gw), int32(h-(r+1)*gh))
-			}
-			gl.End()
-
-			// text
-			if cells[r][c].R == ' ' {
-				continue
-			}
-			font.Draw(string(cell.R), gw*int(c), gh*int(r))
-		}
-	}
-}
-
-var camera = struct {
-	alpha, betta float64
-	R            float64
-	center       Point
-	moveX, moveY float64
-}{
-	alpha:  0,
-	betta:  0,
-	R:      1,
-	center: Point{X: 0, Y: 0, Z: 0},
-}
-
-func angle_norm(a float64) float64 {
+func angle360(a float64) float64 {
 	if 360.0 < a {
 		return a - 360.0
 	}
@@ -250,224 +234,402 @@ func angle_norm(a float64) float64 {
 	return a
 }
 
-func cameraView(window *glfw.Window) {
-	// better angle value
-	camera.alpha = angle_norm(camera.alpha)
-	camera.betta = angle_norm(camera.betta)
+// TODO: aadd to TUI and other
+func (op *Opengl) ViewAll(centerCorrection bool) {
+	// take only coordinates, because all element are limit be coordinates
+	cos := op.mesh.GetCoords()
+	// for empty coordinate no need to do anythink
+	var initialized bool
+	var xmin, xmax, ymin, ymax, zmin, zmax float64
+	for i := range cos {
+		if cos[i].hided {
+			continue
+		}
+		if cos[i].Removed {
+			continue
+		}
+		if !initialized {
+			initialized = true
+			xmin = cos[i].Point3d[0]
+			xmax = cos[i].Point3d[0]
+			ymin = cos[i].Point3d[1]
+			ymax = cos[i].Point3d[1]
+			zmin = cos[i].Point3d[2]
+			zmax = cos[i].Point3d[2]
+		}
+		// find extemal values
+		xmin = math.Min(xmin, cos[i].Point3d[0])
+		ymin = math.Min(ymin, cos[i].Point3d[1])
+		zmin = math.Min(zmin, cos[i].Point3d[2])
+		xmax = math.Max(xmax, cos[i].Point3d[0])
+		ymax = math.Max(ymax, cos[i].Point3d[1])
+		zmax = math.Max(zmax, cos[i].Point3d[2])
+	}
+	if len(cos) == 0 || !initialized {
+		op.camera.R = 1.0
+		return
+	}
+	// update camera
+	op.camera.R = math.Max(xmax-xmin, math.Max(ymax-ymin, zmax-zmin))
+	if centerCorrection {
+		op.camera.center = gog.Point3d{
+			(xmax + xmin) / 2.0,
+			(ymax + ymin) / 2.0,
+			(zmax + zmin) / 2.0,
+		}
+		return
+	}
+	// without center correction
+}
 
-	w, h := window.GetSize()
+func (op *Opengl) UpdateModel() {
+	op.updateModel = true
+	// TODO  add logic
+}
+
+func (op *Opengl) cameraView() {
+	// better angle value
+	op.camera.alpha = angle360(op.camera.alpha)
+	op.camera.betta = angle360(op.camera.betta)
+
+	w, h := op.window.GetSize()
 	gl.Viewport(0, 0, int32(w), int32(h))
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
-	ratio := 1.0
+	var ratio float64
 	{
 		// for avoid 3D cutting back model
 		const Zzoom float64 = 100.0
 		// renaming
-		cx := camera.center.X
-		cy := camera.center.Y
-		cz := camera.center.Z
+		cx := op.camera.center[0]
+		cy := op.camera.center[1]
+		cz := op.camera.center[2]
 		// scaling monitor 3d model on screen
 		if w < h {
 			ratio = float64(w) / float64(h)
 			gl.Ortho(
-				(-camera.R-camera.moveX)+cx, (camera.R-camera.moveX)+cx,
-				(-camera.R-camera.moveY)/ratio+cy, (camera.R-camera.moveY)/ratio+cy,
-				(-camera.R-cz)*Zzoom, (camera.R+cz)*Zzoom)
+				(-op.camera.R-op.camera.moveX)+cx, (op.camera.R-op.camera.moveX)+cx,
+				(-op.camera.R-op.camera.moveY)/ratio+cy, (op.camera.R-op.camera.moveY)/ratio+cy,
+				(-op.camera.R-cz)*Zzoom, (op.camera.R+cz)*Zzoom)
 		} else {
 			ratio = float64(h) / float64(w)
 			gl.Ortho(
-				(-camera.R-camera.moveX)/ratio+cx, (camera.R-camera.moveX)/ratio+cx,
-				(-camera.R-camera.moveY)+cy, (camera.R-camera.moveY)+cy,
-				(-camera.R-cz)*Zzoom, (camera.R+cz)*Zzoom)
+				(-op.camera.R-op.camera.moveX)/ratio+cx, (op.camera.R-op.camera.moveX)/ratio+cx,
+				(-op.camera.R-op.camera.moveY)+cy, (op.camera.R-op.camera.moveY)+cy,
+				(-op.camera.R-cz)*Zzoom, (op.camera.R+cz)*Zzoom)
 		}
 	}
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
 
-	gl.Translated(camera.center.X, camera.center.Y, camera.center.Z)
-	gl.Rotated(camera.betta, 1.0, 0.0, 0.0)
-	gl.Rotated(camera.alpha, 0.0, 1.0, 0.0)
-	gl.Translated(-camera.center.X, -camera.center.Y, -camera.center.Z)
+	gl.Translated(
+		op.camera.center[0],
+		op.camera.center[1],
+		op.camera.center[2],
+	)
+	gl.Rotated(op.camera.betta, 1.0, 0.0, 0.0)
+	gl.Rotated(op.camera.alpha, 0.0, 1.0, 0.0)
+	gl.Translated(
+		-op.camera.center[0],
+		-op.camera.center[1],
+		-op.camera.center[2],
+	)
 
 	// minimal R
-	if camera.R < 0.1 {
-		camera.R = 0.1
+	if op.camera.R < 0.1 {
+		op.camera.R = 0.1
 	}
 }
 
-var updateModel bool // TODO remove
+// https://blog.jayway.com/2009/12/04/opengl-es-tutorial-for-android-part-ii-building-a-polygon/
+// http://web.archive.org/web/20120527185124/http://cgg-journal.com/2008-2/06/index.html
+func (op *Opengl) model3d(s viewState, parent string) {
+	if op.mesh == nil {
+		return
+	}
 
-func model3d(window *glfw.Window, s selectType) {
 	gl.PushMatrix()
 	defer func() {
 		gl.PopMatrix()
 	}()
 
-	if updateModel {
-		updateModel = false
-		// default values
+	cos, els := op.mesh.GetCoords(), op.mesh.GetElements()
+
+	if op.updateModel {
+		op.updateModel = false
+
+		// Do not update angles
 		// angle in global plate XOZ
-		camera.alpha = 0.0
+		// camera.alpha = 0.0
 		// angle in global plate XOY
-		camera.betta = 0.0
+		// camera.betta = 0.0
+
 		// distance from center to camera
-		camera.R = 1.0
-		if len(model.Points) == 0 {
+		op.camera.R = 1.0
+		if len(cos) == 0 {
 			return
 		}
 		// renaming
-		ps := model.Points
+		ps := cos
 		// calculate radius
 		var (
-			xmin = ps[0].X
-			xmax = ps[0].X
-			ymin = ps[0].Y
-			ymax = ps[0].Y
-			zmin = ps[0].Z
-			zmax = ps[0].Z
+			xmin = ps[0].Point3d[0]
+			xmax = ps[0].Point3d[0]
+			ymin = ps[0].Point3d[1]
+			ymax = ps[0].Point3d[1]
+			zmin = ps[0].Point3d[2]
+			zmax = ps[0].Point3d[2]
 		)
 		for i := range ps {
-			xmin = math.Min(xmin, ps[i].X)
-			ymin = math.Min(ymin, ps[i].Y)
-			zmin = math.Min(zmin, ps[i].Z)
-			xmax = math.Max(xmax, ps[i].X)
-			ymax = math.Max(ymax, ps[i].Y)
-			zmax = math.Max(zmax, ps[i].Z)
+			xmin = math.Min(xmin, ps[i].Point3d[0])
+			ymin = math.Min(ymin, ps[i].Point3d[1])
+			zmin = math.Min(zmin, ps[i].Point3d[2])
+			xmax = math.Max(xmax, ps[i].Point3d[0])
+			ymax = math.Max(ymax, ps[i].Point3d[1])
+			zmax = math.Max(zmax, ps[i].Point3d[2])
 		}
-		camera.R = math.Max(xmax-xmin, camera.R)
-		camera.R = math.Max(ymax-ymin, camera.R)
-		camera.R = math.Max(zmax-zmin, camera.R)
-		camera.center = Point{
-			X: (xmax + xmin) / 2.0,
-			Y: (ymax + ymin) / 2.0,
-			Z: (zmax + zmin) / 2.0,
+		op.camera.R = math.Max(xmax-xmin, op.camera.R)
+		op.camera.R = math.Max(ymax-ymin, op.camera.R)
+		op.camera.R = math.Max(zmax-zmin, op.camera.R)
+		op.camera.center = gog.Point3d{
+			(xmax + xmin) / 2.0,
+			(ymax + ymin) / 2.0,
+			(zmax + zmin) / 2.0,
 		}
 	}
 
-	// TODO: if model.Points[i].Hided {
+	// TODO: if cos[i].Hided {
 	// TODO: 	continue
 	// TODO: }
+
+	if !(s == selectTriangles || s == selectLines || s == selectPoints) {
+		// TODO CREATE A GREAT LINES
+		gl.Disable(gl.POLYGON_OFFSET_FILL)
+	}
 
 	// Point
 	gl.PointSize(5)
 	switch s {
-	case selectNone:
+	case normal, colorEdgeElements:
 		gl.Begin(gl.POINTS)
-		for i := range model.Points {
-			if model.Points[i].Selected {
+		for i := range cos {
+			if cos[i].Removed {
+				continue
+			}
+			if cos[i].hided {
+				continue
+			}
+			if cos[i].selected {
 				gl.Color3ub(255, 1, 1)
 			} else {
 				gl.Color3ub(1, 1, 1)
 			}
-			gl.Vertex3d(model.Points[i].X, model.Points[i].Y, model.Points[i].Z)
+			gl.Vertex3d(cos[i].Point3d[0], cos[i].Point3d[1], cos[i].Point3d[2])
 		}
 		gl.End()
 	case selectPoints:
 		gl.Begin(gl.POINTS)
-		for i := range model.Points {
-			if model.Points[i].Selected {
+		for i := range cos {
+			if cos[i].Removed {
+				continue
+			}
+			if cos[i].hided {
+				continue
+			}
+			if cos[i].selected {
 				continue
 			}
 			convertToColor(i)
-			gl.Vertex3d(model.Points[i].X, model.Points[i].Y, model.Points[i].Z)
+			gl.Vertex3d(cos[i].Point3d[0], cos[i].Point3d[1], cos[i].Point3d[2])
 		}
 		gl.End()
+	case selectLines, selectTriangles: // do nothing
+	default:
+		panic(fmt.Errorf("not valid selection : %v", s))
 	}
-	// Lines
-	gl.LineWidth(3)
-	switch s {
-	case selectNone:
-		gl.Begin(gl.LINES)
-		for i := range model.Lines {
-			if model.Lines[i].Selected {
-				gl.Color3ub(255, 1, 1)
-			} else {
-				gl.Color3ub(153, 153, 153)
-			}
-			f := model.Points[model.Lines[i].Index[0]]
-			t := model.Points[model.Lines[i].Index[1]]
-			gl.Vertex3d(f.X, f.Y, f.Z)
-			gl.Vertex3d(t.X, t.Y, t.Z)
+	// Elements
+	for i, el := range els {
+		gl.PointSize(2) // default points size
+		gl.LineWidth(1) // TODO GREAT LINES 3) // default lines width
+		if op.mesh.IsIgnore(uint(i)) {
+			continue
 		}
-		gl.End()
-	case selectLines:
-		gl.PointSize(2)
-		for i := range model.Lines {
-			if model.Lines[i].Selected {
-				continue
-			}
-			convertToColor(i)
-			f := model.Points[model.Lines[i].Index[0]]
-			t := model.Points[model.Lines[i].Index[1]]
-			gl.Begin(gl.LINES)
-			gl.Vertex3d(f.X, f.Y, f.Z)
-			gl.Vertex3d(t.X, t.Y, t.Z)
-			gl.End()
-			gl.Begin(gl.POINTS)
-			gl.Vertex3d(f.X, f.Y, f.Z)
-			gl.Vertex3d(t.X, t.Y, t.Z)
-			gl.End()
+		// do not show selected elements in Select case
+		if s != normal && s != colorEdgeElements && el.selected {
+			continue
 		}
-	}
-	// Triangle
-	switch s {
-	case selectNone:
-		gl.Begin(gl.TRIANGLES)
-		for i := range model.Triangles {
-			if model.Triangles[i].Selected {
-				gl.Color3ub(255, 1, 1)
-			} else {
-				gl.Color3ub(153, 0, 153)
-			}
-			for p := 0; p < 3; p++ {
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[p]].X,
-					model.Points[model.Triangles[i].Index[p]].Y,
-					model.Points[model.Triangles[i].Index[p]].Z)
-			}
+		if el.hided { // hided element
+			continue
 		}
-		gl.End()
-	case selectTriangles:
-		gl.PointSize(2)
-		for i := range model.Triangles {
-			if model.Triangles[i].Selected {
-				continue
-			}
-			convertToColor(i)
-			gl.Begin(gl.POINTS)
-			for p := 0; p < 3; p++ {
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[p]].X,
-					model.Points[model.Triangles[i].Index[p]].Y,
-					model.Points[model.Triangles[i].Index[p]].Z)
-			}
-			gl.End()
-			gl.Begin(gl.TRIANGLES)
-			for p := 0; p < 3; p++ {
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[p]].X,
-					model.Points[model.Triangles[i].Index[p]].Y,
-					model.Points[model.Triangles[i].Index[p]].Z)
-			}
-			gl.End()
-			gl.LineWidth(2)
-			gl.Begin(gl.LINES)
-			for p := 0; p < 3; p++ {
-				from, to := p, p+1
-				if to == 3 {
-					to = 0
+		if el.ElementType == ElRemove { // removed element
+			continue
+		}
+		// color identification
+		switch s {
+		case normal, colorEdgeElements:
+			switch el.ElementType {
+			case Line2:
+				if el.selected {
+					gl.Color3ub(255, 51, 51)
+				} else {
+					gl.Color3ub(153, 153, 153)
 				}
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[from]].X,
-					model.Points[model.Triangles[i].Index[from]].Y,
-					model.Points[model.Triangles[i].Index[from]].Z)
-				gl.Vertex3d(
-					model.Points[model.Triangles[i].Index[to]].X,
-					model.Points[model.Triangles[i].Index[to]].Y,
-					model.Points[model.Triangles[i].Index[to]].Z)
+			case Triangle3:
+				if el.selected {
+					// gl.Color3ub(255, 91, 91)
+					gl.Color4ub(255, 91, 91, 200)
+				} else {
+					// gl.Color3ub(153, 0, 153)
+					gl.Color4ub(153, 0, 153, 200)
+				}
+			default:
+				panic(fmt.Errorf("not valid element type: %v", el))
+			}
+		case selectPoints, selectLines, selectTriangles:
+			convertToColor(i)
+		default:
+			panic(fmt.Errorf("not valid select element: %v", s))
+		}
+		// select points
+		if (s == selectLines && el.ElementType == Line2) ||
+			(s == selectTriangles && el.ElementType == Triangle3) {
+			gl.Begin(gl.POINTS)
+			for _, p := range el.Indexes {
+				gl.Vertex3d(cos[p].Point3d[0], cos[p].Point3d[1], cos[p].Point3d[2])
 			}
 			gl.End()
+		}
+		// draw lines in 3D
+		switch el.ElementType {
+		case Line2:
+			if s == normal || s == selectLines || (s == colorEdgeElements && el.selected) {
+				gl.Begin(gl.LINES)
+				for _, k := range el.Indexes {
+					c := cos[k]
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				}
+				gl.End()
+			}
+			if s == colorEdgeElements && !el.selected {
+				gl.Begin(gl.LINES)
+				for i, k := range el.Indexes {
+					edgeColor(i)
+					c := cos[k]
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				}
+				gl.End()
+			}
+		case Triangle3:
+			if s == selectTriangles {
+				gl.Begin(gl.LINES)
+				for p := range el.Indexes {
+					from, to := p, p+1
+					if to == len(el.Indexes) {
+						from = el.Indexes[from]
+						to = el.Indexes[0]
+					} else {
+						from = el.Indexes[from]
+						to = el.Indexes[to]
+					}
+					gl.Vertex3d(
+						cos[from].Point3d[0],
+						cos[from].Point3d[1],
+						cos[from].Point3d[2])
+					gl.Vertex3d(
+						cos[to].Point3d[0],
+						cos[to].Point3d[1],
+						cos[to].Point3d[2])
+				}
+				gl.End()
+			}
+		default:
+			panic(fmt.Errorf("not valid element: %v", el))
+		}
+
+		// TODO CREATE A GREAT LINES
+		if !(s == selectTriangles || s == selectLines || s == selectPoints) {
+			gl.Enable(gl.POLYGON_OFFSET_FILL)
+			gl.PolygonOffset(1.0, 1.0)
+		}
+
+		// draw triangles in 3D
+		switch el.ElementType {
+		case Line2: // do nothing
+		case Triangle3:
+			if s == normal || s == selectTriangles || (s == colorEdgeElements && el.selected) {
+				gl.Begin(gl.TRIANGLES)
+				for _, p := range el.Indexes {
+					gl.Vertex3d(
+						cos[p].Point3d[0],
+						cos[p].Point3d[1],
+						cos[p].Point3d[2])
+				}
+				gl.End()
+			}
+			if s == colorEdgeElements && !el.selected {
+				gl.Begin(gl.TRIANGLES)
+				for i, p := range el.Indexes {
+					edgeColor(i)
+					gl.Vertex3d(
+						cos[p].Point3d[0],
+						cos[p].Point3d[1],
+						cos[p].Point3d[2])
+				}
+				gl.End()
+			}
+			if s == normal {
+				gl.Color4ub(123, 0, 123, 200)
+				gl.LineWidth(1)
+
+				mid := [3]float64{
+					(cos[el.Indexes[0]].Point3d[0] +
+						cos[el.Indexes[1]].Point3d[0] +
+						cos[el.Indexes[2]].Point3d[0]) * 1.0 / 3.0,
+					(cos[el.Indexes[0]].Point3d[1] +
+						cos[el.Indexes[1]].Point3d[1] +
+						cos[el.Indexes[2]].Point3d[1]) * 1.0 / 3.0,
+					(cos[el.Indexes[0]].Point3d[2] +
+						cos[el.Indexes[1]].Point3d[2] +
+						cos[el.Indexes[2]].Point3d[2]) * 1.0 / 3.0,
+				}
+
+				for p := range el.Indexes {
+					gl.LineWidth(float32(p * 2))
+					gl.Begin(gl.LINES)
+
+					from, to := p, p+1
+					if to == len(el.Indexes) {
+						from = el.Indexes[from]
+						to = el.Indexes[0]
+					} else {
+						from = el.Indexes[from]
+						to = el.Indexes[to]
+					}
+					gl.Vertex3d(
+						cos[from].Point3d[0],
+						cos[from].Point3d[1],
+						cos[from].Point3d[2])
+					gl.Vertex3d(
+						cos[to].Point3d[0],
+						cos[to].Point3d[1],
+						cos[to].Point3d[2])
+
+					gl.Vertex3d(
+						0.1*mid[0]+0.9*cos[from].Point3d[0],
+						0.1*mid[1]+0.9*cos[from].Point3d[1],
+						0.1*mid[2]+0.9*cos[from].Point3d[2],
+					)
+					gl.Vertex3d(
+						0.1*mid[0]+0.9*cos[to].Point3d[0],
+						0.1*mid[1]+0.9*cos[to].Point3d[1],
+						0.1*mid[2]+0.9*cos[to].Point3d[2],
+					)
+					gl.End()
+				}
+
+			}
+		default:
+			panic(fmt.Errorf("not valid element: %v", el))
 		}
 	}
 }
@@ -486,71 +648,41 @@ func openGlScreenCoordinate(window *glfw.Window) {
 	gl.LoadIdentity()
 }
 
-func drawSelectRectangle(window *glfw.Window) {
-	// draw select rectangle
-	if !selectObjects.fromAdd || !selectObjects.toUpdate {
-		return
-	}
-	_, h := window.GetSize()
-
-	gl.LineWidth(1)
-	gl.Begin(gl.LINES)
-	gl.Color3d(1.0, 0.0, 0.0) // Red
-	{
-		x1 := float64(selectObjects.xFrom)
-		y1 := float64(h) - float64(selectObjects.yFrom)
-		x2 := float64(selectObjects.xTo)
-		y2 := float64(h) - float64(selectObjects.yTo)
-		gl.Vertex2d(x1, y1)
-		gl.Vertex2d(x1, y2)
-
-		gl.Vertex2d(x1, y2)
-		gl.Vertex2d(x2, y2)
-
-		gl.Vertex2d(x2, y2)
-		gl.Vertex2d(x2, y1)
-
-		gl.Vertex2d(x2, y1)
-		gl.Vertex2d(x1, y1)
-	}
-	gl.End()
-}
-
-func drawAxes(window *glfw.Window) {
-	w, h := window.GetSize()
+func (op *Opengl) drawAxes() {
+	w, h := op.window.GetSize()
 
 	s := math.Max(50.0, float64(h)/8.0)
 	b := 5.0 // distance from window border
 
-	center_x := float64(w) - b - s/2.0
-	center_y := b + s/2.0
+	centerX := float64(w) - b - s/2.0
+	centerY := b + s/2.0
 	gl.Begin(gl.QUADS)
 	gl.Color3d(0.8, 0.8, 0.8)
 	{
-		gl.Vertex2d(center_x-s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y+s/2)
-		gl.Vertex2d(center_x-s/2, center_y+s/2)
+		gl.Vertex2d(centerX-s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY+s/2)
+		gl.Vertex2d(centerX-s/2, centerY+s/2)
 	}
 	gl.End()
 	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
 	gl.Color3d(0.1, 0.1, 0.1)
 	{
-		gl.Vertex2d(center_x-s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y-s/2)
-		gl.Vertex2d(center_x+s/2, center_y+s/2)
-		gl.Vertex2d(center_x+s/2, center_y+s/2)
-		gl.Vertex2d(center_x-s/2, center_y+s/2)
-		gl.Vertex2d(center_x-s/2, center_y+s/2)
-		gl.Vertex2d(center_x-s/2, center_y-s/2)
+		gl.Vertex2d(centerX-s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY-s/2)
+		gl.Vertex2d(centerX+s/2, centerY+s/2)
+		gl.Vertex2d(centerX+s/2, centerY+s/2)
+		gl.Vertex2d(centerX-s/2, centerY+s/2)
+		gl.Vertex2d(centerX-s/2, centerY+s/2)
+		gl.Vertex2d(centerX-s/2, centerY-s/2)
 	}
 	gl.End()
 
-	gl.Translated(center_x, center_y, 0)
-	gl.Rotated(camera.betta, 1.0, 0.0, 0.0)
-	gl.Rotated(camera.alpha, 0.0, 1.0, 0.0)
+	gl.Translated(centerX, centerY, 0)
+	gl.Rotated(op.camera.betta, 1.0, 0.0, 0.0)
+	gl.Rotated(op.camera.alpha, 0.0, 1.0, 0.0)
 	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
 	{
@@ -594,35 +726,56 @@ func drawAxes(window *glfw.Window) {
 	gl.End()
 }
 
-func scrollCallback(window *glfw.Window, xoffset, yoffset float64) {
-	const factor = 0.05
-	switch {
-	case 0 <= yoffset:
-		camera.R /= (1 + factor)
-	case yoffset <= 0:
-		camera.R *= (1 + factor)
-	}
+func (op *Opengl) scroll(window *glfw.Window, xoffset, yoffset float64) {
+	op.mouseMid.Roll(int32(xoffset), int32(yoffset), op)
 }
 
-var selectObjects = struct {
-	xFrom, yFrom int32
-	fromAdd      bool
-
-	xTo, yTo int32
-	toUpdate bool
-	toAdd    bool
-}{}
-
-type selectType = uint8
+type viewState uint8
 
 const (
-	selectNone selectType = iota
-	selectPoints
-	selectLines
-	selectTriangles
+	normal            viewState = 1 << iota // 1
+	colorEdgeElements                       // 2
+	selectPoints                            // 4
+	selectLines                             // 8
+	selectTriangles                         // 16
 )
 
-var (
+func (s viewState) String() string {
+	switch s {
+	case normal:
+		return "normal"
+	case colorEdgeElements:
+		return "colorEdgeElements"
+	case selectPoints:
+		return "selectPoints"
+	case selectLines:
+		return "selectLines"
+	case selectTriangles:
+		return "selectTriangles"
+	}
+	return fmt.Sprintf("%d", s)
+}
+
+func edgeColor(pos int) {
+	switch pos {
+	case 0: // yellow
+		gl.Color3ub(255, 255, 0)
+		return
+	case 1: // blue
+		gl.Color3ub(0, 0, 255)
+		return
+	case 2: // green
+		gl.Color3ub(0, 255, 0)
+		return
+	case 3: // purple
+		gl.Color3ub(255, 0, 125)
+		return
+	}
+	panic(fmt.Errorf("not valid pos: %d", pos))
+}
+
+// maximal amount colors is 245^3 = 14 706 125
+const (
 	convertOffset  = uint64(5)
 	convertMaxUint = uint64(245) // max uint value
 )
@@ -687,209 +840,524 @@ func convertToColor(i int) {
 	)
 }
 
-func selectByRectangle(window *glfw.Window) {
-	_, h := window.GetSize()
-
-	selectObjects.yFrom = int32(h) - selectObjects.yFrom
-	selectObjects.yTo = int32(h) - selectObjects.yTo
-
-	//  glXGetConfig(dpy, vInfo, GLX_RED_SIZE, &attribs->redSize);
-	// GLX_BUFFER_SIZE
-	//
-	//     Number of bits per color buffer. For RGBA visuals,
-	// GLX_BUFFER_SIZE is the sum of GLX_RED_SIZE, GLX_GREEN_SIZE,
-	// GLX_BLUE_SIZE, and GLX_ALPHA_SIZE.
-	// For color index visuals, GLX_BUFFER_SIZE is the size of the color indexes.
-	//
-	// GLX_RED_SIZE
-	//
-	//     Number of bits of red stored in each color buffer.
-	// Undefined if GLX_RGBA is False.
-	//
-	// glxinfo
-	//     visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
-	//   id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
-	// ----------------------------------------------------------------------------
-	// 0x081 24 tc  0  32  0 r  . .   8  8  8  8 .  .  0  0  0  0  0  0  0  0 0 None
-	//
-	// GLX_BUFFER_SIZE = 32
-	// GLX_RED_SIZE    =  8
-	// 8bits is 0...256
-
-	if selectObjects.xTo < selectObjects.xFrom {
-		// swap
-		selectObjects.xTo, selectObjects.xFrom = selectObjects.xFrom, selectObjects.xTo
-	}
-	if selectObjects.yTo < selectObjects.yFrom {
-		// swap
-		selectObjects.yTo, selectObjects.yFrom = selectObjects.yFrom, selectObjects.yTo
-	}
-
-	var found bool
-
-	for _, s := range []struct {
-		st selectType
-		sf func(index int) (found bool)
-	}{
-		{
-			st: selectPoints, sf: func(index int) bool {
-				if index < 0 || len(model.Points) <= index {
-					return false
-				}
-				model.Points[index].Selected = true
-				return true
-			},
-		},
-		{
-			st: selectLines, sf: func(index int) bool {
-				if index < 0 || len(model.Lines) <= index {
-					return false
-				}
-				model.Lines[index].Selected = true
-				return true
-			},
-		},
-		{
-			st: selectTriangles, sf: func(index int) bool {
-				if index < 0 || len(model.Triangles) <= index {
-					return false
-				}
-				model.Triangles[index].Selected = true
-				return true
-			},
-		},
-	} {
-		found = true
-		for found { // TODO : infinite loop
-			found = false
-			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-			gl.ClearColorxOES(0, 0, 0, 0) // ClearColor(1, 1, 1, 1)
-			gl.Enable(gl.DEPTH_TEST)
-			gl.Disable(gl.LINE_SMOOTH)
-			cameraView(window)
-			// color initialize
-			model3d(window, s.st)
-
-			// TODO : screen coordinates
-			// TODO : openGlScreenCoordinate(window)
-			// TODO : gl.Flush()
-
-			// color selection
-			var color []uint8 = make([]uint8, 4)
-			for x := selectObjects.xFrom; x <= selectObjects.xTo; x++ {
-				for y := selectObjects.yFrom; y <= selectObjects.yTo; y++ {
-					// func ReadPixels(
-					//	x int32, y int32,
-					//	width int32, height int32,
-					//	format uint32, xtype uint32, pixels unsafe.Pointer)
-					gl.ReadPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&color[0]))
-					index := convertToIndex(color)
-					if s.sf(index) {
-						found = true
-					}
-				}
-			}
-			// if any find selection, then try again
-		}
-	}
-}
-
-func mouseButtonCallback(
+func (op *Opengl) mouseButton(
 	w *glfw.Window,
 	button glfw.MouseButton,
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	if button == glfw.MouseButton1 {
-		switch action {
-		case glfw.Press:
-			if mods == glfw.ModControl {
-				x, y := w.GetCursorPos()
-				selectObjects.xFrom = int32(x)
-				selectObjects.yFrom = int32(y)
-				selectObjects.fromAdd = true
-			} else {
-				selectObjects.fromAdd = false
-			}
-		case glfw.Release:
-			if mods == glfw.ModControl {
-				x, y := w.GetCursorPos()
-				selectObjects.xTo = int32(x)
-				selectObjects.yTo = int32(y)
-				selectObjects.toAdd = true
-			} else {
-				selectObjects.toUpdate = false
-				selectObjects.fromAdd = false
-				selectObjects.toAdd = false
-			}
-		case glfw.Repeat:
-			// do nothing
-		}
-	}
-}
-
-var (
-	xlast float64
-	ylast float64
-)
-
-func cursorPosCallback(w *glfw.Window, xpos, ypos float64) {
-	if selectObjects.fromAdd || selectObjects.toAdd {
-		selectObjects.xTo = int32(xpos)
-		selectObjects.yTo = int32(ypos)
-		selectObjects.toUpdate = true
+	var index int
+	switch button {
+	case glfw.MouseButton1:
+		index = 0
+	case glfw.MouseButton2:
+		index = 1
+	case glfw.MouseButton3:
+		index = 2
+	default:
 		return
 	}
-
-	const angle = 5.0
-	if w.GetMouseButton(glfw.MouseButton1) == glfw.Press {
-		switch {
-		case xpos < xlast:
-			camera.alpha -= angle
-		case xlast < xpos:
-			camera.alpha += angle
+	for i := range op.mouses {
+		if op.mouses[i] == nil {
+			continue
 		}
-		switch {
-		case ypos < ylast:
-			camera.betta -= angle
-		case ylast < ypos:
-			camera.betta += angle
+		if i != index {
+			op.mouses[i].Reset()
+			continue
 		}
-		xlast = xpos
-		ylast = ypos
-	}
-
-	const factor = 0.01
-	if w.GetMouseButton(glfw.MouseButton2) == glfw.Press {
-		switch {
-		case xpos < xlast:
-			camera.moveX -= camera.R * factor
-		case xlast < xpos:
-			camera.moveX += camera.R * factor
+		x, y := w.GetCursorPos()
+		_, h := w.GetSize()
+		y = float64(h) - y
+		switch action {
+		case glfw.Press:
+			op.mouses[index].Press(int32(x), int32(y))
+		case glfw.Release:
+			op.mouses[index].Release(int32(x), int32(y))
+		default:
+			// case glfw.Repeat:
+			// do nothing
 		}
-		switch {
-		case ypos < ylast:
-			camera.moveY += camera.R * factor
-		case ylast < ypos:
-			camera.moveY -= camera.R * factor
-		}
-		xlast = xpos
-		ylast = ypos
+		return
 	}
 }
 
-func keyCallback(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+func (op *Opengl) cursorPos(w *glfw.Window, xpos, ypos float64) {
+	_, h := w.GetSize()
+	ypos = float64(h) - ypos
+	for i := range op.mouses {
+		if op.mouses[i] == nil {
+			continue
+		}
+		op.mouses[i].Update(int32(xpos), int32(ypos))
+	}
+}
+
+func (op *Opengl) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	switch key {
 	case glfw.KeyEscape:
 		// deselect all
-		for i := range model.Points {
-			model.Points[i].Selected = false
+		op.Init()
+		op.mesh.DeselectAll()
+		for i := range op.mouses {
+			if op.mouses[i] == nil {
+				continue
+			}
+			op.mouses[i].Reset()
 		}
-		for i := range model.Lines {
-			model.Lines[i].Selected = false
+		op.MouseDefault()
+	}
+}
+
+func (op *Opengl) StandardView(view SView) {
+	op.updateModel = true
+	switch view {
+	case StandardViewXOYpos:
+		op.camera.alpha = 0.0
+		op.camera.betta = 0.0
+	case StandardViewYOZpos:
+		op.camera.alpha = 90.0
+		op.camera.betta = 0.0
+	case StandardViewXOZpos:
+		op.camera.alpha = 0.0
+		op.camera.betta = 270.0
+	case StandardViewXOYneg:
+		op.camera.alpha = 180.0
+		op.camera.betta = 0.0
+	case StandardViewYOZneg:
+		op.camera.alpha = 270.0
+		op.camera.betta = 0.0
+	case StandardViewXOZneg:
+		op.camera.alpha = 0.0
+		op.camera.betta = 90.0
+	}
+}
+
+func (op *Opengl) ColorEdge(isColor bool) {
+	if isColor {
+		op.state = colorEdgeElements
+	} else {
+		op.state = normal
+	}
+}
+
+func (op *Opengl) SelectLeftCursor(nodes, lines, tria bool) {
+	op.cursorLeft = 0
+	if nodes {
+		op.cursorLeft |= selectPoints
+	}
+	if lines {
+		op.cursorLeft |= selectLines
+	}
+	if tria {
+		op.cursorLeft |= selectTriangles
+	}
+}
+
+func (op *Opengl) SelectScreen(from, to [2]int32) {
+	for i := range op.mouses {
+		if op.mouses[i] == nil {
+			continue
 		}
-		for i := range model.Triangles {
-			model.Triangles[i].Selected = false
+		switch m := op.mouses[i].(type) {
+		case *MouseSelect:
+			m.Reset()
+			m.Press(from[0], from[1])
+			m.Release(to[0], to[1])
 		}
 	}
+}
+
+type LeftCursor uint8
+
+const (
+	AddLinesLC = iota
+	AddTrianglesLC
+	endLC
+)
+
+func (lc LeftCursor) AmountNodes() int {
+	switch lc {
+	case AddLinesLC:
+		return 2
+	case AddTrianglesLC:
+		return 3
+	}
+	return -1
+}
+
+func (lc LeftCursor) String() string {
+	switch lc {
+	case AddLinesLC:
+		return "Lines"
+	case AddTrianglesLC:
+		return "Triangles"
+	}
+	return "Undefined"
+}
+
+func (op *Opengl) AddLeftCursor(lc LeftCursor) {
+	var ma MouseAdd
+	ma.LC = lc
+	op.mouses[0] = &ma
+}
+
+type MouseRoll interface {
+	Roll(xoffset, yoffset int32, op *Opengl)
+}
+
+type MouseZoom struct {
+	x, y int32
+}
+
+func (mz *MouseZoom) Roll(xoffset, yoffset int32, op *Opengl) {
+	mz.x = xoffset
+	mz.y = yoffset
+	mz.AfterRoll(op)
+}
+
+func (mz *MouseZoom) AfterRoll(op *Opengl) {
+	const factor = 0.05
+	switch {
+	case 0 <= mz.y:
+		op.camera.R /= (1 + factor)
+	case mz.y <= 0:
+		op.camera.R *= (1 + factor)
+	}
+}
+
+type Mouse interface {
+	Press(x, y int32)
+	Update(x, y int32)
+	Release(x, y int32)
+
+	ReadyPreview() bool
+	Preview()
+
+	ReadyAction() bool
+	Action(op *Opengl)
+
+	Reset()
+}
+
+type Mouse2P struct {
+	from    [2]int32
+	fromAdd bool
+
+	to       [2]int32
+	toUpdate bool
+	toAdd    bool
+}
+
+func (m2 *Mouse2P) Press(x, y int32) {
+	m2.from[0] = x
+	m2.from[1] = y
+	m2.fromAdd = true
+}
+
+func (m2 *Mouse2P) Update(x, y int32) {
+	if !m2.fromAdd {
+		return
+	}
+	m2.to[0] = x
+	m2.to[1] = y
+	m2.toUpdate = true
+}
+
+func (m2 *Mouse2P) Release(x, y int32) {
+	if !m2.fromAdd {
+		return
+	}
+	m2.to[0] = x
+	m2.to[1] = y
+	m2.toAdd = true
+}
+
+func (m2 *Mouse2P) Reset() {
+	m2.fromAdd = false
+	m2.toUpdate = false
+	m2.toAdd = false
+}
+
+func (m2 *Mouse2P) ReadyPreview() bool {
+	if !m2.fromAdd || !m2.toUpdate {
+		return false
+	}
+	return true
+}
+
+func (m2 *Mouse2P) ReadyAction() bool {
+	if !m2.fromAdd || !m2.toAdd {
+		return false
+	}
+	return true
+}
+
+type MouseSelect struct {
+	Mouse2P
+}
+
+func (ms *MouseSelect) Preview() {
+	if !ms.ReadyPreview() {
+		return
+	}
+
+	// draw select rectangle
+	gl.LineWidth(1)
+	gl.Begin(gl.LINES)
+	gl.Color3d(1.0, 0.0, 0.0) // Red
+	{
+		var (
+			x1 = ms.from[0]
+			y1 = ms.from[1]
+			x2 = ms.to[0]
+			y2 = ms.to[1]
+		)
+		gl.Vertex2i(x1, y1)
+		gl.Vertex2i(x1, y2)
+
+		gl.Vertex2i(x1, y2)
+		gl.Vertex2i(x2, y2)
+
+		gl.Vertex2i(x2, y2)
+		gl.Vertex2i(x2, y1)
+
+		gl.Vertex2i(x2, y1)
+		gl.Vertex2i(x1, y1)
+	}
+	gl.End()
+}
+
+func (ms *MouseSelect) Action(op *Opengl) {
+	if !ms.ReadyAction() {
+		return
+	}
+	defer ms.Reset()
+
+	for c := 0; c < 2; c++ {
+		if ms.to[c] < ms.from[c] {
+			// swap
+			ms.to[c], ms.from[c] = ms.from[c], ms.to[c]
+		}
+		if ms.from[c] < 0 {
+			ms.from[c] = 0
+		}
+		if ms.to[c] < 0 {
+			ms.to[c] = 0
+		}
+	}
+
+	cos, els := op.mesh.GetCoords(), op.mesh.GetElements()
+
+	for _, s := range []struct {
+		st viewState
+		sf func(index int) (found bool)
+	}{
+		{st: selectPoints, sf: func(index int) bool {
+			if index < 0 {
+				return false
+			}
+			if len(cos) <= index {
+				AddInfo("selectPoints index outside: %d", index)
+				return false
+			}
+			cos[index].selected = true
+			return true
+		}}, {st: selectLines, sf: func(index int) bool {
+			if index < 0 {
+				return false
+			}
+			if len(els) <= index {
+				AddInfo("selectLines index outside: %d", index)
+				return false
+			}
+			if els[index].ElementType != Line2 {
+				AddInfo("selectLines index is not line: %d. %v",
+					index, els[index])
+				return false
+			}
+			els[index].selected = true
+			return true
+		}}, {st: selectTriangles, sf: func(index int) bool {
+			if index < 0 {
+				return false
+			}
+			if len(els) <= index {
+				AddInfo("selectTriangles index outside: %d", index)
+				return false
+			}
+			if els[index].ElementType != Triangle3 {
+				AddInfo("selectTriangles index is not triangle: %d", index)
+				return false
+			}
+			els[index].selected = true
+			return true
+		}},
+	} {
+		if op.cursorLeft&s.st == 0 {
+			continue
+		}
+
+		// find selection
+		found := true
+		for found { // TODO : infinite loop
+			found = false
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+			gl.ClearColorxOES(0, 0, 0, 0)
+			// gl.ClearColor(1, 1, 1, 1)
+			gl.Enable(gl.DEPTH_TEST)
+			gl.Disable(gl.LINE_SMOOTH)
+			gl.Disable(gl.BLEND) // Transparency
+			op.cameraView()
+			// color initialize
+
+			op.model3d(s.st, "select")
+
+			// TODO : screen coordinates
+			// TODO : openGlScreenCoordinate(window)
+			// TODO :
+
+			gl.Flush()
+			gl.Finish()
+
+			// color selection
+			sizeX := (ms.to[0] - ms.from[0] + 1)
+			sizeY := (ms.to[1] - ms.from[1] + 1)
+			size := sizeX * sizeY
+			color := make([]uint8, 4*size)
+			gl.ReadPixels(ms.from[0], ms.from[1], sizeX, sizeY,
+				gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&color[0]))
+			for i := 0; i < len(color)-1; i += 4 {
+				index := convertToIndex(color[i : i+4])
+				if s.sf(index) {
+					found = true
+				}
+			}
+
+			// if any find selection, then try again
+		}
+	}
+}
+
+type MouseRotate struct {
+	Mouse2P
+}
+
+func (mr *MouseRotate) Preview() {}
+
+func (mr *MouseRotate) Action(op *Opengl) {
+	if !mr.ReadyAction() {
+		return
+	}
+	defer mr.Reset()
+	// action
+	const angle = 15.0
+
+	dx := mr.to[0] - mr.from[0]
+	dy := mr.to[1] - mr.from[1]
+	if dx < 0 {
+		dx = -dx
+	}
+	if dy < 0 {
+		dy = -dy
+	}
+	if dy < dx {
+		switch {
+		case mr.to[0] < mr.from[0]:
+			op.camera.alpha -= angle
+		case mr.from[0] < mr.to[0]:
+			op.camera.alpha += angle
+		}
+	} else {
+		switch {
+		case mr.to[1] < mr.from[1]:
+			op.camera.betta += angle
+		case mr.from[1] < mr.to[1]:
+			op.camera.betta -= angle
+		}
+	}
+}
+
+type MouseMove struct {
+	Mouse2P
+}
+
+func (mr *MouseMove) Preview() {}
+
+func (mr *MouseMove) Action(op *Opengl) {
+	if !mr.ReadyAction() {
+		return
+	}
+	defer mr.Reset()
+	// action
+	const factor = 0.05
+	switch {
+	case mr.to[0] < mr.from[0]:
+		op.camera.moveX -= op.camera.R * factor
+	case mr.from[0] < mr.to[0]:
+		op.camera.moveX += op.camera.R * factor
+	}
+	switch {
+	case mr.to[1] < mr.from[1]:
+		op.camera.moveY -= op.camera.R * factor
+	case mr.from[1] < mr.to[1]:
+		op.camera.moveY += op.camera.R * factor
+	}
+}
+
+type MouseAdd struct {
+	MouseSelect
+
+	LC LeftCursor
+	ps []uint
+}
+
+func (ma *MouseAdd) Action(op *Opengl) {
+	if !ma.ReadyAction() {
+		return
+	}
+	defer ma.MouseSelect.Reset()
+
+	// store node
+	op.mesh.DeselectAll()
+	ma.MouseSelect.Action(op)
+	ids := op.mesh.GetSelectNodes(Single)
+	if len(ids) != 1 {
+		return
+	}
+	// nodes is not same
+	var same bool
+	for i := range ma.ps {
+		if ma.ps[i] == ids[0] {
+			same = true
+		}
+	}
+	if !same {
+		ma.ps = append(ma.ps, ids[0])
+	}
+	// TODO : add preview indicated points
+	op.mesh.DeselectAll()
+
+	if len(ma.ps) != ma.LC.AmountNodes() {
+		return
+	}
+	// action
+	switch ma.LC {
+	case AddLinesLC:
+		op.mesh.AddLineByNodeNumber(
+			ma.ps[0],
+			ma.ps[1],
+		)
+	case AddTrianglesLC:
+		op.mesh.AddTriangle3ByNodeNumber(
+			ma.ps[0],
+			ma.ps[1],
+			ma.ps[2],
+		)
+	}
+	ma.Reset()
+}
+
+func (ma *MouseAdd) Reset() {
+	ma.ps = nil
+	ma.MouseSelect.Reset()
 }
