@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Konstantin8105/vl"
 	"github.com/Konstantin8105/ms"
+	"github.com/Konstantin8105/vl"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -17,7 +17,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}
-	err = vl.Run(root, action,nil, tcell.KeyCtrlC)
+	err = vl.Run(root, action, nil, tcell.KeyCtrlC)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
@@ -26,4 +26,3 @@ func main() {
 		fmt.Println(ms.Debug[i])
 	}
 }
-
