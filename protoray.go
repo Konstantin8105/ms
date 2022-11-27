@@ -121,7 +121,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	var widthSymbol uint
 	var heightSymbol uint
-	var w, h int
+	var w, h int32
 
 	//	window.SetMouseButtonCallback(func(
 	//		w *glfw.Window,
@@ -178,8 +178,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	for !rl.WindowShouldClose() {
 		// windows
-		w = rl.GetScreenWidth()
-		h = rl.GetScreenHeight()
+		w = int32(rl.GetScreenWidth())
+		h = int32(rl.GetScreenHeight())
 
 		rl.UpdateCamera(&camera)
 
@@ -243,12 +243,12 @@ func Run(root vl.Widget, action chan func()) (err error) {
 				bm = tcell.WheelUp
 			}
 			// TODO :
-		// if xoffset < 0 {
-		// 	bm = tcell.WheelLeft
-		// }
-		// if 0 < xoffset {
-		// 	bm = tcell.WheelRight
-		// }
+			// if xoffset < 0 {
+			// 	bm = tcell.WheelLeft
+			// }
+			// if 0 < xoffset {
+			// 	bm = tcell.WheelRight
+			// }
 			screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
 		}
 	}
