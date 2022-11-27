@@ -64,10 +64,13 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	defer rl.CloseWindow()
 
 	rl.SetTargetFPS(60) // Set our game to run at 60 frames-per-second
+	font := rl.LoadFontEx("./ProggyClean.ttf", 13, nil)
+	// Generate mipmap levels to use trilinear filtering
+	// NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
+	rl.GenTextureMipmaps(&font.Texture)
+	rl.SetTextureFilter(font.Texture, rl.FilterPoint)
 
-	font := rl.GetFontDefault()
-	fontSize := rl.GetGlyphAtlasRec(font, '?')
-	gw, gh := fontSize.Width, fontSize.Height
+	gw, gh := float32(font.Recs.Width), float32(font.Recs.Height)
 
 	//mutex
 	// 	var mutex sync.Mutex
@@ -108,10 +111,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		if bg != defaultColor {
 			rl.DrawRectangle(int32(x), int32(y), int32(gw), int32(gh), color(bg))
 		}
-		rl.DrawText(string(cell.R), int32(x), int32(y), int32(gh), color(fg))
-
-		// TODO implementation in raylib-go
-		// rl.DrawTextCodepoint(font, int(cell.R), rl.Vector2{float32(x), float32(y)}, int32(gh), color(fg))
+		rl.DrawTextEx(font, string(cell.R), rl.Vector2{x, y}, float32(font.BaseSize), 0, color(fg))
 	}
 
 	screen := vl.Screen{
