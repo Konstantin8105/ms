@@ -258,22 +258,23 @@ func Run(root vl.Widget, action chan func()) (err error) {
 // Draw gizmo
 func DrawGizmo() { // Vector3 position) {
 	// NOTE: RGB = XYZ
-	//     float lenght = 1.0f;
-	//
-	//     rlPushMatrix();
-	//         rlTranslatef(position.x, position.y, position.z);
-	//         //rlRotatef(rotation, 0, 1, 0);
-	//         rlScalef(lenght, lenght, lenght);
-	//
-	//         rlBegin(RL_LINES);
-	//             rlColor3f(1.0f, 0.0f, 0.0f); rlVertex3f(0.0f, 0.0f, 0.0f);
-	//             rlColor3f(1.0f, 0.0f, 0.0f); rlVertex3f(1.0f, 0.0f, 0.0f);
-	//
-	//             rlColor3f(0.0f, 1.0f, 0.0f); rlVertex3f(0.0f, 0.0f, 0.0f);
-	//             rlColor3f(0.0f, 1.0f, 0.0f); rlVertex3f(0.0f, 1.0f, 0.0f);
-	//
-	//             rlColor3f(0.0f, 0.0f, 1.0f); rlVertex3f(0.0f, 0.0f, 0.0f);
-	//             rlColor3f(0.0f, 0.0f, 1.0f); rlVertex3f(0.0f, 0.0f, 1.0f);
-	//         rlEnd();
-	//     rlPopMatrix();
+	     float lenght = 1.0f;
+	
+	     rl.PushMatrix();
+	         rl.Translatef(position.x, position.y, position.z);
+	         //rlRotatef(rotation, 0, 1, 0);
+	         rl.Scalef(lenght, lenght, lenght);
+	
+	         rl.Begin(rl.Lines);
+	             rl.Color3f(1.0, 0.0, 0.0); rl.Vertex3f(0.0, 0.0, 0.0);
+	             rl.Color3f(1.0, 0.0, 0.0); rl.Vertex3f(1.0, 0.0, 0.0);
+	
+	             rl.Color3f(0.0, 1.0, 0.0); rl.Vertex3f(0.0, 0.0, 0.0);
+	             rl.Color3f(0.0, 1.0, 0.0); rl.Vertex3f(0.0, 1.0, 0.0);
+	
+	             rl.Color3f(0.0, 0.0, 1.0); rl.Vertex3f(0.0, 0.0, 0.0);
+	             rl.Color3f(0.0, 0.0, 1.0); rl.Vertex3f(0.0, 0.0, 1.0);
+	         rl.End();
+	     rl.PopMatrix();
 }
+
