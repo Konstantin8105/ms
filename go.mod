@@ -18,7 +18,7 @@ require (
 	github.com/Konstantin8105/errors v0.1.0 // indirect
 	github.com/Konstantin8105/tree v0.1.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
-	github.com/gen2brain/raylib-go/raylib v0.0.0-20221117130019-ce3c8e83dd6d // indirect
+	github.com/gen2brain/raylib-go/raylib v0.0.0-20221126205955-18ffd04b2a85 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect

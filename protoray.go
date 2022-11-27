@@ -195,11 +195,31 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			rl.DrawCubeWires(cubePosition, 9.0, 1.0, 1.0, rl.Maroon)
 			rl.DrawGrid(10, 1.0)
 
+			rl.Begin(rl.RL_TRIANGLES)
+			rl.Color3f(0.8, 0.8, 0.8)
+			rl.Vertex3f(1, 0, 0)
+			rl.Vertex3f(2, 2, 2)
+			rl.Vertex3f(3, 4, 0)
+			rl.End()
+
+			rl.Begin(rl.RL_TRIANGLES)
+			rl.Color3f(0.8, 0.8, 0.8)
+			rl.Vertex3f(2, 2, 2)
+			rl.Vertex3f(1, 0, 0)
+			rl.Vertex3f(3, 4, 0)
+			rl.End()
+
+			rl.Begin(rl.RL_LINES)
+			rl.Color3f(0.2, 0.2, 0.8)
+			rl.Vertex3f(1, 0, 0)
+			rl.Vertex3f(3, 4, 0)
+			rl.End()
+
+			// draw gizmo
+			DrawGizmo(rl.Vector3{X: 2, Y: 2, Z: 2})
+
 			rl.EndMode3D()
 		}
-
-		// draw gizmo
-		DrawGizmo()
 
 		{ // draw tui
 			rl.BeginDrawing()
@@ -256,25 +276,32 @@ func Run(root vl.Widget, action chan func()) (err error) {
 }
 
 // Draw gizmo
-func DrawGizmo() { // Vector3 position) {
+func DrawGizmo(position rl.Vector3) {
 	// NOTE: RGB = XYZ
-	     float lenght = 1.0f;
-	
-	     rl.PushMatrix();
-	         rl.Translatef(position.x, position.y, position.z);
-	         //rlRotatef(rotation, 0, 1, 0);
-	         rl.Scalef(lenght, lenght, lenght);
-	
-	         rl.Begin(rl.Lines);
-	             rl.Color3f(1.0, 0.0, 0.0); rl.Vertex3f(0.0, 0.0, 0.0);
-	             rl.Color3f(1.0, 0.0, 0.0); rl.Vertex3f(1.0, 0.0, 0.0);
-	
-	             rl.Color3f(0.0, 1.0, 0.0); rl.Vertex3f(0.0, 0.0, 0.0);
-	             rl.Color3f(0.0, 1.0, 0.0); rl.Vertex3f(0.0, 1.0, 0.0);
-	
-	             rl.Color3f(0.0, 0.0, 1.0); rl.Vertex3f(0.0, 0.0, 0.0);
-	             rl.Color3f(0.0, 0.0, 1.0); rl.Vertex3f(0.0, 0.0, 1.0);
-	         rl.End();
-	     rl.PopMatrix();
-}
+	var lenght float32 = 1.0
 
+	//	rl.PushMatrix()
+	// rl.Translatef(position.X, position.Y, position.Z)
+	//rlRotatef(rotation, 0, 1, 0);
+	rl.Scalef(lenght, lenght, lenght)
+
+	x, y, z := position.X, position.Y, position.Z
+
+	rl.Begin(rl.RL_LINES)
+	rl.Color3f(1.0, 0.0, 0.0)
+	rl.Vertex3f(x, y, z)
+	rl.Color3f(1.0, 0.0, 0.0)
+	rl.Vertex3f(x+1.0, y, z)
+
+	rl.Color3f(0.0, 1.0, 0.0)
+	rl.Vertex3f(x, y, z)
+	rl.Color3f(0.0, 1.0, 0.0)
+	rl.Vertex3f(x, y+1, z)
+
+	rl.Color3f(0.0, 0.0, 1.0)
+	rl.Vertex3f(x, y, z)
+	rl.Color3f(0.0, 0.0, 1.0)
+	rl.Vertex3f(x, y, z+1)
+	rl.End()
+	//	rl.PopMatrix()
+}
