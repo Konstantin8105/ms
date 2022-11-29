@@ -178,14 +178,15 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	camera.Position = rl.Vector3{10.0, 10.0, 10.0} // Camera position
 	camera.Target = rl.Vector3{0.0, 0.0, 0.0}      // Camera looking at point
 	camera.Up = rl.Vector3{0.0, 1.0, 0.0}          // Camera up vector (rotation towards target)
-	camera.Fovy = 45.0                             // Camera field-of-view Y
-	camera.Projection = rl.CameraPerspective       // Camera mode type
+	camera.Fovy = 15.0                             // Camera field-of-view Y
+	// camera.Projection = rl.CameraPerspective       // Camera mode type
+	camera.Projection = rl.CameraOrthographic // Camera mode type
 
 	cubePosition := rl.Vector3{0.0, 0.0, 0.0}
 
 	// rl.SetCameraMode(camera, rl.CameraThirdPerson)
-	rl.SetCameraMode(camera, rl.CameraOrbital)
-	// rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
+	// rl.SetCameraMode(camera, rl.CameraOrbital)
+	rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
 
 	for !rl.WindowShouldClose() {
 		// windows
