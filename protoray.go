@@ -69,7 +69,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	for i := 0; i < 200; i++ {
 		runes = append(runes, rune(i))
 	}
-	fontSize := float32(11)
+	fontSize := float32(10)
 	//font := rl.LoadFontEx("./ProggyClean.ttf", int32(fontSize), runes)
 	font := rl.LoadFontEx("/home/konstantin/.fonts/Go-Mono.ttf", int32(fontSize), runes)
 
