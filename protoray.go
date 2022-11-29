@@ -263,6 +263,9 @@ func Run(root vl.Widget, action chan func()) (err error) {
 					DrawText(cells[r][c], float32(c), float32(r))
 				}
 			}
+
+			rl.DrawFPS(10, 10)
+
 			rl.EndDrawing()
 		}
 
