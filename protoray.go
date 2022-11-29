@@ -69,7 +69,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	for i := 0; i < 200; i++ {
 		runes = append(runes, rune(i))
 	}
-	fontSize := float32(13)
+	fontSize := float32(11)
 	//font := rl.LoadFontEx("./ProggyClean.ttf", int32(fontSize), runes)
 	font := rl.LoadFontEx("/home/konstantin/.fonts/Go-Mono.ttf", int32(fontSize), runes)
 
@@ -78,7 +78,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	rl.GenTextureMipmaps(&font.Texture)
 	rl.SetTextureFilter(font.Texture, rl.FilterPoint)
 
-	gw, gh := float32(font.Chars.AdvanceX), float32(fontSize)
+	gw, gh := float32(font.Chars.AdvanceX+1), float32(fontSize)
 
 	//mutex
 	// 	var mutex sync.Mutex
