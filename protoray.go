@@ -64,13 +64,21 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	defer rl.CloseWindow()
 
 	rl.SetTargetFPS(60) // Set our game to run at 60 frames-per-second
-	font := rl.LoadFontEx("./ProggyClean.ttf", 13, nil)
+
+	var runes []rune
+	for i := 0; i < 200; i++ {
+		runes = append(runes, rune(i))
+	}
+	fontSize := float32(13)
+	//font := rl.LoadFontEx("./ProggyClean.ttf", int32(fontSize), runes)
+	font := rl.LoadFontEx("/home/konstantin/.fonts/Go-Mono.ttf", int32(fontSize), runes)
+
 	// Generate mipmap levels to use trilinear filtering
 	// NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
 	rl.GenTextureMipmaps(&font.Texture)
 	rl.SetTextureFilter(font.Texture, rl.FilterPoint)
 
-	gw, gh := float32(font.Recs.Width), float32(font.Recs.Height)
+	gw, gh := float32(font.Chars.AdvanceX), float32(fontSize)
 
 	//mutex
 	// 	var mutex sync.Mutex
@@ -111,7 +119,14 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		if bg != defaultColor {
 			rl.DrawRectangle(int32(x), int32(y), int32(gw), int32(gh), color(bg))
 		}
-		rl.DrawTextEx(font, string(cell.R), rl.Vector2{x, y}, float32(font.BaseSize), 0, color(fg))
+		rl.DrawTextEx(
+			font,
+			string(cell.R),
+			rl.Vector2{x, y},
+			fontSize,
+			0,
+			color(fg),
+		)
 	}
 
 	screen := vl.Screen{
@@ -195,19 +210,19 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			rl.DrawCubeWires(cubePosition, 9.0, 1.0, 1.0, rl.Maroon)
 			rl.DrawGrid(10, 1.0)
 
-			 rl.Begin(rl.RL_TRIANGLES)
-			 rl.Color3f(0.8, 0.8, 0.8)
-			 rl.Vertex3f(1, 0, 0)
-			 rl.Vertex3f(2, 2, 2)
-			 rl.Vertex3f(3, 4, 0)
-			 rl.End()
+			rl.Begin(rl.RL_TRIANGLES)
+			rl.Color3f(0.8, 0.8, 0.8)
+			rl.Vertex3f(1, 0, 0)
+			rl.Vertex3f(2, 2, 2)
+			rl.Vertex3f(3, 4, 0)
+			rl.End()
 
-			 rl.Begin(rl.RL_TRIANGLES)
-			 rl.Color3f(0.8, 0.8, 0.8)
-			 rl.Vertex3f(2, 2, 2)
-			 rl.Vertex3f(1, 0, 0)
-			 rl.Vertex3f(3, 4, 0)
-			 rl.End()
+			rl.Begin(rl.RL_TRIANGLES)
+			rl.Color3f(0.8, 0.8, 0.8)
+			rl.Vertex3f(2, 2, 2)
+			rl.Vertex3f(1, 0, 0)
+			rl.Vertex3f(3, 4, 0)
+			rl.End()
 
 			rl.Begin(rl.RL_LINES)
 			rl.Color3f(0.2, 0.2, 0.8)
@@ -283,6 +298,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			// }
 			screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
 		}
+
 	}
 	return
 }
