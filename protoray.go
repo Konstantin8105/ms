@@ -115,14 +115,17 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		if bg != defaultColor {
 			rl.DrawRectangle(int32(x), int32(y), int32(gw), int32(gh), color(bg))
 		}
-		rl.DrawTextEx(
-			font,
-			string(cell.R),
-			rl.Vector2{x, y},
-			fontSize,
-			0,
-			color(fg),
-		)
+		r := cell.R
+		if r != 32 {
+			rl.DrawTextEx(
+				font,
+				string(r),
+				rl.Vector2{x, y},
+				fontSize,
+				0,
+				color(fg),
+			)
+		}
 	}
 
 	screen := vl.Screen{
