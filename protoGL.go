@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/Konstantin8105/vl"
 	"github.com/gdamore/tcell/v2"
@@ -316,9 +317,22 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		}
 	})
 
+	var fps uint64
+	start := time.Now()
+
 	for !window.ShouldClose() {
 		alpha += 0.2
 		betta += 0.05
+
+		{
+			// FPS
+			if diff := time.Now().Sub(start); 1 < diff.Seconds() {
+				fmt.Printf("FPS(%d) ", fps)
+				fps = 0
+				start = time.Now()
+			}
+			fps++
+		}
 
 		// windows
 		w, h = window.GetSize()
@@ -336,6 +350,62 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		}
 
 		// Opengl
+
+		// 3D model
+		{
+			gl.Viewport(int32(x), 0, int32(w-x), int32(h))
+			gl.MatrixMode(gl.PROJECTION)
+			gl.LoadIdentity()
+
+			var ratio float64
+			//if w-x < h {
+			ratio = float64(w-x) / float64(h)
+			// gl.Ortho(
+			// 	(-op.camera.R-op.camera.moveX)+cx, (op.camera.R-op.camera.moveX)+cx,
+			// 	(-op.camera.R-op.camera.moveY)/ratio+cy, (op.camera.R-op.camera.moveY)/ratio+cy,
+			// 	(-op.camera.R-cz)*Zzoom, (op.camera.R+cz)*Zzoom)
+			//} else {
+			//	ratio = float64(h) / float64(w)
+			// gl.Ortho(
+			// 	(-op.camera.R-op.camera.moveX)/ratio+cx, (op.camera.R-op.camera.moveX)/ratio+cx,
+			// 	(-op.camera.R-op.camera.moveY)+cy, (op.camera.R-op.camera.moveY)+cy,
+			// 	(-op.camera.R-cz)*Zzoom, (op.camera.R+cz)*Zzoom)
+			//}
+
+			gl.Ortho(-50*ratio, 50*ratio, -50, 50, float64(-100.0), float64(100.0))
+
+			gl.MatrixMode(gl.MODELVIEW)
+			gl.LoadIdentity()
+
+			gl.Translated(0, 0, 0)
+			gl.Rotated(betta, 1.0, 0.0, 0.0)
+			gl.Rotated(alpha, 0.0, 1.0, 0.0)
+			// cube
+			size := 10.0
+			gl.Begin(gl.LINES)
+			gl.Color3d(0.1, 0.7, 0.1)
+			{
+				gl.Vertex3d(-size, -size, -size)
+				gl.Vertex3d(+size, -size, -size)
+
+				gl.Vertex3d(-size, -size, -size)
+				gl.Vertex3d(-size, +size, -size)
+
+				gl.Vertex3d(-size, -size, -size)
+				gl.Vertex3d(-size, -size, +size)
+
+				gl.Vertex3d(+size, +size, +size)
+				gl.Vertex3d(-size, +size, +size)
+
+				gl.Vertex3d(+size, +size, +size)
+				gl.Vertex3d(+size, -size, +size)
+
+				gl.Vertex3d(+size, +size, +size)
+				gl.Vertex3d(+size, +size, -size)
+			}
+			gl.End()
+
+		}
 		// Axes
 		{
 			gl.Viewport(int32(x), 0, int32(w-x), int32(h))
