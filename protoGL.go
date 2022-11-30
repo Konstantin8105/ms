@@ -25,6 +25,11 @@ func init() {
 	runtime.LockOSThread()
 }
 
+var (
+	betta = 30.0
+	alpha = 10.0
+)
+
 var WindowRatio float64 = 0.5
 
 func main() {
@@ -128,6 +133,9 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	// DrawText text on the screen
 	DrawText := func(cell vl.Cell, x, y int) {
+		if x < 0 || y < 0 {
+			return
+		}
 
 		// We need to offset each string by the height of the
 		// font. To ensure they don't overlap each other.
@@ -309,6 +317,9 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	})
 
 	for !window.ShouldClose() {
+		alpha += 0.2
+		betta += 0.05
+
 		// windows
 		w, h = window.GetSize()
 		x := int(float64(w) * WindowRatio)
@@ -320,18 +331,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 		// Opengl
 		gl.Viewport(int32(x), 0, int32(w-x), int32(h))
-		gl.MatrixMode(gl.PROJECTION)
-		gl.LoadIdentity()
-
-		gl.Begin(gl.QUADS)
-		gl.Color3d(0.8, 0.1, 0.1)
-		{
-			gl.Vertex2d(-0.99, -0.99)
-			gl.Vertex2d(-0.99, +0.99)
-			gl.Vertex2d(+0.99, +0.99)
-			gl.Vertex2d(+0.99, -0.99)
-		}
-		gl.End()
 		{
 			// screen coordinates
 			// openGlScreenCoordinate(op.window)
@@ -348,12 +347,22 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			gl.LoadIdentity()
 		}
 		{
+			// separator
+			gl.Color3d(0.1, 0.1, 0.1)
+			gl.Begin(gl.LINES)
+			{
+				gl.Vertex2d(0, 0)
+				gl.Vertex2d(0, float64(h))
+			}
+			gl.End()
+		}
+		{
 			// draw axe coordinates
 			// op.drawAxes()
 			//w, h := op.window.GetSize()
 
-			s := math.Min(math.Min(50.0, float64(h)/8.0), float64(x))
 			b := 5.0 // distance from window border
+			s := math.Min(math.Min(float64(x)-b, float64(h)-b), 50.0)
 
 			centerX := float64(x) - b - s/2.0
 			centerY := b + s/2.0
@@ -382,8 +391,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			gl.End()
 
 			gl.Translated(centerX, centerY, 0)
-			betta := 30.0
-			alpha := 10.0
 			gl.Rotated(betta, 1.0, 0.0, 0.0)
 			gl.Rotated(alpha, 0.0, 1.0, 0.0)
 			gl.LineWidth(1)
