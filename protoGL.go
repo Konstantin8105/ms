@@ -330,33 +330,16 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		gl.ClearColor(r, g, b, 1)
 
 		// Opengl
-		gl.Viewport(int32(x), 0, int32(w-x), int32(h))
+		// Axes
 		{
-			// screen coordinates
-			// openGlScreenCoordinate(op.window)
-			gl.Disable(gl.DEPTH_TEST)
-			gl.Disable(gl.TEXTURE_2D)
-
-			//w, h := window.GetSize()
-			//gl.Viewport(0, 0, int32(w), int32(h))
+			gl.Viewport(int32(x), 0, int32(w-x), int32(h))
 			gl.MatrixMode(gl.PROJECTION)
 			gl.LoadIdentity()
 			gl.Ortho(0, float64(x), 0, float64(h), float64(-100.0), float64(100.0))
 
 			gl.MatrixMode(gl.MODELVIEW)
 			gl.LoadIdentity()
-		}
-		{
-			// separator
-			gl.Color3d(0.1, 0.1, 0.1)
-			gl.Begin(gl.LINES)
-			{
-				gl.Vertex2d(0, 0)
-				gl.Vertex2d(0, float64(h))
-			}
-			gl.End()
-		}
-		{
+
 			// draw axe coordinates
 			// op.drawAxes()
 			//w, h := op.window.GetSize()
@@ -434,6 +417,28 @@ func Run(root vl.Widget, action chan func()) (err error) {
 				}
 			}
 			gl.End()
+		}
+		{
+			// separator
+			gl.Viewport(int32(x), 0, int32(w-x), int32(h))
+			// gl.MatrixMode(gl.PROJECTION)
+			// gl.LoadIdentity()
+			gl.Ortho(0, float64(x), 0, float64(h), float64(-100.0), float64(100.0))
+
+			gl.MatrixMode(gl.MODELVIEW)
+			gl.LoadIdentity()
+
+			// separator
+			gl.Color3d(0.9, 0.1, 0.1)
+			gl.LineStipple(1, 0xAAAA)
+			gl.Enable(gl.LINE_STIPPLE)
+			gl.Begin(gl.LINES)
+			{
+				gl.Vertex2d(0, 0)
+				gl.Vertex2d(0, float64(h))
+			}
+			gl.End()
+			gl.Disable(gl.LINE_STIPPLE)
 		}
 
 		// gui
