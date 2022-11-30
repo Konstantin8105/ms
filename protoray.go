@@ -65,9 +65,9 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	rl.SetTargetFPS(60) // Set our game to run at 60 frames-per-second
 
-	fontSize := float32(10)
-	//font := rl.LoadFontEx("./ProggyClean.ttf", int32(fontSize), runes)
-	font := rl.LoadFontEx("/home/konstantin/.fonts/Go-Mono.ttf", int32(fontSize), nil)
+	fontSize := float32(13)
+	font := rl.LoadFontEx("./ProggyClean.ttf", int32(fontSize), nil)
+	// font := rl.LoadFontEx("/home/konstantin/.fonts/Go-Mono.ttf", int32(fontSize), nil)
 
 	// Generate mipmap levels to use trilinear filtering
 	// NOTE: On 2D drawing it won't be noticeable, it looks like FILTER_BILINEAR
@@ -311,9 +311,9 @@ func DrawGizmo(position rl.Vector3) {
 	// NOTE: RGB = XYZ
 	var lenght float32 = 1.0
 
-	//	rl.PushMatrix()
+	// rl.PushMatrix()
 	// rl.Translatef(position.X, position.Y, position.Z)
-	//rlRotatef(rotation, 0, 1, 0);
+	// rlRotatef(rotation, 0, 1, 0);
 	rl.Scalef(lenght, lenght, lenght)
 
 	x, y, z := position.X, position.Y, position.Z
