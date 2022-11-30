@@ -342,7 +342,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			//gl.Viewport(0, 0, int32(w), int32(h))
 			gl.MatrixMode(gl.PROJECTION)
 			gl.LoadIdentity()
-			gl.Ortho(0, float64(w), 0, float64(h), float64(-100.0), float64(100.0))
+			gl.Ortho(0, float64(x), 0, float64(h), float64(-100.0), float64(100.0))
 
 			gl.MatrixMode(gl.MODELVIEW)
 			gl.LoadIdentity()
@@ -352,10 +352,10 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			// op.drawAxes()
 			//w, h := op.window.GetSize()
 
-			s := math.Max(50.0, float64(h)/8.0)
+			s := math.Min(math.Min(50.0, float64(h)/8.0), float64(x))
 			b := 5.0 // distance from window border
 
-			centerX := float64(w) - b - s/2.0
+			centerX := float64(x) - b - s/2.0
 			centerY := b + s/2.0
 			gl.Begin(gl.QUADS)
 			gl.Color3d(0.8, 0.8, 0.8)
