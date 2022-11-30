@@ -19,7 +19,7 @@ import (
 
 const (
 	runeStart = rune(byte(32))
-	runeEnd   = rune('■')
+	runeEnd   = rune(byte(127)) // '■')
 )
 
 func init() {
@@ -107,6 +107,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		}
 	}
 	gw, gh := font.GlyphBounds()
+	// TODO : add distance between glyph gw++
 	// gw -= 3
 	// gh -= 5
 	// font is prepared
@@ -132,6 +133,10 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		return
 	}
 
+	var widthSymbol uint
+	var heightSymbol uint
+	var w, h int
+
 	// DrawText text on the screen
 	DrawText := func(cell vl.Cell, x, y int) {
 		if x < 0 || y < 0 {
@@ -150,72 +155,53 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		_ = attr
 
 		if bg != tcell.ColorWhite {
-			// rectangle
-			var vp [4]int32
-			gl.GetIntegerv(gl.VIEWPORT, &vp[0])
-
-			gl.PushAttrib(gl.TRANSFORM_BIT)
-			gl.MatrixMode(gl.PROJECTION)
-			gl.PushMatrix()
-			gl.LoadIdentity()
-			gl.Ortho(float64(vp[0]), float64(vp[2]), float64(vp[1]), float64(vp[3]), 0, 1)
-			gl.PopAttrib()
-
-			gl.PushAttrib(gl.LIST_BIT | gl.CURRENT_BIT | gl.ENABLE_BIT | gl.TRANSFORM_BIT)
+			// draw background rectangle
+			r, g, b := color(bg)
+			gl.Color4f(r, g, b, 1)
+			gl.Begin(gl.QUADS)
 			{
-				gl.MatrixMode(gl.MODELVIEW)
-				gl.Disable(gl.LIGHTING)
-				gl.Disable(gl.DEPTH_TEST)
-				gl.Enable(gl.BLEND)
-				gl.Enable(gl.TEXTURE_2D)
-
-				gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-				gl.TexEnvf(gl.TEXTURE_ENV, gl.TEXTURE_ENV_MODE, gl.MODULATE)
-				//gl.BindTexture(gl.TEXTURE_2D, f.texture)
-				//gl.ListBase(f.listbase)
-
-				var mv [16]float32
-				gl.GetFloatv(gl.MODELVIEW_MATRIX, &mv[0])
-				gl.PushMatrix()
-				{
-					gl.LoadIdentity()
-
-					//mgw := float32(gw) // f.maxGlyphWidth)
-					mgh := float32(gh) // f.maxGlyphHeight)
-
-					//switch f.config.Dir {
-					//case LeftToRight, TopToBottom:
-					gl.Translatef(float32(x), float32(vp[3])-float32(y)-mgh, 0)
-					//case RightToLeft:
-					//	gl.Translatef(x-mgw, float32(vp[3])-y-mgh, 0)
-					//}
-
-					//fmt.Println(cell.S)
-					r, g, b := color(bg)
-					gl.Color4f(r, g, b, 1)
-
-					gl.Rectf(0, 0, float32(gw), float32(gh))
-
-					gl.MultMatrixf(&mv[0])
-					//gl.CallLists(int32(len(indices)), gl.UNSIGNED_INT, unsafe.Pointer(&indices[0]))
-				}
-				gl.PopMatrix()
+				gl.Vertex2d(float64(x), float64(h-y))
+				gl.Vertex2d(float64(x+gw), float64(h-y))
+				gl.Vertex2d(float64(x+gw), float64(h-y-gh))
+				gl.Vertex2d(float64(x), float64(h-y-gh))
 			}
-			gl.PopAttrib()
-
-			gl.PushAttrib(gl.TRANSFORM_BIT)
-			gl.MatrixMode(gl.PROJECTION)
-			gl.PopMatrix()
-			gl.PopAttrib()
-
-			gl.LoadIdentity()
+			gl.End()
 		}
 
 		str := string(cell.R)
+		r, g, b := color(fg)
+		gl.Color4f(r, g, b, 1)
 
-		if str != " " {
-			r, g, b := color(fg)
-			gl.Color4f(r, g, b, 1)
+		//	str = strings.ToUpper(str)
+
+		//	gl.Begin(gl.LINES)
+		//	id := 35
+		//	for a := range symbol[id] {
+		//		for b := range symbol[id][a] {
+		//			d := symbol[id][a][b]
+		//			const fontSize = 16
+		//			dx := float64(x)+ float64(fontSize) * float64(d[0])/400
+		//			dy := float64(y)+ float64(fontSize) * float64(d[1])/400
+		//			gl.Vertex2d(dx,dy )
+		//		}
+		//	}
+		//	gl.End()
+		//	return
+
+		switch str {
+		// TODO: performance
+		// case "+", "|", "-", "=", ">", "<", "[", "]","(",")":
+		// 	gl.Begin(gl.LINES)
+		// 	{
+		// 		gl.Vertex2d(float64(x), float64(h-y-gh/2))
+		// 		gl.Vertex2d(float64(x+gw), float64(h-y-gh/2))
+		// 		gl.Vertex2d(float64(x+gw/2), float64(h-y))
+		// 		gl.Vertex2d(float64(x+gw/2), float64(h-y-gh))
+		// 	}
+		// 	gl.End()
+		case " ":
+			// do nothing
+		default:
 			err = font.Printf(float32(x), float32(y), str)
 			if err != nil {
 				panic(err)
@@ -234,10 +220,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		Root: root,
 	}
 	var cells [][]vl.Cell
-
-	var widthSymbol uint
-	var heightSymbol uint
-	var w, h int
 
 	window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//mutex
@@ -382,8 +364,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			gl.Rotated(alpha, 0.0, 1.0, 0.0)
 			// cube
 			size := 10.0
-			gl.Begin(gl.LINES)
 			gl.Color3d(0.1, 0.7, 0.1)
+			gl.Begin(gl.LINES)
 			{
 				gl.Vertex3d(-size, -size, -size)
 				gl.Vertex3d(+size, -size, -size)
@@ -402,6 +384,21 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 				gl.Vertex3d(+size, +size, +size)
 				gl.Vertex3d(+size, +size, -size)
+			}
+			gl.End()
+
+			gl.PointSize(5)
+			gl.Color3d(0.2, 0.8, 0.5)
+			gl.Begin(gl.POINTS)
+			{
+				gl.Vertex3d(-size, -size, -size)
+				gl.Vertex3d(+size, -size, -size)
+				gl.Vertex3d(-size, +size, -size)
+				gl.Vertex3d(-size, -size, +size)
+				gl.Vertex3d(+size, +size, -size)
+				gl.Vertex3d(+size, -size, +size)
+				gl.Vertex3d(-size, +size, +size)
+				gl.Vertex3d(+size, +size, +size)
 			}
 			gl.End()
 
