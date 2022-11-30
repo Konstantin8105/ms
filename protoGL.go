@@ -107,20 +107,21 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	color := func(c tcell.Color) (R, G, B float32) {
 		switch c {
-		case tcell.ColorRed:
-			R, G, B = 1, 0.3, 0.3
-		case tcell.ColorBlack:
-			R, G, B = 0, 0, 0
 		case tcell.ColorWhite:
 			R, G, B = 1, 1, 1
+		case tcell.ColorBlack:
+			R, G, B = 0, 0, 0
+		case tcell.ColorRed:
+			R, G, B = 1, 0.3, 0.3
 		case tcell.ColorYellow:
 			R, G, B = 1, 1, 0
 		case tcell.ColorViolet:
-			R, G, B = 0.5, 0, 1.0
+			R, G, B = 0.75, 0.90, 0.90 //0.5, 0, 1.0
 		case tcell.ColorMaroon:
-			R, G, B = 0.5, 0, 0
+			R, G, B = 1, 0.5, 0 // 0.5, 0, 0
 		default:
-			panic(c)
+			ri, gi, bi := c.RGB()
+			return float32(ri), float32(gi), float32(bi)
 		}
 		return
 	}
@@ -383,8 +384,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			gl.Translated(centerX, centerY, 0)
 			betta := 30.0
 			alpha := 10.0
-			 gl.Rotated(betta, 1.0, 0.0, 0.0)
-			 gl.Rotated(alpha, 0.0, 1.0, 0.0)
+			gl.Rotated(betta, 1.0, 0.0, 0.0)
+			gl.Rotated(alpha, 0.0, 1.0, 0.0)
 			gl.LineWidth(1)
 			gl.Begin(gl.LINES)
 			{
