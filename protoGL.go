@@ -329,6 +329,12 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		r, g, b := color(tcell.ColorWhite)
 		gl.ClearColor(r, g, b, 1)
 
+		if w < 10 || h < 10 {
+			// TODO: fix resizing window
+			// PROBLEM with text rendering
+			continue
+		}
+
 		// Opengl
 		// Axes
 		{
