@@ -200,7 +200,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		// 	}
 		// 	gl.End()
 		case " ":
-			// do nothing
+		// do nothing
 		default:
 			err = font.Printf(float32(x), float32(y), str)
 			if err != nil {
@@ -402,6 +402,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			}
 			gl.End()
 
+			DrawSpiral()
+
 		}
 		// Axes
 		{
@@ -496,7 +498,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			gl.Viewport(int32(x), 0, int32(w-x), int32(h))
 			// gl.MatrixMode(gl.PROJECTION)
 			// gl.LoadIdentity()
-			gl.Ortho(0, float64(x), 0, float64(h), float64(-100.0), float64(100.0))
+			gl.Ortho(0, float64(x), 0, float64(h), float64(-1000000.0), float64(1000000.0))
 
 			gl.MatrixMode(gl.MODELVIEW)
 			gl.LoadIdentity()
@@ -537,4 +539,49 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		window.SwapBuffers()
 	}
 	return
+}
+
+func DrawSpiral() {
+	var (
+		Ri     = 0.5
+		Ro     = 2.5
+		dR     = 0.0
+		da     = 30.0 // degree
+		dy     = 0.2
+		levels = 800
+		//    8 = FPS 61.0
+		//   80 = FPS 58.0
+		//  800 = FPS 25.0
+		// 8000 = FPS  5.5 --- 16000 points
+	)
+	for i := 0; i < int(levels); i++ {
+		Ro += dR
+		Ri += dR
+		angle := float64(i) * da * math.Pi / 180.0
+
+		bc0 := float32(Ri * math.Sin(angle))
+		bc1 := float32(float64(i) * dy)
+		bc2 := float32(Ri * math.Cos(angle))
+
+		c := 0.1 + float32(i)/(float32(levels)*1.2)
+		gl.Begin(gl.POINTS)
+		gl.Color3f(c, 0.4, 0.1)
+		gl.Vertex3f(bc0, bc1, bc2)
+		gl.End()
+
+		fc0 := float32(Ro * math.Sin(angle))
+		fc1 := float32(float64(i) * dy)
+		fc2 := float32(Ro * math.Cos(angle))
+
+		gl.Begin(gl.POINTS)
+		gl.Color3f(0.1, c, 0.4)
+		gl.Vertex3f(fc0, fc1, fc2)
+		gl.End()
+
+		gl.Begin(gl.LINES)
+		gl.Color3f(0.4, 0.1, c)
+		gl.Vertex3f(bc0, bc1, bc2)
+		gl.Vertex3f(fc0, fc1, fc2)
+		gl.End()
+	}
 }
