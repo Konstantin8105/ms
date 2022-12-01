@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/Konstantin8105/vl"
 	"github.com/gdamore/tcell/v2"
@@ -137,6 +138,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	var widthSymbol uint
 	var heightSymbol uint
 	var w, h, x int32
+	_ = x
 
 	//	window.SetMouseButtonCallback(func(
 	//		w *glfw.Window,
@@ -197,7 +199,19 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	screen3d := rl.LoadRenderTexture(int32(float32(screenWidth)*(1-WindowRatio)), screenHeight)
 	defer rl.UnloadRenderTexture(screen3d) // Unload render texture
 
+	var fps uint64
+	start := time.Now()
+
 	for !rl.WindowShouldClose() {
+		{
+			// FPS
+			if diff := time.Now().Sub(start); 1 < diff.Seconds() {
+				fmt.Printf("FPS(%d) ", fps)
+				fps = 0
+				start = time.Now()
+			}
+			fps++
+		}
 		// windows
 		w = int32(rl.GetScreenWidth())
 		h = int32(rl.GetScreenHeight())
@@ -258,7 +272,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			DrawGizmo(rl.Vector3{X: 2, Y: 2, Z: 2})
 
 			DrawSpiral()
-
 			rl.EndMode3D()
 			rl.EndTextureMode()
 		}
@@ -280,9 +293,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 					DrawText(cells[r][c], float32(c), float32(r))
 				}
 			}
-
-			rl.DrawFPS(10, 10)
-
 			rl.EndDrawing()
 			rl.EndTextureMode()
 		}
@@ -297,6 +307,10 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			rl.DrawTextureRec(screen3d.Texture,
 				rl.Rectangle{0.0, 0.0, float32(screen3d.Texture.Width), float32(-screen3d.Texture.Height)},
 				rl.Vector2{float32(x), 0}, rl.White)
+
+			// TODO: FPS calculated wrong
+			// rl.DrawFPS(10, 10)
+
 			rl.EndDrawing()
 		}
 
