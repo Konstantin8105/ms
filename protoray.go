@@ -181,8 +181,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	// Define the camera to look into our 3d world
 	var camera rl.Camera3D
-	camera.Position = rl.Vector3{10.0, 10.0, 10.0} // Camera position
-	camera.Target = rl.Vector3{0.0, 0.0, 0.0}      // Camera looking at point
+	camera.Position = rl.Vector3{10.0, 200.0, 10.0} // Camera position
+	camera.Target = rl.Vector3{0.0, 50.0, 0.0}      // Camera looking at point
 	camera.Up = rl.Vector3{0.0, 1.0, 0.0}          // Camera up vector (rotation towards target)
 	camera.Fovy = 25.0                             // Camera field-of-view Y
 	// camera.Projection = rl.CameraPerspective       // Camera mode type
@@ -201,6 +201,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	var fps uint64
 	start := time.Now()
+
+	lb := false // leftbutton
 
 	for !rl.WindowShouldClose() {
 		{
@@ -314,7 +316,12 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			rl.EndDrawing()
 		}
 
-		if rl.IsMouseButtonPressed(rl.MouseLeftButton) {
+		if rl.IsMouseButtonDown(rl.MouseLeftButton) {
+			lb = true
+		}
+
+		if rl.IsMouseButtonUp(rl.MouseLeftButton) && lb == true {
+			lb = false
 			xs := int(float32(rl.GetMouseX()) / float32(gw))
 			ys := int(float32(rl.GetMouseY()) / float32(gh))
 			screen.Event(tcell.NewEventMouse(xs, ys, tcell.Button1, tcell.ModNone))
@@ -390,7 +397,7 @@ func DrawSpiral() {
 		dR     = 0.0
 		da     = 30.0 // degree
 		dy     = 0.2
-		levels = 60
+		levels = 800
 		//    8 = FPS 61.0
 		//   80 = FPS 58.0
 		//  800 = FPS 25.0
