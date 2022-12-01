@@ -31,7 +31,7 @@ var (
 	alpha = 10.0
 )
 
-var WindowRatio float64 = 0.5
+var WindowRatio float64 = 0.4
 
 func main() {
 	// initialize
@@ -354,7 +354,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			// 	(-op.camera.R-cz)*Zzoom, (op.camera.R+cz)*Zzoom)
 			//}
 
-			gl.Ortho(-50*ratio, 50*ratio, -50, 50, float64(-100.0), float64(100.0))
+			gl.Ortho(-50*ratio, 50*ratio, -50, 50, float64(-1000000.0), float64(1000000.0))
 
 			gl.MatrixMode(gl.MODELVIEW)
 			gl.LoadIdentity()
@@ -548,7 +548,7 @@ func DrawSpiral() {
 		dR     = 0.0
 		da     = 30.0 // degree
 		dy     = 0.2
-		levels = 800
+		levels = 8000
 		//    8 = FPS 61.0
 		//   80 = FPS 58.0
 		//  800 = FPS 25.0
