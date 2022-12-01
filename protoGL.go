@@ -19,7 +19,7 @@ import (
 
 const (
 	runeStart = rune(byte(32))
-	runeEnd   = rune(byte(127)) // '■')
+	runeEnd   = rune(byte(127)) // int32('■'))
 )
 
 func init() {
@@ -42,17 +42,17 @@ func main() {
 	root, action = vl.Demo()
 
 	// unicode table
-	//	{
-	//		var t vl.Text
-	//		var str string
-	//		for i := runeStart; i < runeEnd; i++ {
-	//			str += " " + string(rune(i))
-	//		}
-	//		t.SetText(str)
-	//		var sc vl.Scroll
-	//		sc.Root = &t
-	//		root = &sc
-	//	}
+	// {
+	// 	var t vl.Text
+	// 	var str string
+	// 	for i := runeStart; i < runeEnd; i++ {
+	// 		str += " " + string(rune(i))
+	// 	}
+	// 	t.SetText(str)
+	// 	var sc vl.Scroll
+	// 	sc.Root = &t
+	// 	root = &sc
+	// }
 
 	// run vl widget in OpenGL
 	err := Run(root, action)
