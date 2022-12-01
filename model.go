@@ -2127,7 +2127,7 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	var mm Undo
 	mm.model = new(Model)
 	// filename MSH22
-	if filename != "" {
+	if false && filename != "" { // TODO redesign
 		var geo []byte
 		geo, err = os.ReadFile(filename)
 		if err != nil {
