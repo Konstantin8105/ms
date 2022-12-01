@@ -23,7 +23,7 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var WindowRatio float32 = 0.7
+var WindowRatio float32 = 0.6
 
 func main() {
 	// initialize
@@ -60,7 +60,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		screenHeight int32 = 600
 	)
 
-	rl.SetConfigFlags(rl.FlagWindowResizable | rl.FlagVsyncHint)
+	// TODO rl.SetConfigFlags(rl.FlagWindowResizable | rl.FlagVsyncHint)
 	rl.InitWindow(screenWidth, screenHeight, "3D model")
 	defer rl.CloseWindow()
 
@@ -136,7 +136,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	var widthSymbol uint
 	var heightSymbol uint
-	var w, h int32
+	var w, h, x int32
 
 	//	window.SetMouseButtonCallback(func(
 	//		w *glfw.Window,
@@ -192,18 +192,30 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	rl.SetCameraMode(camera, rl.CameraOrbital)
 	// rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
 
+	screenGui := rl.LoadRenderTexture(int32(float32(screenWidth)*WindowRatio), screenHeight)
+	defer rl.UnloadRenderTexture(screenGui) // Unload render texture
+	screen3d := rl.LoadRenderTexture(int32(float32(screenWidth)*(1-WindowRatio)), screenHeight)
+	defer rl.UnloadRenderTexture(screen3d) // Unload render texture
+
 	for !rl.WindowShouldClose() {
 		// windows
 		w = int32(rl.GetScreenWidth())
 		h = int32(rl.GetScreenHeight())
+		x = int32(float32(rl.GetScreenWidth()) * WindowRatio)
 
 		rl.UpdateCamera(&camera)
 
-		rc := color(defaultColor)
-		rl.ClearBackground(rc)
+		// rc := color(defaultColor)
+		// rl.ClearBackground(rc)
 
 		{ // draw 3D model
+			// Draw Player1 view to the render texture
+			rl.BeginTextureMode(screen3d)
+
+			rl.ClearBackground(rl.White)
+
 			rl.BeginMode3D(camera)
+
 			rl.DrawCube(cubePosition, 2.0, 2.0, 2.0, rl.Red)
 			rl.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, rl.Maroon)
 			rl.DrawCube(cubePosition, 9.0, 1.0, 1.0, rl.Red)
@@ -248,9 +260,12 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			DrawSpiral()
 
 			rl.EndMode3D()
+			rl.EndTextureMode()
 		}
 
 		{ // draw tui
+			rl.BeginTextureMode(screenGui)
+			rl.ClearBackground(rl.SkyBlue)
 			rl.BeginDrawing()
 
 			widthSymbol = uint(float32(w) / float32(gw) * WindowRatio)
@@ -268,6 +283,20 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 			rl.DrawFPS(10, 10)
 
+			rl.EndDrawing()
+			rl.EndTextureMode()
+		}
+
+		{
+			// Draw both views render textures to the screen side by side
+			rl.BeginDrawing()
+			rl.ClearBackground(rl.Black)
+			rl.DrawTextureRec(screenGui.Texture,
+				rl.Rectangle{0.0, 0.0, float32(screenGui.Texture.Width), float32(-screenGui.Texture.Height)},
+				rl.Vector2{0, 0}, rl.White)
+			rl.DrawTextureRec(screen3d.Texture,
+				rl.Rectangle{0.0, 0.0, float32(screen3d.Texture.Width), float32(-screen3d.Texture.Height)},
+				rl.Vector2{float32(x), 0}, rl.White)
 			rl.EndDrawing()
 		}
 
@@ -305,6 +334,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		}
 
 	}
+
 	return
 }
 
