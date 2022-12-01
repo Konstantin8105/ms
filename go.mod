@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/Konstantin8105/ds v0.0.0-20221117175729-38d388679e60 // indirect
 	github.com/Konstantin8105/errors v0.1.0 // indirect
 	github.com/Konstantin8105/tree v0.1.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect

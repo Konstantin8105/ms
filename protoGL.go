@@ -172,7 +172,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		r, g, b := color(fg)
 		gl.Color4f(r, g, b, 1)
 
-		//	str = strings.ToUpper(str)
+		// str = strings.ToUpper(str)
 
 		//	gl.Begin(gl.LINES)
 		//	id := 35
