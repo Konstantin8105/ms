@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"runtime"
 
@@ -22,7 +23,7 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var WindowRatio float32 = 0.5
+var WindowRatio float32 = 0.7
 
 func main() {
 	// initialize
@@ -181,15 +182,15 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	camera.Position = rl.Vector3{10.0, 10.0, 10.0} // Camera position
 	camera.Target = rl.Vector3{0.0, 0.0, 0.0}      // Camera looking at point
 	camera.Up = rl.Vector3{0.0, 1.0, 0.0}          // Camera up vector (rotation towards target)
-	camera.Fovy = 15.0                             // Camera field-of-view Y
+	camera.Fovy = 25.0                             // Camera field-of-view Y
 	// camera.Projection = rl.CameraPerspective       // Camera mode type
 	camera.Projection = rl.CameraOrthographic // Camera mode type
 
 	cubePosition := rl.Vector3{0.0, 0.0, 0.0}
 
 	// rl.SetCameraMode(camera, rl.CameraThirdPerson)
-	// rl.SetCameraMode(camera, rl.CameraOrbital)
-	rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
+	rl.SetCameraMode(camera, rl.CameraOrbital)
+	// rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
 
 	for !rl.WindowShouldClose() {
 		// windows
@@ -203,7 +204,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 		{ // draw 3D model
 			rl.BeginMode3D(camera)
-
 			rl.DrawCube(cubePosition, 2.0, 2.0, 2.0, rl.Red)
 			rl.DrawCubeWires(cubePosition, 2.0, 2.0, 2.0, rl.Maroon)
 			rl.DrawCube(cubePosition, 9.0, 1.0, 1.0, rl.Red)
@@ -244,6 +244,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 			// draw gizmo
 			DrawGizmo(rl.Vector3{X: 2, Y: 2, Z: 2})
+
+			DrawSpiral()
 
 			rl.EndMode3D()
 		}
@@ -335,4 +337,70 @@ func DrawGizmo(position rl.Vector3) {
 	rl.Vertex3f(x, y, z+1)
 	rl.End()
 	//	rl.PopMatrix()
+}
+
+func DrawSpiral() {
+	var (
+		Ri     = 0.5
+		Ro     = 2.5
+		dR     = 0.0
+		da     = 30.0 // degree
+		dy     = 0.2
+		levels = 60
+		//    8 = FPS 61.0
+		//   80 = FPS 58.0
+		//  800 = FPS 25.0
+		// 8000 = FPS  5.5 --- 16000 points
+	)
+	for i := 0; i < int(levels); i++ {
+		Ro += dR
+		Ri += dR
+		angle := float64(i) * da * math.Pi / 180.0
+
+		bc0 := float32(Ri * math.Sin(angle))
+		bc1 := float32(float64(i) * dy)
+		bc2 := float32(Ri * math.Cos(angle))
+
+		// TODO: raylib  have not RL_POINTS
+		// rl.Begin(rl.RL_POINTS)
+		// rl.Color3f(0.8, 0.8, 0.8)
+		// rl.Vertex3f(bc0, bc1, bc2)
+		// rl.End()
+		DrawPoint(bc0, bc1, bc2)
+
+		fc0 := float32(Ro * math.Sin(angle))
+		fc1 := float32(float64(i) * dy)
+		fc2 := float32(Ro * math.Cos(angle))
+
+		// TODO: raylib  have not RL_POINTS
+		// rl.Begin(rl.RL_POINTS)
+		// rl.Color3f(0.8, 0.1, 0.1)
+		// rl.Vertex3f(fc0, fc1, fc2)
+		// rl.End()
+		DrawPoint(fc0, fc1, fc2)
+
+		rl.Begin(rl.RL_LINES)
+		rl.Color3f(0.3, 0.7, 0.1)
+		rl.Vertex3f(bc0, bc1, bc2)
+		rl.Vertex3f(fc0, fc1, fc2)
+		rl.End()
+
+	}
+}
+
+func DrawPoint(x, y, z float32) {
+	var size float32 = 0.05
+	rl.Color3f(0.3, 0.7, 0.8)
+	rl.Begin(rl.RL_LINES)
+	rl.Vertex3f(x+size, y, z)
+	rl.Vertex3f(x-size, y, z)
+	rl.End()
+	rl.Begin(rl.RL_LINES)
+	rl.Vertex3f(x, y+size, z)
+	rl.Vertex3f(x, y-size, z)
+	rl.End()
+	rl.Begin(rl.RL_LINES)
+	rl.Vertex3f(x, y, z+size)
+	rl.Vertex3f(x, y, z-size)
+	rl.End()
 }
