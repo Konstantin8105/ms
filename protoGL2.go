@@ -54,18 +54,103 @@ func main() {
 	// 	root = &sc
 	// }
 
+	v := NewVl(root, f)
+
 	// run vl widget in OpenGL
-	err := Run(root, action)
+	err := Run(v, action)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
 }
 
-var font *gltext.Font
-var gw, gh int
-var cells [][]vl.Cell
-var screen vl.Screen
+type Vl struct {
+	screen vl.Screen
+	cells  [][]vl.Cell
+}
+
+func NewVl(root vl.Widget, f *Font) (v *Vl) {
+	v = new(Vl)
+	v.screen = vl.Screen{
+		Root: root,
+	}
+	return
+}
+
+func (v *Vl) Draw(w, h int) {
+	widthSymbol := uint(float64(w) / float64(f.gw))
+	heightSymbol := uint(h) / uint(f.gh)
+	v.screen.SetHeight(heightSymbol)
+	v.screen.GetContents(widthSymbol, &v.cells)
+	for r := 0; r < len(v.cells); r++ {
+		if len(v.cells[r]) == 0 {
+			continue
+		}
+		for c := 0; c < len(v.cells[r]); c++ {
+			f.DrawText(v.cells[r][c], c, r, h)
+		}
+	}
+}
+
+var f *Font
+
+type Font struct {
+	font   *gltext.Font
+	gw, gh int
+}
+
+func InitFont() (f *Font) {
+	f = new(Font)
+
+	// create new Font from given filename (.ttf expected)
+	fd, err := os.Open("ProggyClean.ttf") // fontfile
+	if err != nil {
+		return
+	}
+	const fontSize = int32(16)
+	ft, err := gltext.LoadTruetype(fd, fontSize, runeStart, runeEnd, gltext.LeftToRight)
+	if err != nil {
+		panic(err)
+	}
+	f.font = ft
+	err = fd.Close()
+	if err != nil {
+		panic(err)
+	}
+
+	f.gw, f.gh = f.font.GlyphBounds()
+	// TODO : add distance between glyph gw++
+	// gw -= 3
+	// gh -= 5
+	// font is prepared
+
+	return
+}
+
+// DrawText text on the screen
+func (f Font) DrawText(cell vl.Cell, x, y, h int) {
+	if x < 0 || y < 0 {
+		return
+	}
+
+	x *= f.gw
+	y *= f.gh
+
+	// prepare colors
+	fg, bg, attr := cell.S.Decompose()
+	_ = fg
+	_ = bg
+	_ = attr
+
+	str := string(cell.R)
+	r, g, b := color(fg)
+	gl.Color4f(r, g, b, 1)
+
+	err := f.font.Printf(float32(x), float32(y), str)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func color(c tcell.Color) (R, G, B float32) {
 	switch c {
@@ -88,32 +173,7 @@ func color(c tcell.Color) (R, G, B float32) {
 	return
 }
 
-// DrawText text on the screen
-func DrawText(cell vl.Cell, x, y, h int) {
-	if x < 0 || y < 0 {
-		return
-	}
-
-	x *= gw
-	y *= gh
-
-	// prepare colors
-	fg, bg, attr := cell.S.Decompose()
-	_ = fg
-	_ = bg
-	_ = attr
-
-	str := string(cell.R)
-	r, g, b := color(fg)
-	gl.Color4f(r, g, b, 1)
-
-	err := font.Printf(float32(x), float32(y), str)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func Run(root vl.Widget, action chan func()) (err error) {
+func Run(v *Vl, action chan func()) (err error) {
 	//mutex
 	var mutex sync.Mutex
 
@@ -139,28 +199,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 
 	glfw.SwapInterval(1) // Enable vsync
 
-	// create new Font from given filename (.ttf expected)
-	{
-		var fd *os.File
-		fd, err = os.Open("ProggyClean.ttf") // fontfile
-		if err != nil {
-			return
-		}
-		const fontSize = int32(16)
-		font, err = gltext.LoadTruetype(fd, fontSize, runeStart, runeEnd, gltext.LeftToRight)
-		if err != nil {
-			return
-		}
-		err = fd.Close()
-		if err != nil {
-			return
-		}
-	}
-	gw, gh = font.GlyphBounds()
-	// TODO : add distance between glyph gw++
-	// gw -= 3
-	// gh -= 5
-	// font is prepared
+	f = InitFont()
 
 	// 	var widthSymbol uint
 	// 	var heightSymbol uint
@@ -170,10 +209,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		// 3D window is close
 		glfw.Terminate()
 	}()
-
-	screen = vl.Screen{
-		Root: root,
-	}
 
 	window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//mutex
@@ -185,7 +220,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		if !(runeStart <= r && r <= runeEnd) {
 			return
 		}
-		screen.Event(tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone))
+		v.screen.Event(tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone))
 	})
 
 	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
@@ -195,8 +230,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		//action
 
 		x, y := w.GetCursorPos()
-		xs := int(x / float64(gw))
-		ys := int(y / float64(gh))
+		xs := int(x / float64(f.gw))
+		ys := int(y / float64(f.gh))
 
 		var bm tcell.ButtonMask
 		if yoffset < 0 {
@@ -211,7 +246,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		if 0 < xoffset {
 			bm = tcell.WheelRight
 		}
-		screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
+		v.screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
 	})
 
 	window.SetMouseButtonCallback(func(
@@ -239,12 +274,12 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		}
 		// calculate position
 		x, y := w.GetCursorPos()
-		xs := int(x / float64(gw))
-		ys := int(y / float64(gh))
+		xs := int(x / float64(f.gw))
+		ys := int(y / float64(f.gh))
 		// create event
 		switch action {
 		case glfw.Press:
-			screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
+			v.screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
 		case glfw.Release:
 
 		default:
@@ -312,28 +347,13 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			gl.MatrixMode(gl.MODELVIEW)
 			gl.LoadIdentity()
 
-			drawLeft(x, h)
+			v.Draw(x, h)
 		}
 		// end
 		window.MakeContextCurrent()
 		window.SwapBuffers()
 	}
 	return
-}
-
-func drawLeft(w, h int) {
-	widthSymbol := uint(float64(w) / float64(gw))
-	heightSymbol := uint(h) / uint(gh)
-	screen.SetHeight(heightSymbol)
-	screen.GetContents(widthSymbol, &cells)
-	for r := 0; r < len(cells); r++ {
-		if len(cells[r]) == 0 {
-			continue
-		}
-		for c := 0; c < len(cells[r]); c++ {
-			DrawText(cells[r][c], c, r, h)
-		}
-	}
 }
 
 func drawRight() {
