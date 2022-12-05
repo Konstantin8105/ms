@@ -15,8 +15,8 @@ require (
 )
 
 require (
-	github.com/Konstantin8105/ds v0.0.0-20221117175729-38d388679e60 // indirect
 	github.com/Konstantin8105/errors v0.1.0 // indirect
+	github.com/Konstantin8105/glsymbol v0.0.0-20221205104224-fb5fd947ab6c // indirect
 	github.com/Konstantin8105/tree v0.1.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gen2brain/raylib-go/raylib v0.0.0-20221127193218-23cae4c96cbe // indirect
