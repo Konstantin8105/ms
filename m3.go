@@ -3,23 +3,22 @@ package ms
 import (
 	"fmt"
 	"math"
-	"os"
 	"runtime"
 	"time"
 
+	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/gog"
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
-	"github.com/go-gl/gltext"
 )
 
 func init() {
 	runtime.LockOSThread()
 }
 
-var font *gltext.Font
+var font *glsymbol.Font
 
-const fontSize = int32(12)
+// const fontSize = int32(12)
 
 type Opengl struct {
 	window *glfw.Window
@@ -86,16 +85,8 @@ func NewOpengl(m Mesh) (op *Opengl, err error) {
 
 	// ???
 
-	// create new Font from given filename (.ttf expected)
-	fd, err := os.Open("ProggyClean.ttf") // fontfile
-	if err != nil {
-		return
-	}
-	font, err = gltext.LoadTruetype(fd, fontSize, 32, 127, gltext.LeftToRight)
-	if err != nil {
-		return
-	}
-	err = fd.Close()
+	// create new Font
+	font, err = glsymbol.DefaultFont()
 	if err != nil {
 		return
 	}
@@ -160,13 +151,13 @@ func (op *Opengl) Run() {
 			// draw axe coordinates
 			op.drawAxes()
 			// minimal screen notes
-			DrawText(fmt.Sprintf("FPS       : %6.2f",
-				op.fps.Get()), 0, 0*fontSize)
+			openGlScreenCoordinate(op.window)
+			font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
 			if op.mesh != nil {
-				DrawText(fmt.Sprintf("Nodes     : %6d",
-					len(op.mesh.GetCoords())), 0, 1*fontSize)
-				DrawText(fmt.Sprintf("Elements  : %6d",
-					len(op.mesh.GetElements())), 0, 2*fontSize)
+				font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
+					len(op.mesh.GetCoords())))
+				font.Printf(10, 40, fmt.Sprintf("Elements  : %6d",
+					len(op.mesh.GetElements())))
 			}
 
 			for i := range op.mouses {

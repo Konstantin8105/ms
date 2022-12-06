@@ -105,31 +105,9 @@ type Font struct {
 func (f *Font) Init() (err error) {
 	f.font, err = glsymbol.DefaultFont()
 	if err != nil {
-		panic(err)
+		return
 	}
-	// f.gw = int(f.font.MaxGlyphWidth)
-	w, h := f.font.GlyphBounds()
-	f.gw, f.gh = int(w), int(h)
-
-	// fmt.Println(f.gw, f.gh)
-	// 	// create new Font from given filename (.ttf expected)
-	// 	fd, err := os.Open("ProggyClean.ttf") // fontfile
-	// 	if err != nil {
-	// 		return
-	// 	}
-	// 	const fontSize = int32(16)
-	// 	ft, err := gltext.LoadTruetype(fd, fontSize, runeStart, runeEnd, gltext.LeftToRight)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	f.font = ft
-	// 	err = fd.Close()
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	//
-	// 	f.gw, f.gh = f.font.GlyphBounds()
-	// 	f.gw++ // add distance between glyph
+	f.gw, f.gh = int(f.font.MaxGlyphWidth), int(f.font.MaxGlyphHeight)
 	return
 }
 

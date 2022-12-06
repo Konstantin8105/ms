@@ -31,6 +31,9 @@ const (
 	endGroup
 )
 
+// TODO betta angle for repeat rotate Copy
+// TODO check copy node on distance
+
 func (g GroupID) String() string {
 	switch g {
 	case File:
