@@ -111,8 +111,7 @@ func (f *Font) Init() (err error) {
 	w, h := f.font.GlyphBounds()
 	f.gw, f.gh = int(w), int(h)
 
-	fmt.Println(f.gw, f.gh)
-
+	// fmt.Println(f.gw, f.gh)
 	// 	// create new Font from given filename (.ttf expected)
 	// 	fd, err := os.Open("ProggyClean.ttf") // fontfile
 	// 	if err != nil {
@@ -365,7 +364,6 @@ func Run(v *Vl, action chan func(), init func()) (err error) {
 			gl.MatrixMode(gl.PROJECTION)
 			gl.LoadIdentity()
 			gl.Ortho(0, float64(x), 0, float64(h), -1.0, 1.0)
-
 			gl.MatrixMode(gl.MODELVIEW)
 			gl.LoadIdentity()
 
@@ -380,14 +378,11 @@ func Run(v *Vl, action chan func(), init func()) (err error) {
 			gl.MatrixMode(gl.MODELVIEW)
 			gl.LoadIdentity()
 
-			gl.Color3f(1, 0, 0)
+			gl.Color3f(0.7, 0.7, 0.7)
 			gl.Begin(gl.LINES)
-			{
-				gl.Vertex3f(float32(x), 0, 0)
-				gl.Vertex3f(float32(x), float32(h), 0)
-			}
+			gl.Vertex3f(float32(x), 0, 0)
+			gl.Vertex3f(float32(x), float32(h), 0)
 			gl.End()
-
 		}
 		// end
 		window.MakeContextCurrent()
@@ -446,7 +441,7 @@ func drawRight() {
 		dR     = 0.0
 		da     = 30.0 // degree
 		dy     = 0.2
-		levels = 800
+		levels = 8000
 	)
 	for i := 0; i < int(levels); i++ {
 		Ro += dR

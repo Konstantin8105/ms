@@ -31,7 +31,6 @@ const (
 	endGroup
 )
 
-
 func (g GroupID) String() string {
 	switch g {
 	case File:
@@ -108,6 +107,9 @@ func init() {
 				}()
 				id := m.PartPresent()
 				ns := m.PartsName()
+				if len(ns) <= int(id) {
+					return
+				}
 				part := ns[id]
 				if part == "" {
 					part = defaultPartName(int(id))
@@ -135,6 +137,11 @@ func init() {
 			var rg vl.RadioGroup
 			list.Add(&rg)
 
+			change := func() {
+				pos := rg.GetPos()
+				m.PartChange(pos)
+			}
+
 			update := func() {
 				defer func() {
 					if r := recover(); r != nil {
@@ -143,6 +150,7 @@ func init() {
 					}
 				}()
 				ns := m.PartsName()
+				id := m.PartPresent()
 				for i := range ns {
 					if ns[i] != "" {
 						continue
@@ -153,13 +161,13 @@ func init() {
 					}
 					ns[i] = fmt.Sprintf("part %02d", i)
 				}
-				rg.SetText(ns)
+				rg.Clear()
+				rg.AddText(ns...)
+				rg.SetPos(id)
+				change()
 			}
 
-			rg.OnChange(func() {
-				pos := rg.GetPos()
-				m.PartChange(pos)
-			})
+			rg.OnChange(change)
 
 			go func() {
 				for {
@@ -323,7 +331,7 @@ func init() {
 			}
 
 			var rg vl.RadioGroup
-			rg.SetText(names)
+			rg.AddText(names...)
 			list.Add(&rg)
 
 			var b vl.Button
@@ -343,7 +351,7 @@ func init() {
 			var list vl.List
 
 			var rg vl.RadioGroup
-			rg.SetText([]string{"Normal colors", "Edge colors of elements"})
+			rg.AddText([]string{"Normal colors", "Edge colors of elements"}...)
 			list.Add(&rg)
 
 			var b vl.Button
@@ -535,7 +543,7 @@ func init() {
 			}
 
 			var rg vl.RadioGroup
-			rg.SetText(names)
+			rg.AddText(names...)
 			list.Add(&rg)
 
 			var b vl.Button
@@ -555,7 +563,7 @@ func init() {
 			list.Add(d)
 
 			var rg vl.RadioGroup
-			rg.SetText([]string{"from line begin", "from line end"})
+			rg.AddText([]string{"from line begin", "from line end"}...)
 			list.Add(&rg)
 
 			var bi vl.Button
@@ -580,7 +588,7 @@ func init() {
 			list.Add(d)
 
 			var rg vl.RadioGroup
-			rg.SetText([]string{"from line begin", "from line end"})
+			rg.AddText([]string{"from line begin", "from line end"}...)
 			list.Add(&rg)
 
 			var bi vl.Button
@@ -1089,7 +1097,7 @@ func init() {
 			var list vl.List
 
 			var rg vl.RadioGroup
-			rg.SetText([]string{"More", "Less"})
+			rg.AddText([]string{"More", "Less"}...)
 			list.Add(&rg)
 
 			d, dgt := InputFloat("Lenght", "meter")
@@ -1130,7 +1138,7 @@ func init() {
 
 			list.Add(vl.TextStatic("Direction:"))
 			var drg vl.RadioGroup
-			drg.SetText([]string{DirX.String(), DirY.String(), DirZ.String()})
+			drg.AddText([]string{DirX.String(), DirY.String(), DirZ.String()}...)
 			list.Add(&drg)
 
 			var b vl.Button
@@ -1213,7 +1221,7 @@ type MoveCopyble interface {
 		basePoint [3][3]float64,
 		copy bool,
 		addLines, addTri bool)
-// TODO do not copy lines Collinear on copy direction
+	// TODO do not copy lines Collinear on copy direction
 	//	MoveCopyOnPlane(nodes, elements []uint, coordinate [3]float64,
 	//		plane Plane,
 	//		intermediantParts uint,
@@ -1482,11 +1490,11 @@ func init() {
 
 				list.Add(vl.TextStatic("Direction of repeat:"))
 				var dir vl.RadioGroup
-				dir.SetText([]string{
+				dir.AddText([]string{
 					DirX.String(),
 					DirY.String(),
 					DirZ.String(),
-				})
+				}...)
 				list.Add(&dir)
 
 				list.Add(new(vl.Separator))
@@ -1655,11 +1663,11 @@ func init() {
 				list.Add(new(vl.Separator))
 				list.Add(vl.TextStatic("Choose plane:"))
 				var plane vl.RadioGroup
-				plane.SetText([]string{
+				plane.AddText([]string{
 					PlaneXOY.String(),
 					PlaneXOZ.String(),
 					PlaneYOZ.String(),
-				})
+				}...)
 
 				list.Add(&plane)
 				ch.Root = &list
