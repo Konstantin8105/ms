@@ -70,6 +70,8 @@ type Filable interface {
 	// 2D model: axesymm
 	// Convert to 2d
 
+	// Delete part
+
 	PartPresent() (id uint)
 	PartsName() (names []string)
 	PartChange(id uint)
