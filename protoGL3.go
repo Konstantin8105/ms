@@ -217,9 +217,11 @@ func Run(v *Vl) (err error) {
 		scancode int,
 		action glfw.Action,
 		mods glfw.ModifierKey) {
-		if key == glfw.KeyEnter {
-			windows[focus].CharCallback(w, rune('\n'))
-		}
+		//mutex
+		mutex.Lock()
+		defer mutex.Unlock()
+		//action
+		windows[focus].KeyCallback(w,key,scancode, action, mods)
 	})
 
 	// draw
@@ -390,6 +392,36 @@ func (vl *Vl) MouseButtonCallback(
 		// do nothing
 	}
 }
+func (vl *Vl) KeyCallback(
+	w *glfw.Window,
+	key glfw.Key,
+	scancode int,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+) {
+	fmt.Printf("%p key %v %v %v %v\n", vl, key, scancode, action, mods)
+	if action != glfw.Press {
+		return
+	}
+	switch key {
+	case glfw.KeyUp:
+		vl.screen.Event(tcell.NewEventKey(tcell.KeyUp, rune(' '), tcell.ModNone))
+	case glfw.KeyDown:
+		vl.screen.Event(tcell.NewEventKey(tcell.KeyDown, rune(' '), tcell.ModNone))
+	case glfw.KeyLeft:
+		vl.screen.Event(tcell.NewEventKey(tcell.KeyLeft, rune(' '), tcell.ModNone))
+	case glfw.KeyRight:
+		vl.screen.Event(tcell.NewEventKey(tcell.KeyRight, rune(' '), tcell.ModNone))
+	case glfw.KeyEnter:
+		vl.screen.Event(tcell.NewEventKey(tcell.KeyEnter, rune('\n'), tcell.ModNone))
+	case glfw.KeyBackspace:
+		vl.screen.Event(tcell.NewEventKey(tcell.KeyBackspace, rune(' '), tcell.ModNone))
+	case glfw.KeyDelete:
+		vl.screen.Event(tcell.NewEventKey(tcell.KeyDelete, rune(' '), tcell.ModNone))
+	default:
+		// do nothing
+	}
+}
 
 //===========================================================================//
 
@@ -515,6 +547,15 @@ func (op *Opengl) MouseButtonCallback(
 ) {
 	fmt.Printf("%p mouse %v %v %v\n", op, button, action, mods)
 }
+func (op *Opengl) KeyCallback(
+	w *glfw.Window,
+	key glfw.Key,
+	scancode int,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+) {
+	fmt.Printf("%p key %v %v %v %v\n", op, key, scancode, action, mods)
+}
 
 //===========================================================================//
 
@@ -526,6 +567,13 @@ type Window interface {
 	MouseButtonCallback(
 		w *glfw.Window,
 		button glfw.MouseButton,
+		action glfw.Action,
+		mods glfw.ModifierKey,
+	)
+	KeyCallback(
+		w *glfw.Window,
+		key glfw.Key,
+		scancode int,
 		action glfw.Action,
 		mods glfw.ModifierKey,
 	)
