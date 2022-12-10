@@ -25,8 +25,6 @@ func init() {
 	runtime.LockOSThread()
 }
 
-var WindowRatio float64 = 0.4
-
 func main() {
 	// initialize
 	var root vl.Widget
@@ -154,6 +152,9 @@ func Run(v *Vl) (err error) {
 		return
 	}
 
+	// window ratio
+	const windowRatio float64 = 0.4
+
 	// dimensions
 	var w, h, split int
 
@@ -210,12 +211,22 @@ func Run(v *Vl) (err error) {
 		//action
 		windows[focus].MouseButtonCallback(w, button, action, mods)
 	})
+	window.SetKeyCallback(func(
+		w *glfw.Window,
+		key glfw.Key,
+		scancode int,
+		action glfw.Action,
+		mods glfw.ModifierKey) {
+		if key == glfw.KeyEnter {
+			windows[focus].CharCallback(w, rune('\n'))
+		}
+	})
 
 	// draw
 	for !window.ShouldClose() {
 		// windows
 		w, h = window.GetSize()
-		split = int(float64(w) * WindowRatio)
+		split = int(float64(w) * windowRatio)
 
 		glfw.PollEvents()
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -313,7 +324,7 @@ func (v *Vl) Draw(w, h int) {
 func (vl *Vl) CharCallback(w *glfw.Window, r rune) {
 	fmt.Printf("%p char %v\n", vl, r)
 	// rune limit
-	if !(runeStart <= r && r <= runeEnd) {
+	if !((runeStart <= r && r <= runeEnd) || r == rune('\n')) {
 		return
 	}
 	vl.screen.Event(tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone))
