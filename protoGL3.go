@@ -567,15 +567,16 @@ func (op *Opengl) KeyCallback(
 	if action != glfw.Press {
 		return
 	}
+	const angle = 5.0
 	switch key {
 	case glfw.KeyUp:
-		op.alpha += 2
+		op.alpha += angle
 	case glfw.KeyDown:
-		op.alpha -= 2
+		op.alpha -= angle
 	case glfw.KeyLeft:
-		op.betta += 2
+		op.betta += angle
 	case glfw.KeyRight:
-		op.betta -= 2
+		op.betta -= angle
 	default:
 		// do nothing
 	}
