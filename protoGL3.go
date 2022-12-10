@@ -434,13 +434,11 @@ type Opengl struct {
 	alpha float64
 }
 
-func (o *Opengl) SetFont(f *Font) {
-	o.font = f
+func (op *Opengl) SetFont(f *Font) {
+	op.font = f
 }
 
-func (o *Opengl) Draw(w, h int) {
-	o.alpha += 0.2
-	o.betta += 0.25
+func (op *Opengl) Draw(w, h int) {
 
 	var ratio float64
 	ratio = float64(w) / float64(h)
@@ -451,8 +449,8 @@ func (o *Opengl) Draw(w, h int) {
 	gl.LoadIdentity()
 
 	// gl.Translated(0, 0, 0)
-	gl.Rotated(o.betta, 1.0, 0.0, 0.0)
-	gl.Rotated(o.alpha, 0.0, 1.0, 0.0)
+	gl.Rotated(op.betta, 1.0, 0.0, 0.0)
+	gl.Rotated(op.alpha, 0.0, 1.0, 0.0)
 	// cube
 	size := 10.0
 	gl.Color3d(0.1, 0.7, 0.1)
@@ -555,6 +553,21 @@ func (op *Opengl) KeyCallback(
 	mods glfw.ModifierKey,
 ) {
 	fmt.Printf("%p key %v %v %v %v\n", op, key, scancode, action, mods)
+	if action != glfw.Press {
+		return
+	}
+	switch key {
+	case glfw.KeyUp:
+		op.alpha += 2
+	case glfw.KeyDown:
+		op.alpha -= 2
+	case glfw.KeyLeft:
+		op.betta += 2
+	case glfw.KeyRight:
+		op.betta -= 2
+	default:
+		// do nothing
+	}
 }
 
 //===========================================================================//
