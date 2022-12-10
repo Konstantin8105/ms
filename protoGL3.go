@@ -221,7 +221,7 @@ func Run(v *Vl) (err error) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		//action
-		windows[focus].KeyCallback(w,key,scancode, action, mods)
+		windows[focus].KeyCallback(w, key, scancode, action, mods)
 	})
 
 	// draw
