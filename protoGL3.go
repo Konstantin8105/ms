@@ -30,19 +30,14 @@ var WindowRatio float64 = 0.4
 func main() {
 	// initialize
 	var root vl.Widget
-	var action chan func()
 
 	// vl demo
-	root, action = vl.Demo()
+	root, _ = vl.Demo()
 
-	f := new(Font)
-	v := NewVl(root, f)
+	v := NewVl(root)
 
 	// run vl widget in OpenGL
-	err := Run(v, action, func() {
-		f.Init()
-	})
-	if err != nil {
+	if err := Run(v); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
@@ -51,17 +46,11 @@ func main() {
 //===========================================================================//
 
 type Font struct {
-	font   *glsymbol.Font
-	gw, gh int
+	font *glsymbol.Font
 }
 
-func (f *Font) Init() (err error) {
-	f.font, err = glsymbol.DefaultFont()
-	if err != nil {
-		return
-	}
-	f.gw, f.gh = int(f.font.MaxGlyphWidth), int(f.font.MaxGlyphHeight)
-	return
+func (f Font) GetSymbolSize() (gw, gh int) {
+	return int(f.font.MaxGlyphWidth), int(f.font.MaxGlyphHeight)
 }
 
 // DrawText text on the screen
@@ -70,8 +59,10 @@ func (f Font) DrawText(cell vl.Cell, x, y, h int) {
 		return
 	}
 
-	x *= f.gw
-	y *= f.gh
+	gw, gh := f.GetSymbolSize()
+
+	x *= gw
+	y *= gh
 
 	// prepare colors
 	fg, bg, attr := cell.S.Decompose()
@@ -82,7 +73,7 @@ func (f Font) DrawText(cell vl.Cell, x, y, h int) {
 	if bg != tcell.ColorWhite {
 		r, g, b := color(bg)
 		gl.Color4f(r, g, b, 1)
-		gl.Rectf(float32(x), float32(h-y-f.gh), float32(x+f.gw), float32(h-y))
+		gl.Rectf(float32(x), float32(h-y-gh), float32(x+gw), float32(h-y))
 	}
 
 	if cell.R == ' ' {
@@ -91,7 +82,7 @@ func (f Font) DrawText(cell vl.Cell, x, y, h int) {
 	r, g, b := color(fg)
 	gl.Color4f(r, g, b, 1)
 	i := int(byte(cell.R)) - int(f.font.Config.Low)
-	gl.RasterPos2i(int32(x), int32(h-y-f.gh))
+	gl.RasterPos2i(int32(x), int32(h-y-gh))
 	gl.Bitmap(
 		f.font.Config.Glyphs[i].Width, f.font.Config.Glyphs[i].Height,
 		0.0, 0.0,
@@ -126,7 +117,7 @@ func color(c tcell.Color) (R, G, B float32) {
 
 //===========================================================================//
 
-func Run(v *Vl, action chan func(), init func()) (err error) {
+func Run(v *Vl) (err error) {
 	//mutex
 	var mutex sync.Mutex
 
@@ -152,23 +143,29 @@ func Run(v *Vl, action chan func(), init func()) (err error) {
 
 	glfw.SwapInterval(1) // Enable vsync
 
-	if init != nil {
-		init()
-	}
-
-	// 	var widthSymbol uint
-	// 	var heightSymbol uint
-	var w, h, split int
-
-	windows := [2]Window{new(Vl), new(Opengl)}
-	windows[0] = v
-	focus := 1
-
 	defer func() {
 		// 3D window is close
 		glfw.Terminate()
 	}()
 
+	var font Font
+	font.font, err = glsymbol.DefaultFont()
+	if err != nil {
+		return
+	}
+
+	// dimensions
+	var w, h, split int
+
+	// windows prepared
+	windows := [2]Window{new(Vl), new(Opengl)}
+	windows[0] = v
+	focus := 1
+	for i := range windows {
+		windows[i].SetFont(&font)
+	}
+
+	// windows input data
 	window.SetCharCallback(func(w *glfw.Window, r rune) {
 		//mutex
 		mutex.Lock()
@@ -176,7 +173,6 @@ func Run(v *Vl, action chan func(), init func()) (err error) {
 		//action
 		windows[focus].CharCallback(w, r)
 	})
-
 	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
 		//mutex
 		mutex.Lock()
@@ -192,7 +188,6 @@ func Run(v *Vl, action chan func(), init func()) (err error) {
 		//action
 		windows[focus].ScrollCallback(w, xoffset, yoffset)
 	})
-
 	window.SetMouseButtonCallback(func(
 		w *glfw.Window,
 		button glfw.MouseButton,
@@ -216,6 +211,7 @@ func Run(v *Vl, action chan func(), init func()) (err error) {
 		windows[focus].MouseButtonCallback(w, button, action, mods)
 	})
 
+	// draw
 	for !window.ShouldClose() {
 		// windows
 		w, h = window.GetSize()
@@ -275,17 +271,21 @@ func Run(v *Vl, action chan func(), init func()) (err error) {
 var _ Window = new(Vl)
 
 type Vl struct {
+	font *Font
+
 	screen vl.Screen
 	cells  [][]vl.Cell
-	font   *Font
 }
 
-func NewVl(root vl.Widget, f *Font) (v *Vl) {
+func (vl *Vl) SetFont(f *Font) {
+	vl.font = f
+}
+
+func NewVl(root vl.Widget) (v *Vl) {
 	v = new(Vl)
 	v.screen = vl.Screen{
 		Root: root,
 	}
-	v.font = f
 	return
 }
 
@@ -294,8 +294,10 @@ func (v *Vl) Draw(w, h int) {
 	gl.MatrixMode(gl.MODELVIEW)
 	gl.LoadIdentity()
 
-	widthSymbol := uint(float64(w) / float64(v.font.gw))
-	heightSymbol := uint(h) / uint(v.font.gh)
+	gw, gh := v.font.GetSymbolSize()
+
+	widthSymbol := uint(float64(w) / float64(gw))
+	heightSymbol := uint(h) / uint(gh)
 	v.screen.SetHeight(heightSymbol)
 	v.screen.GetContents(widthSymbol, &v.cells)
 	for r := 0; r < len(v.cells); r++ {
@@ -318,9 +320,12 @@ func (vl *Vl) CharCallback(w *glfw.Window, r rune) {
 }
 func (vl *Vl) ScrollCallback(w *glfw.Window, xoffset, yoffset float64) {
 	fmt.Printf("%p scroll %v %v\n", vl, xoffset, yoffset)
+
+	gw, gh := vl.font.GetSymbolSize()
+
 	x, y := w.GetCursorPos()
-	xs := int(x / float64(vl.font.gw))
-	ys := int(y / float64(vl.font.gh))
+	xs := int(x / float64(gw))
+	ys := int(y / float64(gh))
 
 	var bm tcell.ButtonMask
 	if yoffset < 0 {
@@ -344,6 +349,9 @@ func (vl *Vl) MouseButtonCallback(
 	mods glfw.ModifierKey,
 ) {
 	fmt.Printf("%p mouse %v %v %v\n", vl, button, action, mods)
+
+	gw, gh := vl.font.GetSymbolSize()
+
 	// convert button
 	var bm tcell.ButtonMask
 	switch button {
@@ -358,8 +366,8 @@ func (vl *Vl) MouseButtonCallback(
 	}
 	// calculate position
 	x, y := w.GetCursorPos()
-	xs := int(x / float64(vl.font.gw))
-	ys := int(y / float64(vl.font.gh))
+	xs := int(x / float64(gw))
+	ys := int(y / float64(gh))
 	// create event
 	switch action {
 	case glfw.Press:
@@ -377,8 +385,14 @@ func (vl *Vl) MouseButtonCallback(
 var _ Window = new(Opengl)
 
 type Opengl struct {
+	font *Font
+
 	betta float64
 	alpha float64
+}
+
+func (o *Opengl) SetFont(f *Font) {
+	o.font = f
 }
 
 func (o *Opengl) Draw(w, h int) {
@@ -494,6 +508,7 @@ func (op *Opengl) MouseButtonCallback(
 //===========================================================================//
 
 type Window interface {
+	SetFont(font *Font)
 	Draw(w, h int)
 	CharCallback(w *glfw.Window, r rune)
 	ScrollCallback(w *glfw.Window, xoffset, yoffset float64)
