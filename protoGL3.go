@@ -161,7 +161,7 @@ func Run(v *Vl) (err error) {
 	// windows prepared
 	windows := [2]Window{new(Vl), new(Opengl)}
 	windows[0] = v
-	focus := 1
+	var focus uint
 	for i := range windows {
 		windows[i].SetFont(&font)
 	}
@@ -172,6 +172,9 @@ func Run(v *Vl) (err error) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		//action
+		if len(windows) <= int(focus) {
+			focus = 0
+		}
 		windows[focus].CharCallback(w, r)
 	})
 	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
@@ -187,6 +190,9 @@ func Run(v *Vl) (err error) {
 			focus = 1
 		}
 		//action
+		if len(windows) <= int(focus) {
+			focus = 0
+		}
 		windows[focus].ScrollCallback(w, xoffset, yoffset)
 	})
 	window.SetMouseButtonCallback(func(
@@ -209,6 +215,9 @@ func Run(v *Vl) (err error) {
 			}
 		}
 		//action
+		if len(windows) <= int(focus) {
+			focus = 0
+		}
 		windows[focus].MouseButtonCallback(w, button, action, mods)
 	})
 	window.SetKeyCallback(func(
@@ -221,6 +230,9 @@ func Run(v *Vl) (err error) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		//action
+		if len(windows) <= int(focus) {
+			focus = 0
+		}
 		windows[focus].KeyCallback(w, key, scancode, action, mods)
 	})
 
@@ -439,7 +451,6 @@ func (op *Opengl) SetFont(f *Font) {
 }
 
 func (op *Opengl) Draw(w, h int) {
-
 	var ratio float64
 	ratio = float64(w) / float64(h)
 	ymax := 0.2 * 800
