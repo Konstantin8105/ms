@@ -254,20 +254,20 @@ func Run(v *Vl) (err error) {
 		}
 
 		{
-			// 3D model
-			gl.Viewport(int32(split), 0, int32(w-split), int32(h))
-			gl.MatrixMode(gl.PROJECTION)
-			gl.LoadIdentity()
-
-			windows[1].Draw(split, h)
-		}
-		{
 			// gui
 			gl.Viewport(0, 0, int32(split), int32(h))
 			gl.MatrixMode(gl.PROJECTION)
 			gl.LoadIdentity()
 
 			windows[0].Draw(split, h)
+		}
+		{
+			// 3D model
+			gl.Viewport(int32(split), 0, int32(w-split), int32(h))
+			gl.MatrixMode(gl.PROJECTION)
+			gl.LoadIdentity()
+
+			windows[1].Draw(split, h)
 		}
 		{
 			// separator
