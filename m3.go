@@ -22,7 +22,7 @@ var WindowRatio float64 = 0.4
 
 type Opengl struct {
 	window *glfw.Window
-	font *glsymbol.Font
+	font   *glsymbol.Font
 
 	mesh Mesh
 
