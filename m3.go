@@ -441,7 +441,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	// Elements
 	for i, el := range els {
 		gl.PointSize(2) // default points size
-		gl.LineWidth(1) // TODO GREAT LINES 3) // default lines width
+		gl.LineWidth(2) // TODO GREAT LINES 3) // default lines width
 		if op.mesh.IsIgnore(uint(i)) {
 			continue
 		}
@@ -584,10 +584,11 @@ func (op *Opengl) model3d(s viewState, parent string) {
 						cos[el.Indexes[2]].Point3d[2]) * 1.0 / 3.0,
 				}
 
-				ratio := 0.05
+				ratio := 0.5 //0.05
 
+					gl.LineWidth(1)
 				for p := range el.Indexes {
-					gl.LineWidth(float32(p * 2))
+					// gl.LineWidth(float32(p * 2))
 					gl.Begin(gl.LINES)
 
 					from, to := p, p+1
@@ -598,14 +599,14 @@ func (op *Opengl) model3d(s viewState, parent string) {
 						from = el.Indexes[from]
 						to = el.Indexes[to]
 					}
-					gl.Vertex3d(
-						cos[from].Point3d[0],
-						cos[from].Point3d[1],
-						cos[from].Point3d[2])
-					gl.Vertex3d(
-						cos[to].Point3d[0],
-						cos[to].Point3d[1],
-						cos[to].Point3d[2])
+					// gl.Vertex3d(
+					// 	cos[from].Point3d[0],
+					// 	cos[from].Point3d[1],
+					// 	cos[from].Point3d[2])
+					// gl.Vertex3d(
+					// 	cos[to].Point3d[0],
+					// 	cos[to].Point3d[1],
+					// 	cos[to].Point3d[2])
 
 					gl.Vertex3d(
 						ratio*mid[0]+(1-ratio)*cos[from].Point3d[0],

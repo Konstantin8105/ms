@@ -370,7 +370,7 @@ func Run(v *Vl, action chan func(), init func()) (err error) {
 }
 
 func drawRight() {
-	gl.Translated(0, 0, 0)
+	// gl.Translated(0, 0, 0)
 	gl.Rotated(betta, 1.0, 0.0, 0.0)
 	gl.Rotated(alpha, 0.0, 1.0, 0.0)
 	// cube
