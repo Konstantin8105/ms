@@ -18,12 +18,11 @@ func init() {
 
 var WindowRatio float64 = 0.4
 
-var font *glsymbol.Font
-
 // const fontSize = int32(12)
 
 type Opengl struct {
 	window *glfw.Window
+	font *glsymbol.Font
 
 	mesh Mesh
 
@@ -88,7 +87,7 @@ func NewOpengl(m Mesh) (op *Opengl, err error) {
 	// ???
 
 	// create new Font
-	font, err = glsymbol.DefaultFont()
+	op.font, err = glsymbol.DefaultFont()
 	if err != nil {
 		return
 	}
@@ -167,11 +166,12 @@ func (op *Opengl) Run() {
 
 			// minimal screen notes
 			openGlScreenCoordinate(op.window)
-			font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
+			gl.Color3f(0.7, 0.2, 0.2)
+			op.font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
 			if op.mesh != nil {
-				font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
+				op.font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
 					len(op.mesh.GetCoords())))
-				font.Printf(10, 40, fmt.Sprintf("Elements  : %6d",
+				op.font.Printf(10, 40, fmt.Sprintf("Elements  : %6d",
 					len(op.mesh.GetElements())))
 			}
 
@@ -221,13 +221,6 @@ func (f *Fps) Get() float32 {
 
 func (f *Fps) EndFrame() {
 	f.framesCount++
-}
-
-// DrawText text on the screen
-func DrawText(str string, x, y int32) {
-	gl.Color4ub(0, 0, 0, 255)
-	gl.LoadIdentity()
-	font.Printf(float32(x), float32(y), str)
 }
 
 func angle360(a float64) float64 {
