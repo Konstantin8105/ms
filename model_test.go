@@ -317,7 +317,7 @@ func TestIntegration(t *testing.T) {
 		close(quit)
 	}
 	// create a new model
-	if err := Run(quit); err != nil {
+	if err := Run("", quit); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}
@@ -350,7 +350,7 @@ func TestAddInfo(t *testing.T) {
 	}
 
 	// create a new model
-	if err := Run(quit); err != nil {
+	if err := Run("", quit); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}
