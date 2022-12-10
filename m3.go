@@ -16,6 +16,8 @@ func init() {
 	runtime.LockOSThread()
 }
 
+var WindowRatio float64 = 0.4
+
 var font *glsymbol.Font
 
 // const fontSize = int32(12)
@@ -146,10 +148,23 @@ func (op *Opengl) Run() {
 			op.cameraView()
 			op.model3d(op.state, "run")
 
-			// screen coordinates
-			openGlScreenCoordinate(op.window)
 			// draw axe coordinates
+			openGlScreenCoordinate(op.window)
 			op.drawAxes()
+
+			// draw separator
+			openGlScreenCoordinate(op.window)
+			{
+				w, h := op.window.GetSize()
+				_ = h
+				x := int(float64(w) * WindowRatio)
+				gl.Color3f(0.7, 0.7, 0.7)
+				gl.Begin(gl.LINES)
+				gl.Vertex3f(float32(x), 0, 0)
+				gl.Vertex3f(float32(x), float32(h), 0)
+				gl.End()
+			}
+
 			// minimal screen notes
 			openGlScreenCoordinate(op.window)
 			font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
@@ -586,7 +601,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 
 				ratio := 0.5 //0.05
 
-					gl.LineWidth(1)
+				gl.LineWidth(1)
 				for p := range el.Indexes {
 					// gl.LineWidth(float32(p * 2))
 					gl.Begin(gl.LINES)
