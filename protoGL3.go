@@ -36,7 +36,7 @@ func main() {
 	vl := NewVl(func() vl.Widget {
 		var list vl.List
 
-		r, rgt := InputUnsigned("Amount levels", "")
+		r, rgt := InputUnsigned("Amount levels", "", u.GetValue())
 		list.Add(r)
 
 		var b vl.Button
@@ -62,7 +62,7 @@ func main() {
 		new(Opengl),
 	}
 	for i := range windows {
-		windows[i].SetModel(u)
+		windows[i].SetModel(&u)
 	}
 
 	// run vl widget in OpenGL
@@ -72,7 +72,7 @@ func main() {
 	}
 }
 
-func InputUnsigned(prefix, postfix string) (
+func InputUnsigned(prefix, postfix string, defValue uint) (
 	w vl.Widget,
 	gettext func() (_ uint, ok bool),
 ) {
@@ -81,7 +81,7 @@ func InputUnsigned(prefix, postfix string) (
 		in   vl.Inputbox
 	)
 	list.Add(vl.TextStatic(prefix))
-	in.SetText("2")
+	in.SetText(fmt.Sprintf("%d", defValue))
 	in.Filter(tf.UnsignedInteger)
 	list.Add(&in)
 	list.Add(vl.TextStatic(postfix))
