@@ -495,7 +495,7 @@ type Vl struct {
 func NewVl(root vl.Widget) (v *Vl) {
 	v = new(Vl)
 	v.screen = vl.Screen{
-		Root: &vl.Scroll {
+		Root: &vl.Scroll{
 			Root: root,
 		},
 	}
@@ -530,7 +530,7 @@ func (vl *Vl) SetModel(ch Changable) {
 	vl.ch = ch
 }
 func (vl *Vl) CharCallback(w *glfw.Window, r rune) {
-	fmt.Printf("%p char %v\n", vl, r)
+	// fmt.Printf("%p char %v\n", vl, r)
 	// rune limit
 	runeStart, runeEnd := vl.font.GetRunes()
 	if !((runeStart <= r && r <= runeEnd) || r == rune('\n')) {
@@ -539,7 +539,7 @@ func (vl *Vl) CharCallback(w *glfw.Window, r rune) {
 	vl.screen.Event(tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone))
 }
 func (vl *Vl) ScrollCallback(w *glfw.Window, xoffset, yoffset float64) {
-	fmt.Printf("%p scroll %v %v\n", vl, xoffset, yoffset)
+	// fmt.Printf("%p scroll %v %v\n", vl, xoffset, yoffset)
 
 	gw, gh := vl.font.GetSymbolSize()
 
@@ -568,7 +568,7 @@ func (vl *Vl) MouseButtonCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	fmt.Printf("%p mouse %v %v %v\n", vl, button, action, mods)
+	// fmt.Printf("%p mouse %v %v %v\n", vl, button, action, mods)
 
 	gw, gh := vl.font.GetSymbolSize()
 
@@ -606,7 +606,7 @@ func (vl *Vl) KeyCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	fmt.Printf("%p key %v %v %v %v\n", vl, key, scancode, action, mods)
+	// fmt.Printf("%p key %v %v %v %v\n", vl, key, scancode, action, mods)
 	if action != glfw.Press {
 		return
 	}
@@ -741,10 +741,10 @@ func (op *Opengl) SetModel(ch Changable) {
 	op.ch = ch
 }
 func (op *Opengl) CharCallback(w *glfw.Window, r rune) {
-	fmt.Printf("%p char %v\n", op, r)
+	// fmt.Printf("%p char %v\n", op, r)
 }
 func (op *Opengl) ScrollCallback(w *glfw.Window, xoffset, yoffset float64) {
-	fmt.Printf("%p scroll %v %v\n", op, xoffset, yoffset)
+	// fmt.Printf("%p scroll %v %v\n", op, xoffset, yoffset)
 }
 func (op *Opengl) MouseButtonCallback(
 	w *glfw.Window,
@@ -752,7 +752,7 @@ func (op *Opengl) MouseButtonCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	fmt.Printf("%p mouse %v %v %v\n", op, button, action, mods)
+	// fmt.Printf("%p mouse %v %v %v\n", op, button, action, mods)
 }
 func (op *Opengl) KeyCallback(
 	w *glfw.Window,
@@ -761,7 +761,7 @@ func (op *Opengl) KeyCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	fmt.Printf("%p key %v %v %v %v\n", op, key, scancode, action, mods)
+	// fmt.Printf("%p key %v %v %v %v\n", op, key, scancode, action, mods)
 	if action != glfw.Press {
 		return
 	}
