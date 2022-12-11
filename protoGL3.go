@@ -3,6 +3,8 @@
 package main
 
 import (
+	"container/list"
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -24,10 +26,47 @@ func init() {
 
 func main() {
 	var m Model
-	m.value = 10
+	m.Value = 10
+
+	var u Undo
+	u.actual = &m
+
+	syncPoint := make(chan func(), 10)
+
+	vl := NewVl(func() vl.Widget {
+		var list vl.List
+
+		r, rgt := InputUnsigned("Amount levels", "")
+		list.Add(r)
+
+		var b vl.Button
+		b.SetText("Add")
+		b.OnClick = func() {
+			n, ok := rgt()
+			if !ok {
+				return
+			}
+			if n < 1 {
+				return
+			}
+			syncPoint <- func() {
+				u.Change(n) // TODO wrong
+			}
+		}
+		list.Add(&b)
+		return &list
+	}())
+
+	windows := [2]Window{
+		vl,
+		new(Opengl),
+	}
+	for i := range windows {
+		windows[i].SetModel(u.actual)
+	}
 
 	// run vl widget in OpenGL
-	if err := Run(&m); err != nil {
+	if err := Run(&windows, &syncPoint); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
@@ -57,8 +96,70 @@ func InputUnsigned(prefix, postfix string) (
 }
 
 type Model struct {
-	value uint
+	Value uint
 }
+
+func (m *Model) Change(value uint) {
+	m.Value = value
+}
+
+func (m *Model) GetValue() uint {
+	return m.Value
+}
+
+type Undo struct {
+	list *list.List
+
+	actual *Model
+}
+
+func (u *Undo) addToUndo() {
+	b, err := json.Marshal(u.actual)
+	if err != nil {
+		panic(err) // TODO
+		return
+	}
+	if u.list == nil {
+		u.list = list.New()
+		u.addToUndo() // store
+		return
+	}
+	u.list.PushBack(b)
+}
+
+func (u *Undo) Change(value uint) {
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.actual.Change(value)
+}
+
+func (u *Undo) sync(isUndo bool) (pre, post func()) {
+	// no need opengl lock, because used panic-free model
+	return func() {
+			// Lock/Unlock model for avoid concurrency problems
+			// with Opengl drawing
+			if !isUndo {
+				//	u.addToUndo() // store model in undo list
+			}
+		}, func() {
+			//u.op.UpdateModel() // update camera view
+		}
+}
+
+func (u *Undo) GetValue() uint {
+	return u.actual.GetValue()
+}
+
+type Changable interface {
+	Change(value uint)
+	GetValue() uint
+}
+
+var _ Changable = new(Model)
+var _ Changable = new(Undo)
 
 //===========================================================================//
 
@@ -138,31 +239,9 @@ func color(c tcell.Color) (R, G, B float32) {
 
 //===========================================================================//
 
-func Run(model *Model) (err error) {
-	vl := NewVl(func() vl.Widget {
-		var list vl.List
-
-		r, rgt := InputUnsigned("Amount levels", "")
-		list.Add(r)
-
-		var b vl.Button
-		b.SetText("Add")
-		b.OnClick = func() {
-			n, ok := rgt()
-			if !ok {
-				return
-			}
-			if n < 1 {
-				return
-			}
-			model.value = n
-		}
-		list.Add(&b)
-		return &list
-	}())
-
+func Run(windows *[2]Window, syncPoint *chan func()) (err error) {
 	//mutex
-	var mutex sync.Mutex
+	var mutex sync.Mutex // TODO change to syncPoint
 
 	if err = glfw.Init(); err != nil {
 		err = fmt.Errorf("failed to initialize glfw: %v", err)
@@ -204,11 +283,9 @@ func Run(model *Model) (err error) {
 	var w, h, split int
 
 	// windows prepared
-	windows := [2]Window{vl, new(Opengl)}
 	var focus uint
 	for i := range windows {
 		windows[i].SetFont(&font)
-		windows[i].SetModel(model)
 	}
 
 	// windows input data
@@ -283,6 +360,13 @@ func Run(model *Model) (err error) {
 
 	// draw
 	for !window.ShouldClose() {
+		// sync
+		select {
+		case f := <-*syncPoint:
+			f()
+		default:
+		}
+
 		// windows
 		w, h = window.GetSize()
 		split = int(float64(w) * windowRatio)
@@ -341,8 +425,8 @@ func Run(model *Model) (err error) {
 var _ Window = new(Vl)
 
 type Vl struct {
-	font  *Font
-	model *Model
+	font *Font
+	ch   Changable
 
 	screen vl.Screen
 	cells  [][]vl.Cell
@@ -380,8 +464,8 @@ func (v *Vl) Draw(w, h int) {
 func (vl *Vl) SetFont(f *Font) {
 	vl.font = f
 }
-func (vl *Vl) SetModel(model *Model) {
-	vl.model = model
+func (vl *Vl) SetModel(ch Changable) {
+	vl.ch = ch
 }
 func (vl *Vl) CharCallback(w *glfw.Window, r rune) {
 	fmt.Printf("%p char %v\n", vl, r)
@@ -489,8 +573,8 @@ func (vl *Vl) KeyCallback(
 var _ Window = new(Opengl)
 
 type Opengl struct {
-	font  *Font
-	model *Model
+	font *Font
+	ch   Changable
 
 	betta float64
 	alpha float64
@@ -554,7 +638,7 @@ func (op *Opengl) Draw(w, h int) {
 		dR     = 0.0
 		da     = 30.0 // degree
 		dy     = 0.2
-		levels = op.model.value
+		levels = op.ch.GetValue()
 	)
 	for i := 0; i < int(levels); i++ {
 		Ro += dR
@@ -591,8 +675,8 @@ func (op *Opengl) Draw(w, h int) {
 func (op *Opengl) SetFont(f *Font) {
 	op.font = f
 }
-func (op *Opengl) SetModel(model *Model) {
-	op.model = model
+func (op *Opengl) SetModel(ch Changable) {
+	op.ch = ch
 }
 func (op *Opengl) CharCallback(w *glfw.Window, r rune) {
 	fmt.Printf("%p char %v\n", op, r)
@@ -638,7 +722,7 @@ func (op *Opengl) KeyCallback(
 
 type Window interface {
 	SetFont(font *Font)
-	SetModel(model *Model)
+	SetModel(ch Changable)
 	Draw(w, h int)
 	CharCallback(w *glfw.Window, r rune)
 	ScrollCallback(w *glfw.Window, xoffset, yoffset float64)
