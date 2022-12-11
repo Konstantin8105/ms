@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/tf"
@@ -34,48 +35,8 @@ func main() {
 	u.actual = &m
 	u.syncPoint = &syncPoint
 
-	vl := NewVl(func() vl.Widget {
-		var list vl.List
-
-		r, rgt := InputUnsigned("Amount levels", "", u.GetValue())
-		list.Add(r)
-
-		var b vl.Button
-		b.SetText("Add")
-		b.OnClick = func() {
-			n, ok := rgt()
-			if !ok {
-				return
-			}
-			if n < 1 {
-				return
-			}
-			syncPoint <- func() {
-				u.Change(n) // TODO wrong
-			}
-		}
-		list.Add(&b)
-
-		var back vl.Button
-		back.SetText("Undo")
-		back.OnClick = func() {
-			u.Undo()
-		}
-		list.Add(&back)
-
-		return &list
-	}())
-
-	windows := [2]Window{
-		vl,
-		new(Opengl),
-	}
-	for i := range windows {
-		windows[i].SetModel(&u)
-	}
-
 	// run vl widget in OpenGL
-	if err := Run(&windows, &syncPoint); err != nil {
+	if err := Run(&u, &syncPoint); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
@@ -116,6 +77,10 @@ func (m *Model) GetValue() uint {
 	return m.Value
 }
 
+func (m Model) Undo() {
+	// do nothing
+}
+
 type Undo struct {
 	list      *list.List
 	syncPoint *chan func()
@@ -139,24 +104,16 @@ func (u *Undo) addToUndo() {
 }
 
 func (u *Undo) Change(value uint) {
-	// sync
-	// pre, post := u.sync(false)
-	// pre()
-	// defer post()
-
-	u.addToUndo()
-
-	// action
-	u.actual.Change(value)
+	(*u.syncPoint) <- func() {
+		u.addToUndo()
+		// action
+		u.actual.Change(value)
+	}
 }
 
 func (u *Undo) Undo() {
 	(*u.syncPoint) <- func() {
-		// sync
-		// 	pre, post := u.sync(true)
-		// 	pre()
-		// 	defer post()
-		// u.addToUndo()
+		// u.addToUndo() // No need
 		// action
 		if u.list == nil {
 			fmt.Println("nil list")
@@ -184,26 +141,17 @@ func (u *Undo) Undo() {
 	}
 }
 
-// func (u *Undo) sync(isUndo bool) (pre, post func()) {
-// 	// no need opengl lock, because used panic-free model
-// 	return func() {
-// 			// Lock/Unlock model for avoid concurrency problems
-// 			// with Opengl drawing
-// 			if !isUndo {
-// 				//	u.addToUndo() // store model in undo list
-// 			}
-// 		}, func() {
-// 			//u.op.UpdateModel() // update camera view
-// 		}
-// }
-
 func (u *Undo) GetValue() uint {
 	return u.actual.GetValue()
 }
 
+
 type Changable interface {
 	Change(value uint)
 	GetValue() uint
+	Undo()
+// 	AddLog(log string)
+// 	GetLog() []string
 }
 
 var _ Changable = new(Model)
@@ -287,7 +235,7 @@ func color(c tcell.Color) (R, G, B float32) {
 
 //===========================================================================//
 
-func Run(windows *[2]Window, syncPoint *chan func()) (err error) {
+func Run(ch Changable, syncPoint *chan func()) (err error) {
 	//mutex
 	var mutex sync.Mutex // TODO change to syncPoint
 
@@ -326,6 +274,55 @@ func Run(windows *[2]Window, syncPoint *chan func()) (err error) {
 
 	// window ratio
 	const windowRatio float64 = 0.4
+
+	vl := NewVl(func() vl.Widget {
+		var list vl.List
+
+		r, rgt := InputUnsigned("Amount levels", "", ch.GetValue())
+		list.Add(r)
+
+		var actual vl.Text
+		list.Add(&actual)
+		go func() {
+			for {
+				time.Sleep(time.Millisecond * 100)
+				(*syncPoint) <- func() {
+					actual.SetText(fmt.Sprintf("Size: %03d", ch.GetValue()))
+				}
+			}
+		}()
+
+		var b vl.Button
+		b.SetText("Add")
+		b.OnClick = func() {
+			n, ok := rgt()
+			if !ok {
+				return
+			}
+			if n < 1 {
+				return
+			}
+			ch.Change(n)
+		}
+		list.Add(&b)
+
+		var back vl.Button
+		back.SetText("Undo")
+		back.OnClick = func() {
+			ch.Undo()
+		}
+		list.Add(&back)
+
+		return &list
+	}())
+
+	windows := [2]Window{
+		vl,
+		new(Opengl),
+	}
+	for i := range windows {
+		windows[i].SetModel(ch)
+	}
 
 	// dimensions
 	var w, h, split int
