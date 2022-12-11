@@ -461,6 +461,7 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 			gl.MatrixMode(gl.MODELVIEW)
 			gl.LoadIdentity()
 			gl.Color3f(0.7, 0.7, 0.7)
+			gl.LineWidth(1)
 			gl.Begin(gl.LINES)
 			gl.Vertex3f(float32(split), 0, 0)
 			gl.Vertex3f(float32(split), float32(h), 0)
@@ -516,25 +517,27 @@ func (v *Vl) Draw(w, h int) {
 	}
 }
 
-func (vl *Vl) SetFont(f *Font) {
-	vl.font = f
+func (v *Vl) SetFont(f *Font) {
+	v.font = f
 }
-func (vl *Vl) SetModel(ch Changable) {
-	vl.ch = ch
+func (v *Vl) SetModel(ch Changable) {
+	v.ch = ch
 }
-func (vl *Vl) CharCallback(w *glfw.Window, r rune) {
+
+func (v *Vl) CharCallback(w *glfw.Window, r rune) {
 	// fmt.Printf("%p char %v\n", vl, r)
 	// rune limit
-	runeStart, runeEnd := vl.font.GetRunes()
+	runeStart, runeEnd := v.font.GetRunes()
 	if !((runeStart <= r && r <= runeEnd) || r == rune('\n')) {
 		return
 	}
-	vl.screen.Event(tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone))
+	v.screen.Event(tcell.NewEventKey(tcell.KeyRune, r, tcell.ModNone))
 }
-func (vl *Vl) ScrollCallback(w *glfw.Window, xoffset, yoffset float64) {
+
+func (v *Vl) ScrollCallback(w *glfw.Window, xoffset, yoffset float64) {
 	// fmt.Printf("%p scroll %v %v\n", vl, xoffset, yoffset)
 
-	gw, gh := vl.font.GetSymbolSize()
+	gw, gh := v.font.GetSymbolSize()
 
 	x, y := w.GetCursorPos()
 	xs := int(x / float64(gw))
@@ -553,9 +556,10 @@ func (vl *Vl) ScrollCallback(w *glfw.Window, xoffset, yoffset float64) {
 	if 0 < xoffset {
 		bm = tcell.WheelRight
 	}
-	vl.screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
+	v.screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
 }
-func (vl *Vl) MouseButtonCallback(
+
+func (v *Vl) MouseButtonCallback(
 	w *glfw.Window,
 	button glfw.MouseButton,
 	action glfw.Action,
@@ -563,7 +567,7 @@ func (vl *Vl) MouseButtonCallback(
 ) {
 	// fmt.Printf("%p mouse %v %v %v\n", vl, button, action, mods)
 
-	gw, gh := vl.font.GetSymbolSize()
+	gw, gh := v.font.GetSymbolSize()
 
 	// convert button
 	var bm tcell.ButtonMask
@@ -584,7 +588,7 @@ func (vl *Vl) MouseButtonCallback(
 	// create event
 	switch action {
 	case glfw.Press:
-		vl.screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
+		v.screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
 	case glfw.Release:
 
 	default:
@@ -592,32 +596,36 @@ func (vl *Vl) MouseButtonCallback(
 		// do nothing
 	}
 }
-func (vl *Vl) KeyCallback(
+
+func (v *Vl) KeyCallback(
 	w *glfw.Window,
 	key glfw.Key,
 	scancode int,
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	// fmt.Printf("%p key %v %v %v %v\n", vl, key, scancode, action, mods)
+	// fmt.Printf("%p key %v %v %v %v\n", v, key, scancode, action, mods)
 	if action != glfw.Press {
 		return
 	}
+	run := func(k tcell.Key, ch rune, mod tcell.ModMask) {
+		v.screen.Event(tcell.NewEventKey(k, ch, mod))
+	}
 	switch key {
 	case glfw.KeyUp:
-		vl.screen.Event(tcell.NewEventKey(tcell.KeyUp, rune(' '), tcell.ModNone))
+		run(tcell.KeyUp, rune(' '), tcell.ModNone)
 	case glfw.KeyDown:
-		vl.screen.Event(tcell.NewEventKey(tcell.KeyDown, rune(' '), tcell.ModNone))
+		run(tcell.KeyDown, rune(' '), tcell.ModNone)
 	case glfw.KeyLeft:
-		vl.screen.Event(tcell.NewEventKey(tcell.KeyLeft, rune(' '), tcell.ModNone))
+		run(tcell.KeyLeft, rune(' '), tcell.ModNone)
 	case glfw.KeyRight:
-		vl.screen.Event(tcell.NewEventKey(tcell.KeyRight, rune(' '), tcell.ModNone))
+		run(tcell.KeyRight, rune(' '), tcell.ModNone)
 	case glfw.KeyEnter:
-		vl.screen.Event(tcell.NewEventKey(tcell.KeyEnter, rune('\n'), tcell.ModNone))
+		run(tcell.KeyEnter, rune('\n'), tcell.ModNone)
 	case glfw.KeyBackspace:
-		vl.screen.Event(tcell.NewEventKey(tcell.KeyBackspace, rune(' '), tcell.ModNone))
+		run(tcell.KeyBackspace, rune(' '), tcell.ModNone)
 	case glfw.KeyDelete:
-		vl.screen.Event(tcell.NewEventKey(tcell.KeyDelete, rune(' '), tcell.ModNone))
+		run(tcell.KeyDelete, rune(' '), tcell.ModNone)
 	default:
 		// do nothing
 	}
@@ -636,8 +644,7 @@ type Opengl struct {
 }
 
 func (op *Opengl) Draw(w, h int) {
-	var ratio float64
-	ratio = float64(w) / float64(h)
+	ratio := float64(w) / float64(h)
 	ymax := 0.2 * 800
 	gl.Ortho(-50*ratio, 50*ratio, -50, 50, float64(-ymax), float64(ymax))
 
@@ -649,6 +656,7 @@ func (op *Opengl) Draw(w, h int) {
 	gl.Rotated(op.alpha, 0.0, 1.0, 0.0)
 	// cube
 	size := 10.0
+	gl.LineWidth(2)
 	gl.Color3d(0.1, 0.7, 0.1)
 	gl.Begin(gl.LINES)
 	{
@@ -730,15 +738,19 @@ func (op *Opengl) Draw(w, h int) {
 func (op *Opengl) SetFont(f *Font) {
 	op.font = f
 }
+
 func (op *Opengl) SetModel(ch Changable) {
 	op.ch = ch
 }
+
 func (op *Opengl) CharCallback(w *glfw.Window, r rune) {
 	// fmt.Printf("%p char %v\n", op, r)
 }
+
 func (op *Opengl) ScrollCallback(w *glfw.Window, xoffset, yoffset float64) {
 	// fmt.Printf("%p scroll %v %v\n", op, xoffset, yoffset)
 }
+
 func (op *Opengl) MouseButtonCallback(
 	w *glfw.Window,
 	button glfw.MouseButton,
@@ -747,6 +759,7 @@ func (op *Opengl) MouseButtonCallback(
 ) {
 	// fmt.Printf("%p mouse %v %v %v\n", op, button, action, mods)
 }
+
 func (op *Opengl) KeyCallback(
 	w *glfw.Window,
 	key glfw.Key,
@@ -760,13 +773,13 @@ func (op *Opengl) KeyCallback(
 	}
 	const angle = 5.0
 	switch key {
-	case glfw.KeyUp:
-		op.alpha += angle
-	case glfw.KeyDown:
-		op.alpha -= angle
 	case glfw.KeyLeft:
-		op.betta += angle
+		op.alpha += angle
 	case glfw.KeyRight:
+		op.alpha -= angle
+	case glfw.KeyUp:
+		op.betta += angle
+	case glfw.KeyDown:
 		op.betta -= angle
 	default:
 		// do nothing
@@ -775,6 +788,7 @@ func (op *Opengl) KeyCallback(
 
 //===========================================================================//
 
+// Window interface for important implementation
 type Window interface {
 	SetFont(font *Font)
 	SetModel(ch Changable)
