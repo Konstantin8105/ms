@@ -25,13 +25,14 @@ func init() {
 }
 
 func main() {
+	syncPoint := make(chan func(), 10)
+
 	var m Model
 	m.Value = 10
 
 	var u Undo
 	u.actual = &m
-
-	syncPoint := make(chan func(), 10)
+	u.syncPoint = &syncPoint
 
 	vl := NewVl(func() vl.Widget {
 		var list vl.List
@@ -54,6 +55,14 @@ func main() {
 			}
 		}
 		list.Add(&b)
+
+		var back vl.Button
+		back.SetText("Undo")
+		back.OnClick = func() {
+			u.Undo()
+		}
+		list.Add(&back)
+
 		return &list
 	}())
 
@@ -108,7 +117,8 @@ func (m *Model) GetValue() uint {
 }
 
 type Undo struct {
-	list *list.List
+	list      *list.List
+	syncPoint *chan func()
 
 	actual *Model
 }
@@ -124,30 +134,68 @@ func (u *Undo) addToUndo() {
 		u.addToUndo() // store
 		return
 	}
+	fmt.Println(">> add to undo")
 	u.list.PushBack(b)
 }
 
 func (u *Undo) Change(value uint) {
 	// sync
-	pre, post := u.sync(false)
-	pre()
-	defer post()
+	// pre, post := u.sync(false)
+	// pre()
+	// defer post()
+
+	u.addToUndo()
+
 	// action
 	u.actual.Change(value)
 }
 
-func (u *Undo) sync(isUndo bool) (pre, post func()) {
-	// no need opengl lock, because used panic-free model
-	return func() {
-			// Lock/Unlock model for avoid concurrency problems
-			// with Opengl drawing
-			if !isUndo {
-				//	u.addToUndo() // store model in undo list
-			}
-		}, func() {
-			//u.op.UpdateModel() // update camera view
+func (u *Undo) Undo() {
+	(*u.syncPoint) <- func() {
+		// sync
+		// 	pre, post := u.sync(true)
+		// 	pre()
+		// 	defer post()
+		// u.addToUndo()
+		// action
+		if u.list == nil {
+			fmt.Println("nil list")
+			return
 		}
+		el := u.list.Back()
+		if el == nil {
+			fmt.Println("back empty")
+			return
+		}
+		var last Model
+		b := el.Value.([]byte)
+		if err := json.Unmarshal(b, &last); err != nil {
+			fmt.Println(">>> undo ", err)
+			// AddInfo("Undo: %v", err)
+			return
+		}
+		// swap models
+
+		// undo model
+		u.actual = &last
+
+		// remove
+		u.list.Remove(el)
+	}
 }
+
+// func (u *Undo) sync(isUndo bool) (pre, post func()) {
+// 	// no need opengl lock, because used panic-free model
+// 	return func() {
+// 			// Lock/Unlock model for avoid concurrency problems
+// 			// with Opengl drawing
+// 			if !isUndo {
+// 				//	u.addToUndo() // store model in undo list
+// 			}
+// 		}, func() {
+// 			//u.op.UpdateModel() // update camera view
+// 		}
+// }
 
 func (u *Undo) GetValue() uint {
 	return u.actual.GetValue()
@@ -253,7 +301,7 @@ func Run(windows *[2]Window, syncPoint *chan func()) (err error) {
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 
 	var window *glfw.Window
-	window, err = glfw.CreateWindow(800, 600, "3D model", nil, nil)
+	window, err = glfw.CreateWindow(600, 300, "3D model", nil, nil)
 	if err != nil {
 		return
 	}
