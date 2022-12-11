@@ -66,17 +66,22 @@ func InputUnsigned(prefix, postfix string, defValue uint) (
 	}
 }
 
+//===========================================================================//
+
 type Model struct {
 	Value uint
 }
 
 func (m *Model) Change(value uint) {
 	m.Value = value
+	time.Sleep(time.Second * 2) // TODO remove
 }
 
 func (m *Model) GetValue() uint {
 	return m.Value
 }
+
+//===========================================================================//
 
 type Undo struct {
 	list      *list.List
@@ -143,6 +148,8 @@ func (u *Undo) Undo() {
 		u.list.Remove(el)
 	}
 }
+
+//===========================================================================//
 
 type Changable interface {
 	Change(value uint)
@@ -324,12 +331,13 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 		return &list
 	}())
 
-	windows := [2]Window{
+	windows := [...]Window{
 		vl,
 		new(Opengl),
 	}
 	for i := range windows {
 		windows[i].SetModel(ch)
+		windows[i].SetFont(&font)
 	}
 
 	// dimensions
@@ -337,9 +345,6 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 
 	// windows prepared
 	var focus uint
-	for i := range windows {
-		windows[i].SetFont(&font)
-	}
 
 	// windows input data
 	window.SetCharCallback(func(w *glfw.Window, r rune) {
