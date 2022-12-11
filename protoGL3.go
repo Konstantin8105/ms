@@ -62,7 +62,7 @@ func main() {
 		new(Opengl),
 	}
 	for i := range windows {
-		windows[i].SetModel(u.actual)
+		windows[i].SetModel(u)
 	}
 
 	// run vl widget in OpenGL
