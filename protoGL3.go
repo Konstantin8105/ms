@@ -10,6 +10,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -77,21 +78,23 @@ func (m *Model) GetValue() uint {
 	return m.Value
 }
 
-func (m Model) Undo() {
-	// do nothing
+func (m Model) Undo()             {} // do nothing
+func (m Model) AddLog(log string) {} // do nothing
+func (m Model) GetLog() []string { // do nothing
+	return nil
 }
 
 type Undo struct {
 	list      *list.List
 	syncPoint *chan func()
-
-	actual *Model
+	log       []string
+	actual    *Model
 }
 
 func (u *Undo) addToUndo() {
 	b, err := json.Marshal(u.actual)
 	if err != nil {
-		panic(err) // TODO
+		u.AddLog(fmt.Sprintf("%v", err))
 		return
 	}
 	if u.list == nil {
@@ -99,7 +102,7 @@ func (u *Undo) addToUndo() {
 		u.addToUndo() // store
 		return
 	}
-	fmt.Println(">> add to undo")
+	u.AddLog("Add to undo")
 	u.list.PushBack(b)
 }
 
@@ -116,26 +119,22 @@ func (u *Undo) Undo() {
 		// u.addToUndo() // No need
 		// action
 		if u.list == nil {
-			fmt.Println("nil list")
+			u.AddLog("undo list is empty")
 			return
 		}
 		el := u.list.Back()
 		if el == nil {
-			fmt.Println("back empty")
+			u.AddLog("undo list back is empty")
 			return
 		}
 		var last Model
 		b := el.Value.([]byte)
 		if err := json.Unmarshal(b, &last); err != nil {
-			fmt.Println(">>> undo ", err)
-			// AddInfo("Undo: %v", err)
+			u.AddLog(fmt.Sprintf("json: %v", err))
 			return
 		}
-		// swap models
-
 		// undo model
 		u.actual = &last
-
 		// remove
 		u.list.Remove(el)
 	}
@@ -144,14 +143,19 @@ func (u *Undo) Undo() {
 func (u *Undo) GetValue() uint {
 	return u.actual.GetValue()
 }
-
+func (u *Undo) AddLog(log string) {
+	u.log = append(u.log, log)
+}
+func (u *Undo) GetLog() []string {
+	return u.log
+}
 
 type Changable interface {
 	Change(value uint)
 	GetValue() uint
 	Undo()
-// 	AddLog(log string)
-// 	GetLog() []string
+	AddLog(log string)
+	GetLog() []string
 }
 
 var _ Changable = new(Model)
@@ -312,6 +316,17 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 			ch.Undo()
 		}
 		list.Add(&back)
+
+		var logs vl.Text
+		list.Add(&logs)
+		go func() {
+			for {
+				time.Sleep(time.Second)
+				(*syncPoint) <- func() {
+					logs.SetText(strings.Join(ch.GetLog(), "\n"))
+				}
+			}
+		}()
 
 		return &list
 	}())
@@ -480,7 +495,9 @@ type Vl struct {
 func NewVl(root vl.Widget) (v *Vl) {
 	v = new(Vl)
 	v.screen = vl.Screen{
-		Root: root,
+		Root: &vl.Scroll {
+			Root: root,
+		},
 	}
 	return
 }
