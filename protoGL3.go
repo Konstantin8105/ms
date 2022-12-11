@@ -26,38 +26,17 @@ func main() {
 	var m Model
 	m.value = 10
 
-	w := func() vl.Widget {
-		var list vl.List
-
-		r, rgt := InputUnsigned("Amount levels", "")
-		list.Add(r)
-
-		var b vl.Button
-		b.SetText("Add")
-		b.OnClick = func() {
-			n, ok := rgt()
-			if !ok {
-				return
-			}
-			if n < 1 {
-				return
-			}
-			m.value = n
-		}
-		list.Add(&b)
-		return &list
-	}()
-
-	v := NewVl(w)
-
 	// run vl widget in OpenGL
-	if err := Run(v); err != nil {
+	if err := Run(m); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
 }
 
-func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() (_ uint, ok bool)) {
+func InputUnsigned(prefix, postfix string) (
+	w vl.Widget,
+	gettext func() (_ uint, ok bool),
+) {
 	var (
 		list vl.ListH
 		in   vl.Inputbox
@@ -159,7 +138,30 @@ func color(c tcell.Color) (R, G, B float32) {
 
 //===========================================================================//
 
-func Run(v *Vl) (err error) {
+func Run(model Model) (err error) {
+
+	v := NewVl(func() vl.Widget {
+		var list vl.List
+
+		r, rgt := InputUnsigned("Amount levels", "")
+		list.Add(r)
+
+		var b vl.Button
+		b.SetText("Add")
+		b.OnClick = func() {
+			n, ok := rgt()
+			if !ok {
+				return
+			}
+			if n < 1 {
+				return
+			}
+			model.value = n
+		}
+		list.Add(&b)
+		return &list
+	}())
+
 	//mutex
 	var mutex sync.Mutex
 
@@ -208,6 +210,7 @@ func Run(v *Vl) (err error) {
 	var focus uint
 	for i := range windows {
 		windows[i].SetFont(&font)
+		windows[i].SetModel(&model)
 	}
 
 	// windows input data
@@ -340,14 +343,11 @@ func Run(v *Vl) (err error) {
 var _ Window = new(Vl)
 
 type Vl struct {
-	font *Font
+	font  *Font
+	model *Model
 
 	screen vl.Screen
 	cells  [][]vl.Cell
-}
-
-func (vl *Vl) SetFont(f *Font) {
-	vl.font = f
 }
 
 func NewVl(root vl.Widget) (v *Vl) {
@@ -379,6 +379,12 @@ func (v *Vl) Draw(w, h int) {
 	}
 }
 
+func (vl *Vl) SetFont(f *Font) {
+	vl.font = f
+}
+func (vl *Vl) SetModel(model *Model) {
+	vl.model = model
+}
 func (vl *Vl) CharCallback(w *glfw.Window, r rune) {
 	fmt.Printf("%p char %v\n", vl, r)
 	// rune limit
@@ -485,14 +491,11 @@ func (vl *Vl) KeyCallback(
 var _ Window = new(Opengl)
 
 type Opengl struct {
-	font *Font
+	font  *Font
+	model *Model
 
 	betta float64
 	alpha float64
-}
-
-func (op *Opengl) SetFont(f *Font) {
-	op.font = f
 }
 
 func (op *Opengl) Draw(w, h int) {
@@ -553,7 +556,7 @@ func (op *Opengl) Draw(w, h int) {
 		dR     = 0.0
 		da     = 30.0 // degree
 		dy     = 0.2
-		levels = 80
+		levels = op.model.value
 	)
 	for i := 0; i < int(levels); i++ {
 		Ro += dR
@@ -587,6 +590,12 @@ func (op *Opengl) Draw(w, h int) {
 	}
 }
 
+func (op *Opengl) SetFont(f *Font) {
+	op.font = f
+}
+func (op *Opengl) SetModel(model *Model) {
+	op.model = model
+}
 func (op *Opengl) CharCallback(w *glfw.Window, r rune) {
 	fmt.Printf("%p char %v\n", op, r)
 }
@@ -631,6 +640,7 @@ func (op *Opengl) KeyCallback(
 
 type Window interface {
 	SetFont(font *Font)
+	SetModel(model *Model)
 	Draw(w, h int)
 	CharCallback(w *glfw.Window, r rune)
 	ScrollCallback(w *glfw.Window, xoffset, yoffset float64)
