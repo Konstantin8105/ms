@@ -139,8 +139,7 @@ func color(c tcell.Color) (R, G, B float32) {
 //===========================================================================//
 
 func Run(model *Model) (err error) {
-
-	v := NewVl(func() vl.Widget {
+	vl := NewVl(func() vl.Widget {
 		var list vl.List
 
 		r, rgt := InputUnsigned("Amount levels", "")
@@ -205,8 +204,7 @@ func Run(model *Model) (err error) {
 	var w, h, split int
 
 	// windows prepared
-	windows := [2]Window{new(Vl), new(Opengl)}
-	windows[0] = v
+	windows := [2]Window{vl, new(Opengl)}
 	var focus uint
 	for i := range windows {
 		windows[i].SetFont(&font)
