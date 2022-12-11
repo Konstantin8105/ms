@@ -16,11 +16,6 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-const (
-	runeStart = rune(byte(32))
-	runeEnd   = rune(byte(127)) // int32('■'))
-)
-
 func init() {
 	runtime.LockOSThread()
 }
@@ -45,6 +40,10 @@ func main() {
 
 type Font struct {
 	font *glsymbol.Font
+}
+
+func (f Font) GetRunes() (low, high rune) {
+	return f.font.Config.Low, f.font.Config.High
 }
 
 func (f Font) GetSymbolSize() (gw, gh int) {
@@ -338,6 +337,7 @@ func (v *Vl) Draw(w, h int) {
 func (vl *Vl) CharCallback(w *glfw.Window, r rune) {
 	fmt.Printf("%p char %v\n", vl, r)
 	// rune limit
+	runeStart, runeEnd := vl.font.GetRunes()
 	if !((runeStart <= r && r <= runeEnd) || r == rune('\n')) {
 		return
 	}
