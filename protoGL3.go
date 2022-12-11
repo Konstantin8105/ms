@@ -27,7 +27,7 @@ func main() {
 	m.value = 10
 
 	// run vl widget in OpenGL
-	if err := Run(m); err != nil {
+	if err := Run(&m); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
@@ -138,7 +138,7 @@ func color(c tcell.Color) (R, G, B float32) {
 
 //===========================================================================//
 
-func Run(model Model) (err error) {
+func Run(model *Model) (err error) {
 
 	v := NewVl(func() vl.Widget {
 		var list vl.List
@@ -210,7 +210,7 @@ func Run(model Model) (err error) {
 	var focus uint
 	for i := range windows {
 		windows[i].SetFont(&font)
-		windows[i].SetModel(&model)
+		windows[i].SetModel(model)
 	}
 
 	// windows input data
