@@ -7,9 +7,11 @@ import (
 	"math"
 	"os"
 	"runtime"
+	"strconv"
 	"sync"
 
 	"github.com/Konstantin8105/glsymbol"
+	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
 	"github.com/gdamore/tcell/v2"
 	"github.com/go-gl/gl/v2.1/gl"
@@ -21,19 +23,62 @@ func init() {
 }
 
 func main() {
-	// initialize
-	var root vl.Widget
+	var m Model
+	m.value = 10
 
-	// vl demo
-	root, _ = vl.Demo()
+	w := func() vl.Widget {
+		var list vl.List
 
-	v := NewVl(root)
+		r, rgt := InputUnsigned("Amount levels", "")
+		list.Add(r)
+
+		var b vl.Button
+		b.SetText("Add")
+		b.OnClick = func() {
+			n, ok := rgt()
+			if !ok {
+				return
+			}
+			if n < 1 {
+				return
+			}
+			m.value = n
+		}
+		list.Add(&b)
+		return &list
+	}()
+
+	v := NewVl(w)
 
 	// run vl widget in OpenGL
 	if err := Run(v); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
 	}
+}
+
+func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() (_ uint, ok bool)) {
+	var (
+		list vl.ListH
+		in   vl.Inputbox
+	)
+	list.Add(vl.TextStatic(prefix))
+	in.SetText("2")
+	in.Filter(tf.UnsignedInteger)
+	list.Add(&in)
+	list.Add(vl.TextStatic(postfix))
+	return &list, func() (uint, bool) {
+		text := in.GetText()
+		value, err := strconv.ParseUint(text, 10, 64)
+		if err != nil {
+			return 0, false
+		}
+		return uint(value), true
+	}
+}
+
+type Model struct {
+	value uint
 }
 
 //===========================================================================//
