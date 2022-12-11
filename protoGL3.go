@@ -78,12 +78,6 @@ func (m *Model) GetValue() uint {
 	return m.Value
 }
 
-func (m Model) Undo()             {} // do nothing
-func (m Model) AddLog(log string) {} // do nothing
-func (m Model) GetLog() []string { // do nothing
-	return nil
-}
-
 type Undo struct {
 	list      *list.List
 	syncPoint *chan func()
@@ -114,6 +108,16 @@ func (u *Undo) Change(value uint) {
 	}
 }
 
+func (u *Undo) GetValue() uint {
+	return u.actual.GetValue()
+}
+func (u *Undo) AddLog(log string) {
+	u.log = append(u.log, log)
+}
+func (u *Undo) GetLog() []string {
+	return u.log
+}
+
 func (u *Undo) Undo() {
 	(*u.syncPoint) <- func() {
 		// u.addToUndo() // No need
@@ -140,25 +144,14 @@ func (u *Undo) Undo() {
 	}
 }
 
-func (u *Undo) GetValue() uint {
-	return u.actual.GetValue()
-}
-func (u *Undo) AddLog(log string) {
-	u.log = append(u.log, log)
-}
-func (u *Undo) GetLog() []string {
-	return u.log
-}
-
 type Changable interface {
 	Change(value uint)
 	GetValue() uint
-	Undo()
 	AddLog(log string)
 	GetLog() []string
+	Undo()
 }
 
-var _ Changable = new(Model)
 var _ Changable = new(Undo)
 
 //===========================================================================//
