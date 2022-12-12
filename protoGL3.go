@@ -75,7 +75,7 @@ type Model struct {
 func (m *Model) Change(value uint) {
 	m.Value = value
 	// emulate long time process
-	time.Sleep(time.Second * 2) // TODO remove
+	time.Sleep(time.Second * 5) // TODO remove
 }
 
 func (m *Model) GetValue() uint {
@@ -336,23 +336,22 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 		var list vl.List
 
 		var log vl.Text
-		list.Add(&log)
-		go func() {
-			for {
-				time.Sleep(time.Second)
-				(*syncPoint) <- func() {
-					// reverse
-					src := ch.GetLog()
-					// copy
-					s := make([]string, len(src))
-					copy(s, src)
-					for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-						s[i], s[j] = s[j], s[i]
-					}
-					log.SetText(strings.Join(s, "\n"))
-				}
+
+		var b vl.Button
+		b.SetText("Update")
+		b.OnClick = func() {
+			// reverse
+			src := ch.GetLog()
+			// copy
+			s := make([]string, len(src))
+			copy(s, src)
+			for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+				s[i], s[j] = s[j], s[i]
 			}
-		}()
+			log.SetText(strings.Join(s, "\n"))
+		}
+		list.Add(&b)
+		list.Add(&log)
 
 		return &list
 	}())
@@ -382,12 +381,11 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 	// windows input data
 	window.SetCharCallback(func(w *glfw.Window, r rune) {
 		// no need a reaction if in progress
-		if progressState {
-			return
+		if !progressState {
+			//mutex
+			mutex.Lock()
+			defer mutex.Unlock()
 		}
-		//mutex
-		mutex.Lock()
-		defer mutex.Unlock()
 		//action
 		if len(windows) <= int(focus) {
 			focus = 0
@@ -396,19 +394,22 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 	})
 	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
 		// no need a reaction if in progress
-		if progressState {
-			return
+		if !progressState {
+			//mutex
+			mutex.Lock()
+			defer mutex.Unlock()
 		}
-		//mutex
-		mutex.Lock()
-		defer mutex.Unlock()
 		// calculate position
 		x, _ := w.GetCursorPos()
 		// create event
-		if int(x) < split {
-			focus = 0
+		if progressState {
+			focus = 2
 		} else {
-			focus = 1
+			if int(x) < split {
+				focus = 0
+			} else {
+				focus = 1
+			}
 		}
 		//action
 		if len(windows) <= int(focus) {
@@ -423,20 +424,23 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 		mods glfw.ModifierKey,
 	) {
 		// no need a reaction if in progress
-		if progressState {
-			return
+		if !progressState {
+			//mutex
+			mutex.Lock()
+			defer mutex.Unlock()
 		}
-		//mutex
-		mutex.Lock()
-		defer mutex.Unlock()
 		// calculate position
 		x, _ := w.GetCursorPos()
 		// create event
 		if action == glfw.Press {
-			if int(x) < split {
-				focus = 0
+			if progressState {
+				focus = 2
 			} else {
-				focus = 1
+				if int(x) < split {
+					focus = 0
+				} else {
+					focus = 1
+				}
 			}
 		}
 		//action
@@ -452,19 +456,17 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 		action glfw.Action,
 		mods glfw.ModifierKey) {
 		// no need a reaction if in progress
-		if progressState {
-			return
+		if !progressState {
+			//mutex
+			mutex.Lock()
+			defer mutex.Unlock()
 		}
-		//mutex
-		mutex.Lock()
-		defer mutex.Unlock()
 		//action
 		if len(windows) <= int(focus) {
 			focus = 0
 		}
 		windows[focus].KeyCallback(w, key, scancode, action, mods)
 	})
-
 
 	// draw
 	for !window.ShouldClose() {
@@ -511,6 +513,7 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 			gl.MatrixMode(gl.PROJECTION)
 			gl.LoadIdentity()
 
+			focus = 2
 			windows[2].Draw(split, h) // waiting
 		} else {
 			{
