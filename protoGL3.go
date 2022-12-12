@@ -74,6 +74,7 @@ type Model struct {
 
 func (m *Model) Change(value uint) {
 	m.Value = value
+	// emulate long time process
 	time.Sleep(time.Second * 2) // TODO remove
 }
 
@@ -279,7 +280,7 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 	// window ratio
 	const windowRatio float64 = 0.4
 
-	vl := NewVl(func() vl.Widget {
+	v := NewVl(func() vl.Widget {
 		var list vl.List
 
 		r, rgt := InputUnsigned("Amount levels", "", ch.GetValue())
@@ -331,14 +332,46 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 		return &list
 	}())
 
+	waiting := NewVl(func() vl.Widget {
+		var list vl.List
+
+		var log vl.Text
+		list.Add(&log)
+		go func() {
+			for {
+				time.Sleep(time.Second)
+				(*syncPoint) <- func() {
+					// reverse
+					src := ch.GetLog()
+					// copy
+					s := make([]string, len(src))
+					copy(s, src)
+					for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+						s[i], s[j] = s[j], s[i]
+					}
+					log.SetText(strings.Join(s, "\n"))
+				}
+			}
+		}()
+
+		return &list
+	}())
+
 	windows := [...]Window{
-		vl,
+		v,
 		new(Opengl),
+		waiting,
 	}
 	for i := range windows {
 		windows[i].SetModel(ch)
 		windows[i].SetFont(&font)
 	}
+
+	// progress
+	var (
+		progressState = false
+		progressChan  = make(chan bool)
+	)
 
 	// dimensions
 	var w, h, split int
@@ -348,6 +381,10 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 
 	// windows input data
 	window.SetCharCallback(func(w *glfw.Window, r rune) {
+		// no need a reaction if in progress
+		if progressState {
+			return
+		}
 		//mutex
 		mutex.Lock()
 		defer mutex.Unlock()
@@ -358,6 +395,10 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 		windows[focus].CharCallback(w, r)
 	})
 	window.SetScrollCallback(func(w *glfw.Window, xoffset, yoffset float64) {
+		// no need a reaction if in progress
+		if progressState {
+			return
+		}
 		//mutex
 		mutex.Lock()
 		defer mutex.Unlock()
@@ -381,6 +422,10 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 		action glfw.Action,
 		mods glfw.ModifierKey,
 	) {
+		// no need a reaction if in progress
+		if progressState {
+			return
+		}
 		//mutex
 		mutex.Lock()
 		defer mutex.Unlock()
@@ -406,6 +451,10 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 		scancode int,
 		action glfw.Action,
 		mods glfw.ModifierKey) {
+		// no need a reaction if in progress
+		if progressState {
+			return
+		}
 		//mutex
 		mutex.Lock()
 		defer mutex.Unlock()
@@ -416,12 +465,29 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 		windows[focus].KeyCallback(w, key, scancode, action, mods)
 	})
 
+
 	// draw
 	for !window.ShouldClose() {
 		// sync
 		select {
 		case f := <-*syncPoint:
-			f()
+			if f != nil {
+				progressState = false
+				go func() {
+					f()
+					progressChan <- true
+				}()
+				select {
+				case <-time.After(time.Second):
+					progressState = true
+					go func() {
+						<-progressChan
+						progressState = false
+					}()
+				case <-progressChan:
+					progressState = false
+				}
+			}
 		default:
 		}
 
@@ -440,37 +506,45 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 			continue
 		}
 
-		{
-			// gui
+		if progressState {
 			gl.Viewport(0, 0, int32(split), int32(h))
 			gl.MatrixMode(gl.PROJECTION)
 			gl.LoadIdentity()
 
-			windows[0].Draw(split, h)
-		}
-		{
-			// 3D model
-			gl.Viewport(int32(split), 0, int32(w-split), int32(h))
-			gl.MatrixMode(gl.PROJECTION)
-			gl.LoadIdentity()
+			windows[2].Draw(split, h) // waiting
+		} else {
+			{
+				// gui
+				gl.Viewport(0, 0, int32(split), int32(h))
+				gl.MatrixMode(gl.PROJECTION)
+				gl.LoadIdentity()
 
-			windows[1].Draw(split, h)
-		}
-		{
-			// separator
-			gl.Viewport(0, 0, int32(split), int32(h))
-			gl.MatrixMode(gl.PROJECTION)
-			gl.LoadIdentity()
+				windows[0].Draw(split, h)
+			}
+			{
+				// 3D model
+				gl.Viewport(int32(split), 0, int32(w-split), int32(h))
+				gl.MatrixMode(gl.PROJECTION)
+				gl.LoadIdentity()
 
-			gl.Ortho(0, float64(split), 0, float64(h), -1.0, 1.0)
-			gl.MatrixMode(gl.MODELVIEW)
-			gl.LoadIdentity()
-			gl.Color3f(0.7, 0.7, 0.7)
-			gl.LineWidth(1)
-			gl.Begin(gl.LINES)
-			gl.Vertex3f(float32(split), 0, 0)
-			gl.Vertex3f(float32(split), float32(h), 0)
-			gl.End()
+				windows[1].Draw(split, h)
+			}
+			{
+				// separator
+				gl.Viewport(0, 0, int32(split), int32(h))
+				gl.MatrixMode(gl.PROJECTION)
+				gl.LoadIdentity()
+
+				gl.Ortho(0, float64(split), 0, float64(h), -1.0, 1.0)
+				gl.MatrixMode(gl.MODELVIEW)
+				gl.LoadIdentity()
+				gl.Color3f(0.7, 0.7, 0.7)
+				gl.LineWidth(1)
+				gl.Begin(gl.LINES)
+				gl.Vertex3f(float32(split), 0, 0)
+				gl.Vertex3f(float32(split), float32(h), 0)
+				gl.End()
+			}
 		}
 		// end
 		window.MakeContextCurrent()
