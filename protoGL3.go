@@ -333,6 +333,7 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 	}())
 
 	waiting := NewVl(func() vl.Widget {
+		// Do not use any another methods of Changable except GetLog()
 		var list vl.List
 
 		var log vl.Text
@@ -355,6 +356,7 @@ func Run(ch Changable, syncPoint *chan func()) (err error) {
 
 		return &list
 	}())
+	// TODO: prepare modal dialog
 
 	windows := [...]Window{
 		v,
