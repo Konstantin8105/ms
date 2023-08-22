@@ -98,7 +98,8 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		case tcell.ColorMaroon:
 			cr = rl.Orange
 		default:
-			panic(c)
+			cr = rl.Red
+			// panic(c)
 		}
 		return
 	}
@@ -183,15 +184,15 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	var camera rl.Camera3D
 	camera.Position = rl.Vector3{10.0, 200.0, 10.0} // Camera position
 	camera.Target = rl.Vector3{0.0, 50.0, 0.0}      // Camera looking at point
-	camera.Up = rl.Vector3{0.0, 1.0, 0.0}          // Camera up vector (rotation towards target)
-	camera.Fovy = 25.0                             // Camera field-of-view Y
+	camera.Up = rl.Vector3{0.0, 1.0, 0.0}           // Camera up vector (rotation towards target)
+	camera.Fovy = 25.0                              // Camera field-of-view Y
 	// camera.Projection = rl.CameraPerspective       // Camera mode type
 	camera.Projection = rl.CameraOrthographic // Camera mode type
 
 	cubePosition := rl.Vector3{0.0, 0.0, 0.0}
 
 	// rl.SetCameraMode(camera, rl.CameraThirdPerson)
-	rl.SetCameraMode(camera, rl.CameraOrbital)
+	// rl.SetCameraMode(camera, rl.CameraOrbital)
 	// rl.SetCameraMode(camera, rl.CameraFree) // Set a free camera mode
 
 	screenGui := rl.LoadRenderTexture(int32(float32(screenWidth)*WindowRatio), screenHeight)
@@ -203,6 +204,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 	start := time.Now()
 
 	lb := false // leftbutton
+	_ = lb      // TODO remove
 
 	for !rl.WindowShouldClose() {
 		{
@@ -219,7 +221,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		h = int32(rl.GetScreenHeight())
 		x = int32(float32(rl.GetScreenWidth()) * WindowRatio)
 
-		rl.UpdateCamera(&camera)
+		rl.UpdateCamera(&camera, rl.CameraOrbital)
 
 		// rc := color(defaultColor)
 		// rl.ClearBackground(rc)
@@ -302,7 +304,7 @@ func Run(root vl.Widget, action chan func()) (err error) {
 		{
 			// Draw both views render textures to the screen side by side
 			rl.BeginDrawing()
-			rl.ClearBackground(rl.Black)
+			rl.ClearBackground(rl.RayWhite) // Black)
 			rl.DrawTextureRec(screenGui.Texture,
 				rl.Rectangle{0.0, 0.0, float32(screenGui.Texture.Width), float32(-screenGui.Texture.Height)},
 				rl.Vector2{0, 0}, rl.White)
@@ -353,7 +355,6 @@ func Run(root vl.Widget, action chan func()) (err error) {
 			// }
 			screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
 		}
-
 	}
 
 	return
