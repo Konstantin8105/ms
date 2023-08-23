@@ -1,6 +1,7 @@
 package window
 
 import (
+	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/vl"
 	"github.com/gdamore/tcell/v2"
@@ -32,7 +33,7 @@ type Tui struct {
 	cells  [][]vl.Cell
 }
 
-func(t *Tui) SetFont(f *glsymbol.Font) {
+func (t *Tui) SetFont(f *glsymbol.Font) {
 	t.font = f
 }
 

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/ms/window"
@@ -42,6 +44,11 @@ func main() {
 	}
 	tw0.SetFont(f)
 	tw1.SetFont(f)
+
+	// Experiment: go func() {
+	// Experiment: 	time.Sleep(time.Second)
+	// Experiment: 	screen.UpdateWindow(1, new(window.Empty))
+	// Experiment: }()
 
 	screen.Run()
 }
