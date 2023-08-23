@@ -1,7 +1,9 @@
 package ms
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"runtime"
 	"runtime/debug"
@@ -2122,29 +2124,29 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	}()
 	// initialize undo chain
 	var mm Undo
-	mm.model = new(Model)
-	// filename gmsh software
-	if strings.HasSuffix(strings.ToLower(filename), ".geo") {
+	// prepare model
+	if filename == "" {
+		mm.model = new(Model)
+	} else if strings.HasSuffix(strings.ToLower(filename), ".geo") {
+		// read gmsh file
 		var model Model
 		model, err = Gmsh2Model(filename)
 		if err != nil {
 			return
 		}
 		mm.model = &model
+	} else {
+		// read native json file format
+		b, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return
+		}
+		var actual Model
+		if err := json.Unmarshal(b, &actual); err != nil {
+			return
+		}
+		mm.model = &actual
 	}
-
-	// TODO read native json file format
-	// { // only for debug
-	// 	b, err := ioutil.ReadFile("./testdata/IntersectionSpiral")
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	var actual Model
-	// 	if err := json.Unmarshal(b, &actual); err != nil {
-	// 		panic(err)
-	// 	}
-	// 	mm.model = &actual
-	// }
 
 	// initialize tui
 	tui, err := NewTui(&mm)
