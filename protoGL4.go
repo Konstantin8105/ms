@@ -121,14 +121,6 @@ func (t *TuiWindow) SetScrollCallback(
 	t.screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
 }
 func (t *TuiWindow) Draw(x, y, w, h int32) {
-	//
-	// 			gl.Viewport(0, 0, int32(x), int32(h))
-	// 			gl.MatrixMode(gl.PROJECTION)
-	// 			gl.LoadIdentity()
-	// 			gl.Ortho(0, float64(x), 0, float64(h), -1.0, 1.0)
-	// 			gl.MatrixMode(gl.MODELVIEW)
-	// 			gl.LoadIdentity()
-	//
 	gl.Viewport(int32(x), int32(y), int32(w), int32(h))
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
@@ -165,8 +157,6 @@ func (t *TuiWindow) DrawText(cell vl.Cell, x, y, h int) {
 
 	// prepare colors
 	fg, bg, attr := cell.S.Decompose()
-	_ = fg
-	_ = bg
 	_ = attr
 
 	if bg != tcell.ColorWhite {
@@ -213,6 +203,8 @@ func main() {
 		}
 	}()
 
+	// ws[1] = new(Empty) // TODO: REMOVE
+
 	screen, err := ds.New("Demo", ws, &ch)
 	if err != nil {
 		panic(err)
@@ -236,21 +228,49 @@ const (
 
 func color(c tcell.Color) (R, G, B float32) {
 	switch c {
-	case tcell.ColorWhite:
-		R, G, B = 1, 1, 1
-	case tcell.ColorBlack:
-		R, G, B = 0, 0, 0
-	case tcell.ColorRed:
-		R, G, B = 1, 0.3, 0.3
-	case tcell.ColorYellow:
-		R, G, B = 1, 1, 0
-	case tcell.ColorViolet:
-		R, G, B = 0.75, 0.90, 0.90 //0.5, 0, 1.0
-	case tcell.ColorMaroon:
-		R, G, B = 1, 0.5, 0 // 0.5, 0, 0
+	// 	case tcell.ColorWhite:
+	// 		R, G, B = 1, 1, 1
+	// 	case tcell.ColorBlack:
+	// 		R, G, B = 0, 0, 0
+	// 	case tcell.ColorRed:
+	// 		R, G, B = 1, 0.3, 0.3
+	// 	case tcell.ColorYellow:
+	// 		R, G, B = 1, 1, 0
+	// 	case tcell.ColorViolet:
+	// 		R, G, B = 0.75, 0.90, 0.90 //0.5, 0, 1.0
+	// 	case tcell.ColorMaroon:
+	// 		R, G, B = 1, 0.5, 0 // 0.5, 0, 0
+	// 		// 	case tcell.ColorDeepPink:
+	// 		// 		R, G, B = 1.0, 0.01, 0.5
+	// 	case tcell.ColorGreen:
+	// 		R, G, B = 0, 1, 0
 	default:
 		ri, gi, bi := c.RGB()
-		return float32(ri), float32(gi), float32(bi)
+		return float32(ri) / 255.0, float32(gi) / 255.0, float32(bi) / 255.0
 	}
 	return
 }
+
+type Empty struct{}
+
+func (e *Empty) SetMouseButtonCallback(
+	button glfw.MouseButton,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+	xcursor, ycursor float64,
+) {
+}
+func (e *Empty) SetCharCallback(r rune) {}
+func (e *Empty) SetScrollCallback(
+	xcursor, ycursor float64,
+	xoffset, yoffset float64,
+) {
+}
+func (e *Empty) SetKeyCallback(
+	key glfw.Key,
+	scancode int,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+) {
+}
+func (e *Empty) Draw(x, y, w, h int32) {}
