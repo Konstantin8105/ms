@@ -2,10 +2,12 @@ github.com/Konstantin8105/binaryexpr v0.1.0 h1:2+mmmCRpZ6BDHyaLRAePjGiVp/Hgt7T7z
 github.com/Konstantin8105/binaryexpr v0.1.0/go.mod h1:prPPFcv/zGCwhx78QW299JwMKP4xSkldgOwhZNr99GQ=
 github.com/Konstantin8105/compare v0.0.0-20230404132328-f605c0d757de h1:0nMcmCvcjJke50WgghlksdphJTcTLghcel+O2ElX68w=
 github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b h1:IZkvBy8TJTxpPHjOW1R5KqIgVF2lVk8isx9iQBHnOnw=
+github.com/Konstantin8105/ds v0.0.0-20230823104601-c11d5c25dafc h1:QqNa39sIYwhXSpi0NrmMRA+/r9YF4El/WI8nOoHp90Q=
+github.com/Konstantin8105/ds v0.0.0-20230823104601-c11d5c25dafc/go.mod h1:WrDdhGNe9iX/7ICewqiaQEe3M/qkn8Ta8YbrvIupBiM=
 github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibUOtOpkg=
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
-github.com/Konstantin8105/glsymbol v0.0.0-20221205104224-fb5fd947ab6c h1:m2zHNs7wxqiTetMY+DGEf2zG82+I7VoDfe3jGFM1HbM=
-github.com/Konstantin8105/glsymbol v0.0.0-20221205104224-fb5fd947ab6c/go.mod h1:ukgISnGuGc2fHkbqs+WOEm+/kv61C7V3om6EqoEfvuQ=
+github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e h1:mRPpDK0aP/qASyuHCJ3NlddUJsWpVGI7Q+OaHiNidb8=
+github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e/go.mod h1:dQY/BbYDz+cmioaRNjG5Nj9QSueytBNIvRaKMWFOXNg=
 github.com/Konstantin8105/gog v0.0.0-20221011134020-d25f31641629 h1:osJtN6gKI9PflLDHStla36K0reECn60SPa+5XHIjmp8=
 github.com/Konstantin8105/gog v0.0.0-20221011134020-d25f31641629/go.mod h1:lECN7ur7B+Jy6dgggiJWuV6Ierk4QGqDtPEaJw9c0b8=
 github.com/Konstantin8105/msh v0.0.0-20230709182739-092b2bf6afb1 h1:/Wkh7FYq9iW2YkjMphdcCvUVGWo/BFBqRZ/CsB9/cN8=
@@ -23,8 +25,6 @@ github.com/gdamore/encoding v1.0.0 h1:+7OoQ1Bc6eTm5niUzBa0Ctsh6JbMW6Ra+YNuAtDBdk
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/tcell/v2 v2.6.0 h1:OKbluoP9VYmJwZwq/iLb4BxwKcwGthaa1YNBJIyCySg=
 github.com/gdamore/tcell/v2 v2.6.0/go.mod h1:be9omFATkdr0D9qewWW3d+MEvl5dha+Etb5y65J2H8Y=
-github.com/gen2brain/raylib-go/raylib v0.0.0-20230818184703-30cfef01daee h1:8TOBmkeFi+gP89Of5Xuh4ilZq2A/Te9ltwVYEg+xNIA=
-github.com/gen2brain/raylib-go/raylib v0.0.0-20230818184703-30cfef01daee/go.mod h1:AwtGA3aTtYdezNxEVbfchaLw/z+CuRDh2Mlxy0FbBro=
 github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6 h1:zDw5v7qm4yH7N8C8uWd+8Ii9rROdgWxQuGoJ9WDXxfk=
 github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6/go.mod h1:9YTyiznxEY1fVinfM7RvRcjRHbw2xLBJ3AAGIT0I4Nw=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b h1:GgabKamyOYguHqHjSkDACcgoPIz3w0Dis/zJ1wyHHHU=

@@ -3,7 +3,8 @@ module github.com/Konstantin8105/ms
 go 1.18
 
 require (
-	github.com/Konstantin8105/glsymbol v0.0.0-20221205104224-fb5fd947ab6c
+	github.com/Konstantin8105/ds v0.0.0-20230823104601-c11d5c25dafc
+	github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e
 	github.com/Konstantin8105/gog v0.0.0-20221011134020-d25f31641629
 	github.com/Konstantin8105/msh v0.0.0-20230709182739-092b2bf6afb1
 	github.com/Konstantin8105/pow v0.1.0
@@ -18,7 +19,6 @@ require (
 	github.com/Konstantin8105/errors v0.1.0 // indirect
 	github.com/Konstantin8105/tree v0.1.1 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
-	github.com/gen2brain/raylib-go/raylib v0.0.0-20230818184703-30cfef01daee // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
