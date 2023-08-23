@@ -258,16 +258,6 @@ func (f *Fps) EndFrame() {
 	f.framesCount++
 }
 
-func angle360(a float64) float64 {
-	if 360.0 < a {
-		return a - 360.0
-	}
-	if a < -360.0 {
-		return a + 360.0
-	}
-	return a
-}
-
 // TODO: aadd to TUI and other
 func (op *Opengl) ViewAll(centerCorrection bool) {
 	// take only coordinates, because all element are limit be coordinates
