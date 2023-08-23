@@ -8,6 +8,8 @@ import (
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
+var _ ds.Window = (*Tui)(nil)
+
 const (
 	runeStart = rune(byte(32))
 	runeEnd   = rune(byte(127)) // int32('■'))
