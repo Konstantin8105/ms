@@ -6,11 +6,14 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/gog"
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
+
+var _ ds.Window = (*Opengl)(nil)
 
 func init() {
 	runtime.LockOSThread()
@@ -43,6 +46,38 @@ type Opengl struct {
 	// mouses
 	mouses   [3]Mouse  // left, middle, right
 	mouseMid MouseRoll // middle scroll
+}
+
+func (op *Opengl) SetFont(f *glsymbol.Font) {
+	op.font = f
+}
+func (op *Opengl) SetMouseButtonCallback(
+	button glfw.MouseButton,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+	xcursor, ycursor float64,
+) {
+	// TODO
+}
+func (op *Opengl) SetCharCallback(r rune) {
+	// TODO
+}
+func (op *Opengl) SetScrollCallback(
+	xcursor, ycursor float64,
+	xoffset, yoffset float64,
+) {
+	// TODO
+}
+func (op *Opengl) SetKeyCallback(
+	key glfw.Key,
+	scancode int,
+	action glfw.Action,
+	mods glfw.ModifierKey,
+) {
+	// TODO
+}
+func (op *Opengl) Draw(x, y, w, h int32) {
+	// TODO
 }
 
 func (op *Opengl) Init() {
