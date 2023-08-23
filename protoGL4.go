@@ -1,8 +1,8 @@
+//go:build ignore
+
 package main
 
 import (
-	"time"
-
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/ms/window"
