@@ -2133,6 +2133,7 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 		mm.model = &model
 	}
 
+	// TODO read native json file format
 	// { // only for debug
 	// 	b, err := ioutil.ReadFile("./testdata/IntersectionSpiral")
 	// 	if err != nil {
@@ -2144,6 +2145,7 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	// 	}
 	// 	mm.model = &actual
 	// }
+
 	// initialize tui
 	tui, err := NewTui(&mm)
 	if err != nil {
