@@ -509,7 +509,7 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		gl.PopMatrix()
 	}()
 
-	cos, els := op.mesh.GetCoords(), op.mesh.GetElements()
+	cos := op.mesh.GetCoords()
 
 	if op.updateModel {
 		op.updateModel = false
@@ -563,6 +563,13 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		gl.Disable(gl.POLYGON_OFFSET_FILL)
 	}
 
+	op.drawElements(s, parent)
+	op.drawPoints(s, parent)
+}
+
+func (op *Opengl) drawPoints(s viewState, parent string) {
+	cos := op.mesh.GetCoords()
+
 	// Point
 	gl.PointSize(5)
 	switch s {
@@ -603,6 +610,12 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	default:
 		panic(fmt.Errorf("not valid selection : %v", s))
 	}
+}
+
+func (op *Opengl) drawElements(s viewState, parent string) {
+	cos := op.mesh.GetCoords()
+	els := op.mesh.GetElements()
+
 	// Elements
 	for i, el := range els {
 		gl.PointSize(2) // default points size
