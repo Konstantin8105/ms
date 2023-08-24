@@ -178,16 +178,6 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 
 	// draw separator
 	openGlScreenCoordinate(x, y, w, h) // op.window)
-	{
-		//w, h := op.window.GetSize()
-		// _ = h
-		x := int(float64(w) * WindowRatio)
-		gl.Color3f(0.7, 0.7, 0.7)
-		gl.Begin(gl.LINES)
-		gl.Vertex3f(float32(x), 0, 0)
-		gl.Vertex3f(float32(x), float32(h), 0)
-		gl.End()
-	}
 
 	// minimal screen notes
 	openGlScreenCoordinate(x, y, w, h) //op.window)

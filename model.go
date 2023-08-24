@@ -2214,6 +2214,9 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	// // run opengl
 	// go func() { op.Run() }()
 	// run tui
+	ch <- func() {
+		screen.ChangeRatio(0.4) // TODO: add to interface
+	}
 	screen.Run()
 	return // tui.Run(quit)
 }
