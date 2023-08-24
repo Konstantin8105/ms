@@ -188,7 +188,12 @@ func (t *Tui) DrawText(cell vl.Cell, x, y, h int) {
 	}
 
 	if cell.R == ' ' {
+		// no need draw that rune
 		return
+	}
+	if cell.R < runeStart || runeEnd < cell.R {
+		// ignore not ascii symbol
+		cell.R = '-'
 	}
 	r, g, b := color(fg)
 	gl.Color4f(r, g, b, 1)

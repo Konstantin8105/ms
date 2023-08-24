@@ -120,7 +120,7 @@ func init() {
 				if 0 < id {
 					prefix = "Submodel"
 				}
-				pre.SetText(fmt.Sprintf("№%02d. %s", id, prefix))
+				pre.SetText(fmt.Sprintf("%02d. %s", id, prefix))
 				name.SetText(part)
 			}
 
