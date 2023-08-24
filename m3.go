@@ -149,6 +149,12 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 	gl.Disable(gl.LIGHTING)
 
 	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LEQUAL)
+	defer func() {
+		gl.DepthFunc(gl.LESS)
+		gl.Disable(gl.DEPTH_TEST)
+	}()
+	// gl.Enable(gl.DEPTH_TEST)
 	// gl.Enable(gl.BLEND) // Transparency
 	// gl.Enable(gl.LINE_SMOOTH)
 
