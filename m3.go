@@ -173,14 +173,11 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 	op.model3d(op.state, "run")
 
 	// draw axe coordinates
-	openGlScreenCoordinate(x, y, w, h) // op.window)
+	openGlScreenCoordinate(x, y, w, h)
 	op.drawAxes(w, h)
 
-	// draw separator
-	openGlScreenCoordinate(x, y, w, h) // op.window)
-
 	// minimal screen notes
-	openGlScreenCoordinate(x, y, w, h) //op.window)
+	openGlScreenCoordinate(x, y, w, h)
 	gl.Color3f(0.7, 0.2, 0.2)
 	op.font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
 	if op.mesh != nil {
