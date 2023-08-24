@@ -762,7 +762,7 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 						cos[el.Indexes[2]].Point3d[2]) * 1.0 / 3.0,
 				}
 
-				ratio := 0.5 //0.05
+				ratio := 0.1
 
 				gl.LineWidth(1)
 				for p := range el.Indexes {
