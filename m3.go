@@ -1373,8 +1373,8 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		for found { // TODO : infinite loop
 			found = false
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-			gl.ClearColorxOES(0, 0, 0, 0)
-			// gl.ClearColor(1, 1, 1, 1)
+			// gl.ClearColorxOES(0, 0, 0, 0) // ???? TODO ??
+			gl.ClearColor(1, 1, 1, 1)
 			gl.Enable(gl.DEPTH_TEST)
 			gl.Disable(gl.LINE_SMOOTH)
 			gl.Disable(gl.BLEND) // Transparency
