@@ -3,7 +3,6 @@ package ms
 import (
 	"container/list"
 	"encoding/json"
-	"sync"
 
 	"github.com/Konstantin8105/gog"
 )
@@ -11,11 +10,11 @@ import (
 type Undo struct {
 	list *list.List
 
-	mu sync.Mutex
+	//mu sync.Mutex
 
 	model *Model  // actual model
 	op    *Opengl // for 3d
-	tui   *Tui    // for terminal ui
+	// tui   *Tui    // for terminal ui
 }
 
 func (u *Undo) sync(isUndo bool) (pre, post func()) {
@@ -23,13 +22,13 @@ func (u *Undo) sync(isUndo bool) (pre, post func()) {
 	return func() {
 			// Lock/Unlock model for avoid concurrency problems
 			// with Opengl drawing
-			u.mu.Lock() // mutex lock evethink
+			// u.mu.Lock() // mutex lock evethink
 			if !isUndo {
 				u.addToUndo() // store model in undo list
 			}
 		}, func() {
 			u.op.UpdateModel() // update camera view
-			u.mu.Unlock()      // mutex unlock everythink
+			// u.mu.Unlock()      // mutex unlock everythink
 		}
 }
 

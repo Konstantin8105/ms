@@ -24,8 +24,11 @@ var WindowRatio float64 = 0.4
 // const fontSize = int32(12)
 
 type Opengl struct {
-	window *glfw.Window
-	font   *glsymbol.Font
+	font *glsymbol.Font
+
+	actions chan func()
+
+	x, y, w, h int32
 
 	mesh Mesh
 
@@ -57,7 +60,39 @@ func (op *Opengl) SetMouseButtonCallback(
 	mods glfw.ModifierKey,
 	xcursor, ycursor float64,
 ) {
-	// TODO
+	var index int
+	switch button {
+	case glfw.MouseButton1:
+		index = 0
+	case glfw.MouseButton2:
+		index = 1
+	case glfw.MouseButton3:
+		index = 2
+	default:
+		return
+	}
+	for i := range op.mouses {
+		if op.mouses[i] == nil {
+			continue
+		}
+		if i != index {
+			op.mouses[i].Reset()
+			continue
+		}
+		x, y := xcursor, ycursor // w.GetCursorPos()
+		h := op.h                //_, h := w.GetSize()
+		y = float64(h) - y
+		switch action {
+		case glfw.Press:
+			op.mouses[index].Press(int32(x), int32(y))
+		case glfw.Release:
+			op.mouses[index].Release(int32(x), int32(y))
+		default:
+			// case glfw.Repeat:
+			// do nothing
+		}
+		return
+	}
 }
 func (op *Opengl) SetCharCallback(r rune) {
 	// TODO
@@ -66,7 +101,7 @@ func (op *Opengl) SetScrollCallback(
 	xcursor, ycursor float64,
 	xoffset, yoffset float64,
 ) {
-	// TODO
+	op.mouseMid.Roll(int32(xoffset), int32(yoffset), op)
 }
 func (op *Opengl) SetKeyCallback(
 	key glfw.Key,
@@ -74,9 +109,111 @@ func (op *Opengl) SetKeyCallback(
 	action glfw.Action,
 	mods glfw.ModifierKey,
 ) {
-	// TODO
+	switch key {
+	case glfw.KeyEscape:
+		// deselect all
+		op.Init()
+		op.mesh.DeselectAll()
+		for i := range op.mouses {
+			if op.mouses[i] == nil {
+				continue
+			}
+			op.mouses[i].Reset()
+		}
+		op.MouseDefault()
+	}
+}
+func (op *Opengl) SetCursorPosCallback(
+	xpos float64,
+	ypos float64,
+) {
+	h := op.h
+	ypos = float64(h) - ypos
+	for i := range op.mouses {
+		if op.mouses[i] == nil {
+			continue
+		}
+		op.mouses[i].Update(int32(xpos), int32(ypos))
+	}
 }
 func (op *Opengl) Draw(x, y, w, h int32) {
+	op.x, op.y, op.w, op.h = x, y, w, h
+	gl.Viewport(int32(x), int32(y), int32(w), int32(h))
+	gl.MatrixMode(gl.PROJECTION)
+	gl.LoadIdentity()
+
+	gl.Ortho(0, float64(w), 0, float64(h), -1, 1)
+	gl.MatrixMode(gl.MODELVIEW)
+	gl.LoadIdentity()
+
+	gl.Disable(gl.LIGHTING)
+
+	gl.Enable(gl.DEPTH_TEST)
+	// gl.Enable(gl.BLEND) // Transparency
+	// gl.Enable(gl.LINE_SMOOTH)
+
+	// TODO transperency on back side
+
+	// switch to wireframe mode
+	// gl.PolygonMode( gl.FRONT_AND_BACK, gl.LINE );
+	// switch off wireframe
+	// gl.PolygonMode( gl.FRONT_AND_BACK, gl.FILL );
+	// gl.PolygonMode( gl.FRONT_AND_BACK, gl.POINT );
+
+	// Avoid panics if Model is changed.
+	// Main problem of synchronization.
+
+	op.cameraView(x, y, w, h)
+	op.model3d(op.state, "run")
+
+	// draw axe coordinates
+	openGlScreenCoordinate(x, y, w, h) // op.window)
+	op.drawAxes(w, h)
+
+	// draw separator
+	openGlScreenCoordinate(x, y, w, h) // op.window)
+	{
+		//w, h := op.window.GetSize()
+		// _ = h
+		x := int(float64(w) * WindowRatio)
+		gl.Color3f(0.7, 0.7, 0.7)
+		gl.Begin(gl.LINES)
+		gl.Vertex3f(float32(x), 0, 0)
+		gl.Vertex3f(float32(x), float32(h), 0)
+		gl.End()
+	}
+
+	// minimal screen notes
+	openGlScreenCoordinate(x, y, w, h) //op.window)
+	gl.Color3f(0.7, 0.2, 0.2)
+	op.font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
+	if op.mesh != nil {
+		op.font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
+			len(op.mesh.GetCoords())))
+		op.font.Printf(10, 40, fmt.Sprintf("Elements  : %6d",
+			len(op.mesh.GetElements())))
+	}
+
+	for i := range op.mouses {
+		if op.mouses[i] == nil {
+			continue
+		}
+		if op.mouses[i].ReadyAction() {
+			op.mouses[i].Action(op)
+		}
+		if op.mouses[i].ReadyPreview() {
+			op.mouses[i].Preview(op.x, op.y)
+		}
+	}
+
+	// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
+	// TODO : REMOVE: ui(window)
+
+	// 			op.window.MakeContextCurrent()
+	// 			op.window.SwapBuffers()
+
+	op.fps.EndFrame()
+
 	// TODO
 }
 
@@ -88,49 +225,52 @@ func (op *Opengl) Init() {
 	op.cursorLeft = selectPoints
 }
 
-func NewOpengl(m Mesh) (op *Opengl, err error) {
+func NewOpengl(m Mesh) (op *Opengl, actions *chan func(), err error) {
 	op = new(Opengl)
 	op.Init()
 	op.mesh = m
+	op.actions = make(chan func(), 1000)
 
-	if err = glfw.Init(); err != nil {
-		err = fmt.Errorf("failed to initialize glfw: %v", err)
-		return
-	}
+	actions = &op.actions
 
-	glfw.WindowHint(glfw.Resizable, glfw.True)
-	glfw.WindowHint(glfw.ContextVersionMajor, 2)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-
-	op.window, err = glfw.CreateWindow(800, 600, "3D model", nil, nil)
-	if err != nil {
-		return
-	}
-	op.window.MakeContextCurrent()
-
-	op.window.SetMouseButtonCallback(op.mouseButton)
-	op.window.SetScrollCallback(op.scroll)
-	op.window.SetCursorPosCallback(op.cursorPos)
-	op.window.SetKeyCallback(op.key)
-
-	if err = gl.Init(); err != nil {
-		return
-	}
-
-	glfw.SwapInterval(1) // Enable vsync
-
-	// ???
-
-	// create new Font
-	op.font, err = glsymbol.DefaultFont()
-	if err != nil {
-		return
-	}
-	// font is prepared
-
+	// 	if err = glfw.Init(); err != nil {
+	// 		err = fmt.Errorf("failed to initialize glfw: %v", err)
+	// 		return
+	// 	}
+	//
+	// 	glfw.WindowHint(glfw.Resizable, glfw.True)
+	// 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
+	// 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	//
+	// 	op.window, err = glfw.CreateWindow(800, 600, "3D model", nil, nil)
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// 	op.window.MakeContextCurrent()
+	//
+	// 	op.window.SetMouseButtonCallback(op.mouseButton)
+	// 	op.window.SetScrollCallback(op.scroll)
+	// 	op.window.SetCursorPosCallback(op.cursorPos)
+	// 	op.window.SetKeyCallback(op.key)
+	//
+	// 	if err = gl.Init(); err != nil {
+	// 		return
+	// 	}
+	//
+	// 	glfw.SwapInterval(1) // Enable vsync
+	//
+	// 	// ???
+	//
+	// 	// create new Font
+	// 	op.font, err = glsymbol.DefaultFont()
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// 	// font is prepared
+	//
 	op.fps.Init()
 
-	gl.Disable(gl.LIGHTING)
+	// TODO : gl.Disable(gl.LIGHTING)
 
 	// mouse initialize
 	op.MouseDefault()
@@ -145,93 +285,93 @@ func (op *Opengl) MouseDefault() {
 	op.mouseMid = new(MouseZoom)    // middle scroll
 }
 
-func (op *Opengl) Run() {
-	defer func() {
-		// 3D window is close
-		glfw.Terminate()
-	}()
-	for !op.window.ShouldClose() {
-		func() {
-			defer func() {
-				if r := recover(); r != nil {
-					// safety ignore panic
-					<-time.After(100 * time.Millisecond)
-					AddInfo("Opengl: safety ignore panic: %s", r)
-				}
-			}()
-
-			glfw.PollEvents()
-			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-			gl.ClearColor(1, 1, 1, 1)
-
-			gl.Enable(gl.DEPTH_TEST)
-			// gl.Enable(gl.BLEND) // Transparency
-			// gl.Enable(gl.LINE_SMOOTH)
-
-			// TODO transperency on back side
-
-			// switch to wireframe mode
-			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.LINE );
-			// switch off wireframe
-			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.FILL );
-			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.POINT );
-
-			// Avoid panics if Model is changed.
-			// Main problem of synchronization.
-
-			op.cameraView()
-			op.model3d(op.state, "run")
-
-			// draw axe coordinates
-			openGlScreenCoordinate(op.window)
-			op.drawAxes()
-
-			// draw separator
-			openGlScreenCoordinate(op.window)
-			{
-				w, h := op.window.GetSize()
-				_ = h
-				x := int(float64(w) * WindowRatio)
-				gl.Color3f(0.7, 0.7, 0.7)
-				gl.Begin(gl.LINES)
-				gl.Vertex3f(float32(x), 0, 0)
-				gl.Vertex3f(float32(x), float32(h), 0)
-				gl.End()
-			}
-
-			// minimal screen notes
-			openGlScreenCoordinate(op.window)
-			gl.Color3f(0.7, 0.2, 0.2)
-			op.font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
-			if op.mesh != nil {
-				op.font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
-					len(op.mesh.GetCoords())))
-				op.font.Printf(10, 40, fmt.Sprintf("Elements  : %6d",
-					len(op.mesh.GetElements())))
-			}
-
-			for i := range op.mouses {
-				if op.mouses[i] == nil {
-					continue
-				}
-				if op.mouses[i].ReadyAction() {
-					op.mouses[i].Action(op)
-				}
-				if op.mouses[i].ReadyPreview() {
-					op.mouses[i].Preview()
-				}
-			}
-
-			// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
-			// TODO : REMOVE: ui(window)
-
-			op.window.MakeContextCurrent()
-			op.window.SwapBuffers()
-
-			op.fps.EndFrame()
-		}()
-	}
-}
+// func (op *Opengl) Run() {
+// 	defer func() {
+// 		// 3D window is close
+// 		glfw.Terminate()
+// 	}()
+// 	for !op.window.ShouldClose() {
+// 		func() {
+// 			defer func() {
+// 				if r := recover(); r != nil {
+// 					// safety ignore panic
+// 					<-time.After(100 * time.Millisecond)
+// 					AddInfo("Opengl: safety ignore panic: %s", r)
+// 				}
+// 			}()
+//
+// 			glfw.PollEvents()
+// 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+// 			gl.ClearColor(1, 1, 1, 1)
+//
+// 			gl.Enable(gl.DEPTH_TEST)
+// 			// gl.Enable(gl.BLEND) // Transparency
+// 			// gl.Enable(gl.LINE_SMOOTH)
+//
+// 			// TODO transperency on back side
+//
+// 			// switch to wireframe mode
+// 			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.LINE );
+// 			// switch off wireframe
+// 			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.FILL );
+// 			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.POINT );
+//
+// 			// Avoid panics if Model is changed.
+// 			// Main problem of synchronization.
+//
+// 			op.cameraView()
+// 			op.model3d(op.state, "run")
+//
+// 			// draw axe coordinates
+// 			openGlScreenCoordinate(op.window)
+// 			op.drawAxes()
+//
+// 			// draw separator
+// 			openGlScreenCoordinate(op.window)
+// 			{
+// 				w, h := op.window.GetSize()
+// 				_ = h
+// 				x := int(float64(w) * WindowRatio)
+// 				gl.Color3f(0.7, 0.7, 0.7)
+// 				gl.Begin(gl.LINES)
+// 				gl.Vertex3f(float32(x), 0, 0)
+// 				gl.Vertex3f(float32(x), float32(h), 0)
+// 				gl.End()
+// 			}
+//
+// 			// minimal screen notes
+// 			openGlScreenCoordinate(op.window)
+// 			gl.Color3f(0.7, 0.2, 0.2)
+// 			op.font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
+// 			if op.mesh != nil {
+// 				op.font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
+// 					len(op.mesh.GetCoords())))
+// 				op.font.Printf(10, 40, fmt.Sprintf("Elements  : %6d",
+// 					len(op.mesh.GetElements())))
+// 			}
+//
+// 			for i := range op.mouses {
+// 				if op.mouses[i] == nil {
+// 					continue
+// 				}
+// 				if op.mouses[i].ReadyAction() {
+// 					op.mouses[i].Action(op)
+// 				}
+// 				if op.mouses[i].ReadyPreview() {
+// 					op.mouses[i].Preview()
+// 				}
+// 			}
+//
+// 			// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
+// 			// TODO : REMOVE: ui(window)
+//
+// 			op.window.MakeContextCurrent()
+// 			op.window.SwapBuffers()
+//
+// 			op.fps.EndFrame()
+// 		}()
+// 	}
+// }
 
 type Fps struct {
 	framesCount int64
@@ -311,13 +451,13 @@ func (op *Opengl) UpdateModel() {
 	// TODO  add logic
 }
 
-func (op *Opengl) cameraView() {
+func (op *Opengl) cameraView(x, y, w, h int32) {
 	// better angle value
 	op.camera.alpha = angle360(op.camera.alpha)
 	op.camera.betta = angle360(op.camera.betta)
 
-	w, h := op.window.GetSize()
-	gl.Viewport(0, 0, int32(w), int32(h))
+	// w, h := op.window.GetSize()
+	gl.Viewport(int32(x), int32(y), int32(w), int32(h))
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
 	var ratio float64
@@ -661,12 +801,12 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	}
 }
 
-func openGlScreenCoordinate(window *glfw.Window) {
+func openGlScreenCoordinate(x, y, w, h int32) { // window *glfw.Window) {
 	gl.Disable(gl.DEPTH_TEST)
 	gl.Disable(gl.TEXTURE_2D)
 
-	w, h := window.GetSize()
-	gl.Viewport(0, 0, int32(w), int32(h))
+	// w, h := window.GetSize()
+	gl.Viewport(int32(x), int32(y), int32(w), int32(h))
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
 	gl.Ortho(0, float64(w), 0, float64(h), float64(-100.0), float64(100.0))
@@ -675,8 +815,8 @@ func openGlScreenCoordinate(window *glfw.Window) {
 	gl.LoadIdentity()
 }
 
-func (op *Opengl) drawAxes() {
-	w, h := op.window.GetSize()
+func (op *Opengl) drawAxes(w, h int32) {
+	// w, h := op.window.GetSize()
 
 	s := math.Max(50.0, float64(h)/8.0)
 	b := 5.0 // distance from window border
@@ -753,9 +893,9 @@ func (op *Opengl) drawAxes() {
 	gl.End()
 }
 
-func (op *Opengl) scroll(window *glfw.Window, xoffset, yoffset float64) {
-	op.mouseMid.Roll(int32(xoffset), int32(yoffset), op)
-}
+// func (op *Opengl) scroll(window *glfw.Window, xoffset, yoffset float64) {
+// 	op.mouseMid.Roll(int32(xoffset), int32(yoffset), op)
+// }
 
 type viewState uint8
 
@@ -867,73 +1007,73 @@ func convertToColor(i int) {
 	)
 }
 
-func (op *Opengl) mouseButton(
-	w *glfw.Window,
-	button glfw.MouseButton,
-	action glfw.Action,
-	mods glfw.ModifierKey,
-) {
-	var index int
-	switch button {
-	case glfw.MouseButton1:
-		index = 0
-	case glfw.MouseButton2:
-		index = 1
-	case glfw.MouseButton3:
-		index = 2
-	default:
-		return
-	}
-	for i := range op.mouses {
-		if op.mouses[i] == nil {
-			continue
-		}
-		if i != index {
-			op.mouses[i].Reset()
-			continue
-		}
-		x, y := w.GetCursorPos()
-		_, h := w.GetSize()
-		y = float64(h) - y
-		switch action {
-		case glfw.Press:
-			op.mouses[index].Press(int32(x), int32(y))
-		case glfw.Release:
-			op.mouses[index].Release(int32(x), int32(y))
-		default:
-			// case glfw.Repeat:
-			// do nothing
-		}
-		return
-	}
-}
+// func (op *Opengl) mouseButton(
+// 	w *glfw.Window,
+// 	button glfw.MouseButton,
+// 	action glfw.Action,
+// 	mods glfw.ModifierKey,
+// ) {
+// 	var index int
+// 	switch button {
+// 	case glfw.MouseButton1:
+// 		index = 0
+// 	case glfw.MouseButton2:
+// 		index = 1
+// 	case glfw.MouseButton3:
+// 		index = 2
+// 	default:
+// 		return
+// 	}
+// 	for i := range op.mouses {
+// 		if op.mouses[i] == nil {
+// 			continue
+// 		}
+// 		if i != index {
+// 			op.mouses[i].Reset()
+// 			continue
+// 		}
+// 		x, y := w.GetCursorPos()
+// 		_, h := w.GetSize()
+// 		y = float64(h) - y
+// 		switch action {
+// 		case glfw.Press:
+// 			op.mouses[index].Press(int32(x), int32(y))
+// 		case glfw.Release:
+// 			op.mouses[index].Release(int32(x), int32(y))
+// 		default:
+// 			// case glfw.Repeat:
+// 			// do nothing
+// 		}
+// 		return
+// 	}
+// }
 
-func (op *Opengl) cursorPos(w *glfw.Window, xpos, ypos float64) {
-	_, h := w.GetSize()
-	ypos = float64(h) - ypos
-	for i := range op.mouses {
-		if op.mouses[i] == nil {
-			continue
-		}
-		op.mouses[i].Update(int32(xpos), int32(ypos))
-	}
-}
+// func (op *Opengl) cursorPos(w *glfw.Window, xpos, ypos float64) {
+// 	_, h := w.GetSize()
+// 	ypos = float64(h) - ypos
+// 	for i := range op.mouses {
+// 		if op.mouses[i] == nil {
+// 			continue
+// 		}
+// 		op.mouses[i].Update(int32(xpos), int32(ypos))
+// 	}
+// }
 
-func (op *Opengl) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-	switch key {
-	case glfw.KeyEscape:
-		// deselect all
-		op.Init()
-		op.mesh.DeselectAll()
-		for i := range op.mouses {
-			if op.mouses[i] == nil {
-				continue
-			}
-			op.mouses[i].Reset()
-		}
-		op.MouseDefault()
-	}
-}
+// func (op *Opengl) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+// 	switch key {
+// 	case glfw.KeyEscape:
+// 		// deselect all
+// 		op.Init()
+// 		op.mesh.DeselectAll()
+// 		for i := range op.mouses {
+// 			if op.mouses[i] == nil {
+// 				continue
+// 			}
+// 			op.mouses[i].Reset()
+// 		}
+// 		op.MouseDefault()
+// 	}
+// }
 
 func (op *Opengl) StandardView(view SView) {
 	op.updateModel = true
@@ -1058,7 +1198,7 @@ type Mouse interface {
 	Release(x, y int32)
 
 	ReadyPreview() bool
-	Preview()
+	Preview(xinit, yinit int32)
 
 	ReadyAction() bool
 	Action(op *Opengl)
@@ -1123,7 +1263,7 @@ type MouseSelect struct {
 	Mouse2P
 }
 
-func (ms *MouseSelect) Preview() {
+func (ms *MouseSelect) Preview(xinit, yinit int32) {
 	if !ms.ReadyPreview() {
 		return
 	}
@@ -1172,6 +1312,10 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			ms.to[c] = 0
 		}
 	}
+	ms.from[0] += op.x
+	ms.from[1] += op.y
+	ms.to[0] += op.x
+	ms.to[1] += op.y
 
 	cos, els := op.mesh.GetCoords(), op.mesh.GetElements()
 
@@ -1234,7 +1378,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			gl.Enable(gl.DEPTH_TEST)
 			gl.Disable(gl.LINE_SMOOTH)
 			gl.Disable(gl.BLEND) // Transparency
-			op.cameraView()
+			op.cameraView(op.x, op.y, op.w, op.h)
 			// color initialize
 
 			op.model3d(s.st, "select")
@@ -1269,7 +1413,7 @@ type MouseRotate struct {
 	Mouse2P
 }
 
-func (mr *MouseRotate) Preview() {}
+func (mr *MouseRotate) Preview(xinit, yinit int32) {}
 
 func (mr *MouseRotate) Action(op *Opengl) {
 	if !mr.ReadyAction() {
@@ -1308,7 +1452,7 @@ type MouseMove struct {
 	Mouse2P
 }
 
-func (mr *MouseMove) Preview() {}
+func (mr *MouseMove) Preview(xinit, yinit int32) {}
 
 func (mr *MouseMove) Action(op *Opengl) {
 	if !mr.ReadyAction() {

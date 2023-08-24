@@ -10,7 +10,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Konstantin8105/ds"
+	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/gog"
+	"github.com/Konstantin8105/ms/window"
 	"github.com/Konstantin8105/pow"
 )
 
@@ -2149,27 +2152,68 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 		mm.model = &model
 	}
 
-	// initialize tui
-	tui, err := NewTui(&mm)
+	var ws [2]ds.Window
+
+	tui, tuiAction, err := NewTui(&mm)
 	if err != nil {
 		return
 	}
-	mm.tui = tui
-	// initialize opengl view
-	op, err := NewOpengl(&mm)
+	tuiWindow := window.NewTui(tui)
+	ws[0] = tuiWindow
+
+	opWindow, opAction, err := NewOpengl(&mm)
 	if err != nil {
 		return
 	}
-	mm.op = op
-	// run test function
+	ws[1] = opWindow
+
+	ch := make(chan func(), 1000)
 	go func() {
-		if testCoverageFunc == nil {
-			return
+		for a := range tuiAction {
+			ch <- a
 		}
-		testCoverageFunc(&mm)
 	}()
-	// run opengl
-	go func() { op.Run() }()
+	go func() {
+		for a := range *opAction {
+			ch <- a
+		}
+	}()
+
+	screen, err := ds.New("Demo", ws, &ch)
+	if err != nil {
+		panic(err)
+	}
+	// add fonts
+	f, err := glsymbol.DefaultFont()
+	if err != nil {
+		panic(err)
+	}
+	tuiWindow.SetFont(f)
+	opWindow.SetFont(f)
+
+	// initialize tui
+	// tui, err := NewTui(&mm)
+	// if err != nil {
+	// 	return
+	// }
+	// mm.tui = tui // TODO Why????
+
+	// initialize opengl view
+	// op, err := NewOpengl(&mm)
+	// if err != nil {
+	// 	return
+	// }
+	mm.op = opWindow
+	// // run test function
+	// go func() {
+	// 	if testCoverageFunc == nil {
+	// 		return
+	// 	}
+	// 	testCoverageFunc(&mm)
+	// }()
+	// // run opengl
+	// go func() { op.Run() }()
 	// run tui
-	return tui.Run(quit)
+	screen.Run()
+	return // tui.Run(quit)
 }

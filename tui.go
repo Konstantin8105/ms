@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"runtime/debug"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Konstantin8105/gog"
 	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
-	"github.com/gdamore/tcell/v2"
 )
 
 type GroupID uint8
@@ -2144,41 +2142,42 @@ func PrintInfo() string {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-type Tui struct {
-	root vl.Widget
+// type Tui struct {
+// 	root vl.Widget
+//
+// 	mesh Mesh
+// 	// actions chan func()
+// 	Change func(*Opengl)
+// 	quit   bool
+// }
 
-	mesh    Mesh
-	actions chan func()
-	Change  func(*Opengl)
-	quit    bool
-}
+// func (tui *Tui) Run(quit <-chan struct{}) error {
+// 	defer func() {
+// 		if r := recover(); r != nil {
+// 			// safety ignore panic
+// 			AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+// 		}
+// 	}()
+// 	defer func() {
+// 		tui.quit = true
+// 		// TODO: <-time.After(5 * time.Second)
+// 		// TODO: close(tui.actions)
+// 	}()
+// 	// TODO remove key close
+// 	return vl.Run(tui.root, tui.actions, quit, tcell.KeyCtrlC)
+// }
 
-func (tui *Tui) Run(quit <-chan struct{}) error {
+func NewTui(mesh Mesh) (tui vl.Widget, actions chan func(), err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			// safety ignore panic
 			AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 		}
 	}()
-	defer func() {
-		tui.quit = true
-		// TODO: <-time.After(5 * time.Second)
-		// TODO: close(tui.actions)
-	}()
-	// TODO remove key close
-	return vl.Run(tui.root, tui.actions, quit, tcell.KeyCtrlC)
-}
-
-func NewTui(mesh Mesh) (tui *Tui, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			// safety ignore panic
-			AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
-		}
-	}()
-	tui = new(Tui)
-	tui.mesh = mesh
-	tui.actions = make(chan func())
+	// tui = new(Tui)
+	// tui.mesh = mesh
+	// tui.actions = make(chan func())
+	actions = make(chan func(), 1000)
 
 	{
 		// widgets amount
@@ -2188,7 +2187,8 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 		scroll vl.Scroll
 		list   vl.List
 	)
-	tui.root = &scroll
+	// tui.root = &scroll
+	tui = &scroll
 	scroll.Root = &list
 
 	view := make([]bool, len(Operations))
@@ -2211,7 +2211,8 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 				err = fmt.Errorf("widget %02d is empty: %#v", i, Operations[i])
 				return
 			}
-			r := part(tui.mesh, tui.actions)
+			// r := part(tui.mesh, tui.actions)
+			r := part(mesh, actions)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true
@@ -2250,25 +2251,26 @@ func NewTui(mesh Mesh) (tui *Tui, err error) {
 		var txt vl.Text
 		txt.SetText("Logger")
 
-		update := func() {
-			defer func() {
-				if r := recover(); r != nil {
-					// safety ignore panic
-					AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
-				}
-			}()
-			txt.SetText(strings.Join(Info, "\n"))
-		}
-
-		go func() {
-			for {
-				<-time.After(time.Millisecond * 500)
-				if tui.quit {
-					return
-				}
-				tui.actions <- update
-			}
-		}()
+		// 		update := func() {
+		// 			defer func() {
+		// 				if r := recover(); r != nil {
+		// 					// safety ignore panic
+		// 					AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+		// 				}
+		// 			}()
+		// 			txt.SetText(strings.Join(Info, "\n"))
+		// 		}
+		//
+		// 		go func() {
+		// 			for {
+		// 				<-time.After(time.Millisecond * 500)
+		// 				if tui.quit {
+		// 					return
+		// 				}
+		// 				// tui.actions <- update
+		// 				actions <- update
+		// 			}
+		// 		}()
 		logList.Add(&txt)
 
 		var log vl.CollapsingHeader

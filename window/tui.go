@@ -201,3 +201,8 @@ func (t *Tui) DrawText(cell vl.Cell, x, y, h int) {
 		(*uint8)(gl.Ptr(&t.font.Config.Glyphs[i].BitmapData[0])),
 	)
 }
+func (t *Tui) SetCursorPosCallback(
+	xpos float64,
+	ypos float64,
+) {
+}

@@ -22,6 +22,11 @@ func (e *Empty) SetScrollCallback(
 	xoffset, yoffset float64,
 ) {
 }
+func (e *Empty) SetCursorPosCallback(
+	xpos float64,
+	ypos float64,
+) {
+}
 func (e *Empty) SetKeyCallback(
 	key glfw.Key,
 	scancode int,
