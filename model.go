@@ -2137,15 +2137,16 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 		mm.model = &model
 	} else {
 		// read native json file format
-		b, err := ioutil.ReadFile(filename)
+		var b []byte
+		b, err = ioutil.ReadFile(filename)
 		if err != nil {
 			return
 		}
-		var actual Model
-		if err := json.Unmarshal(b, &actual); err != nil {
+		var model Model
+		if err = json.Unmarshal(b, &model); err != nil {
 			return
 		}
-		mm.model = &actual
+		mm.model = &model
 	}
 
 	// initialize tui
