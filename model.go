@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/glsymbol"
@@ -2152,32 +2153,23 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 		mm.model = &model
 	}
 
+	closedApp := false
+	ch := make(chan func(), 1000)
+
 	var ws [2]ds.Window
 
-	tui, tuiAction, err := NewTui(&mm)
+	tui, err := NewTui(&mm, &closedApp, &ch)
 	if err != nil {
 		return
 	}
 	tuiWindow := window.NewTui(tui)
 	ws[0] = tuiWindow
 
-	opWindow, opAction, err := NewOpengl(&mm)
+	opWindow, err := NewOpengl(&mm, &ch)
 	if err != nil {
 		return
 	}
 	ws[1] = opWindow
-
-	ch := make(chan func(), 1000)
-	go func() {
-		for a := range tuiAction {
-			ch <- a
-		}
-	}()
-	go func() {
-		for a := range *opAction {
-			ch <- a
-		}
-	}()
 
 	screen, err := ds.New("Demo", ws, &ch)
 	if err != nil {
@@ -2205,18 +2197,21 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	// }
 	mm.op = opWindow
 	// // run test function
-	// go func() {
-	// 	if testCoverageFunc == nil {
-	// 		return
-	// 	}
-	// 	testCoverageFunc(&mm)
-	// }()
+	go func() {
+		if testCoverageFunc == nil {
+			return
+		}
+		testCoverageFunc(&mm)
+	}()
 	// // run opengl
 	// go func() { op.Run() }()
 	// run tui
 	ch <- func() {
 		screen.ChangeRatio(0.4) // TODO: add to interface
 	}
-	screen.Run()
-	return // tui.Run(quit)
+	screen.Run(quit)
+	closedApp = true
+	time.Sleep(2 * time.Second)
+	close(ch)
+	return
 }

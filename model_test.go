@@ -331,16 +331,15 @@ func TestAddInfo(t *testing.T) {
 	// tests movements
 	quit := make(chan struct{})
 
-	size := 10
 	var wg sync.WaitGroup
-	wg.Add(size)
-	for i := 0; i < size; i++ {
-		go func() {
-			for i := 0; i < 10; i++ {
-				AddInfo("StandardView")
+	for i, size := 0, 10; i < size; i++ {
+		wg.Add(1)
+		go func(cp int) {
+			defer wg.Done()
+			for i := 0; i < size; i++ {
+				AddInfo(fmt.Sprintf("StandardView %02d.%02d", cp, i))
 			}
-			wg.Done()
-		}()
+		}(i)
 	}
 
 	testCoverageFunc = func(mm Mesh) {

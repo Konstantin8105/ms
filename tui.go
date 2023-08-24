@@ -90,7 +90,7 @@ func init() {
 	group := File
 	ops := []Operation{{
 		Name: "Name of actual model/part",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var pre vl.Text
@@ -126,14 +126,17 @@ func init() {
 
 			go func() {
 				for {
-					<-time.After(1 * time.Second)
-					actions <- update
+					<-time.After(time.Second)
+					if *closedApp {
+						break
+					}
+					*actions <- update
 				}
 			}()
 			return &list
 		}}, {
 		Name: "Choose model/part",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var rg vl.RadioGroup
@@ -173,15 +176,18 @@ func init() {
 
 			go func() {
 				for {
-					<-time.After(1 * time.Second)
-					actions <- update
+					<-time.After(time.Second)
+					if *closedApp {
+						break
+					}
+					*actions <- update
 				}
 			}()
 
 			return &list
 		}}, {
 		Name: "Create a new part",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var listH vl.ListH
@@ -201,7 +207,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Rename model/part",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var listH vl.ListH
@@ -233,8 +239,11 @@ func init() {
 
 			go func() {
 				for {
-					<-time.After(2 * time.Second)
-					actions <- update
+					<-time.After(time.Second)
+					if *closedApp {
+						break
+					}
+					*actions <- update
 				}
 			}()
 
@@ -256,7 +265,7 @@ func init() {
 	group := Edit
 	ops := []Operation{{
 		Name: "Undo",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.ListH
 
 			list.Add(vl.TextStatic("Undo operation for erase last change of model"))
@@ -324,7 +333,7 @@ func init() {
 	name := group.String()
 	ops := []Operation{{
 		Name: "Standard View",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var names []string
@@ -349,7 +358,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Color edges of elements",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var rg vl.RadioGroup
@@ -457,7 +466,7 @@ func init() {
 	group := AddRemove
 	ops := []Operation{{
 		Name: "Add node by coordinate [X,Y,Z]",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			w, gt := Input3Float(
@@ -480,7 +489,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Add line2 by nodes",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 			b, bgt := Select("Select node1", Single, m.GetSelectNodes)
 			list.Add(b)
@@ -505,7 +514,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Add triangle3 by nodes",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 			n1, n1gt := Select("Select node1", Single, m.GetSelectNodes)
 			list.Add(n1)
@@ -536,7 +545,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Add by left cursor button",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var names []string
@@ -557,7 +566,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Split line2 by distance from node",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 			s, sgt := Select("Select lines", Many, m.GetSelectLines)
 			list.Add(s)
@@ -582,7 +591,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Split Line2 by ratio",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 			s, sgt := Select("Select line", Many, m.GetSelectLines)
 			list.Add(s)
@@ -607,7 +616,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Split Line2 to equal parts",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 			ns, nsgt := Select("Select lines", Many, m.GetSelectLines)
 			list.Add(ns)
@@ -629,7 +638,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Split Triangle3 to 3 Triangle3",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 			ns, nsgt := Select("Select triangles3", Many, m.GetSelectTriangles)
 			list.Add(ns)
@@ -644,7 +653,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Intersection between nodes and elements",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -664,7 +673,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Merge nodes",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			d, dgt := InputFloat("Minimal distance", "meter")
@@ -686,7 +695,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Merge lines",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			s, sgt := Select("Select lines", Many, m.GetSelectLines)
@@ -701,7 +710,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Remove nodes with same coordinates",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var bi vl.Button
@@ -714,7 +723,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Remove nodes without connection to element",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var bi vl.Button
@@ -727,7 +736,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Remove lines with zero lenght",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var bi vl.Button
@@ -740,7 +749,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Remove triangles with zero area",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var bi vl.Button
@@ -753,7 +762,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Remove selected",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -791,7 +800,7 @@ func init() {
 	name := group.String()
 	ops := []Operation{{
 		Name: "Ignore elements",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			elf, elfgt := Select("Select elements", Many, m.GetSelectElements)
@@ -811,7 +820,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Clear ignoring elements",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var b vl.Button
@@ -839,7 +848,7 @@ func init() {
 	group := Hide
 	ops := []Operation{{
 		Name: "Hide",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -860,7 +869,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Show only selected",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var b vl.Button
@@ -877,7 +886,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Unhide all",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var b vl.Button
@@ -976,7 +985,7 @@ func init() {
 	name := group.String()
 	ops := []Operation{{
 		Name: "Left cursor selection",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var nodes vl.CheckBox
@@ -1000,7 +1009,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Invert selection",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var nodes vl.CheckBox
@@ -1025,7 +1034,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Select ortho lines parallel axes X, Y, Z",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var x vl.CheckBox
@@ -1050,7 +1059,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Select lines on plane XOY, YOZ, XOZ",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var xoy vl.CheckBox
@@ -1075,7 +1084,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Select lines parallel lines",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			lf, lfgt := Select("Lines", Many, m.GetSelectLines)
@@ -1095,7 +1104,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Select lines by lenght",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var rg vl.RadioGroup
@@ -1122,7 +1131,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Select lines in cylinder system coordinate",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			nf, nfgt := Select("Node", Single, m.GetSelectNodes)
@@ -1159,7 +1168,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Deselect all",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var b vl.Button
@@ -1172,7 +1181,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Select all",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			var nodes vl.CheckBox
@@ -1242,7 +1251,7 @@ type MoveCopyble interface {
 func init() {
 	ops := []Operation{{
 		Name: "Move/Rotate",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -1384,7 +1393,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Translational/Circular repeat/Spiral",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -1643,7 +1652,7 @@ func init() {
 			return &list
 		}}, {
 		Name: "Mirror",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -1901,7 +1910,7 @@ func init() {
 	group := Plugin
 	ops := []Operation{{
 		Name: "Demo: spiral",
-		Part: func(m Mesh, actions chan<- func()) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget) {
 			var list vl.List
 
 			r, rgt := InputUnsigned("Amount levels", "")
@@ -1951,7 +1960,7 @@ const (
 type Operation struct {
 	Group GroupID
 	Name  string
-	Part  func(m Mesh, actions chan<- func()) (w vl.Widget)
+	Part  func(m Mesh, actions *chan func(), closedApp *bool) (w vl.Widget)
 }
 
 var Operations []Operation
@@ -2167,7 +2176,7 @@ func PrintInfo() string {
 // 	return vl.Run(tui.root, tui.actions, quit, tcell.KeyCtrlC)
 // }
 
-func NewTui(mesh Mesh) (tui vl.Widget, actions chan func(), err error) {
+func NewTui(mesh Mesh, closedApp *bool, actions *chan func()) (tui vl.Widget, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			// safety ignore panic
@@ -2177,7 +2186,6 @@ func NewTui(mesh Mesh) (tui vl.Widget, actions chan func(), err error) {
 	// tui = new(Tui)
 	// tui.mesh = mesh
 	// tui.actions = make(chan func())
-	actions = make(chan func(), 1000)
 
 	{
 		// widgets amount
@@ -2212,7 +2220,7 @@ func NewTui(mesh Mesh) (tui vl.Widget, actions chan func(), err error) {
 				return
 			}
 			// r := part(tui.mesh, tui.actions)
-			r := part(mesh, actions)
+			r := part(mesh, actions, closedApp)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true

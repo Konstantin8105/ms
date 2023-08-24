@@ -26,7 +26,7 @@ var WindowRatio float64 = 0.4
 type Opengl struct {
 	font *glsymbol.Font
 
-	actions chan func()
+	actions *chan func()
 
 	x, y, w, h int32
 
@@ -217,13 +217,11 @@ func (op *Opengl) Init() {
 	op.cursorLeft = selectPoints
 }
 
-func NewOpengl(m Mesh) (op *Opengl, actions *chan func(), err error) {
+func NewOpengl(m Mesh, actions *chan func()) (op *Opengl, err error) {
 	op = new(Opengl)
 	op.Init()
 	op.mesh = m
-	op.actions = make(chan func(), 1000)
-
-	actions = &op.actions
+	op.actions = actions
 
 	// 	if err = glfw.Init(); err != nil {
 	// 		err = fmt.Errorf("failed to initialize glfw: %v", err)
