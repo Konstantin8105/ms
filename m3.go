@@ -112,7 +112,6 @@ func (op *Opengl) SetKeyCallback(
 	switch key {
 	case glfw.KeyEscape:
 		// deselect all
-		op.Init()
 		op.mesh.DeselectAll()
 		for i := range op.mouses {
 			if op.mouses[i] == nil {
