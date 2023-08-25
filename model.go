@@ -2118,7 +2118,7 @@ func min(xs ...float64) (res float64) {
 //	 +--------- FREQUENCY                                        //
 //	                                                             //
 
-var testCoverageFunc func(m Mesh)
+var testCoverageFunc func(m Mesh, ch *chan func())
 
 func Run(filename string, quit <-chan struct{}) (err error) {
 	defer func() {
@@ -2173,12 +2173,12 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 
 	screen, err := ds.New("Demo", ws, &ch)
 	if err != nil {
-		panic(err)
+		return
 	}
 	// add fonts
 	f, err := glsymbol.DefaultFont()
 	if err != nil {
-		panic(err)
+		return
 	}
 	tuiWindow.SetFont(f)
 	opWindow.SetFont(f)
@@ -2201,7 +2201,7 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 		if testCoverageFunc == nil {
 			return
 		}
-		testCoverageFunc(&mm)
+		testCoverageFunc(&mm, &ch)
 	}()
 	// // run opengl
 	// go func() { op.Run() }()

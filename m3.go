@@ -3,7 +3,6 @@ package ms
 import (
 	"fmt"
 	"math"
-	"runtime"
 	"time"
 
 	"github.com/Konstantin8105/ds"
@@ -14,10 +13,6 @@ import (
 )
 
 var _ ds.Window = (*Opengl)(nil)
-
-func init() {
-	runtime.LockOSThread()
-}
 
 var WindowRatio float64 = 0.4
 

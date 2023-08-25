@@ -1,10 +1,18 @@
 package ms
 
 import (
+	"log"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 )
+
+var logger *log.Logger
+
+func init() {
+	logger = log.New(os.Stdout, "logger: ", log.Ltime|log.Llongfile)
+}
 
 func angle360(a float64) float64 {
 	if 360.0 < a {
