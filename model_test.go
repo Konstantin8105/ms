@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
-	"time"
 )
 
 func Example() {
@@ -154,173 +153,154 @@ func TestIntegration(t *testing.T) {
 		t.Logf("%s", PrintInfo())
 	}()
 
-	//	AddInfo := func(v string) {
-	//		t.Logf("%s", v)
-	//		AddInfo(v)
-	//	}
+	AddInfo := func(v string) {
+		t.Logf("%s", v)
+		AddInfo(v)
+	}
 
 	// tests movements
 	quit := make(chan struct{})
 	testCoverageFunc = func(mm Mesh, ch *chan func()) {
-		// draw spiral
-		<-time.After(500 * time.Millisecond)
-		*ch <- func() { mm.DemoSpiral(26) }
-		AddInfo("add DemoSpiral")
-		// draw clone spiral
-		<-time.After(500 * time.Millisecond)
-		*ch <- func() { mm.DemoSpiral(27) }
-		AddInfo("add DemoSpiral again")
-		// select
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.SelectLeftCursor(true, true, true) }
-		AddInfo("*change SelectLeftCursor")
-		<-time.After(300 * time.Millisecond)
-		AddInfo("SelectScreen")
-		*ch <- func() { mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300}) }
-		<-time.After(3 * time.Second)
+
+		var wg sync.WaitGroup
+		run := func(name string, f func()) {
+			AddInfo(fmt.Sprintf("begin of %s", name))
+			wg.Add(1)
+			*ch <- func() {
+				f()
+				wg.Done()
+			}
+			wg.Wait()
+			AddInfo(fmt.Sprintf("end of %s", name))
+		}
+
+		run("DemoSpiral", func() { mm.DemoSpiral(26) })
+		run("DemoSpiral again", func() { mm.DemoSpiral(27) })
+		run("SelectLeftCursor", func() { mm.SelectLeftCursor(true, true, true) })
+		run("SelectScreen", func() { mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300}) })
+
+		// SelectElements
 		{
-			els := mm.GetSelectElements(Many)
 			AddInfo("SelectElements")
+			wg.Add(1)
+			var els []uint
+			*ch <- func() {
+				els = mm.GetSelectElements(Many)
+				wg.Done()
+			}
+			wg.Wait()
 			if len(els) == 0 {
 				AddInfo("Error: SelectElements is zero")
 				close(quit)
 				t.Fatalf("after select screen")
 			}
 		}
-		<-time.After(1 * time.Second)
-		AddInfo("select screen")
-		// color *change
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.ColorEdge(true) }
-		AddInfo("add colors")
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.ColorEdge(false) }
-		AddInfo("false colors")
-		// deselect
-		<-time.After(1 * time.Second)
-		*ch <- func() { mm.DeselectAll() }
-		AddInfo("deselect")
-		// select ortho
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.SelectLinesOrtho(true, true, true) }
-		AddInfo("SelectLinesOrtho")
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.InvertSelect(true, true, true) }
-		AddInfo("InvertSelect")
-		<-time.After(300 * time.Millisecond)
-		els := mm.GetSelectElements(Many)
-		AddInfo("SelectElements")
-		if len(els) == 0 {
-			close(quit)
-			t.Fatalf("No 1")
-		}
-		// IgnoreElements
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.IgnoreModelElements(els) }
-		AddInfo("IgnoreModelElements")
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.Unignore() }
-		AddInfo("Unignore")
-		// split lines
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.SelectLinesOrtho(true, true, true) }
-		AddInfo("SelectLinesOrtho")
-		<-time.After(300 * time.Millisecond)
-		els = mm.GetSelectElements(Many)
-		AddInfo("SelectElements")
-		if len(els) == 0 {
-			close(quit)
-			t.Fatalf("No 2")
-		}
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.ColorEdge(true) } // color
-		AddInfo("add colors")
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.SplitLinesByRatio(els, 0.25, false) }
-		AddInfo("SplitLinesByRatio")
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.SplitLinesByRatio(els, 2.25, false) }
-		AddInfo("SplitLinesByRatio")
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.SplitLinesByEqualParts(els, 10) }
-		AddInfo("SplitLinesByEqualParts")
-		// merge
-		<-time.After(900 * time.Millisecond)
-		*ch <- func() { mm.MergeNodes(0.050) }
-		AddInfo("MergeNodes")
-		// deselect
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.DeselectAll() }
-		AddInfo("DeselectAll")
 
-		// select
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.SelectLinesOnPlane(true, true, true) }
-		AddInfo("SelectLinesOnPlane")
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.InvertSelect(true, true, true) }
-		AddInfo("InvertSelect")
-		<-time.After(300 * time.Millisecond)
-		tris := mm.GetSelectTriangles(Many)
-		AddInfo("SelectTriangles")
-		if len(tris) == 0 {
-			close(quit)
-			t.Fatalf("No 3")
-		}
-		// selectObjects.fromAdd = false
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.SplitTri3To3Tri3(tris) }
-		AddInfo("SplitTri3To3Tri3")
+		run("color edge", func() { mm.ColorEdge(true) })
+		run("color edge false", func() { mm.ColorEdge(false) })
+		run("deselect", func() { mm.DeselectAll() })
+		run("SelectLinesOrtho", func() { mm.SelectLinesOrtho(true, true, true) })
+		run("InvertSelect", func() { mm.InvertSelect(true, true, true) })
 
-		// deselect
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.DeselectAll() }
-		AddInfo("DeselectAll")
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.SelectLinesOnPlane(true, true, true) }
-		AddInfo("SelectLinesOnPlane")
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.InvertSelect(true, false, true) }
-		AddInfo("InvertSelect")
-		<-time.After(300 * time.Millisecond)
-		tris = mm.GetSelectElements(Many)
-		AddInfo("SelectElements")
-		if len(tris) == 0 {
-			close(quit)
-			t.Fatalf("No 4")
+		// SelectElements
+		{
+			AddInfo("SelectElements")
+			wg.Add(1)
+			var els []uint
+			*ch <- func() {
+				els = mm.GetSelectElements(Many)
+				wg.Done()
+			}
+			wg.Wait()
+			if len(els) == 0 {
+				AddInfo("Error: SelectElements is zero")
+				close(quit)
+				t.Fatalf("after select screen")
+			}
+
+			run("IgnoreModelElements", func() { mm.IgnoreModelElements(els) })
+			run("Unignore", func() { mm.Unignore() })
+			run("SelectLinesOrtho", func() { mm.SelectLinesOrtho(true, true, true) })
+			run("ColorEdge", func() { mm.ColorEdge(true) })
 		}
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() {
-			mm.Copy(nil, tris,
-				[3]float64{4, 0, 0},
-				[]diffCoordinate{[6]float64{4, 0, 0, 0, 0, 0}},
-				true, true)
+
+		// Select elements
+		{
+			AddInfo("SelectElements")
+			wg.Add(1)
+			var els []uint
+			*ch <- func() {
+				els = mm.GetSelectElements(Many)
+				wg.Done()
+			}
+			wg.Wait()
+			if len(els) == 0 {
+				AddInfo("Error: SelectElements is zero")
+				close(quit)
+				t.Fatalf("after select screen")
+			}
+
+			run("SplitLinesByRatio", func() { mm.SplitLinesByRatio(els, 0.25, false) })
+			run("SplitLinesByRatio", func() { mm.SplitLinesByRatio(els, 2.25, false) })
+			run("SplitLinesByEqualParts", func() { mm.SplitLinesByEqualParts(els, 10) })
 		}
-		AddInfo("MoveCopyNodesDistance")
-		// view
-		<-time.After(1 * time.Second)
-		*ch <- func() { mm.StandardView(StandardViewXOYpos) }
-		AddInfo("StandardView")
-		<-time.After(1 * time.Second)
-		*ch <- func() { mm.StandardView(StandardViewXOZpos) }
-		AddInfo("StandardView")
-		<-time.After(1 * time.Second)
-		*ch <- func() { mm.StandardView(StandardViewYOZpos) }
-		AddInfo("StandardView")
-		// undo
-		<-time.After(300 * time.Millisecond)
-		*ch <- func() { mm.ColorEdge(false) }
-		<-time.After(300 * time.Millisecond)
+
+		run("MergeNodes", func() { mm.MergeNodes(0.050) })
+		run("DeselectAll", func() { mm.DeselectAll() })
+		run("SelectLinesOnPlane", func() { mm.SelectLinesOnPlane(true, true, true) })
+		run("InvertSelect", func() { mm.InvertSelect(true, true, true) })
+
+		{
+			AddInfo("SelectTriangles")
+			var tris []uint
+			wg.Add(1)
+			*ch <- func() {
+				tris = mm.GetSelectTriangles(Many)
+				wg.Done()
+			}
+			wg.Wait()
+			if len(tris) == 0 {
+				close(quit)
+				t.Fatalf("No 3")
+			}
+
+			run("SplitTri3To3Tri3", func() { mm.SplitTri3To3Tri3(tris) })
+		}
+
+		run("DeselectAll", func() { mm.DeselectAll() })
+		run("SelectLinesOnPlane", func() { mm.SelectLinesOnPlane(true, true, true) })
+		run("InvertSelect", func() { mm.InvertSelect(true, false, true) })
+
+		{
+			AddInfo("SelectElements")
+			var tris []uint
+			wg.Add(1)
+			*ch <- func() {
+				tris = mm.GetSelectElements(Many)
+				wg.Done()
+			}
+			wg.Wait()
+			if len(tris) == 0 {
+				close(quit)
+				t.Fatalf("No 4")
+			}
+			run("MoveCopyNodesDistance", func() {
+				mm.Copy(nil, tris,
+					[3]float64{4, 0, 0},
+					[]diffCoordinate{[6]float64{4, 0, 0, 0, 0, 0}},
+					true, true)
+			})
+		}
+
+		run("StandardView", func() { mm.StandardView(StandardViewXOYpos) })
+		run("StandardView", func() { mm.StandardView(StandardViewXOZpos) })
+		run("StandardView", func() { mm.StandardView(StandardViewYOZpos) })
+
+		run("ColorEdge", func() { mm.ColorEdge(false) })
 		for i := 0; i < 15; i++ {
-			*ch <- func() { mm.Undo() }
-			AddInfo("Undo")
-			<-time.After(2 * time.Second)
+			run("Undo", func() { mm.Undo() })
 		}
-		// view
-		*ch <- func() { mm.StandardView(StandardViewXOZpos) }
-		AddInfo("StandardView")
-		// quit
-		<-time.After(2 * time.Second)
+		run("StandardView", func() { mm.StandardView(StandardViewXOZpos) })
 		close(quit)
 	}
 	// create a new model
@@ -339,7 +319,7 @@ func TestAddInfo(t *testing.T) {
 	quit := make(chan struct{})
 
 	var wg sync.WaitGroup
-	for i, size := 0, 10; i < size; i++ {
+	for i, size := 0, 1000; i < size; i++ {
 		wg.Add(1)
 		go func(cp int) {
 			defer wg.Done()
