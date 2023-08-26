@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 )
 
 func Example() {
@@ -290,6 +291,7 @@ func TestIntegration(t *testing.T) {
 					[]diffCoordinate{[6]float64{4, 0, 0, 0, 0, 0}},
 					true, true)
 			})
+			time.Sleep(500 * time.Millisecond)
 		}
 
 		run("StandardView", func() { mm.StandardView(StandardViewXOYpos) })
