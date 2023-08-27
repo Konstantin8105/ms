@@ -21,7 +21,7 @@ var WindowRatio float64 = 0.4
 type Opengl struct {
 	font *glsymbol.Font
 
-	actions *chan func()
+	actions *chan ds.Action
 
 	x, y, w, h int32
 
@@ -212,7 +212,7 @@ func (op *Opengl) Init() {
 	op.cursorLeft = selectPoints
 }
 
-func NewOpengl(m Mesh, actions *chan func()) (op *Opengl, err error) {
+func NewOpengl(m Mesh, actions *chan ds.Action) (op *Opengl, err error) {
 	op = new(Opengl)
 	op.Init()
 	op.mesh = m

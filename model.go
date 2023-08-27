@@ -2118,7 +2118,7 @@ func min(xs ...float64) (res float64) {
 //	 +--------- FREQUENCY                                        //
 //	                                                             //
 
-var testCoverageFunc func(m Mesh, ch *chan func())
+var testCoverageFunc func(m Mesh, ch *chan ds.Action)
 
 func Run(filename string, quit <-chan struct{}) (err error) {
 	defer func() {
@@ -2154,7 +2154,7 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	}
 
 	closedApp := false
-	ch := make(chan func(), 1000)
+	ch := make(chan ds.Action, 1000)
 
 	var ws [2]ds.Window
 
@@ -2206,8 +2206,9 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	// // run opengl
 	// go func() { op.Run() }()
 	// run tui
-	ch <- func() {
+	ch <- func() (fus bool) {
 		screen.ChangeRatio(0.4) // TODO: add to interface
+		return false
 	}
 	screen.Run(quit)
 	closedApp = true

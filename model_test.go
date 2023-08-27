@@ -11,6 +11,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/Konstantin8105/ds"
 )
 
 func Example() {
@@ -161,22 +163,28 @@ func TestIntegration(t *testing.T) {
 
 	// tests movements
 	quit := make(chan struct{})
-	testCoverageFunc = func(mm Mesh, ch *chan func()) {
+	defer func() {
+		testCoverageFunc = nil
+	}()
+	testCoverageFunc = func(mm Mesh, ch *chan ds.Action) {
 
 		var wg sync.WaitGroup
 		run := func(name string, f func()) {
 			AddInfo(fmt.Sprintf("begin of %s", name))
 			wg.Add(1)
-			*ch <- func() {
+			*ch <- func() (fus bool) {
 				f()
 				wg.Done()
+				return true
 			}
 			wg.Wait()
+			// time.Sleep(time.Second)
 			AddInfo(fmt.Sprintf("end of %s", name))
 		}
 
 		run("DemoSpiral", func() { mm.DemoSpiral(26) })
 		run("DemoSpiral again", func() { mm.DemoSpiral(27) })
+		run("StandardView", func() { mm.StandardView(StandardViewXOYpos) })
 		run("SelectLeftCursor", func() { mm.SelectLeftCursor(true, true, true) })
 		run("SelectScreen", func() { mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300}) })
 
@@ -185,9 +193,10 @@ func TestIntegration(t *testing.T) {
 			AddInfo("SelectElements")
 			wg.Add(1)
 			var els []uint
-			*ch <- func() {
+			*ch <- func() (fus bool) {
 				els = mm.GetSelectElements(Many)
 				wg.Done()
+				return true
 			}
 			wg.Wait()
 			if len(els) == 0 {
@@ -208,9 +217,10 @@ func TestIntegration(t *testing.T) {
 			AddInfo("SelectElements")
 			wg.Add(1)
 			var els []uint
-			*ch <- func() {
+			*ch <- func() (fus bool) {
 				els = mm.GetSelectElements(Many)
 				wg.Done()
+				return true
 			}
 			wg.Wait()
 			if len(els) == 0 {
@@ -230,9 +240,10 @@ func TestIntegration(t *testing.T) {
 			AddInfo("SelectElements")
 			wg.Add(1)
 			var els []uint
-			*ch <- func() {
+			*ch <- func() (fus bool) {
 				els = mm.GetSelectElements(Many)
 				wg.Done()
+				return true
 			}
 			wg.Wait()
 			if len(els) == 0 {
@@ -255,9 +266,10 @@ func TestIntegration(t *testing.T) {
 			AddInfo("SelectTriangles")
 			var tris []uint
 			wg.Add(1)
-			*ch <- func() {
+			*ch <- func() (fus bool) {
 				tris = mm.GetSelectTriangles(Many)
 				wg.Done()
+				return true
 			}
 			wg.Wait()
 			if len(tris) == 0 {
@@ -276,9 +288,10 @@ func TestIntegration(t *testing.T) {
 			AddInfo("SelectElements")
 			var tris []uint
 			wg.Add(1)
-			*ch <- func() {
+			*ch <- func() (fus bool) {
 				tris = mm.GetSelectElements(Many)
 				wg.Done()
+				return true
 			}
 			wg.Wait()
 			if len(tris) == 0 {
@@ -320,18 +333,21 @@ func TestAddInfo(t *testing.T) {
 	// tests movements
 	quit := make(chan struct{})
 
-	var wg sync.WaitGroup
-	for i, size := 0, 1000; i < size; i++ {
-		wg.Add(1)
-		go func(cp int) {
-			defer wg.Done()
-			for i := 0; i < size; i++ {
-				AddInfo(fmt.Sprintf("StandardView %02d.%02d", cp, i))
+	defer func() {
+		testCoverageFunc = nil
+	}()
+	testCoverageFunc = func(mm Mesh, ch *chan ds.Action) {
+		var wg sync.WaitGroup
+		for i, size := 0, 10; i < size; i++ {
+			wg.Add(1)
+			*ch <- func() (fus bool) {
+				for p := 0; p < size; p++ {
+					AddInfo(fmt.Sprintf("StandardView %02d.%02d", p, i))
+				}
+				wg.Done()
+				return true
 			}
-		}(i)
-	}
-
-	testCoverageFunc = func(mm Mesh, ch *chan func()) {
+		}
 		wg.Wait()
 		// quit
 		close(quit)

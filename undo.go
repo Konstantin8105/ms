@@ -27,7 +27,7 @@ func (u *Undo) sync(isUndo bool) (pre, post func()) {
 				u.addToUndo() // store model in undo list
 			}
 		}, func() {
-			u.op.UpdateModel() // update camera view
+			// u.op.UpdateModel() // update camera view
 			// u.mu.Unlock()      // mutex unlock everythink
 		}
 }
