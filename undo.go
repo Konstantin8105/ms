@@ -71,16 +71,17 @@ func (u *Undo) Undo() {
 }
 
 func (u *Undo) PartPresent() (id uint) {
+	// too many : logger.Print("PartPresent")
 	return u.model.PartPresent()
 }
 
 func (u *Undo) PartsName() (names []string) {
-	logger.Print("PartsName")
+	// too many : logger.Print("PartsName")
 	return u.model.PartsName()
 }
 
 func (u *Undo) PartChange(id uint) {
-	logger.Print("PartChange")
+	// too many : logger.Print("PartChange")
 	u.model.PartChange(id)
 }
 
@@ -145,12 +146,12 @@ func (u *Undo) GetCoordByID(id uint) (_ gog.Point3d, ok bool) {
 }
 
 func (u *Undo) GetCoords() []Coordinate {
-	logger.Print("GetCoords")
+	// too many : logger.Print("GetCoords")
 	return u.model.GetCoords()
 }
 
 func (u *Undo) GetElements() []Element {
-	logger.Print("GetElements")
+	// too many : logger.Print("GetElements")
 	return u.model.GetElements()
 }
 
