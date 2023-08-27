@@ -601,7 +601,7 @@ func (op *Opengl) drawPoints(s viewState, parent string) {
 		gl.End()
 	case selectLines, selectTriangles: // do nothing
 	default:
-		panic(fmt.Errorf("not valid selection : %v", s))
+		AddInfo("not valid selection : %v", s)
 	}
 }
 
@@ -645,12 +645,12 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 					gl.Color4ub(153, 0, 153, 200)
 				}
 			default:
-				panic(fmt.Errorf("not valid element type: %v", el))
+				AddInfo("not valid element type: %v", el)
 			}
 		case selectPoints, selectLines, selectTriangles:
 			convertToColor(i)
 		default:
-			panic(fmt.Errorf("not valid select element: %v", s))
+			AddInfo("not valid select element: %v", s)
 		}
 		// select points
 		if (s == selectLines && el.ElementType == Line2) ||
@@ -705,7 +705,7 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 				gl.End()
 			}
 		default:
-			panic(fmt.Errorf("not valid element: %v", el))
+			AddInfo("not valid element: %v", el)
 		}
 
 		// TODO CREATE A GREAT LINES
@@ -794,7 +794,7 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 
 			}
 		default:
-			panic(fmt.Errorf("not valid element: %v", el))
+			AddInfo("not valid element: %v", el)
 		}
 	}
 }
@@ -936,7 +936,7 @@ func edgeColor(pos int) {
 		gl.Color3ub(255, 0, 125)
 		return
 	}
-	panic(fmt.Errorf("not valid pos: %d", pos))
+	AddInfo("not valid pos: %d", pos)
 }
 
 // maximal amount colors is 245^3 = 14 706 125

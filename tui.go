@@ -205,7 +205,11 @@ func init() {
 			b.SetText("Create")
 			b.OnClick = func() {
 				logger.Print("Create a new part")
-				m.PartNew(name.GetText())
+				n := name.GetText()
+				if len(n) == 0 {
+					return
+				}
+				m.PartNew(n)
 			}
 			list.Add(&b)
 			return &list

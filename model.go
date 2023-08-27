@@ -186,7 +186,7 @@ func (mm *Model) AddModel(m Model) {
 				uint(newID[el.Indexes[2]]),
 			)
 		default:
-			panic(fmt.Errorf("not implemented %v", el))
+			AddInfo("not implemented %v", el)
 		}
 	}
 }
@@ -1678,7 +1678,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 					}
 
 				default:
-					panic("not implemented")
+					AddInfo("not implemented")
 				}
 			}
 		}
@@ -1869,7 +1869,7 @@ func (mm *Model) Copy(nodes, elements []uint,
 		case Triangle3:
 			cModel.AddTriangle3ByNodeNumber(ids[0], ids[1], ids[2])
 		default:
-			panic(fmt.Errorf("Undefined: %v", el.ElementType))
+			AddInfo("Undefined: %v", el.ElementType)
 		}
 	}
 	// main model
@@ -1962,7 +1962,7 @@ func (mm *Model) StandardView(view SView) {
 
 func max(xs ...float64) (res float64) {
 	if len(xs) == 0 {
-		panic("not valid: zero lenght")
+		AddInfo("not valid: zero lenght")
 	}
 	res = xs[0]
 	for i := range xs {
@@ -1973,7 +1973,7 @@ func max(xs ...float64) (res float64) {
 
 func min(xs ...float64) (res float64) {
 	if len(xs) == 0 {
-		panic("not valid: zero lenght")
+		AddInfo("not valid: zero lenght")
 	}
 	res = xs[0]
 	for i := range xs {
@@ -2127,7 +2127,16 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 		}
 	}()
 	// initialize undo chain
-	var mm Undo
+	var (
+		mm        Undo
+		closedApp = false
+		ch        = make(chan ds.Action, 1000)
+		ws        = [2]ds.Window{
+			new(window.Empty),
+			new(window.Empty),
+		}
+	)
+
 	// prepare model
 	if filename == "" {
 		mm.model = new(Model)
@@ -2153,11 +2162,7 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 		mm.model = &model
 	}
 
-	closedApp := false
-	ch := make(chan ds.Action, 1000)
-
-	var ws [2]ds.Window
-
+	// tui
 	tui, err := NewTui(&mm, &closedApp, &ch)
 	if err != nil {
 		return
@@ -2165,16 +2170,19 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	tuiWindow := window.NewTui(tui)
 	ws[0] = tuiWindow
 
+	// 3d model
 	opWindow, err := NewOpengl(&mm, &ch)
 	if err != nil {
 		return
 	}
 	ws[1] = opWindow
 
+	// screen initialization
 	screen, err := ds.New("Demo", ws, &ch)
 	if err != nil {
 		return
 	}
+
 	// add fonts
 	f, err := glsymbol.DefaultFont()
 	if err != nil {
@@ -2183,29 +2191,17 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	tuiWindow.SetFont(f)
 	opWindow.SetFont(f)
 
-	// initialize tui
-	// tui, err := NewTui(&mm)
-	// if err != nil {
-	// 	return
-	// }
-	// mm.tui = tui // TODO Why????
-
-	// initialize opengl view
-	// op, err := NewOpengl(&mm)
-	// if err != nil {
-	// 	return
-	// }
+	//mm.tui = tui // TODO Why????
 	mm.op = opWindow
-	// // run test function
+
+	// run test function
 	go func() {
 		if testCoverageFunc == nil {
 			return
 		}
 		testCoverageFunc(&mm, &ch)
 	}()
-	// // run opengl
-	// go func() { op.Run() }()
-	// run tui
+	// run and stop
 	ch <- func() (fus bool) {
 		screen.ChangeRatio(0.4) // TODO: add to interface
 		return false
