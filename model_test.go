@@ -152,9 +152,9 @@ func TestUniqUint(t *testing.T) {
 }
 
 func TestIntegration(t *testing.T) {
-	defer func() {
-		t.Logf("%s", PrintInfo())
-	}()
+	// defer func() {
+	// 	t.Logf("%s", PrintInfo())
+	// }()
 
 	AddInfo := func(v string) {
 		t.Logf("%s", v)

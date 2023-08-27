@@ -35,7 +35,7 @@ func (u *Undo) sync(isUndo bool) (pre, post func()) {
 func (u *Undo) addToUndo() {
 	b, err := json.Marshal(u.model)
 	if err != nil {
-		AddInfo("addToUndo: %v", err)
+		AddInfo("addTo%v", err)
 		return
 	}
 	if u.list == nil {
@@ -58,7 +58,7 @@ func (u *Undo) Undo() {
 	var last Model
 	b := el.Value.([]byte)
 	if err := json.Unmarshal(b, &last); err != nil {
-		AddInfo("Undo: %v", err)
+		AddInfo("%v", err)
 		return
 	}
 	// swap models
@@ -75,34 +75,42 @@ func (u *Undo) PartPresent() (id uint) {
 }
 
 func (u *Undo) PartsName() (names []string) {
+	logger.Print("PartsName")
 	return u.model.PartsName()
 }
 
 func (u *Undo) PartChange(id uint) {
+	logger.Print("PartChange")
 	u.model.PartChange(id)
 }
 
 func (u *Undo) PartNew(str string) {
+	logger.Print("PartNew")
 	u.model.PartNew(str)
 }
 
 func (u *Undo) PartRename(id uint, str string) {
+	logger.Print("PartRename")
 	u.model.PartRename(id, str)
 }
 
 func (u *Undo) StandardView(view SView) {
+	logger.Print("StandardView")
 	u.op.StandardView(view)
 }
 
 func (u *Undo) ColorEdge(isColor bool) {
+	logger.Print("ColorEdge")
 	u.op.ColorEdge(isColor)
 }
 
 func (u *Undo) ViewAll(centerCorrection bool) {
+	logger.Print("ViewAll")
 	u.op.ViewAll(centerCorrection)
 }
 
 func (u *Undo) AddNode(X, Y, Z float64) (id uint) {
+	logger.Print("AddNode")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -112,6 +120,7 @@ func (u *Undo) AddNode(X, Y, Z float64) (id uint) {
 }
 
 func (u *Undo) AddLineByNodeNumber(n1, n2 uint) (id uint) {
+	logger.Print("AddLineByNodeNumber")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -121,6 +130,7 @@ func (u *Undo) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 }
 
 func (u *Undo) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
+	logger.Print("AddTriangle3ByNodeNumber")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -130,18 +140,22 @@ func (u *Undo) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 }
 
 func (u *Undo) GetCoordByID(id uint) (_ gog.Point3d, ok bool) {
+	logger.Print("GetCoordByID")
 	return u.model.GetCoordByID(id)
 }
 
 func (u *Undo) GetCoords() []Coordinate {
+	logger.Print("GetCoords")
 	return u.model.GetCoords()
 }
 
 func (u *Undo) GetElements() []Element {
+	logger.Print("GetElements")
 	return u.model.GetElements()
 }
 
 func (u *Undo) IgnoreModelElements(ids []uint) {
+	logger.Print("IgnoreModelElements")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -151,6 +165,7 @@ func (u *Undo) IgnoreModelElements(ids []uint) {
 }
 
 func (u *Undo) Unignore() {
+	logger.Print("Unignore")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -160,26 +175,32 @@ func (u *Undo) Unignore() {
 }
 
 func (u *Undo) IsIgnore(elID uint) bool {
+	// too many logs: logger.Print("IsIgnore")
 	return u.model.IsIgnore(elID)
 }
 
 func (u *Undo) Hide(coordinates, elements []uint) {
+	logger.Print("Hide")
 	u.model.Hide(coordinates, elements)
 }
 
 func (u *Undo) UnhideAll() {
+	logger.Print("UnhideAll")
 	u.model.UnhideAll()
 }
 
 func (u *Undo) AddLeftCursor(lc LeftCursor) {
+	logger.Print("AddLeftCursor")
 	u.op.AddLeftCursor(lc)
 }
 
 func (u *Undo) SelectLeftCursor(nodes, lines, tria bool) {
+	logger.Print("SelectLeftCursor")
 	u.op.SelectLeftCursor(nodes, lines, tria)
 }
 
 func (u *Undo) AddModel(m Model) {
+	logger.Print("AddModel")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -189,58 +210,72 @@ func (u *Undo) AddModel(m Model) {
 }
 
 func (u *Undo) GetSelectNodes(single bool) (ids []uint) {
+	logger.Print("GetSelectNodes")
 	return u.model.GetSelectNodes(single)
 }
 
 func (u *Undo) GetSelectLines(single bool) (ids []uint) {
+	logger.Print("GetSelectLines")
 	return u.model.GetSelectLines(single)
 }
 
 func (u *Undo) GetSelectTriangles(single bool) (ids []uint) {
+	logger.Print("GetSelectTriangles")
 	return u.model.GetSelectTriangles(single)
 }
 
 func (u *Undo) GetSelectElements(single bool) (ids []uint) {
+	logger.Print("GetSelectElements")
 	return u.model.GetSelectElements(single)
 }
 
 func (u *Undo) InvertSelect(nodes, lines, triangles bool) {
+	logger.Print("InvertSelect")
 	u.model.InvertSelect(nodes, lines, triangles)
 }
 
 func (u *Undo) SelectLinesOrtho(x, y, z bool) {
+	logger.Print("SelectLinesOrtho")
 	u.model.SelectLinesOrtho(x, y, z)
 }
 
 func (u *Undo) SelectLinesOnPlane(xoy, xoz, yoz bool) {
+	logger.Print("SelectLinesOnPlane")
 	u.model.SelectLinesOnPlane(xoy, xoz, yoz)
 }
 
 func (u *Undo) SelectLinesParallel(lines []uint) {
+	logger.Print("SelectLinesParallel")
 	u.model.SelectLinesParallel(lines)
 }
 
 func (u *Undo) SelectLinesByLenght(more bool, lenght float64) {
+	logger.Print("SelectLinesByLenght")
 	u.model.SelectLinesByLenght(more, lenght)
 }
 
 func (u *Undo) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction) {
+	logger.Print("SelectLinesCylindrical")
 	u.model.SelectLinesCylindrical(node, radiant, conc, axe)
 }
 
 func (u *Undo) SelectScreen(from, to [2]int32) {
+	logger.Print("SelectScreen")
 	u.op.SelectScreen(from, to)
 }
 
 func (u *Undo) DeselectAll() {
+	logger.Print("DeselectAll")
 	u.model.DeselectAll()
 }
 
 func (u *Undo) SelectAll(nodes, lines, triangles bool) {
+	logger.Print("SelectAll")
 	u.model.SelectAll(nodes, lines, triangles)
 }
 
 func (u *Undo) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
+	logger.Print("SplitLinesByDistance")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -250,6 +285,7 @@ func (u *Undo) SplitLinesByDistance(lines []uint, distance float64, atBegin bool
 }
 
 func (u *Undo) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
+	logger.Print("SplitLinesByRatio")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -259,6 +295,7 @@ func (u *Undo) SplitLinesByRatio(lines []uint, proportional float64, atBegin boo
 }
 
 func (u *Undo) SplitLinesByEqualParts(lines []uint, parts uint) {
+	logger.Print("SplitLinesByEqualParts")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -268,6 +305,7 @@ func (u *Undo) SplitLinesByEqualParts(lines []uint, parts uint) {
 }
 
 func (u *Undo) SplitTri3To3Tri3(tris []uint) {
+	logger.Print("SplitTri3To3Tri3")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -277,6 +315,7 @@ func (u *Undo) SplitTri3To3Tri3(tris []uint) {
 }
 
 func (u *Undo) MergeNodes(minDistance float64) {
+	logger.Print("MergeNodes")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -286,6 +325,7 @@ func (u *Undo) MergeNodes(minDistance float64) {
 }
 
 func (u *Undo) MergeLines(lines []uint) {
+	logger.Print("MergeLines")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -295,6 +335,7 @@ func (u *Undo) MergeLines(lines []uint) {
 }
 
 func (u *Undo) Intersection(nodes, elements []uint) {
+	logger.Print("Intersection")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -306,6 +347,7 @@ func (u *Undo) Intersection(nodes, elements []uint) {
 func (u *Undo) Move(nodes, elements []uint,
 	basePoint [3]float64,
 	path diffCoordinate) {
+	logger.Print("Move")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -318,6 +360,7 @@ func (u *Undo) Copy(nodes, elements []uint,
 	basePoint [3]float64,
 	paths []diffCoordinate,
 	addLines, addTri bool) {
+	logger.Print("Copy")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -330,6 +373,7 @@ func (u *Undo) Mirror(nodes, elements []uint,
 	basePoint [3][3]float64,
 	copy bool,
 	addLines, addTri bool) {
+	logger.Print("Mirror")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -339,6 +383,7 @@ func (u *Undo) Mirror(nodes, elements []uint,
 }
 
 func (u *Undo) DemoSpiral(n uint) {
+	logger.Print("DemoSpiral")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -348,6 +393,7 @@ func (u *Undo) DemoSpiral(n uint) {
 }
 
 func (u *Undo) Remove(nodes, elements []uint) {
+	logger.Print("Remove")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -357,6 +403,7 @@ func (u *Undo) Remove(nodes, elements []uint) {
 }
 
 func (u *Undo) RemoveSameCoordinates() {
+	logger.Print("RemoveSameCoordinates")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -366,6 +413,7 @@ func (u *Undo) RemoveSameCoordinates() {
 }
 
 func (u *Undo) RemoveNodesWithoutElements() {
+	logger.Print("RemoveNodesWithoutElements")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -375,6 +423,7 @@ func (u *Undo) RemoveNodesWithoutElements() {
 }
 
 func (u *Undo) RemoveZeroLines() {
+	logger.Print("RemoveZeroLines")
 	// sync
 	pre, post := u.sync(false)
 	pre()
@@ -384,6 +433,7 @@ func (u *Undo) RemoveZeroLines() {
 }
 
 func (u *Undo) RemoveZeroTriangles() {
+	logger.Print("RemoveZeroTriangles")
 	// sync
 	pre, post := u.sync(false)
 	pre()

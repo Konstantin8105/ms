@@ -204,7 +204,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Create")
 			b.OnClick = func() {
-				logger.Print("Create a new part")
 				n := name.GetText()
 				if len(n) == 0 {
 					return
@@ -282,7 +281,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Undo")
 			b.OnClick = func() {
-				logger.Print("Undo")
 				m.Undo()
 			}
 			list.Add(&b)
@@ -358,7 +356,6 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				logger.Print("Standard View")
 				pos := rg.GetPos()
 				if uint(endStandardView) <= pos {
 					return
@@ -379,7 +376,6 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				logger.Print("Color edges of elements")
 				pos := rg.GetPos()
 				if uint(endStandardView) <= pos {
 					return
@@ -491,7 +487,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Add")
 			b.OnClick = func() {
-				logger.Print("Add node")
 				vs, ok := gt()
 				if !ok {
 					return
@@ -512,7 +507,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Add")
 			bi.OnClick = func() {
-				logger.Print("Add line2")
 				b, ok := isOne(bgt)
 				if !ok {
 					return
@@ -540,7 +534,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Add")
 			bi.OnClick = func() {
-				logger.Print("Add triangles3")
 				n1, ok := isOne(n1gt)
 				if !ok {
 					return
@@ -575,7 +568,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Change")
 			b.OnClick = func() {
-				logger.Print("Add by left cursor button")
 				m.AddLeftCursor(LeftCursor(rg.GetPos()))
 			}
 			list.Add(&b)
@@ -596,7 +588,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Split")
 			bi.OnClick = func() {
-				logger.Print("Split line2")
 				d, ok := dgt()
 				if !ok {
 					return
@@ -622,7 +613,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Split")
 			bi.OnClick = func() {
-				logger.Print("Split line2 by ratio")
 				r, ok := dgt()
 				if !ok {
 					return
@@ -645,7 +635,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Split")
 			bi.OnClick = func() {
-				logger.Print("Split line2 to equal parts")
 				parts, ok := rgt()
 				if !ok {
 					return
@@ -665,7 +654,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Split")
 			bi.OnClick = func() {
-				logger.Print("Split Triangle3 to 3 Triangle3")
 				m.SplitTri3To3Tri3(nsgt())
 			}
 			list.Add(&bi)
@@ -682,7 +670,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Intersect")
 			b.OnClick = func() {
-				logger.Print("Intersection between nodes and elements")
 				cs := coordgt()
 				es := elgt()
 				if len(cs) == 0 && len(es) == 0 {
@@ -703,7 +690,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Merge")
 			b.OnClick = func() {
-				logger.Print("Merge nodes")
 				d, ok := dgt()
 				if !ok {
 					return
@@ -726,7 +712,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Merge")
 			b.OnClick = func() {
-				logger.Print("Merge lines")
 				m.MergeLines(sgt())
 			}
 			list.Add(&b)
@@ -739,7 +724,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
-				logger.Print("Remove nodes with same coordinates")
 				m.RemoveSameCoordinates()
 			}
 			list.Add(&bi)
@@ -753,7 +737,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
-				logger.Print("Remove nodes without connection to element")
 				m.RemoveNodesWithoutElements()
 			}
 			list.Add(&bi)
@@ -767,7 +750,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
-				logger.Print("Remove lines with zero lenght")
 				m.RemoveZeroLines()
 			}
 			list.Add(&bi)
@@ -781,7 +763,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
-				logger.Print("Remove triangles with zero area")
 				m.RemoveZeroTriangles()
 			}
 			list.Add(&bi)
@@ -798,7 +779,6 @@ func init() {
 			var bi vl.Button
 			bi.SetText("Remove")
 			bi.OnClick = func() {
-				logger.Print("Remove selected")
 				cs := coordgt()
 				es := elgt()
 				if len(cs) == 0 && len(es) == 0 {
@@ -837,7 +817,6 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				logger.Print("Ignore elements")
 				els := elfgt()
 				if len(els) == 0 {
 					return
@@ -855,7 +834,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Clear")
 			b.OnClick = func() {
-				logger.Print("Clear ignoring elements")
 				m.Unignore()
 			}
 			list.Add(&b)
@@ -887,7 +865,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Hide")
 			b.OnClick = func() {
-				logger.Print("Hide")
 				els := elgt()
 				cs := coordgt()
 				if len(els) == 0 && len(cs) == 0 {
@@ -906,7 +883,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Show only selected")
 			b.OnClick = func() {
-				logger.Print("Show only selected")
 				m.InvertSelect(true, true, true)
 				ns := m.GetSelectNodes(Many)
 				es := m.GetSelectElements(Many)
@@ -924,7 +900,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Unhide all")
 			b.OnClick = func() {
-				logger.Print("Unhide all")
 				m.UnhideAll()
 			}
 			list.Add(&b)
@@ -1036,7 +1011,6 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				logger.Print("Left cursor selection")
 				m.SelectLeftCursor(nodes.Checked, lines.Checked, tris.Checked)
 			}
 			list.Add(&b)
@@ -1061,7 +1035,6 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				logger.Print("Invert selection")
 				m.InvertSelect(nodes.Checked, lines.Checked, tris.Checked)
 			}
 			list.Add(&b)
@@ -1087,7 +1060,6 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				logger.Print("Select ortho lines parallel axes X, Y, Z")
 				m.SelectLinesOrtho(x.Checked, y.Checked, z.Checked)
 			}
 			list.Add(&b)
@@ -1113,7 +1085,6 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				logger.Print("Select lines on plane XOY, YOZ, XOZ")
 				m.SelectLinesOnPlane(xoy.Checked, yoz.Checked, xoz.Checked)
 			}
 			list.Add(&b)
@@ -1130,7 +1101,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Select")
 			b.OnClick = func() {
-				logger.Print("Select lines parallel lines")
 				ls := lfgt()
 				if len(ls) == 0 {
 					return
@@ -1155,7 +1125,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Select")
 			b.OnClick = func() {
-				logger.Print("Select lines by lenght")
 				l, ok := dgt()
 				if !ok {
 					return
@@ -1194,7 +1163,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Select")
 			b.OnClick = func() {
-				logger.Print("Select lines in cylinder system coordinate")
 				n := nfgt()
 				if len(n) != 1 {
 					return
@@ -1214,7 +1182,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Deselect all")
 			b.OnClick = func() {
-				logger.Print("Deselect all")
 				m.DeselectAll()
 			}
 			list.Add(&b)
@@ -1240,7 +1207,6 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				logger.Print("Select all")
 				m.SelectAll(nodes.Checked, lines.Checked, tris.Checked)
 			}
 			list.Add(&b)
@@ -1424,7 +1390,6 @@ func init() {
 			var b vl.Button
 			b.SetText("Move/Rotate")
 			b.OnClick = func() {
-				logger.Print("Move/Rotate")
 				pos := param.GetPos()
 				bp, p, ok := paths[pos].getC()
 				if !ok {
