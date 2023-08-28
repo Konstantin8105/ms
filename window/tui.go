@@ -191,130 +191,134 @@ func (t *Tui) DrawText(cell vl.Cell, x, y, h int) {
 	r, g, b := color(fg)
 	gl.Color4f(r, g, b, 1)
 
-	xl := x          // left coordinate of symbol
-	yd := h - y - gh // down coordinate of symbol
-	hgw := float32(gw) * 0.5
-	hgh := float32(gh) * 0.5
-	gw4 := float32(gw) * 0.4
-	gh4 := float32(gh) * 0.4
-	gw6 := float32(gw) * 0.6
-	gh6 := float32(gh) * 0.6
+	var (
+		xl  = float64(x)          // left coordinate of symbol
+		yd  = float64(h - y - gh) // down coordinate of symbol
+		hgw = float64(gw) * 0.5
+		hgh = float64(gh) * 0.5
+		gw4 = float64(gw) * 0.4
+		gh4 = float64(gh) * 0.4
+		gw6 = float64(gw) * 0.6
+		gh6 = float64(gh) * 0.6
+		dgw = float64(gw) + 1.0
+		dgh = float64(gh) + 1.0
+	)
 
 	// draw opengl symbols
 	switch cell.R {
 	case vl.LineHorizontalFocus:
 		gl.Begin(gl.LINES)
-		gl.Vertex2f(float32(xl), float32(yd)+gh4)
-		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh4)
+		gl.Vertex2d(xl, yd+gh4)
+		gl.Vertex2d(xl+dgw, yd+gh4)
 		gl.End()
 		gl.Begin(gl.LINES)
-		gl.Vertex2f(float32(xl), float32(yd)+gh6)
-		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh6)
+		gl.Vertex2d(xl, yd+gh6)
+		gl.Vertex2d(xl+dgw, yd+gh6)
 		gl.End()
 		return
 	case vl.LineHorizontalUnfocus:
 		gl.Begin(gl.LINES)
-		gl.Vertex2f(float32(xl), float32(yd)+hgh)
-		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+hgh)
+		gl.Vertex2d(xl, yd+hgh)
+		gl.Vertex2d(xl+dgw, yd+hgh)
 		gl.End()
 		return
 	case vl.LineVerticalFocus:
 		gl.Begin(gl.LINES)
-		gl.Vertex2f(float32(xl)+gw4, float32(yd))
-		gl.Vertex2f(float32(xl)+gw4, float32(yd)+float32(gh))
+		gl.Vertex2d(xl+gw4, yd)
+		gl.Vertex2d(xl+gw4, yd+dgh)
 		gl.End()
 		gl.Begin(gl.LINES)
-		gl.Vertex2f(float32(xl)+gw6, float32(yd))
-		gl.Vertex2f(float32(xl)+gw6, float32(yd)+float32(gh))
+		gl.Vertex2d(xl+gw6, yd)
+		gl.Vertex2d(xl+gw6, yd+dgh)
 		gl.End()
 		return
 	case vl.LineVerticalUnfocus:
 		gl.Begin(gl.LINES)
-		gl.Vertex2f(float32(xl)+hgw, float32(yd))
-		gl.Vertex2f(float32(xl)+hgw, float32(yd)+float32(gh))
+		gl.Vertex2d(xl+hgw, yd)
+		gl.Vertex2d(xl+hgw, yd+dgh)
 		gl.End()
 		return
 	case vl.CornerLeftUpFocus:
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl)+gw6, float32(yd))
-		gl.Vertex2f(float32(xl)+gw6, float32(yd)+gh4)
-		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh4)
+		gl.Vertex2d(xl+gw6, yd)
+		gl.Vertex2d(xl+gw6, yd+gh4)
+		gl.Vertex2d(xl+dgw, yd+gh4)
 		gl.End()
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl)+gw4, float32(yd))
-		gl.Vertex2f(float32(xl)+gw4, float32(yd)+gh6)
-		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh6)
+		gl.Vertex2d(xl+gw4, yd)
+		gl.Vertex2d(xl+gw4, yd+gh6)
+		gl.Vertex2d(xl+dgw, yd+gh6)
 		gl.End()
 		return
 	case vl.CornerLeftDownFocus:
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl)+gw4, float32(yd)+float32(gh))
-		gl.Vertex2f(float32(xl)+gw4, float32(yd)+gh4)
-		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh4)
+		gl.Vertex2d(xl+gw4, yd+dgh)
+		gl.Vertex2d(xl+gw4, yd+gh4)
+		gl.Vertex2d(xl+dgw, yd+gh4)
 		gl.End()
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl)+gw6, float32(yd)+float32(gh))
-		gl.Vertex2f(float32(xl)+gw6, float32(yd)+gh6)
-		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh6)
+		gl.Vertex2d(xl+gw6, yd+dgh)
+		gl.Vertex2d(xl+gw6, yd+gh6)
+		gl.Vertex2d(xl+dgw, yd+gh6)
 		gl.End()
 		return
 	case vl.CornerRightUpFocus:
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl)+gw4, float32(yd))
-		gl.Vertex2f(float32(xl)+gw4, float32(yd)+gh4)
-		gl.Vertex2f(float32(xl), float32(yd)+gh4)
+		gl.Vertex2d(xl+gw4, yd)
+		gl.Vertex2d(xl+gw4, yd+gh4)
+		gl.Vertex2d(xl, yd+gh4)
 		gl.End()
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl)+gw6, float32(yd))
-		gl.Vertex2f(float32(xl)+gw6,  float32(yd)+gh6)
-		gl.Vertex2f(float32(xl), float32(yd)+gh6)
+		gl.Vertex2d(xl+gw6, yd)
+		gl.Vertex2d(xl+gw6, yd+gh6)
+		gl.Vertex2d(xl, yd+gh6)
 		gl.End()
 		return
 	case vl.CornerRightDownFocus:
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl), float32(yd)+gh6)
-		gl.Vertex2f(float32(xl)+gw4, float32(yd)+gh6)
-		gl.Vertex2f(float32(xl)+gw4, float32(yd)+float32(gh))
+		gl.Vertex2d(xl, yd+gh6)
+		gl.Vertex2d(xl+gw4, yd+gh6)
+		gl.Vertex2d(xl+gw4, yd+dgh)
 		gl.End()
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl), float32(yd)+gh4)
-		gl.Vertex2f(float32(xl)+gw6, float32(yd)+gh4)
-		gl.Vertex2f(float32(xl)+gw6, float32(yd)+float32(gh))
+		gl.Vertex2d(xl, yd+gh4)
+		gl.Vertex2d(xl+gw6, yd+gh4)
+		gl.Vertex2d(xl+gw6, yd+dgh)
 		gl.End()
 		return
 	case vl.CornerLeftUpUnfocus:
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl)+hgw, float32(yd))
-		gl.Vertex2f(float32(xl)+hgw, float32(yd)+hgh)
-		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+hgh)
+		gl.Vertex2d(xl+hgw, yd)
+		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+dgw, yd+hgh)
 		gl.End()
 		return
 	case vl.CornerLeftDownUnfocus:
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl)+hgw, float32(yd)+float32(gh))
-		gl.Vertex2f(float32(xl)+hgw, float32(yd)+hgh)
-		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+hgh)
+		gl.Vertex2d(xl+hgw, yd+dgh)
+		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+dgw, yd+hgh)
 		gl.End()
 		return
 	case vl.CornerRightUpUnfocus:
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl)+hgw, float32(yd))
-		gl.Vertex2f(float32(xl)+hgw, float32(yd)+hgh)
-		gl.Vertex2f(float32(xl), float32(yd)+hgh)
+		gl.Vertex2d(xl+hgw, yd)
+		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl, yd+hgh)
 		gl.End()
 		return
 	case vl.CornerRightDownUnfocus:
 		gl.Begin(gl.LINE_STRIP)
-		gl.Vertex2f(float32(xl), float32(yd)+hgh)
-		gl.Vertex2f(float32(xl)+hgw, float32(yd)+hgh)
-		gl.Vertex2f(float32(xl)+hgw, float32(yd)+float32(gh))
+		gl.Vertex2d(xl, yd+hgh)
+		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+hgw, yd+dgh)
 		gl.End()
 		return
 	case vl.ScrollLine:
 		gl.Begin(gl.LINES)
-		gl.Vertex2f(float32(xl)+gw4, float32(yd))
-		gl.Vertex2f(float32(xl)+gw6, float32(yd)+hgh)
-		gl.Vertex2f(float32(xl)+gw4, float32(yd)+float32(gh))
+		gl.Vertex2d(xl+gw4, yd)
+		gl.Vertex2d(xl+gw6, yd+hgh)
+		gl.Vertex2d(xl+gw4, yd+dgh)
 		gl.End()
 		return
 	case vl.ScrollUp:
