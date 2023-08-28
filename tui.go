@@ -29,6 +29,7 @@ const (
 	endGroup
 )
 
+// TODO Array by line, circular
 // TODO distance between 2 points if selected both
 // TODO betta angle for repeat rotate Copy
 // TODO check copy node on distance

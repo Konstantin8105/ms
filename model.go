@@ -25,32 +25,32 @@ type object3d struct {
 	hided    bool
 }
 
-type ElType uint8
+type ElType uint8 // from 0 to 255
 
 const (
-	Line2     ElType = iota + 1 // 1
-	Triangle3                   // 2
-	ElRemove                    // 3
+	Line2     ElType          = iota + 1 // 1
+	Triangle3                            // 2
+	ElRemove  = math.MaxUint8            // 255
 )
 
 // Element is typical element for FEM. Examples:
 //
 //	Line o======o                                             //
-//	ElType : 2                                                //
+//	ElType : 1                                                //
 //	Indexes: 2 (amount indexes of coordinates)                //
 //
 //	Triangle o======o                                         //
 //	          \    /                                          //
 //	           \  /                                           //
 //	            o                                             //
-//	ElType : 3                                                //
+//	ElType : 2                                                //
 //	Indexes: 3 (amount indexes of coordinates)                //
 //
 //	Quadr4 o======o                                           //
 //	       |      |                                           //
 //	       |      |                                           //
 //	       o======o                                           //
-//	ElType : 4                                                //
+//	ElType : 3                                                //
 //	Indexes: 4 (amount indexes of coordinates)                //
 type Element struct {
 	object3d
