@@ -16,6 +16,7 @@ import (
 	"github.com/Konstantin8105/gog"
 	"github.com/Konstantin8105/ms/window"
 	"github.com/Konstantin8105/pow"
+	"github.com/Konstantin8105/vl"
 )
 
 // 3D model variables
@@ -2136,6 +2137,9 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 			new(window.Empty),
 		}
 	)
+
+	// use unicode symbols
+	vl.SpecificSymbol(false)
 
 	// prepare model
 	if filename == "" {

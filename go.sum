@@ -21,6 +21,8 @@ github.com/Konstantin8105/tree v0.1.1 h1:EaEOLocAJ5IyQ+KisgY43X/TXoVyFXVd1nsykCl
 github.com/Konstantin8105/tree v0.1.1/go.mod h1:/KrCn6rMgf1uoXUY2HjVvML1LeLUULD1BDiHWJhJwII=
 github.com/Konstantin8105/vl v0.0.0-20230612162641-22ada0ad8f3b h1:XVhThycITqdElo2CVPP1Gh2kdGzSKzPMMi+zquopVi0=
 github.com/Konstantin8105/vl v0.0.0-20230612162641-22ada0ad8f3b/go.mod h1:hG5zfma2mcSFqbXouv9Nz69Y6d2ePZVWRjaUxuao80Q=
+github.com/Konstantin8105/vl v0.0.0-20230828105646-07763eddc45e h1:YEBGzmoV/u/DiXtumPerNiqe+BMU7P5ZJMGntd5Iu1Q=
+github.com/Konstantin8105/vl v0.0.0-20230828105646-07763eddc45e/go.mod h1:hG5zfma2mcSFqbXouv9Nz69Y6d2ePZVWRjaUxuao80Q=
 github.com/gdamore/encoding v1.0.0 h1:+7OoQ1Bc6eTm5niUzBa0Ctsh6JbMW6Ra+YNuAtDBdko=
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/tcell/v2 v2.6.0 h1:OKbluoP9VYmJwZwq/iLb4BxwKcwGthaa1YNBJIyCySg=

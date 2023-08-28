@@ -187,16 +187,150 @@ func (t *Tui) DrawText(cell vl.Cell, x, y, h int) {
 		gl.Rectf(float32(x), float32(h-y-gh), float32(x+gw), float32(h-y))
 	}
 
+	// prepare colors  for symbol
+	r, g, b := color(fg)
+	gl.Color4f(r, g, b, 1)
+
+	xl := x          // left coordinate of symbol
+	yd := h - y - gh // down coordinate of symbol
+	hgw := float32(gw) * 0.5
+	hgh := float32(gh) * 0.5
+	gw4 := float32(gw) * 0.4
+	gh4 := float32(gh) * 0.4
+	gw6 := float32(gw) * 0.6
+	gh6 := float32(gh) * 0.6
+
+	// draw opengl symbols
+	switch cell.R {
+	case vl.LineHorizontalFocus:
+		gl.Begin(gl.LINES)
+		gl.Vertex2f(float32(xl), float32(yd)+gh4)
+		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh4)
+		gl.End()
+		gl.Begin(gl.LINES)
+		gl.Vertex2f(float32(xl), float32(yd)+gh6)
+		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh6)
+		gl.End()
+		return
+	case vl.LineHorizontalUnfocus:
+		gl.Begin(gl.LINES)
+		gl.Vertex2f(float32(xl), float32(yd)+hgh)
+		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+hgh)
+		gl.End()
+		return
+	case vl.LineVerticalFocus:
+		gl.Begin(gl.LINES)
+		gl.Vertex2f(float32(xl)+gw4, float32(yd))
+		gl.Vertex2f(float32(xl)+gw4, float32(yd)+float32(gh))
+		gl.End()
+		gl.Begin(gl.LINES)
+		gl.Vertex2f(float32(xl)+gw6, float32(yd))
+		gl.Vertex2f(float32(xl)+gw6, float32(yd)+float32(gh))
+		gl.End()
+		return
+	case vl.LineVerticalUnfocus:
+		gl.Begin(gl.LINES)
+		gl.Vertex2f(float32(xl)+hgw, float32(yd))
+		gl.Vertex2f(float32(xl)+hgw, float32(yd)+float32(gh))
+		gl.End()
+		return
+	case vl.CornerLeftUpFocus:
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl)+gw6, float32(yd))
+		gl.Vertex2f(float32(xl)+gw6, float32(yd)+gh4)
+		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh4)
+		gl.End()
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl)+gw4, float32(yd))
+		gl.Vertex2f(float32(xl)+gw4, float32(yd)+gh6)
+		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh6)
+		gl.End()
+		return
+	case vl.CornerLeftDownFocus:
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl)+gw4, float32(yd)+float32(gh))
+		gl.Vertex2f(float32(xl)+gw4, float32(yd)+gh4)
+		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh4)
+		gl.End()
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl)+gw6, float32(yd)+float32(gh))
+		gl.Vertex2f(float32(xl)+gw6, float32(yd)+gh6)
+		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+gh6)
+		gl.End()
+		return
+	case vl.CornerRightUpFocus:
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl)+gw4, float32(yd))
+		gl.Vertex2f(float32(xl)+gw4, float32(yd)+gh4)
+		gl.Vertex2f(float32(xl), float32(yd)+gh4)
+		gl.End()
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl)+gw6, float32(yd))
+		gl.Vertex2f(float32(xl)+gw6,  float32(yd)+gh6)
+		gl.Vertex2f(float32(xl), float32(yd)+gh6)
+		gl.End()
+		return
+	case vl.CornerRightDownFocus:
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl), float32(yd)+gh6)
+		gl.Vertex2f(float32(xl)+gw4, float32(yd)+gh6)
+		gl.Vertex2f(float32(xl)+gw4, float32(yd)+float32(gh))
+		gl.End()
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl), float32(yd)+gh4)
+		gl.Vertex2f(float32(xl)+gw6, float32(yd)+gh4)
+		gl.Vertex2f(float32(xl)+gw6, float32(yd)+float32(gh))
+		gl.End()
+		return
+	case vl.CornerLeftUpUnfocus:
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl)+hgw, float32(yd))
+		gl.Vertex2f(float32(xl)+hgw, float32(yd)+hgh)
+		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+hgh)
+		gl.End()
+		return
+	case vl.CornerLeftDownUnfocus:
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl)+hgw, float32(yd)+float32(gh))
+		gl.Vertex2f(float32(xl)+hgw, float32(yd)+hgh)
+		gl.Vertex2f(float32(xl)+float32(gw), float32(yd)+hgh)
+		gl.End()
+		return
+	case vl.CornerRightUpUnfocus:
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl)+hgw, float32(yd))
+		gl.Vertex2f(float32(xl)+hgw, float32(yd)+hgh)
+		gl.Vertex2f(float32(xl), float32(yd)+hgh)
+		gl.End()
+		return
+	case vl.CornerRightDownUnfocus:
+		gl.Begin(gl.LINE_STRIP)
+		gl.Vertex2f(float32(xl), float32(yd)+hgh)
+		gl.Vertex2f(float32(xl)+hgw, float32(yd)+hgh)
+		gl.Vertex2f(float32(xl)+hgw, float32(yd)+float32(gh))
+		gl.End()
+		return
+	case vl.ScrollLine:
+		gl.Begin(gl.LINES)
+		gl.Vertex2f(float32(xl)+gw4, float32(yd))
+		gl.Vertex2f(float32(xl)+gw6, float32(yd)+hgh)
+		gl.Vertex2f(float32(xl)+gw4, float32(yd)+float32(gh))
+		gl.End()
+		return
+	case vl.ScrollUp:
+	case vl.ScrollDown:
+	}
+
+	// draw text symbols
+	if cell.R < runeStart || runeEnd < cell.R {
+		// ignore not ascii symbol
+		cell.R = ' '
+	}
 	if cell.R == ' ' {
 		// no need draw that rune
 		return
 	}
-	if cell.R < runeStart || runeEnd < cell.R {
-		// ignore not ascii symbol
-		cell.R = '-'
-	}
-	r, g, b := color(fg)
-	gl.Color4f(r, g, b, 1)
+
 	i := int(byte(cell.R)) - int(t.font.Config.Low)
 	gl.RasterPos2i(int32(x), int32(h-y-gh))
 	gl.Bitmap(
