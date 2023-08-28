@@ -91,7 +91,7 @@ func (u *Undo) PartNew(str string) {
 }
 
 func (u *Undo) PartRename(id uint, str string) {
-	logger.Print("PartRename")
+	// too many: logger.Print("PartRename")
 	u.model.PartRename(id, str)
 }
 
