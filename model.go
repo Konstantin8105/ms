@@ -30,6 +30,8 @@ type ElType uint8 // from 0 to 255
 const (
 	Line2     ElType          = iota + 1 // 1
 	Triangle3                            // 2
+	Quadr4                               // 3
+	lastElement
 	ElRemove  = math.MaxUint8            // 255
 )
 
@@ -59,7 +61,12 @@ type Element struct {
 }
 
 // valid matrix element constants
-var valid = [...][2]int{{int(Line2), 2}, {int(Triangle3), 3}, {int(ElRemove), 0}}
+var valid = [...][2]int{
+	{int(Line2), 2},
+	{int(Triangle3), 3},
+	{int(Quadr4), 4},
+	{int(ElRemove), 0},
+}
 
 func (e Element) Check() error {
 	for i := range valid {

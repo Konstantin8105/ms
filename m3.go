@@ -612,7 +612,7 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 	// Elements
 	for i, el := range els {
 		gl.PointSize(2) // default points size
-		gl.LineWidth(2) // TODO GREAT LINES 3) // default lines width
+		gl.LineWidth(3) // TODO GREAT LINES 3) // default lines width
 		if op.mesh.IsIgnore(uint(i)) {
 			continue
 		}
@@ -632,17 +632,15 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 			switch el.ElementType {
 			case Line2:
 				if el.selected {
-					gl.Color3ub(255, 51, 51)
+					gl.Color3ub(255, 50, 50)
 				} else {
-					gl.Color3ub(153, 153, 153)
+					gl.Color3ub(155, 155, 155)
 				}
 			case Triangle3:
 				if el.selected {
-					// gl.Color3ub(255, 91, 91)
-					gl.Color4ub(255, 91, 91, 200)
+					gl.Color3ub(255, 90, 90)
 				} else {
-					// gl.Color3ub(153, 0, 153)
-					gl.Color4ub(153, 0, 153, 200)
+					gl.Color3ub(155, 0, 155)
 				}
 			default:
 				AddInfo("not valid element type: %v", el)
@@ -759,7 +757,6 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 
 				gl.LineWidth(1)
 				for p := range el.Indexes {
-					// gl.LineWidth(float32(p * 2))
 					gl.Begin(gl.LINES)
 
 					from, to := p, p+1
@@ -770,15 +767,6 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 						from = el.Indexes[from]
 						to = el.Indexes[to]
 					}
-					// gl.Vertex3d(
-					// 	cos[from].Point3d[0],
-					// 	cos[from].Point3d[1],
-					// 	cos[from].Point3d[2])
-					// gl.Vertex3d(
-					// 	cos[to].Point3d[0],
-					// 	cos[to].Point3d[1],
-					// 	cos[to].Point3d[2])
-
 					gl.Vertex3d(
 						ratio*mid[0]+(1-ratio)*cos[from].Point3d[0],
 						ratio*mid[1]+(1-ratio)*cos[from].Point3d[1],
