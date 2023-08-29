@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Konstantin8105/ds"
+	etree "github.com/Konstantin8105/errors"
 	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/gog"
 	"github.com/Konstantin8105/ms/window"
@@ -28,11 +29,11 @@ type object3d struct {
 type ElType uint8 // from 0 to 255
 
 const (
-	Line2     ElType          = iota + 1 // 1
-	Triangle3                            // 2
-	Quadr4                               // 3
+	Line2     ElType = iota + 1 // 1
+	Triangle3                   // 2
+	Quadr4                      // 3
 	lastElement
-	ElRemove  = math.MaxUint8            // 255
+	ElRemove = math.MaxUint8 // 255
 )
 
 // Element is typical element for FEM. Examples:
@@ -96,6 +97,16 @@ type Coordinate struct {
 	// C [3]float64 // coordinates
 }
 
+func (c Coordinate) Check() error {
+	if max := 1e6; max < math.Abs(c.Point3d[0]) ||
+		max < math.Abs(c.Point3d[1]) ||
+		max < math.Abs(c.Point3d[2]) ||
+		false {
+		return fmt.Errorf("Coordinate is too big")
+	}
+	return nil
+}
+
 // Named intermediant named structure
 type Named struct{ Name string }
 type Ignored struct{ IgnoreElements []bool }
@@ -113,6 +124,32 @@ type Model struct {
 	Coords   []Coordinate
 
 	Parts []Part
+}
+
+func (mm *Model) Check() error {
+	et := etree.New("check model")
+	for i, c := range mm.Coords {
+		if err := c.Check(); err != nil {
+			et.Add(fmt.Errorf("Coordinate: %d\n%v", i, err))
+		}
+	}
+	for i, el := range mm.Elements {
+		if err := el.Check(); err != nil {
+			et.Add(fmt.Errorf("Element: %d\n%v", i, err))
+		}
+		for _, p := range el.Indexes {
+			if p < 0 {
+				et.Add(fmt.Errorf("Element: %d\nCoordinate index is negative", i))
+			}
+			if len(mm.Coords) <= p {
+				et.Add(fmt.Errorf("Element: %d\nCoordinate index is too big", i))
+			}
+		}
+	}
+	if et.IsError() {
+		return et
+	}
+	return nil
 }
 
 type Part struct {

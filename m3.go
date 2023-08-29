@@ -690,7 +690,7 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 			case selectTriangles:
 				// do nothing
 			default:
-				logger.Printf("undefined type: %f", s)
+				logger.Printf("undefined type: %v", s)
 			}
 		///////////////////////////////////
 		case Triangle3:
@@ -775,11 +775,11 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 				}
 				gl.End()
 			default:
-				logger.Printf("undefined type: %f", s)
+				logger.Printf("undefined type: %v", s)
 			}
 		///////////////////////////////////
 		default:
-			logger.Printf("undefined type: %f", s)
+			logger.Printf("undefined type: %v", s)
 			// switch s {
 			// case normal:
 			// 	if el.selected {
