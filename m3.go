@@ -693,7 +693,7 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 				logger.Printf("undefined type: %v", s)
 			}
 		///////////////////////////////////
-		case Triangle3:
+		case Triangle3, Quadr4:
 			switch s {
 			case normal:
 				gl.Begin(gl.POLYGON)
