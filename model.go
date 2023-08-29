@@ -69,12 +69,21 @@ var valid = [...][2]int{
 }
 
 func (e Element) Check() error {
+	index := -1
 	for i := range valid {
-		if int(e.ElementType) == valid[i][0] && len(e.Indexes) != valid[i][1] {
-			return fmt.Errorf("unacceptable element: %v", e)
+		if int(e.ElementType) == valid[i][0] {
+			index = i
+			break
 		}
 	}
-	return fmt.Errorf("undefined element: %v", e)
+	if index < 0 {
+		err = fmt.Errorf("Undefined type: %v", e)
+		return
+	}
+	if len(e.Indexes) != valid[i][1] {
+		return fmt.Errorf("unacceptable element: %v", e)
+	}
+	return
 }
 
 // Coordinate store coordinate of points
