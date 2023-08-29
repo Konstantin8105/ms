@@ -563,6 +563,8 @@ func (op *Opengl) model3d(s viewState, parent string) {
 func (op *Opengl) drawPoints(s viewState, parent string) {
 	cos := op.mesh.GetCoords()
 
+	// prepare colors
+	var r, g, b uint8
 	// Point
 	gl.PointSize(5)
 	switch s {
@@ -576,10 +578,11 @@ func (op *Opengl) drawPoints(s viewState, parent string) {
 				continue
 			}
 			if cos[i].selected {
-				gl.Color3ub(255, 1, 1)
+				r, g, b = 255, 1, 1
 			} else {
-				gl.Color3ub(1, 1, 1)
+				r, g, b = 1, 1, 1
 			}
+			gl.Color3ub(r, g, b)
 			gl.Vertex3d(cos[i].Point3d[0], cos[i].Point3d[1], cos[i].Point3d[2])
 		}
 		gl.End()
@@ -595,7 +598,8 @@ func (op *Opengl) drawPoints(s viewState, parent string) {
 			if cos[i].selected {
 				continue
 			}
-			convertToColor(i)
+			r, g, b = convertToColor(i)
+			gl.Color3ub(r, g, b)
 			gl.Vertex3d(cos[i].Point3d[0], cos[i].Point3d[1], cos[i].Point3d[2])
 		}
 		gl.End()
@@ -609,10 +613,21 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 	cos := op.mesh.GetCoords()
 	els := op.mesh.GetElements()
 
+	switch s {
+	case normal, colorEdgeElements:
+		gl.ShadeModel(gl.SMOOTH) // for points color
+		gl.Enable(gl.POLYGON_OFFSET_FILL)
+		gl.PolygonOffset(1.0, 1.0)
+	case selectPoints, selectLines, selectTriangles:
+		gl.ShadeModel(gl.FLAT)
+		gl.Disable(gl.LINE_SMOOTH)
+		gl.Disable(gl.POLYGON_OFFSET_FILL)
+	}
+
+	// prepare colors
+	var r, g, b uint8
 	// Elements
 	for i, el := range els {
-		gl.PointSize(2) // default points size
-		gl.LineWidth(3) // default lines width
 		if op.mesh.IsIgnore(uint(i)) {
 			continue
 		}
@@ -626,136 +641,90 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 		if el.ElementType == ElRemove { // removed element
 			continue
 		}
-		// color identification
-		switch s {
-		case normal, colorEdgeElements:
-			switch el.ElementType {
-			case Line2:
-				if el.selected {
-					gl.Color3ub(255, 50, 50)
-				} else {
-					gl.Color3ub(155, 155, 155)
-				}
-			case Triangle3:
-				if el.selected {
-					gl.Color3ub(255, 90, 90)
-				} else {
-					gl.Color3ub(155, 0, 155)
-				}
-			default:
-				AddInfo("not valid element type: %v", el)
-			}
-		case selectPoints, selectLines, selectTriangles:
-			convertToColor(i)
-		default:
-			AddInfo("not valid select element: %v", s)
-		}
-		// select points
-		if (s == selectLines && el.ElementType == Line2) ||
-			(s == selectTriangles && el.ElementType == Triangle3) {
-			gl.Begin(gl.POINTS)
-			for _, p := range el.Indexes {
-				gl.Vertex3d(cos[p].Point3d[0], cos[p].Point3d[1], cos[p].Point3d[2])
-			}
-			gl.End()
-		}
-		// draw lines in 3D
 		switch el.ElementType {
+		///////////////////////////////////
 		case Line2:
-			if s == normal || s == selectLines || (s == colorEdgeElements && el.selected) {
+			switch s {
+			case normal:
+				gl.LineWidth(3)
+				gl.Enable(gl.LINE_SMOOTH)
+				gl.Begin(gl.LINES)
+				for _, k := range el.Indexes {
+					c := cos[k]
+					if el.selected {
+						r, g, b = 255, 50, 50
+					} else {
+						r, g, b = 155, 155, 155
+					}
+					gl.Color3ub(r, g, b)
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				}
+				gl.End()
+			case colorEdgeElements:
+				gl.LineWidth(3)
+				gl.Enable(gl.LINE_SMOOTH)
+				gl.Begin(gl.LINES)
+				for p, k := range el.Indexes {
+					c := cos[k]
+					if el.selected {
+						r, g, b = 255, 50, 50
+					} else {
+						r, g, b = edgeColor(p)
+					}
+					gl.Color3ub(r, g, b)
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				}
+				gl.End()
+			case selectPoints:
+				// do nothing
+			case selectLines:
+				gl.LineWidth(1)
+				r, g, b = convertToColor(i)
+				gl.Color3ub(r, g, b)
 				gl.Begin(gl.LINES)
 				for _, k := range el.Indexes {
 					c := cos[k]
 					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
 				}
 				gl.End()
+			case selectTriangles:
+				// do nothing
+			default:
+				logger.Printf("undefined type: %f", s)
 			}
-			if s == colorEdgeElements && !el.selected {
-				gl.Begin(gl.LINES)
-				for i, k := range el.Indexes {
-					edgeColor(i)
+		///////////////////////////////////
+		case Triangle3:
+			switch s {
+			case normal:
+				gl.Begin(gl.POLYGON)
+				for _, k := range el.Indexes {
 					c := cos[k]
+					if el.selected {
+						r, g, b = 255, 90, 90
+					} else {
+						r, g, b = 155, 0, 155
+					}
+					gl.Color3ub(r, g, b)
 					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
 				}
 				gl.End()
-			}
-		case Triangle3:
-			if s == selectTriangles {
-				gl.Begin(gl.LINES)
-				for p := range el.Indexes {
-					from, to := p, p+1
-					if to == len(el.Indexes) {
-						from = el.Indexes[from]
-						to = el.Indexes[0]
-					} else {
-						from = el.Indexes[from]
-						to = el.Indexes[to]
+				// borders
+				var mid [3]float64
+				for _, k := range el.Indexes {
+					c := cos[k]
+					for p := 0; p < 3; p++ {
+						mid[p] += c.Point3d[p]
 					}
-					gl.Vertex3d(
-						cos[from].Point3d[0],
-						cos[from].Point3d[1],
-						cos[from].Point3d[2])
-					gl.Vertex3d(
-						cos[to].Point3d[0],
-						cos[to].Point3d[1],
-						cos[to].Point3d[2])
 				}
-				gl.End()
-			}
-		default:
-			AddInfo("not valid element: %v", el)
-		}
-
-		// TODO CREATE A GREAT LINES
-		if !(s == selectTriangles || s == selectLines || s == selectPoints) {
-			gl.Enable(gl.POLYGON_OFFSET_FILL)
-			gl.PolygonOffset(1.0, 1.0)
-		}
-
-		// draw triangles in 3D
-		switch el.ElementType {
-		case Line2: // do nothing
-		case Triangle3:
-			if s == normal || s == selectTriangles || (s == colorEdgeElements && el.selected) {
-				gl.Begin(gl.TRIANGLES)
-				for _, p := range el.Indexes {
-					gl.Vertex3d(
-						cos[p].Point3d[0],
-						cos[p].Point3d[1],
-						cos[p].Point3d[2])
+				for p := 0; p < 3; p++ {
+					mid[p] /= float64(len(el.Indexes))
 				}
-				gl.End()
-			}
-			if s == colorEdgeElements && !el.selected {
-				gl.Begin(gl.TRIANGLES)
-				for i, p := range el.Indexes {
-					edgeColor(i)
-					gl.Vertex3d(
-						cos[p].Point3d[0],
-						cos[p].Point3d[1],
-						cos[p].Point3d[2])
-				}
-				gl.End()
-			}
-			if s == normal {
-				gl.Color4ub(123, 0, 123, 200)
+				r, g, b = 123, 0, 123
+				gl.Color3ub(r, g, b)
 				gl.LineWidth(1)
-
-				mid := [3]float64{
-					(cos[el.Indexes[0]].Point3d[0] +
-						cos[el.Indexes[1]].Point3d[0] +
-						cos[el.Indexes[2]].Point3d[0]) * 1.0 / 3.0,
-					(cos[el.Indexes[0]].Point3d[1] +
-						cos[el.Indexes[1]].Point3d[1] +
-						cos[el.Indexes[2]].Point3d[1]) * 1.0 / 3.0,
-					(cos[el.Indexes[0]].Point3d[2] +
-						cos[el.Indexes[1]].Point3d[2] +
-						cos[el.Indexes[2]].Point3d[2]) * 1.0 / 3.0,
-				}
+				gl.Disable(gl.LINE_SMOOTH)
 
 				ratio := 0.1
-
-				gl.LineWidth(1)
 				for p := range el.Indexes {
 					gl.Begin(gl.LINES)
 
@@ -779,10 +748,51 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 					)
 					gl.End()
 				}
-
+			case colorEdgeElements:
+				gl.Begin(gl.POLYGON)
+				for p, k := range el.Indexes {
+					c := cos[k]
+					if el.selected {
+						r, g, b = 255, 90, 90
+					} else {
+						r, g, b = edgeColor(p)
+					}
+					gl.Color3ub(r, g, b)
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				}
+				gl.End()
+			case selectPoints:
+				// do nothing
+			case selectLines:
+				// do nothing
+			case selectTriangles:
+				r, g, b = convertToColor(i)
+				gl.Color3ub(r, g, b)
+				gl.Begin(gl.TRIANGLES)
+				for _, k := range el.Indexes {
+					c := cos[k]
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				}
+				gl.End()
+			default:
+				logger.Printf("undefined type: %f", s)
 			}
+		///////////////////////////////////
 		default:
-			AddInfo("not valid element: %v", el)
+			logger.Printf("undefined type: %f", s)
+			// switch s {
+			// case normal:
+			// 	if el.selected {
+			// 	} else {
+			// 	}
+			// case colorEdgeElements:
+			// 	if el.selected {
+			// 	} else {
+			// 	}
+			// case selectPoints:
+			// case selectLines:
+			// case selectTriangles:
+			// }
 		}
 	}
 }
@@ -802,6 +812,8 @@ func openGlScreenCoordinate(x, y, w, h int32) { // window *glfw.Window) {
 }
 
 func (op *Opengl) drawAxes(w, h int32) {
+	gl.Disable(gl.LINE_SMOOTH)
+	gl.LineWidth(1) // default lines width
 	// w, h := op.window.GetSize()
 
 	s := math.Max(50.0, float64(h)/8.0)
@@ -909,22 +921,23 @@ func (s viewState) String() string {
 	return fmt.Sprintf("%d", s)
 }
 
-func edgeColor(pos int) {
+func edgeColor(pos int) (r, g, b uint8) {
 	switch pos {
 	case 0: // yellow
-		gl.Color3ub(255, 255, 0)
+		r, g, b = 255, 255, 0
 		return
 	case 1: // blue
-		gl.Color3ub(0, 0, 255)
+		r, g, b = 0, 0, 255
 		return
 	case 2: // green
-		gl.Color3ub(0, 255, 0)
+		r, g, b = 0, 255, 0
 		return
 	case 3: // purple
-		gl.Color3ub(255, 0, 125)
+		r, g, b = 255, 0, 125
 		return
 	}
 	AddInfo("not valid pos: %d", pos)
+	return 100, 100, 100
 }
 
 // maximal amount colors is 245^3 = 14 706 125
@@ -952,7 +965,7 @@ func convertToIndex(color []uint8) (index int) {
 	return int(uint64(color[0]) + u*uint64(color[1]) + u*u*uint64(color[2]))
 }
 
-func convertToColor(i int) {
+func convertToColor(i int) (r, g, b uint8) {
 	// func Color3ub(red, green, blue uint8)
 	// `uint8` is the set of all unsigned 8-bit integers.
 	// Range: 0 through 255.
@@ -986,11 +999,10 @@ func convertToColor(i int) {
 	for i := range value {
 		value[i] += o
 	}
-	gl.Color3ub(
-		uint8(value[0]),
-		uint8(value[1]),
-		uint8(value[2]),
-	)
+	r = uint8(value[0])
+	g = uint8(value[1])
+	b = uint8(value[2])
+	return
 }
 
 // func (op *Opengl) mouseButton(

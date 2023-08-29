@@ -143,6 +143,9 @@ func (t *Tui) SetScrollCallback(
 	t.screen.Event(tcell.NewEventMouse(xs, ys, bm, tcell.ModNone))
 }
 func (t *Tui) Draw(x, y, w, h int32) {
+	gl.Disable(gl.LINE_SMOOTH)
+	gl.LineWidth(1) // default lines width
+
 	gl.Viewport(int32(x), int32(y), int32(w), int32(h))
 	gl.MatrixMode(gl.PROJECTION)
 	gl.LoadIdentity()
