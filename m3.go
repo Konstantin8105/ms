@@ -612,7 +612,7 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 	// Elements
 	for i, el := range els {
 		gl.PointSize(2) // default points size
-		gl.LineWidth(3) // TODO GREAT LINES 3) // default lines width
+		gl.LineWidth(3) // default lines width
 		if op.mesh.IsIgnore(uint(i)) {
 			continue
 		}
