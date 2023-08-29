@@ -77,13 +77,12 @@ func (e Element) Check() error {
 		}
 	}
 	if index < 0 {
-		err = fmt.Errorf("Undefined type: %v", e)
-		return
+		return fmt.Errorf("Undefined type: %v", e)
 	}
-	if len(e.Indexes) != valid[i][1] {
+	if len(e.Indexes) != valid[index][1] {
 		return fmt.Errorf("unacceptable element: %v", e)
 	}
-	return
+	return nil
 }
 
 // Coordinate store coordinate of points
