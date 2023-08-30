@@ -9,7 +9,7 @@ import (
 
 func Gmsh2Model(filename string) (model Model, err error) {
 	if filename == "" {
-		err = fmt.Errorf("Empty gmsh GEO filename")
+		err = fmt.Errorf("empty gmsh GEO filename")
 		return
 	}
 	var geo []byte

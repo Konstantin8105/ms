@@ -78,7 +78,7 @@ func (e Element) Check() error {
 		}
 	}
 	if index < 0 {
-		return fmt.Errorf("Undefined type: %v", e)
+		return fmt.Errorf("undefined type: %v", e)
 	}
 	if len(e.Indexes) != valid[index][1] {
 		return fmt.Errorf("unacceptable element: %v", e)
@@ -1573,7 +1573,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 	}
 	wg.Wait()
 	close(chNewPoints)
-	_ = <-stop
+	<-stop
 
 	logger.Printf("Intersection: find new %d points", len(newPoints))
 
