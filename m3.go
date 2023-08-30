@@ -270,94 +270,6 @@ func (op *Opengl) MouseDefault() {
 	op.mouseMid = new(MouseZoom)    // middle scroll
 }
 
-// func (op *Opengl) Run() {
-// 	defer func() {
-// 		// 3D window is close
-// 		glfw.Terminate()
-// 	}()
-// 	for !op.window.ShouldClose() {
-// 		func() {
-// 			defer func() {
-// 				if r := recover(); r != nil {
-// 					// safety ignore panic
-// 					<-time.After(100 * time.Millisecond)
-// 					logger.Printf("Opengl: safety ignore panic: %s", r)
-// 				}
-// 			}()
-//
-// 			glfw.PollEvents()
-// 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 			gl.ClearColor(1, 1, 1, 1)
-//
-// 			gl.Enable(gl.DEPTH_TEST)
-// 			// gl.Enable(gl.BLEND) // Transparency
-// 			// gl.Enable(gl.LINE_SMOOTH)
-//
-// 			// TODO transperency on back side
-//
-// 			// switch to wireframe mode
-// 			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.LINE );
-// 			// switch off wireframe
-// 			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.FILL );
-// 			// gl.PolygonMode( gl.FRONT_AND_BACK, gl.POINT );
-//
-// 			// Avoid panics if Model is changed.
-// 			// Main problem of synchronization.
-//
-// 			op.cameraView()
-// 			op.model3d(op.state, "run")
-//
-// 			// draw axe coordinates
-// 			openGlScreenCoordinate(op.window)
-// 			op.drawAxes()
-//
-// 			// draw separator
-// 			openGlScreenCoordinate(op.window)
-// 			{
-// 				w, h := op.window.GetSize()
-// 				_ = h
-// 				x := int(float64(w) * WindowRatio)
-// 				gl.Color3f(0.7, 0.7, 0.7)
-// 				gl.Begin(gl.LINES)
-// 				gl.Vertex3f(float32(x), 0, 0)
-// 				gl.Vertex3f(float32(x), float32(h), 0)
-// 				gl.End()
-// 			}
-//
-// 			// minimal screen notes
-// 			openGlScreenCoordinate(op.window)
-// 			gl.Color3f(0.7, 0.2, 0.2)
-// 			op.font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
-// 			if op.mesh != nil {
-// 				op.font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
-// 					len(op.mesh.GetCoords())))
-// 				op.font.Printf(10, 40, fmt.Sprintf("Elements  : %6d",
-// 					len(op.mesh.GetElements())))
-// 			}
-//
-// 			for i := range op.mouses {
-// 				if op.mouses[i] == nil {
-// 					continue
-// 				}
-// 				if op.mouses[i].ReadyAction() {
-// 					op.mouses[i].Action(op)
-// 				}
-// 				if op.mouses[i].ReadyPreview() {
-// 					op.mouses[i].Preview()
-// 				}
-// 			}
-//
-// 			// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
-// 			// TODO : REMOVE: ui(window)
-//
-// 			op.window.MakeContextCurrent()
-// 			op.window.SwapBuffers()
-//
-// 			op.fps.EndFrame()
-// 		}()
-// 	}
-// }
-
 type Fps struct {
 	framesCount int64
 	framesTime  time.Time
@@ -933,11 +845,7 @@ func (op *Opengl) drawAxes(w, h int32) {
 	gl.End()
 }
 
-// func (op *Opengl) scroll(window *glfw.Window, xoffset, yoffset float64) {
-// 	op.mouseMid.Roll(int32(xoffset), int32(yoffset), op)
-// }
-
-type viewState uint16
+type viewState uint64
 
 const (
 	normal            viewState = 1 << iota // 1
