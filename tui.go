@@ -885,7 +885,7 @@ func init() {
 			var b vl.Button
 			b.SetText("Show only selected")
 			b.OnClick = func() {
-				m.InvertSelect(true, true, true)
+				m.InvertSelect(true, true, true, true)
 				ns := m.GetSelectNodes(Many)
 				es := m.GetSelectElements(Many)
 				m.DeselectAll()
@@ -958,14 +958,14 @@ func (d Direction) String() string {
 type Selectable interface {
 	// TODO select deeper or only first iteration
 
-	SelectLeftCursor(nodes, lines, tria bool)
+	SelectLeftCursor(nodes, lines, tria, quards bool)
 
 	GetSelectNodes(single bool) (ids []uint)
 	GetSelectLines(single bool) (ids []uint)
 	GetSelectTriangles(single bool) (ids []uint)
 	GetSelectElements(single bool) (ids []uint)
 
-	InvertSelect(nodes, lines, triangles bool)
+	InvertSelect(nodes, lines, triangles, quards bool)
 
 	SelectLinesOrtho(x, y, z bool)
 	SelectLinesOnPlane(xoy, xoz, yoz bool)
@@ -1010,10 +1010,14 @@ func init() {
 			tris.SetText("Triangles")
 			list.Add(&tris)
 
+			var qs vl.CheckBox
+			qs.SetText("Quards")
+			list.Add(&qs)
+
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				m.SelectLeftCursor(nodes.Checked, lines.Checked, tris.Checked)
+				m.SelectLeftCursor(nodes.Checked, lines.Checked, tris.Checked, qs.Checked)
 			}
 			list.Add(&b)
 			return &list
@@ -1034,10 +1038,14 @@ func init() {
 			tris.SetText("Triangles")
 			list.Add(&tris)
 
+			var quards vl.CheckBox
+			quards.SetText("Triangles")
+			list.Add(&quards)
+
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				m.InvertSelect(nodes.Checked, lines.Checked, tris.Checked)
+				m.InvertSelect(nodes.Checked, lines.Checked, tris.Checked, quards.Checked)
 			}
 			list.Add(&b)
 

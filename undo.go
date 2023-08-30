@@ -195,9 +195,9 @@ func (u *Undo) AddLeftCursor(lc LeftCursor) {
 	u.op.AddLeftCursor(lc)
 }
 
-func (u *Undo) SelectLeftCursor(nodes, lines, tria bool) {
+func (u *Undo) SelectLeftCursor(nodes, lines, tria, quards bool) {
 	logger.Print("SelectLeftCursor")
-	u.op.SelectLeftCursor(nodes, lines, tria)
+	u.op.SelectLeftCursor(nodes, lines, tria, quards)
 }
 
 func (u *Undo) AddModel(m Model) {
@@ -230,9 +230,9 @@ func (u *Undo) GetSelectElements(single bool) (ids []uint) {
 	return u.model.GetSelectElements(single)
 }
 
-func (u *Undo) InvertSelect(nodes, lines, triangles bool) {
+func (u *Undo) InvertSelect(nodes, lines, triangles, quards bool) {
 	logger.Print("InvertSelect")
-	u.model.InvertSelect(nodes, lines, triangles)
+	u.model.InvertSelect(nodes, lines, triangles, quards)
 }
 
 func (u *Undo) SelectLinesOrtho(x, y, z bool) {

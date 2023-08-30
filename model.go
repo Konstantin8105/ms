@@ -598,9 +598,9 @@ func (mm *Model) Unignore() {
 	*ignore = nil
 }
 
-func (mm *Model) SelectLeftCursor(nodes, lines, tria bool) {
-	logger.Printf("Model not implemented SelectLeftCursor: %v %v %v",
-		nodes, lines, tria)
+func (mm *Model) SelectLeftCursor(nodes, lines, tria, quards bool) {
+	logger.Printf("Model not implemented SelectLeftCursor: %v %v %v %v",
+		nodes, lines, tria, quards)
 }
 
 func (mm *Model) GetSelectNodes(single bool) (ids []uint) {
@@ -656,7 +656,7 @@ func (mm *Model) GetSelectElements(single bool) (ids []uint) {
 	return
 }
 
-func (mm *Model) InvertSelect(nodes, lines, triangles bool) {
+func (mm *Model) InvertSelect(nodes, lines, triangles, quards bool) {
 	if nodes {
 		for i := range mm.Coords {
 			if mm.Coords[i].Removed {
@@ -676,6 +676,14 @@ func (mm *Model) InvertSelect(nodes, lines, triangles bool) {
 	if triangles {
 		for i := range mm.Elements {
 			if mm.Elements[i].ElementType != Triangle3 {
+				continue
+			}
+			mm.Elements[i].selected = !mm.Elements[i].selected
+		}
+	}
+	if quards {
+		for i := range mm.Elements {
+			if mm.Elements[i].ElementType != Quadr4 {
 				continue
 			}
 			mm.Elements[i].selected = !mm.Elements[i].selected

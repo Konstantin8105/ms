@@ -518,24 +518,35 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		if len(cos) == 0 {
 			return
 		}
-		// renaming
-		ps := cos
 		// calculate radius
 		var (
-			xmin = ps[0].Point3d[0]
-			xmax = ps[0].Point3d[0]
-			ymin = ps[0].Point3d[1]
-			ymax = ps[0].Point3d[1]
-			zmin = ps[0].Point3d[2]
-			zmax = ps[0].Point3d[2]
+			xmin       float64
+			xmax       float64
+			ymin       float64
+			ymax       float64
+			zmin       float64
+			zmax       float64
+			initialize bool
 		)
-		for i := range ps {
-			xmin = math.Min(xmin, ps[i].Point3d[0])
-			ymin = math.Min(ymin, ps[i].Point3d[1])
-			zmin = math.Min(zmin, ps[i].Point3d[2])
-			xmax = math.Max(xmax, ps[i].Point3d[0])
-			ymax = math.Max(ymax, ps[i].Point3d[1])
-			zmax = math.Max(zmax, ps[i].Point3d[2])
+		for i := range cos {
+			if cos[i].hided {
+				continue
+			}
+			if !initialize {
+				xmin = cos[i].Point3d[0]
+				xmax = cos[i].Point3d[0]
+				ymin = cos[i].Point3d[1]
+				ymax = cos[i].Point3d[1]
+				zmin = cos[i].Point3d[2]
+				zmax = cos[i].Point3d[2]
+				initialize = true
+			}
+			xmin = math.Min(xmin, cos[i].Point3d[0])
+			ymin = math.Min(ymin, cos[i].Point3d[1])
+			zmin = math.Min(zmin, cos[i].Point3d[2])
+			xmax = math.Max(xmax, cos[i].Point3d[0])
+			ymax = math.Max(ymax, cos[i].Point3d[1])
+			zmax = math.Max(zmax, cos[i].Point3d[2])
 		}
 		op.camera.R = math.Max(xmax-xmin, op.camera.R)
 		op.camera.R = math.Max(ymax-ymin, op.camera.R)
@@ -546,10 +557,6 @@ func (op *Opengl) model3d(s viewState, parent string) {
 			(zmax + zmin) / 2.0,
 		}
 	}
-
-	// TODO: if cos[i].Hided {
-	// TODO: 	continue
-	// TODO: }
 
 	if !(s == selectTriangles ||
 		s == selectQuadrs ||
@@ -691,6 +698,12 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
 				}
 				gl.End()
+				gl.Begin(gl.POINTS)
+				for _, k := range el.Indexes {
+					c := cos[k]
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				}
+				gl.End()
 			case selectTriangles:
 				// do nothing
 			case selectQuadrs:
@@ -702,18 +715,19 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 		case Triangle3, Quadr4:
 			switch s {
 			case normal:
-				gl.Begin(gl.POLYGON)
-				for _, k := range el.Indexes {
-					c := cos[k]
-					if el.selected {
-						r, g, b = 255, 90, 90
-					} else {
-						r, g, b = 155, 0, 155
-					}
-					gl.Color3ub(r, g, b)
-					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
-				}
-				gl.End()
+				// COMMENTED FOR PERFOMANCE :
+				// gl.Begin(gl.POLYGON)
+				// for _, k := range el.Indexes {
+				// 	c := cos[k]
+				// 	if el.selected {
+				// 		r, g, b = 255, 90, 90
+				// 	} else {
+				// 		r, g, b = 155, 0, 155
+				// 	}
+				// 	gl.Color3ub(r, g, b)
+				// 	gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				// }
+				// gl.End()
 				// borders
 				var mid [3]float64
 				for _, k := range el.Indexes {
@@ -725,7 +739,11 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 				for p := 0; p < 3; p++ {
 					mid[p] /= float64(len(el.Indexes))
 				}
-				r, g, b = 123, 0, 123
+				if el.selected {
+					r, g, b = 235, 70, 70
+				} else {
+					r, g, b = 123, 0, 123
+				}
 				gl.Color3ub(r, g, b)
 				gl.LineWidth(1)
 				gl.Disable(gl.LINE_SMOOTH)
@@ -771,8 +789,9 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 				// do nothing
 			case selectLines:
 				// do nothing
-			case selectTriangles:
-				if el.ElementType != Triangle3 {
+			case selectTriangles, selectQuadrs:
+				if (s == selectTriangles && el.ElementType != Triangle3) ||
+					(s == selectQuadrs && el.ElementType != Quadr4) {
 					break
 				}
 				r, g, b = convertToColor(i)
@@ -783,13 +802,14 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
 				}
 				gl.End()
-			case selectQuadrs:
-				if el.ElementType != Quadr4 {
-					break
+				gl.LineWidth(1)
+				gl.Begin(gl.LINES)
+				for _, k := range el.Indexes {
+					c := cos[k]
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
 				}
-				r, g, b = convertToColor(i)
-				gl.Color3ub(r, g, b)
-				gl.Begin(gl.POLYGON)
+				gl.End()
+				gl.Begin(gl.POINTS)
 				for _, k := range el.Indexes {
 					c := cos[k]
 					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
@@ -1130,7 +1150,7 @@ func (op *Opengl) ColorEdge(isColor bool) {
 	}
 }
 
-func (op *Opengl) SelectLeftCursor(nodes, lines, tria bool) {
+func (op *Opengl) SelectLeftCursor(nodes, lines, tria, quards bool) {
 	op.cursorLeft = 0
 	if nodes {
 		op.cursorLeft |= selectPoints
@@ -1140,6 +1160,9 @@ func (op *Opengl) SelectLeftCursor(nodes, lines, tria bool) {
 	}
 	if tria {
 		op.cursorLeft |= selectTriangles
+	}
+	if quards {
+		op.cursorLeft |= selectQuadrs
 	}
 }
 
