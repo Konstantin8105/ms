@@ -8,6 +8,7 @@ import (
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/gog"
+	"github.com/Konstantin8105/pow"
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
@@ -1425,7 +1426,37 @@ type MouseMove struct {
 	Mouse2P
 }
 
-func (mr *MouseMove) Preview(xinit, yinit int32) {}
+func (mr *MouseMove) Preview(xinit, yinit int32) {
+	if !mr.ReadyPreview() {
+		return
+	}
+	var (
+		x1 = mr.from[0]
+		y1 = mr.from[1]
+		x2 = mr.to[0]
+		y2 = mr.to[1]
+	)
+
+	// draw select rectangle
+	gl.LineWidth(1)
+
+	gl.Begin(gl.LINES)
+	gl.Color3d(1.0, 0.4, 0.4)
+	gl.Vertex2i(x1-5, y1)
+	gl.Vertex2i(x1+5, y1)
+	gl.End()
+	gl.Begin(gl.LINES)
+	gl.Color3d(1.0, 0.4, 0.4)
+	gl.Vertex2i(x1, y1-5)
+	gl.Vertex2i(x1, y1+5)
+	gl.End()
+
+	gl.Begin(gl.LINES)
+	gl.Color3d(1.0, 0.0, 0.0) // Red
+	gl.Vertex2i(x1, y1)
+	gl.Vertex2i(x2, y2)
+	gl.End()
+}
 
 func (mr *MouseMove) Action(op *Opengl) {
 	if !mr.ReadyAction() {
@@ -1433,19 +1464,17 @@ func (mr *MouseMove) Action(op *Opengl) {
 	}
 	defer mr.Reset()
 	// action
-	const factor = 0.05
-	switch {
-	case mr.to[0] < mr.from[0]:
-		op.camera.moveX -= op.camera.R * factor
-	case mr.from[0] < mr.to[0]:
-		op.camera.moveX += op.camera.R * factor
+	const factor = 0.15
+	dx := float64(mr.from[0] - mr.to[0])
+	dy := float64(mr.from[1] - mr.to[1])
+	g := math.Sqrt(pow.E2(dx) + pow.E2(dy))
+	if g < 10 { // minimal amount pixel distance
+		return
 	}
-	switch {
-	case mr.to[1] < mr.from[1]:
-		op.camera.moveY -= op.camera.R * factor
-	case mr.from[1] < mr.to[1]:
-		op.camera.moveY += op.camera.R * factor
-	}
+	dx /= g
+	dy /= g
+	op.camera.moveX -= op.camera.R * factor * dx
+	op.camera.moveY -= op.camera.R * factor * dy
 }
 
 type MouseAdd struct {

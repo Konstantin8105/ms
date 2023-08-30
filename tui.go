@@ -29,6 +29,7 @@ const (
 	endGroup
 )
 
+// TODO metadata (add,change,select): thickness, local axe, section
 // TODO Array by line, circular
 // TODO distance between 2 points if selected both
 // TODO betta angle for repeat rotate Copy
