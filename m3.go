@@ -281,7 +281,7 @@ func (op *Opengl) MouseDefault() {
 // 				if r := recover(); r != nil {
 // 					// safety ignore panic
 // 					<-time.After(100 * time.Millisecond)
-// 					AddInfo("Opengl: safety ignore panic: %s", r)
+// 					logger.Printf("Opengl: safety ignore panic: %s", r)
 // 				}
 // 			}()
 //
@@ -551,7 +551,10 @@ func (op *Opengl) model3d(s viewState, parent string) {
 	// TODO: 	continue
 	// TODO: }
 
-	if !(s == selectTriangles || s == selectLines || s == selectPoints) {
+	if !(s == selectTriangles ||
+		s == selectQuadrs ||
+		s == selectLines ||
+		s == selectPoints) {
 		// TODO CREATE A GREAT LINES
 		gl.Disable(gl.POLYGON_OFFSET_FILL)
 	}
@@ -603,9 +606,10 @@ func (op *Opengl) drawPoints(s viewState, parent string) {
 			gl.Vertex3d(cos[i].Point3d[0], cos[i].Point3d[1], cos[i].Point3d[2])
 		}
 		gl.End()
-	case selectLines, selectTriangles: // do nothing
+	case selectLines, selectTriangles, selectQuadrs:
+		// do nothing
 	default:
-		AddInfo("not valid selection : %v", s)
+		logger.Printf("not valid selection : %v", s)
 	}
 }
 
@@ -618,7 +622,7 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 		gl.ShadeModel(gl.SMOOTH) // for points color
 		gl.Enable(gl.POLYGON_OFFSET_FILL)
 		gl.PolygonOffset(1.0, 1.0)
-	case selectPoints, selectLines, selectTriangles:
+	case selectPoints, selectLines, selectTriangles, selectQuadrs:
 		gl.ShadeModel(gl.FLAT)
 		gl.Disable(gl.LINE_SMOOTH)
 		gl.Disable(gl.POLYGON_OFFSET_FILL)
@@ -688,6 +692,8 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 				}
 				gl.End()
 			case selectTriangles:
+				// do nothing
+			case selectQuadrs:
 				// do nothing
 			default:
 				logger.Printf("undefined type: %v", s)
@@ -766,9 +772,24 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 			case selectLines:
 				// do nothing
 			case selectTriangles:
+				if el.ElementType != Triangle3 {
+					break
+				}
 				r, g, b = convertToColor(i)
 				gl.Color3ub(r, g, b)
-				gl.Begin(gl.TRIANGLES)
+				gl.Begin(gl.POLYGON)
+				for _, k := range el.Indexes {
+					c := cos[k]
+					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				}
+				gl.End()
+			case selectQuadrs:
+				if el.ElementType != Quadr4 {
+					break
+				}
+				r, g, b = convertToColor(i)
+				gl.Color3ub(r, g, b)
+				gl.Begin(gl.POLYGON)
 				for _, k := range el.Indexes {
 					c := cos[k]
 					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
@@ -792,6 +813,7 @@ func (op *Opengl) drawElements(s viewState, parent string) {
 			// case selectPoints:
 			// case selectLines:
 			// case selectTriangles:
+			// case selectQuadrs:
 			// }
 		}
 	}
@@ -895,7 +917,7 @@ func (op *Opengl) drawAxes(w, h int32) {
 // 	op.mouseMid.Roll(int32(xoffset), int32(yoffset), op)
 // }
 
-type viewState uint8
+type viewState uint16
 
 const (
 	normal            viewState = 1 << iota // 1
@@ -903,6 +925,7 @@ const (
 	selectPoints                            // 4
 	selectLines                             // 8
 	selectTriangles                         // 16
+	selectQuadrs                            // 32
 )
 
 func (s viewState) String() string {
@@ -917,6 +940,8 @@ func (s viewState) String() string {
 		return "selectLines"
 	case selectTriangles:
 		return "selectTriangles"
+	case selectQuadrs:
+		return "selectQuadrs"
 	}
 	return fmt.Sprintf("%d", s)
 }
@@ -936,7 +961,7 @@ func edgeColor(pos int) (r, g, b uint8) {
 		r, g, b = 255, 0, 125
 		return
 	}
-	AddInfo("not valid pos: %d", pos)
+	logger.Printf("not valid pos: %d", pos)
 	return 100, 100, 100
 }
 
@@ -1135,8 +1160,9 @@ func (op *Opengl) SelectScreen(from, to [2]int32) {
 type LeftCursor uint8
 
 const (
-	AddLinesLC = iota
+	AddLinesLC LeftCursor = iota
 	AddTrianglesLC
+	AddQuardsLC
 	endLC
 )
 
@@ -1146,6 +1172,8 @@ func (lc LeftCursor) AmountNodes() int {
 		return 2
 	case AddTrianglesLC:
 		return 3
+	case AddQuardsLC:
+		return 4
 	}
 	return -1
 }
@@ -1156,6 +1184,8 @@ func (lc LeftCursor) String() string {
 		return "Lines"
 	case AddTrianglesLC:
 		return "Triangles"
+	case AddQuardsLC:
+		return "Quadr"
 	}
 	return "Undefined"
 }
@@ -1326,7 +1356,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 				return false
 			}
 			if len(cos) <= index {
-				AddInfo("selectPoints index outside: %d", index)
+				logger.Printf("selectPoints index outside: %d", index)
 				return false
 			}
 			cos[index].selected = true
@@ -1336,11 +1366,11 @@ func (ms *MouseSelect) Action(op *Opengl) {
 				return false
 			}
 			if len(els) <= index {
-				AddInfo("selectLines index outside: %d", index)
+				logger.Printf("selectLines index outside: %d", index)
 				return false
 			}
 			if els[index].ElementType != Line2 {
-				AddInfo("selectLines index is not line: %d. %v",
+				logger.Printf("selectLines index is not line: %d. %v",
 					index, els[index])
 				return false
 			}
@@ -1351,11 +1381,25 @@ func (ms *MouseSelect) Action(op *Opengl) {
 				return false
 			}
 			if len(els) <= index {
-				AddInfo("selectTriangles index outside: %d", index)
+				logger.Printf("selectTriangles index outside: %d", index)
 				return false
 			}
 			if els[index].ElementType != Triangle3 {
-				AddInfo("selectTriangles index is not triangle: %d", index)
+				logger.Printf("selectTriangles index is not triangle: %d", index)
+				return false
+			}
+			els[index].selected = true
+			return true
+		}}, {st: selectQuadrs, sf: func(index int) bool {
+			if index < 0 {
+				return false
+			}
+			if len(els) <= index {
+				logger.Printf("selectQuadrs index outside: %d", index)
+				return false
+			}
+			if els[index].ElementType != Quadr4 {
+				logger.Printf("selectQuadrs index is not triangle: %d", index)
 				return false
 			}
 			els[index].selected = true

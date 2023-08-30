@@ -46,7 +46,7 @@ func convertUint(str string) (ids []uint) {
 	for i := range fs {
 		u, err := strconv.ParseUint(fs[i], 10, 64)
 		if err != nil {
-			AddInfo("convertUint error: %v", err)
+			logger.Printf("convertUint error: %v", err)
 			continue
 		}
 		ids = append(ids, uint(u))

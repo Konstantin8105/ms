@@ -239,7 +239,7 @@ func (mm *Model) AddModel(m Model) {
 				uint(newID[el.Indexes[2]]),
 			)
 		default:
-			AddInfo("not implemented %v", el)
+			logger.Printf("not implemented %v", el)
 		}
 	}
 }
@@ -349,7 +349,7 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 	ni2 := int(n2)
 	ni3 := int(n3)
 	if mm.Coords[ni1].Removed || mm.Coords[ni2].Removed || mm.Coords[ni3].Removed {
-		AddInfo("AddTriangle3ByNodeNumber: removed coordinate")
+		logger.Printf("AddTriangle3ByNodeNumber: removed coordinate")
 		return
 	}
 	// triangle not on one line
@@ -358,8 +358,8 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 		mm.Coords[ni2].Point3d,
 		mm.Coords[ni3].Point3d,
 	) {
-		AddInfo("AddTriangle3ByNodeNumber: ZeroTriangle3d")
-		// TODO: AddInfo("Zero:\n%v\n%v\n%v",
+		logger.Printf("AddTriangle3ByNodeNumber: ZeroTriangle3d")
+		// TODO: logger.Printf("Zero:\n%v\n%v\n%v",
 		// TODO: 	mm.Coords[ni1].Point3d,
 		// TODO: 	mm.Coords[ni2].Point3d,
 		// TODO: 	mm.Coords[ni3].Point3d,
@@ -400,7 +400,7 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 }
 
 func (mm *Model) AddLeftCursor(lc LeftCursor) {
-	AddInfo("Model not implemented AddLeftCursor: %v", lc)
+	logger.Printf("Model not implemented AddLeftCursor: %v", lc)
 }
 
 func (mm *Model) GetCoordByID(id uint) (c gog.Point3d, ok bool) {
@@ -568,7 +568,7 @@ func (mm *Model) IsIgnore(elID uint) bool {
 }
 
 func (mm *Model) ColorEdge(isColor bool) {
-	AddInfo("Model not implemented ColorEdge: %v", isColor)
+	logger.Printf("Model not implemented ColorEdge: %v", isColor)
 }
 
 func (mm *Model) IgnoreModelElements(ids []uint) {
@@ -599,7 +599,7 @@ func (mm *Model) Unignore() {
 }
 
 func (mm *Model) SelectLeftCursor(nodes, lines, tria bool) {
-	AddInfo("Model not implemented SelectLeftCursor: %v %v %v",
+	logger.Printf("Model not implemented SelectLeftCursor: %v %v %v",
 		nodes, lines, tria)
 }
 
@@ -751,11 +751,11 @@ func (mm *Model) SelectLinesParallel(lines []uint) {
 	// check input data
 	for _, p := range lines {
 		if len(mm.Elements) <= int(p) || int(p) < 0 {
-			AddInfo("SelectLinesParallel: not valid index %d", p)
+			logger.Printf("SelectLinesParallel: not valid index %d", p)
 			return
 		}
 		if mm.Elements[p].ElementType != Line2 {
-			AddInfo("SelectLinesParallel: is not line %v", mm.Elements[p])
+			logger.Printf("SelectLinesParallel: is not line %v", mm.Elements[p])
 			return
 		}
 	}
@@ -860,7 +860,7 @@ func (mm *Model) SelectLinesByLenght(more bool, lenght float64) {
 
 func (mm *Model) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction) {
 	if int(node) < 0 || len(mm.Coords) <= int(node) {
-		AddInfo("SelectLinesCylindrical: not valid node %d", node)
+		logger.Printf("SelectLinesCylindrical: not valid node %d", node)
 		return
 	}
 	for i, el := range mm.Elements {
@@ -920,7 +920,7 @@ func (mm *Model) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direc
 
 func (mm *Model) IsVisibleLine(p uint) (visible, ok bool) {
 	if int(p) < 0 || len(mm.Elements) <= int(p) {
-		AddInfo("IsVisibleLine: not valid index %d", p)
+		logger.Printf("IsVisibleLine: not valid index %d", p)
 		return
 	}
 	if mm.Elements[p].ElementType != Line2 {
@@ -972,7 +972,7 @@ func (mm *Model) SelectAll(nodes, lines, tria bool) {
 }
 
 func (mm *Model) SelectScreen(from, to [2]int32) {
-	AddInfo("Model is not implement SelectScreen: %v %v", from, to)
+	logger.Printf("Model is not implement SelectScreen: %v %v", from, to)
 }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
@@ -1257,7 +1257,7 @@ func (mm *Model) MergeLines(lines []uint) {
 			}
 		}
 		if 1000 < iter {
-			AddInfo("Too many iterations in MergeLines")
+			logger.Printf("Too many iterations in MergeLines")
 			break
 		}
 	}
@@ -1567,7 +1567,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 	close(chNewPoints)
 	_ = <-stop
 
-	AddInfo("Intersection: find new %d points", len(newPoints))
+	logger.Printf("Intersection: find new %d points", len(newPoints))
 
 	// fix zero coordinates
 	for i := range newPoints {
@@ -1609,7 +1609,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 		)
 		nodes = append(nodes, id)
 	}
-	AddInfo("Intersection: %d nodes", len(nodes))
+	logger.Printf("Intersection: %d nodes", len(nodes))
 
 	for iter := 0; ; iter++ { // TODO avoid infinite
 		var newElements []uint
@@ -1658,9 +1658,9 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 						nt, ok := mm.AddTriangle3ByNodeNumber(
 							n, uint(ind[1]), uint(ind[2]),
 						)
-						// AddInfo("Intersection 0-1: %v", ok)
+						// logger.Printf("Intersection 0-1: %v", ok)
 						if !ok {
-							AddInfo("Intersection: split point on triangle edge 01 invalid")
+							logger.Printf("Intersection: split point on triangle edge 01 invalid")
 							continue
 						}
 						ind[1] = int(n)
@@ -1675,9 +1675,9 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 						nt, ok := mm.AddTriangle3ByNodeNumber(
 							n, uint(ind[0]), uint(ind[2]),
 						)
-						// AddInfo("Intersection 1-2: %v", ok)
+						// logger.Printf("Intersection 1-2: %v", ok)
 						if !ok {
-							AddInfo("Intersection: split point on triangle edge 12 invalid")
+							logger.Printf("Intersection: split point on triangle edge 12 invalid")
 							continue
 						}
 						ind[2] = int(n)
@@ -1692,9 +1692,9 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 						nt, ok := mm.AddTriangle3ByNodeNumber(
 							n, uint(ind[1]), uint(ind[2]),
 						)
-						// AddInfo("Intersection 2-0: %v", ok)
+						// logger.Printf("Intersection 2-0: %v", ok)
 						if !ok {
-							AddInfo("Intersection: split point on triangle edge 20 invalid")
+							logger.Printf("Intersection: split point on triangle edge 20 invalid")
 							continue
 						}
 						ind[2] = int(n)
@@ -1720,9 +1720,9 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 							uint(mm.Elements[pe].Indexes[1]),
 							uint(mm.Elements[pe].Indexes[2]),
 						)
-						// AddInfo("Intersection Coordinate-Triangle: %v %v", ok0, ok1)
+						// logger.Printf("Intersection Coordinate-Triangle: %v %v", ok0, ok1)
 						if !(ok0 && ok1) {
-							AddInfo("Intersection: not valid triangles")
+							logger.Printf("Intersection: not valid triangles")
 							continue
 						}
 						mm.Elements[pe].Indexes[1] = int(n)
@@ -1731,17 +1731,17 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 					}
 
 				default:
-					AddInfo("not implemented")
+					logger.Printf("not implemented")
 				}
 			}
 		}
-		AddInfo("Intersection: add %d elements", len(newElements))
+		logger.Printf("Intersection: add %d elements", len(newElements))
 		if len(newElements) == 0 {
 			break
 		}
 		elements = append(elements, newElements...)
 		if 100 < iter {
-			AddInfo("Intersection iterations break")
+			logger.Printf("Intersection iterations break")
 			break
 		}
 	}
@@ -1922,7 +1922,7 @@ func (mm *Model) Copy(nodes, elements []uint,
 		case Triangle3:
 			cModel.AddTriangle3ByNodeNumber(ids[0], ids[1], ids[2])
 		default:
-			AddInfo("Undefined: %v", el.ElementType)
+			logger.Printf("Undefined: %v", el.ElementType)
 		}
 	}
 	// main model
@@ -2010,12 +2010,12 @@ func (mm *Model) Mirror(nodes, elements []uint,
 }
 
 func (mm *Model) StandardView(view SView) {
-	AddInfo("Model not implemented StandardView: %v", view)
+	logger.Printf("Model not implemented StandardView: %v", view)
 }
 
 func max(xs ...float64) (res float64) {
 	if len(xs) == 0 {
-		AddInfo("not valid: zero lenght")
+		logger.Printf("not valid: zero lenght")
 	}
 	res = xs[0]
 	for i := range xs {
@@ -2026,7 +2026,7 @@ func max(xs ...float64) (res float64) {
 
 func min(xs ...float64) (res float64) {
 	if len(xs) == 0 {
-		AddInfo("not valid: zero lenght")
+		logger.Printf("not valid: zero lenght")
 	}
 	res = xs[0]
 	for i := range xs {

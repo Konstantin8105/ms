@@ -107,7 +107,7 @@ func init() {
 				defer func() {
 					if r := recover(); r != nil {
 						// safety ignore panic
-						AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+						logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 					}
 				}()
 				id := m.PartPresent()
@@ -151,11 +151,11 @@ func init() {
 				m.PartChange(pos)
 			}
 
-			update := func()(fus bool) {
+			update := func() (fus bool) {
 				defer func() {
 					if r := recover(); r != nil {
 						// safety ignore panic
-						AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+						logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 					}
 				}()
 				ns := m.PartsName()
@@ -233,7 +233,7 @@ func init() {
 				defer func() {
 					if r := recover(); r != nil {
 						// safety ignore panic
-						AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+						logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 					}
 				}()
 				id := m.PartPresent()
@@ -559,7 +559,7 @@ func init() {
 			var list vl.List
 
 			var names []string
-			for i := 0; i < endLC; i++ {
+			for i := 0; i < int(endLC); i++ {
 				names = append(names, LeftCursor(i).String())
 			}
 
@@ -2143,25 +2143,25 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 
 ///////////////////////////////////////////////////////////////////////////////
 
-var (
-	Info []string
-)
-
-func ResetInfo() {
-	Info = nil
-}
-
-func AddInfo(format string, args ...interface{}) {
-	Info = append(Info, fmt.Sprintf(format, args...))
-}
-
-func PrintInfo() string {
-	var out string
-	for i := range Info {
-		out += Info[i] + "\n"
-	}
-	return out
-}
+// var (
+// 	Info []string
+// )
+//
+// func ResetInfo() {
+// 	Info = nil
+// }
+//
+// func logger.Printf(format string, args ...interface{}) {
+// 	Info = append(Info, fmt.Sprintf(format, args...))
+// }
+//
+// func PrintInfo() string {
+// 	var out string
+// 	for i := range Info {
+// 		out += Info[i] + "\n"
+// 	}
+// 	return out
+// }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2178,7 +2178,7 @@ func PrintInfo() string {
 // 	defer func() {
 // 		if r := recover(); r != nil {
 // 			// safety ignore panic
-// 			AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+// 			logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 // 		}
 // 	}()
 // 	defer func() {
@@ -2194,7 +2194,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	defer func() {
 		if r := recover(); r != nil {
 			// safety ignore panic
-			AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+			logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
 		}
 	}()
 	// tui = new(Tui)
@@ -2203,7 +2203,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 
 	{
 		// widgets amount
-		AddInfo(fmt.Sprintf("Amount widgets: %d", len(Operations)))
+		logger.Printf(fmt.Sprintf("Amount widgets: %d", len(Operations)))
 	}
 	var (
 		scroll vl.Scroll
@@ -2252,54 +2252,54 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 		}
 	}
 
-	{
-		// Logger
-		var logList vl.List
-
-		var b vl.Button
-		b.SetText("Clear log")
-		b.OnClick = func() {
-			ResetInfo()
-		}
-		logList.Add(&b)
-
-		var t vl.Button
-		t.SetText("Add time to log")
-		t.OnClick = func() {
-			AddInfo("Time: %v", time.Now())
-		}
-		logList.Add(&t)
-
-		var txt vl.Text
-		txt.SetText("Logger")
-
-		// 		update := func() {
-		// 			defer func() {
-		// 				if r := recover(); r != nil {
-		// 					// safety ignore panic
-		// 					AddInfo("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
-		// 				}
-		// 			}()
-		// 			txt.SetText(strings.Join(Info, "\n"))
-		// 		}
-		//
-		// 		go func() {
-		// 			for {
-		// 				time.Sleep(time.Millisecond * 500)
-		// 				if tui.quit {
-		// 					return
-		// 				}
-		// 				// tui.actions <- update
-		// 				actions <- update
-		// 			}
-		// 		}()
-		logList.Add(&txt)
-
-		var log vl.CollapsingHeader
-		log.SetText("Log")
-		log.Root = &logList
-		list.Add(&log)
-	}
+	// 	{
+	// 		// Logger
+	// 		var logList vl.List
+	//
+	// 		var b vl.Button
+	// 		b.SetText("Clear log")
+	// 		b.OnClick = func() {
+	// 			ResetInfo()
+	// 		}
+	// 		logList.Add(&b)
+	//
+	// 		var t vl.Button
+	// 		t.SetText("Add time to log")
+	// 		t.OnClick = func() {
+	// 			logger.Printf("Time: %v", time.Now())
+	// 		}
+	// 		logList.Add(&t)
+	//
+	// 		var txt vl.Text
+	// 		txt.SetText("Logger")
+	//
+	// 		// 		update := func() {
+	// 		// 			defer func() {
+	// 		// 				if r := recover(); r != nil {
+	// 		// 					// safety ignore panic
+	// 		// 					logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+	// 		// 				}
+	// 		// 			}()
+	// 		// 			txt.SetText(strings.Join(Info, "\n"))
+	// 		// 		}
+	// 		//
+	// 		// 		go func() {
+	// 		// 			for {
+	// 		// 				time.Sleep(time.Millisecond * 500)
+	// 		// 				if tui.quit {
+	// 		// 					return
+	// 		// 				}
+	// 		// 				// tui.actions <- update
+	// 		// 				actions <- update
+	// 		// 			}
+	// 		// 		}()
+	// 		logList.Add(&txt)
+	//
+	// 		var log vl.CollapsingHeader
+	// 		log.SetText("Log")
+	// 		log.Root = &logList
+	// 		list.Add(&log)
+	// 	}
 
 	return
 }

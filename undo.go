@@ -35,7 +35,7 @@ func (u *Undo) sync(isUndo bool) (pre, post func()) {
 func (u *Undo) addToUndo() {
 	b, err := json.Marshal(u.model)
 	if err != nil {
-		AddInfo("addTo%v", err)
+		logger.Printf("addTo%v", err)
 		return
 	}
 	if u.list == nil {
@@ -58,7 +58,7 @@ func (u *Undo) Undo() {
 	var last Model
 	b := el.Value.([]byte)
 	if err := json.Unmarshal(b, &last); err != nil {
-		AddInfo("%v", err)
+		logger.Printf("%v", err)
 		return
 	}
 	// swap models
