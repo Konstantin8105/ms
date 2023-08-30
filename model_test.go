@@ -16,8 +16,8 @@ import (
 )
 
 func Example() {
-	ResetInfo()
-	defer ResetInfo()
+	// 	ResetInfo()
+	// 	defer ResetInfo()
 	var mm Model
 	{
 		var c Coordinate
@@ -156,11 +156,6 @@ func TestIntegration(t *testing.T) {
 	// 	t.Logf("%s", PrintInfo())
 	// }()
 
-	AddInfo := func(v string) {
-		t.Logf("%s", v)
-		AddInfo(v)
-	}
-
 	// tests movements
 	quit := make(chan struct{})
 	defer func() {
@@ -170,7 +165,7 @@ func TestIntegration(t *testing.T) {
 
 		var wg sync.WaitGroup
 		run := func(name string, f func()) {
-			AddInfo(fmt.Sprintf("begin of %s", name))
+			logger.Printf(fmt.Sprintf("begin of %s", name))
 			wg.Add(1)
 			*ch <- func() (fus bool) {
 				f()
@@ -179,18 +174,18 @@ func TestIntegration(t *testing.T) {
 			}
 			wg.Wait()
 			// time.Sleep(time.Second)
-			AddInfo(fmt.Sprintf("end of %s", name))
+			logger.Printf(fmt.Sprintf("end of %s", name))
 		}
 
 		run("DemoSpiral", func() { mm.DemoSpiral(26) })
 		run("DemoSpiral again", func() { mm.DemoSpiral(27) })
 		run("StandardView", func() { mm.StandardView(StandardViewXOYpos) })
-		run("SelectLeftCursor", func() { mm.SelectLeftCursor(true, true, true) })
+		run("SelectLeftCursor", func() { mm.SelectLeftCursor(true, true, true, true) })
 		run("SelectScreen", func() { mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300}) })
 
 		// SelectElements
 		{
-			AddInfo("SelectElements")
+			logger.Printf("SelectElements")
 			wg.Add(1)
 			var els []uint
 			*ch <- func() (fus bool) {
@@ -200,7 +195,7 @@ func TestIntegration(t *testing.T) {
 			}
 			wg.Wait()
 			if len(els) == 0 {
-				AddInfo("Error: SelectElements is zero")
+				logger.Printf("Error: SelectElements is zero")
 				close(quit)
 				t.Fatalf("after select screen")
 			}
@@ -210,11 +205,11 @@ func TestIntegration(t *testing.T) {
 		run("color edge false", func() { mm.ColorEdge(false) })
 		run("deselect", func() { mm.DeselectAll() })
 		run("SelectLinesOrtho", func() { mm.SelectLinesOrtho(true, true, true) })
-		run("InvertSelect", func() { mm.InvertSelect(true, true, true) })
+		run("InvertSelect", func() { mm.InvertSelect(true, true, true, true) })
 
 		// SelectElements
 		{
-			AddInfo("SelectElements")
+			logger.Printf("SelectElements")
 			wg.Add(1)
 			var els []uint
 			*ch <- func() (fus bool) {
@@ -224,7 +219,7 @@ func TestIntegration(t *testing.T) {
 			}
 			wg.Wait()
 			if len(els) == 0 {
-				AddInfo("Error: SelectElements is zero")
+				logger.Printf("Error: SelectElements is zero")
 				close(quit)
 				t.Fatalf("after select screen")
 			}
@@ -237,7 +232,7 @@ func TestIntegration(t *testing.T) {
 
 		// Select elements
 		{
-			AddInfo("SelectElements")
+			logger.Printf("SelectElements")
 			wg.Add(1)
 			var els []uint
 			*ch <- func() (fus bool) {
@@ -247,7 +242,7 @@ func TestIntegration(t *testing.T) {
 			}
 			wg.Wait()
 			if len(els) == 0 {
-				AddInfo("Error: SelectElements is zero")
+				logger.Printf("Error: SelectElements is zero")
 				close(quit)
 				t.Fatalf("after select screen")
 			}
@@ -260,10 +255,10 @@ func TestIntegration(t *testing.T) {
 		run("MergeNodes", func() { mm.MergeNodes(0.050) })
 		run("DeselectAll", func() { mm.DeselectAll() })
 		run("SelectLinesOnPlane", func() { mm.SelectLinesOnPlane(true, true, true) })
-		run("InvertSelect", func() { mm.InvertSelect(true, true, true) })
+		run("InvertSelect", func() { mm.InvertSelect(true, true, true, true) })
 
 		{
-			AddInfo("SelectTriangles")
+			logger.Printf("SelectTriangles")
 			var tris []uint
 			wg.Add(1)
 			*ch <- func() (fus bool) {
@@ -282,10 +277,10 @@ func TestIntegration(t *testing.T) {
 
 		run("DeselectAll", func() { mm.DeselectAll() })
 		run("SelectLinesOnPlane", func() { mm.SelectLinesOnPlane(true, true, true) })
-		run("InvertSelect", func() { mm.InvertSelect(true, false, true) })
+		run("InvertSelect", func() { mm.InvertSelect(true, false, true, true) })
 
 		{
-			AddInfo("SelectElements")
+			logger.Printf("SelectElements")
 			var tris []uint
 			wg.Add(1)
 			*ch <- func() (fus bool) {
@@ -325,39 +320,39 @@ func TestIntegration(t *testing.T) {
 	}
 }
 
-func TestAddInfo(t *testing.T) {
-	// defer func() {
-	// 	t.Logf("%s", PrintInfo())
-	// }()
-
-	// tests movements
-	quit := make(chan struct{})
-
-	defer func() {
-		testCoverageFunc = nil
-	}()
-	testCoverageFunc = func(mm Mesh, ch *chan ds.Action) {
-		var wg sync.WaitGroup
-		for i, size := 0, 10; i < size; i++ {
-			wg.Add(1)
-			*ch <- func() (fus bool) {
-				for p := 0; p < size; p++ {
-					AddInfo(fmt.Sprintf("StandardView %02d.%02d", p, i))
-				}
-				wg.Done()
-				return true
-			}
-		}
-		wg.Wait()
-		// quit
-		close(quit)
-	}
-
-	// create a new model
-	if err := Run("", quit); err != nil {
-		t.Error(err)
-	}
-}
+// func Testlogger.Printf(t *testing.T) {
+// 	// defer func() {
+// 	// 	t.Logf("%s", PrintInfo())
+// 	// }()
+//
+// 	// tests movements
+// 	quit := make(chan struct{})
+//
+// 	defer func() {
+// 		testCoverageFunc = nil
+// 	}()
+// 	testCoverageFunc = func(mm Mesh, ch *chan ds.Action) {
+// 		var wg sync.WaitGroup
+// 		for i, size := 0, 10; i < size; i++ {
+// 			wg.Add(1)
+// 			*ch <- func() (fus bool) {
+// 				for p := 0; p < size; p++ {
+// 					logger.Printf(fmt.Sprintf("StandardView %02d.%02d", p, i))
+// 				}
+// 				wg.Done()
+// 				return true
+// 			}
+// 		}
+// 		wg.Wait()
+// 		// quit
+// 		close(quit)
+// 	}
+//
+// 	// create a new model
+// 	if err := Run("", quit); err != nil {
+// 		t.Error(err)
+// 	}
+// }
 
 func BenchmarkIntersection(b *testing.B) {
 	var mm Model
@@ -484,8 +479,8 @@ func TestModel(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			ResetInfo()
-			defer ResetInfo()
+			// ResetInfo()
+			// defer ResetInfo()
 			mm := tc.mm()
 
 			b, err := json.MarshalIndent(mm, "", "  ")
@@ -494,7 +489,7 @@ func TestModel(t *testing.T) {
 				return
 			}
 
-			t.Logf("%s\n", PrintInfo())
+			// t.Logf("%s\n", PrintInfo())
 			compare(tc.name, b)
 		})
 	}
