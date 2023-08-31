@@ -165,7 +165,7 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 	// Main problem of synchronization.
 
 	op.cameraView(x, y, w, h)
-	op.model3d(op.state, "run")
+	op.model3d(op.state)
 
 	// draw axe coordinates
 	openGlScreenCoordinate(x, y, w, h)
@@ -405,7 +405,7 @@ func (op *Opengl) cameraView(x, y, w, h int32) {
 
 // https://blog.jayway.com/2009/12/04/opengl-es-tutorial-for-android-part-ii-building-a-polygon/
 // http://web.archive.org/web/20120527185124/http://cgg-journal.com/2008-2/06/index.html
-func (op *Opengl) model3d(s viewState, parent string) {
+func (op *Opengl) model3d(s viewState) {
 	if op.mesh == nil {
 		return
 	}
@@ -479,11 +479,11 @@ func (op *Opengl) model3d(s viewState, parent string) {
 		gl.Disable(gl.POLYGON_OFFSET_FILL)
 	}
 
-	op.drawElements(s, parent)
-	op.drawPoints(s, parent)
+	op.drawElements(s)
+	op.drawPoints(s)
 }
 
-func (op *Opengl) drawPoints(s viewState, parent string) {
+func (op *Opengl) drawPoints(s viewState) {
 	cos := op.mesh.GetCoords()
 
 	// prepare colors
@@ -533,7 +533,7 @@ func (op *Opengl) drawPoints(s viewState, parent string) {
 	}
 }
 
-func (op *Opengl) drawElements(s viewState, parent string) {
+func (op *Opengl) drawElements(s viewState) {
 	cos := op.mesh.GetCoords()
 	els := op.mesh.GetElements()
 
@@ -1355,7 +1355,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			op.cameraView(op.x, op.y, op.w, op.h)
 			// color initialize
 
-			op.model3d(s.st, "select")
+			op.model3d(s.st)
 
 			// TODO : screen coordinates
 			// TODO : openGlScreenCoordinate(window)
