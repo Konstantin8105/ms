@@ -36,6 +36,8 @@ const (
 // TODO distance between 2 points if selected both
 // TODO betta angle for repeat rotate Copy
 // TODO check copy node on distance
+// TODO split elements by plane
+// TODO add lines by convex points on one plane
 
 func (g GroupID) String() string {
 	switch g {
