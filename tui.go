@@ -10,6 +10,7 @@ import (
 	"github.com/Konstantin8105/gog"
 	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
+	"github.com/ncruces/zenity"
 )
 
 type GroupID uint8
@@ -64,7 +65,8 @@ func (g GroupID) String() string {
 }
 
 type Filable interface {
-	// Open
+	Open(name string)
+	GetPresentFilename() (name string)
 	// Save
 	// SaveAs
 	// Close
@@ -93,6 +95,38 @@ func defaultPartName(id int) string {
 func init() {
 	group := File
 	ops := []Operation{{
+		Name: "Open file",
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+			var list vl.List
+
+			list.Add(vl.TextStatic("Present file"))
+
+			var txt vl.Text
+			list.Add(&txt)
+
+			var b vl.Button
+			b.SetText("Open file")
+			b.OnClick = func() {
+				// TODO:
+				// select file
+				name, err := zenity.SelectFile(
+					zenity.Filename("."),
+					zenity.Title("Select file"),
+					zenity.FileFilters{
+						{"Optimization files", []string{"*.optim"}, false},
+					})
+				if err != nil {
+					err = nil
+					return
+				}
+				m.Open(name)
+				str := m.GetPresentFilename()
+				txt.SetText(str)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
 		Name: "Name of actual model/part",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
 			var list vl.List

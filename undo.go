@@ -70,6 +70,16 @@ func (u *Undo) Undo() {
 	u.list.Remove(el)
 }
 
+func (u *Undo) Open(name string) {
+	logger.Print("Open")
+	u.model.Open(name)
+}
+
+func(u *Undo) GetPresentFilename() (name string) {
+	logger.Print("GetPresentFilename")
+	return u.model.GetPresentFilename()
+}
+
 func (u *Undo) PartPresent() (id uint) {
 	// too many : logger.Print("PartPresent")
 	return u.model.PartPresent()

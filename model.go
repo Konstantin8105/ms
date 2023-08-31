@@ -210,6 +210,15 @@ func (mm *Model) PartRename(id uint, name string) {
 	mm.Parts[id-1].Name = name
 }
 
+func (mm *Model) GetPresentFilename()(name string) {
+	logger.Printf("Not implemented function `GetPresentFilename`")
+	return ""
+}
+
+func (mm *Model) Open(name string) {
+	logger.Printf("Not implemented function `Open`")
+}
+
 func (mm *Model) AddModel(m Model) {
 	newID := make([]int, len(m.Coords))
 	for i := range m.Coords {
