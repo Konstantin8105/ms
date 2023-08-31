@@ -80,6 +80,7 @@ func (op *Opengl) SetMouseButtonCallback(
 		y = float64(h) - y
 		switch action {
 		case glfw.Press:
+			op.mouses[index].WithShiftKey(mods == glfw.ModShift)
 			op.mouses[index].Press(int32(x), int32(y))
 		case glfw.Release:
 			op.mouses[index].Release(int32(x), int32(y))
@@ -1173,6 +1174,7 @@ func (mz *MouseZoom) AfterRoll(op *Opengl) {
 }
 
 type Mouse interface {
+	WithShiftKey(key bool)
 	Press(x, y int32)
 	Update(x, y int32)
 	Release(x, y int32)
@@ -1239,39 +1241,53 @@ func (m2 *Mouse2P) ReadyAction() bool {
 	return true
 }
 
+func (m2 *Mouse2P) WithShiftKey(key bool) {
+	// do nothing
+}
+
 type MouseSelect struct {
+	AddShift bool
 	Mouse2P
+}
+
+func (ms *MouseSelect) WithShiftKey(key bool) {
+	ms.AddShift = key
 }
 
 func (ms *MouseSelect) Preview(xinit, yinit int32) {
 	if !ms.ReadyPreview() {
 		return
 	}
+	var (
+		x1 = ms.from[0]
+		y1 = ms.from[1]
+		x2 = ms.to[0]
+		y2 = ms.to[1]
+	)
 
 	// draw select rectangle
+	if x2 < x1 {
+		gl.Color3ub(255, 0, 0) // Red
+	} else {
+		gl.Enable(gl.LINE_STIPPLE)
+		gl.LineStipple(1, 0x00FF)
+		gl.Color3ub(0, 0, 255) // Blue
+	}
 	gl.LineWidth(1)
 	gl.Begin(gl.LINES)
-	gl.Color3d(1.0, 0.0, 0.0) // Red
-	{
-		var (
-			x1 = ms.from[0]
-			y1 = ms.from[1]
-			x2 = ms.to[0]
-			y2 = ms.to[1]
-		)
-		gl.Vertex2i(x1, y1)
-		gl.Vertex2i(x1, y2)
+	gl.Vertex2i(x1, y1)
+	gl.Vertex2i(x1, y2)
 
-		gl.Vertex2i(x1, y2)
-		gl.Vertex2i(x2, y2)
+	gl.Vertex2i(x1, y2)
+	gl.Vertex2i(x2, y2)
 
-		gl.Vertex2i(x2, y2)
-		gl.Vertex2i(x2, y1)
+	gl.Vertex2i(x2, y2)
+	gl.Vertex2i(x2, y1)
 
-		gl.Vertex2i(x2, y1)
-		gl.Vertex2i(x1, y1)
-	}
+	gl.Vertex2i(x2, y1)
+	gl.Vertex2i(x1, y1)
 	gl.End()
+	gl.Disable(gl.LINE_STIPPLE)
 }
 
 func (ms *MouseSelect) Action(op *Opengl) {
@@ -1279,6 +1295,8 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		return
 	}
 	defer ms.Reset()
+
+	rightToLeft := ms.from[0] < ms.to[0]
 
 	// DEBUG : start := time.Now()
 	// DEBUG : logger.Printf("MouseSelect time %v", time.Now())
@@ -1305,6 +1323,23 @@ func (ms *MouseSelect) Action(op *Opengl) {
 
 	cos, els := op.mesh.GetCoords(), op.mesh.GetElements()
 
+	// store present selections
+	selP := make([]bool, len(cos))
+	for i := range cos {
+		selP[i] = cos[i].selected
+		cos[i].selected = false
+	}
+	selE := make([]bool, len(els))
+	for i := range els {
+		selE[i] = els[i].selected
+		els[i].selected = false
+	}
+
+	if rightToLeft {
+		op.cursorLeft |= selectPoints
+	}
+
+	// find new selected
 	for is, s := range []struct {
 		st viewState
 		sf func(index int) (found bool)
@@ -1411,6 +1446,46 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			}
 			// DEBUG : logger.Printf("MouseSelect step %d type %v {%v} duration: %v",
 			// DEBUG : 	is, s.st, fill, time.Since(start))
+		}
+	}
+
+	// TODO SELECT = Only new selection
+	// TODO CTRL + SELECT = Add to selected
+
+	if rightToLeft {
+		// find real selected elements, if all they coordinate selected
+		for i := range els {
+			if !els[i].selected {
+				continue
+			}
+			// element selected
+			for _, index := range els[i].Indexes {
+				if cos[index].selected {
+					continue
+				}
+				els[i].selected = false
+				break
+			}
+		}
+		// select coordinates by selected elements
+		for i := range els {
+			if !els[i].selected {
+				continue
+			}
+			// element selected
+			for _, index := range els[i].Indexes {
+				cos[index].selected = true
+			}
+		}
+	}
+
+	if ms.AddShift {
+		// add to selections
+		for i := range cos {
+			cos[i].selected = selP[i] || cos[i].selected
+		}
+		for i := range els {
+			els[i].selected = selE[i] || els[i].selected
 		}
 	}
 }
