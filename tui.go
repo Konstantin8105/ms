@@ -71,6 +71,8 @@ type Filable interface {
 	// SaveAs
 	// Close
 	// Store all operations
+	// Import from gmsh
+	// Export to gmsh
 	// View 3D model
 
 	// 2D model: axesymm
