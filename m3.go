@@ -1449,9 +1449,6 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		}
 	}
 
-	// TODO SELECT = Only new selection
-	// TODO CTRL + SELECT = Add to selected
-
 	if rightToLeft {
 		// find real selected elements, if all they coordinate selected
 		for i := range els {
