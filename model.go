@@ -2251,7 +2251,8 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	ws[1] = opWindow
 
 	// screen initialization
-	screen, err := ds.New("Demo", ws, &ch)
+	screen, err := ds.New("ms", ws, &ch)
+	// TODO filename like: ms. FILENAME in dialog header
 	if err != nil {
 		return
 	}
