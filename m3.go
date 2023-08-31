@@ -165,7 +165,7 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 	// Main problem of synchronization.
 
 	op.cameraView(x, y, w, h)
-	op.model3d(op.state)
+	op.model3d(op.state, randomPoint)
 
 	// draw axe coordinates
 	openGlScreenCoordinate(x, y, w, h)
@@ -405,7 +405,7 @@ func (op *Opengl) cameraView(x, y, w, h int32) {
 
 // https://blog.jayway.com/2009/12/04/opengl-es-tutorial-for-android-part-ii-building-a-polygon/
 // http://web.archive.org/web/20120527185124/http://cgg-journal.com/2008-2/06/index.html
-func (op *Opengl) model3d(s viewState) {
+func (op *Opengl) model3d(s viewState, fill selectState) {
 	if op.mesh == nil {
 		return
 	}
@@ -479,11 +479,11 @@ func (op *Opengl) model3d(s viewState) {
 		gl.Disable(gl.POLYGON_OFFSET_FILL)
 	}
 
-	op.drawElements(s)
-	op.drawPoints(s)
+	op.drawElements(s, fill)
+	op.drawPoints(s, fill)
 }
 
-func (op *Opengl) drawPoints(s viewState) {
+func (op *Opengl) drawPoints(s viewState, fill selectState) {
 	cos := op.mesh.GetCoords()
 
 	// prepare colors
@@ -533,7 +533,7 @@ func (op *Opengl) drawPoints(s viewState) {
 	}
 }
 
-func (op *Opengl) drawElements(s viewState) {
+func (op *Opengl) drawElements(s viewState, fill selectState) {
 	cos := op.mesh.GetCoords()
 	els := op.mesh.GetElements()
 
@@ -548,11 +548,35 @@ func (op *Opengl) drawElements(s viewState) {
 		gl.Disable(gl.POLYGON_OFFSET_FILL)
 	}
 
+	// random point for fast selection
+	randomPoint := func(iel int) {
+		el := els[iel]
+		// ramdom point on border of element
+		ratio := 0.1 + 0.8*float64(iel)/float64(len(els)) // 0.1 ... 0.9
+		if ratio <= 0.0 || 1.0 <= ratio {
+			logger.Printf("%e %v %v", ratio, iel, len(els))
+			ratio = 0.5
+		}
+		size := len(el.Indexes) // 2 for Line2, 3 for Triangle3, ...
+		b := cos[el.Indexes[size-2]].Point3d
+		f := cos[el.Indexes[size-1]].Point3d
+
+		// draw
+		gl.PointSize(1)
+		gl.Begin(gl.POINTS)
+		gl.Vertex3d(
+			b[0]+ratio*(f[0]-b[0]),
+			b[1]+ratio*(f[1]-b[1]),
+			b[2]+ratio*(f[2]-b[2]),
+		)
+		gl.End()
+	}
+
 	// prepare colors
 	var r, g, b uint8
 	// Elements
-	for i, el := range els {
-		if op.mesh.IsIgnore(uint(i)) {
+	for iel, el := range els {
+		if op.mesh.IsIgnore(uint(iel)) {
 			continue
 		}
 		// do not show selected elements in Select case
@@ -603,20 +627,18 @@ func (op *Opengl) drawElements(s viewState) {
 				// do nothing
 			case selectLines:
 				gl.LineWidth(1)
-				r, g, b = convertToColor(i)
+				r, g, b = convertToColor(iel)
 				gl.Color3ub(r, g, b)
-				gl.Begin(gl.LINES)
-				for _, k := range el.Indexes {
-					c := cos[k]
-					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				if fill {
+					gl.Begin(gl.LINES)
+					for _, k := range el.Indexes {
+						c := cos[k]
+						gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+					}
+					gl.End()
+				} else {
+					randomPoint(iel)
 				}
-				gl.End()
-				gl.Begin(gl.POINTS)
-				for _, k := range el.Indexes {
-					c := cos[k]
-					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
-				}
-				gl.End()
 			case selectTriangles:
 				// do nothing
 			case selectQuadrs:
@@ -707,27 +729,18 @@ func (op *Opengl) drawElements(s viewState) {
 					(s == selectQuadrs && el.ElementType != Quadr4) {
 					break
 				}
-				r, g, b = convertToColor(i)
+				r, g, b = convertToColor(iel)
 				gl.Color3ub(r, g, b)
-				gl.Begin(gl.POLYGON)
-				for _, k := range el.Indexes {
-					c := cos[k]
-					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+				if fill {
+					gl.Begin(gl.POLYGON)
+					for _, k := range el.Indexes {
+						c := cos[k]
+						gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
+					}
+					gl.End()
+				} else {
+					randomPoint(iel)
 				}
-				gl.End()
-				gl.LineWidth(1)
-				gl.Begin(gl.LINES)
-				for _, k := range el.Indexes {
-					c := cos[k]
-					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
-				}
-				gl.End()
-				gl.Begin(gl.POINTS)
-				for _, k := range el.Indexes {
-					c := cos[k]
-					gl.Vertex3d(c.Point3d[0], c.Point3d[1], c.Point3d[2])
-				}
-				gl.End()
 			default:
 				logger.Printf("undefined type: %v", s)
 			}
@@ -855,6 +868,13 @@ const (
 	selectLines                             // 8
 	selectTriangles                         // 16
 	selectQuadrs                            // 32
+)
+
+type selectState bool
+
+const (
+	filling     selectState = true
+	randomPoint             = false
 )
 
 func (s viewState) String() string {
@@ -1260,6 +1280,12 @@ func (ms *MouseSelect) Action(op *Opengl) {
 	}
 	defer ms.Reset()
 
+	// DEBUG : start := time.Now()
+	// DEBUG : logger.Printf("MouseSelect time %v", time.Now())
+	// DEBUG : defer func() {
+	// DEBUG : 	logger.Printf("MouseSelect duration summary : %v", time.Since(start))
+	// DEBUG : }()
+
 	for c := 0; c < 2; c++ {
 		if ms.to[c] < ms.from[c] {
 			// swap
@@ -1279,7 +1305,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 
 	cos, els := op.mesh.GetCoords(), op.mesh.GetElements()
 
-	for _, s := range []struct {
+	for is, s := range []struct {
 		st viewState
 		sf func(index int) (found bool)
 	}{
@@ -1341,44 +1367,50 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		if op.cursorLeft&s.st == 0 {
 			continue
 		}
+		_ = is // for debugging
 
 		// find selection
-		found := true
-		for found { // TODO : infinite loop
-			found = false
-			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-			// gl.ClearColorxOES(0, 0, 0, 0) // ???? TODO ??
-			gl.ClearColor(1, 1, 1, 1)
-			gl.Enable(gl.DEPTH_TEST)
-			gl.Disable(gl.LINE_SMOOTH)
-			gl.Disable(gl.BLEND) // Transparency
-			op.cameraView(op.x, op.y, op.w, op.h)
-			// color initialize
+		for _, fill := range []selectState{randomPoint, filling} {
+			// DEBUG : logger.Printf("MouseSelect step %d type %v {%v} start",
+			// DEBUG : 	is, s.st, fill)
+			found := true
+			for found { // TODO : infinite loop
+				found = false
+				gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+				// gl.ClearColorxOES(0, 0, 0, 0) // ???? TODO ??
+				gl.ClearColor(1, 1, 1, 1)
+				gl.Enable(gl.DEPTH_TEST)
+				gl.Disable(gl.LINE_SMOOTH)
+				gl.Disable(gl.BLEND) // Transparency
+				op.cameraView(op.x, op.y, op.w, op.h)
+				// color initialize
 
-			op.model3d(s.st)
+				op.model3d(s.st, fill)
 
-			// TODO : screen coordinates
-			// TODO : openGlScreenCoordinate(window)
-			// TODO :
+				// TODO : screen coordinates
+				// TODO : openGlScreenCoordinate(window)
+				// TODO :
 
-			gl.Flush()
-			gl.Finish()
+				gl.Flush()
+				gl.Finish()
 
-			// color selection
-			sizeX := (ms.to[0] - ms.from[0] + 1)
-			sizeY := (ms.to[1] - ms.from[1] + 1)
-			size := sizeX * sizeY
-			color := make([]uint8, 4*size)
-			gl.ReadPixels(ms.from[0], ms.from[1], sizeX, sizeY,
-				gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&color[0]))
-			for i := 0; i < len(color)-1; i += 4 {
-				index := convertToIndex(color[i : i+4])
-				if s.sf(index) {
-					found = true
+				// color selection
+				sizeX := (ms.to[0] - ms.from[0] + 1)
+				sizeY := (ms.to[1] - ms.from[1] + 1)
+				size := sizeX * sizeY
+				color := make([]uint8, 4*size)
+				gl.ReadPixels(ms.from[0], ms.from[1], sizeX, sizeY,
+					gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(&color[0]))
+				for i := 0; i < len(color)-1; i += 4 {
+					index := convertToIndex(color[i : i+4])
+					if s.sf(index) {
+						found = true
+					}
 				}
+				// if any find selection, then try again
 			}
-
-			// if any find selection, then try again
+			// DEBUG : logger.Printf("MouseSelect step %d type %v {%v} duration: %v",
+			// DEBUG : 	is, s.st, fill, time.Since(start))
 		}
 	}
 }
