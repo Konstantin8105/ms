@@ -115,7 +115,7 @@ func init() {
 					zenity.Filename("."),
 					zenity.Title("Select file"),
 					zenity.FileFilters{
-						{"Optimization files", []string{"*.optim"}, false},
+						{"ms files", []string{"*."+FileExtension}, false},
 					})
 				if err != nil {
 					err = nil

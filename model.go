@@ -1,9 +1,7 @@
 package ms
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"runtime"
 	"runtime/debug"
@@ -19,6 +17,8 @@ import (
 	"github.com/Konstantin8105/pow"
 	"github.com/Konstantin8105/vl"
 )
+
+const FileExtension = "ms"
 
 // 3D model variables
 type object3d struct {
@@ -124,6 +124,8 @@ type Model struct {
 	Coords   []Coordinate
 
 	Parts []Part
+
+	filename string
 }
 
 func (mm *Model) Check() error {
@@ -210,13 +212,14 @@ func (mm *Model) PartRename(id uint, name string) {
 	mm.Parts[id-1].Name = name
 }
 
-func (mm *Model) GetPresentFilename()(name string) {
-	logger.Printf("Not implemented function `GetPresentFilename`")
-	return ""
+func (mm *Model) GetPresentFilename() (name string) {
+	logger.Printf("GetPresentFilename")
+	return mm.filename
 }
 
 func (mm *Model) Open(name string) {
-	logger.Printf("Not implemented function `Open`")
+	logger.Printf("Open")
+	mm.filename = name
 }
 
 func (mm *Model) AddModel(m Model) {
@@ -2190,7 +2193,7 @@ func min(xs ...float64) (res float64) {
 
 var testCoverageFunc func(m Mesh, ch *chan ds.Action)
 
-func Run(filename string, quit <-chan struct{}) (err error) {
+func Run(quit <-chan struct{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v\n%v\n%v", err, r, string(debug.Stack()))
@@ -2211,29 +2214,32 @@ func Run(filename string, quit <-chan struct{}) (err error) {
 	vl.SpecificSymbol(false)
 
 	// prepare model
-	if filename == "" {
-		mm.model = new(Model)
-	} else if strings.HasSuffix(strings.ToLower(filename), ".geo") {
-		// read gmsh file
-		var model Model
-		model, err = Gmsh2Model(filename)
-		if err != nil {
-			return
-		}
-		mm.model = &model
-	} else {
-		// read native json file format
-		var b []byte
-		b, err = ioutil.ReadFile(filename)
-		if err != nil {
-			return
-		}
-		var model Model
-		if err = json.Unmarshal(b, &model); err != nil {
-			return
-		}
-		mm.model = &model
-	}
+	// if filename == "" {
+	mm.model = new(Model)
+	// } else if strings.HasSuffix(strings.ToLower(filename), FileExtension) {
+	// 	// read native json file format
+	// 	var b []byte
+	// 	b, err = ioutil.ReadFile(filename)
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// 	var model Model
+	// 	if err = json.Unmarshal(b, &model); err != nil {
+	// 		return
+	// 	}
+	// 	mm.model = &model
+	// } else if strings.HasSuffix(strings.ToLower(filename), ".geo") {
+	// 	// read gmsh file
+	// 	var model Model
+	// 	model, err = Gmsh2Model(filename)
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// 	mm.model = &model
+	// } else {
+	// 	err = fmt.Errorf("not valid input data: `%s`", filename)
+	// 	return
+	// }
 
 	// tui
 	tui, err := NewTui(&mm, &closedApp, &ch)
