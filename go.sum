@@ -2,8 +2,8 @@ github.com/Konstantin8105/binaryexpr v0.1.0 h1:2+mmmCRpZ6BDHyaLRAePjGiVp/Hgt7T7z
 github.com/Konstantin8105/binaryexpr v0.1.0/go.mod h1:prPPFcv/zGCwhx78QW299JwMKP4xSkldgOwhZNr99GQ=
 github.com/Konstantin8105/compare v0.0.0-20230404132328-f605c0d757de h1:0nMcmCvcjJke50WgghlksdphJTcTLghcel+O2ElX68w=
 github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b h1:IZkvBy8TJTxpPHjOW1R5KqIgVF2lVk8isx9iQBHnOnw=
-github.com/Konstantin8105/ds v0.0.0-20230827090938-eab9dde4bdab h1:NBmrttIxWHveT8b5wjIAsgVmLhXjXC/xnEh0+hRLk/0=
-github.com/Konstantin8105/ds v0.0.0-20230827090938-eab9dde4bdab/go.mod h1:WrDdhGNe9iX/7ICewqiaQEe3M/qkn8Ta8YbrvIupBiM=
+github.com/Konstantin8105/ds v0.0.0-20230901130001-2bf3c88c7e33 h1:f2LSRUzRZdGLw5RlDklbmkQVbzuDbcJyGr5Vsh2Yj9c=
+github.com/Konstantin8105/ds v0.0.0-20230901130001-2bf3c88c7e33/go.mod h1:WrDdhGNe9iX/7ICewqiaQEe3M/qkn8Ta8YbrvIupBiM=
 github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibUOtOpkg=
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
 github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e h1:mRPpDK0aP/qASyuHCJ3NlddUJsWpVGI7Q+OaHiNidb8=
@@ -23,6 +23,7 @@ github.com/Konstantin8105/vl v0.0.0-20230828105646-07763eddc45e h1:YEBGzmoV/u/Di
 github.com/Konstantin8105/vl v0.0.0-20230828105646-07763eddc45e/go.mod h1:hG5zfma2mcSFqbXouv9Nz69Y6d2ePZVWRjaUxuao80Q=
 github.com/akavel/rsrc v0.10.2 h1:Zxm8V5eI1hW4gGaYsJQUhxpjkENuG91ki8B4zCrvEsw=
 github.com/akavel/rsrc v0.10.2/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
+github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dchest/jsmin v0.0.0-20220218165748-59f39799265f h1:OGqDDftRTwrvUoL6pOG7rYTmWsTCvyEWFsMjg+HcOaA=
 github.com/dchest/jsmin v0.0.0-20220218165748-59f39799265f/go.mod h1:Dv9D0NUlAsaQcGQZa5kc5mqR9ua72SmA8VXi4cd+cBw=
@@ -45,6 +46,7 @@ github.com/mattn/go-runewidth v0.0.15 h1:UNAjwbU9l54TA3KzvqLGxwWjHmMgBUVhBiTjelZ
 github.com/mattn/go-runewidth v0.0.15/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/ncruces/zenity v0.10.10 h1:V/rtAhr5QLdDThahOkm7EYlnw4RuEsf7oN+Xb6lz1j0=
 github.com/ncruces/zenity v0.10.10/go.mod h1:k3k4hJ4Wt1MUbeV48y+Gbl7Fp9skfGszN/xtKmuvhZk=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844 h1:GranzK4hv1/pqTIhMTXt2X8MmMOuH3hMeUR0o9SP5yc=
 github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844/go.mod h1:T1TLSfyWVBRXVGzWd0o9BI4kfoO9InEgfQe4NV3mLz8=
@@ -53,8 +55,10 @@ github.com/rivo/uniseg v0.4.3/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUc
 github.com/rivo/uniseg v0.4.4 h1:8TfxU8dW6PdqD27gjM8MVNuicgxIjxpm4K7x4jp8sis=
 github.com/rivo/uniseg v0.4.4/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
+go.uber.org/goleak v1.2.1 h1:NBol2c7O1ZokfZ0LEU9K6Whx/KnwvepVetCUhtKja4A=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
 golang.org/x/image v0.11.0 h1:ds2RoQvBvYTiJkwpSFDwCcDFNX7DqjL2WsUgTNk0Ooo=
@@ -93,4 +97,5 @@ golang.org/x/tools v0.1.12/go.mod h1:hNGJHUnrk76NpqgfD5Aqm5Crs+Hm0VOH/i9J2+nxYbc
 golang.org/x/tools v0.6.0/go.mod h1:Xwgl3UAJ/d3gWutnCtw505GrjyAbvKui8lOU390QaIU=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c h1:dUUwHk2QECo/6vqA44rthZ8ie2QXMNeKRTHCNY2nXvo=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=

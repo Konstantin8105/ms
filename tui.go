@@ -65,11 +65,12 @@ func (g GroupID) String() string {
 }
 
 type Filable interface {
-	Open(name string)
+	Open(name string) error
+	IsChangedModel() bool
 	GetPresentFilename() (name string)
-	// Save
-	// SaveAs
-	// Close
+	Save() error
+	SaveAs(filename string) error
+	Close()
 	// Store all operations
 	// Import from gmsh
 	// Export to gmsh
@@ -109,13 +110,29 @@ func init() {
 			var b vl.Button
 			b.SetText("Open file")
 			b.OnClick = func() {
-				// TODO:
+				// name of file
+				name := m.GetPresentFilename()
+				if name == "" {
+					name = "Undefined." + FileExtension
+				}
+				// check is saved
+				if m.IsChangedModel() {
+					_, err := zenity.SelectFileSave(
+						zenity.ConfirmOverwrite(),
+						zenity.Filename(name),
+						zenity.FileFilters{
+							{"ms files", []string{"*." + FileExtension}, false},
+						})
+					if err != nil {
+						return
+					}
+				}
 				// select file
 				name, err := zenity.SelectFile(
 					zenity.Filename("."),
 					zenity.Title("Select file"),
 					zenity.FileFilters{
-						{"ms files", []string{"*."+FileExtension}, false},
+						{"ms files", []string{"*." + FileExtension}, false},
 					})
 				if err != nil {
 					err = nil
@@ -124,6 +141,85 @@ func init() {
 				m.Open(name)
 				str := m.GetPresentFilename()
 				txt.SetText(str)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Save",
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+			var list vl.List
+
+			var res vl.Text
+
+			var b vl.Button
+			b.SetText("Save")
+			b.OnClick = func() {
+				err := m.Save()
+				if err != nil {
+					res.SetText(fmt.Sprintf("%v", err))
+					return
+				}
+				res.SetText("")
+			}
+			list.Add(&b)
+			list.Add(&res)
+
+			return &list
+		}}, {
+		Name: "Save As",
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+			var list vl.List
+
+			var b vl.Button
+			b.SetText("Save as ...")
+			b.OnClick = func() {
+				// name of file
+				name := m.GetPresentFilename()
+				if name == "" {
+					name = "Undefined." + FileExtension
+				}
+				// save in new file
+				name, err := zenity.SelectFileSave(
+					zenity.ConfirmOverwrite(),
+					zenity.Filename(name),
+					zenity.FileFilters{
+						{"ms files", []string{"*." + FileExtension}, false},
+					})
+				if err != nil {
+					return
+				}
+				m.SaveAs(name)
+			}
+			list.Add(&b)
+
+			return &list
+		}}, {
+		Name: "Close",
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+			var list vl.List
+
+			var b vl.Button
+			b.SetText("Close")
+			b.OnClick = func() {
+				// name of file
+				name := m.GetPresentFilename()
+				if name == "" {
+					name = "Undefined." + FileExtension
+				}
+				// check is saved
+				if m.IsChangedModel() {
+					_, err := zenity.SelectFileSave(
+						zenity.ConfirmOverwrite(),
+						zenity.Filename(name),
+						zenity.FileFilters{
+							{"ms files", []string{"*." + FileExtension}, false},
+						})
+					if err != nil {
+						return
+					}
+				}
+				m.Close()
 			}
 			list.Add(&b)
 

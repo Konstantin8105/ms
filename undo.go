@@ -15,6 +15,8 @@ type Undo struct {
 	model *Model  // actual model
 	op    *Opengl // for 3d
 	// tui   *Tui    // for terminal ui
+	changed bool
+	quit    *chan struct{}
 }
 
 func (u *Undo) sync(isUndo bool) (pre, post func()) {
@@ -27,6 +29,7 @@ func (u *Undo) sync(isUndo bool) (pre, post func()) {
 				u.addToUndo() // store model in undo list
 			}
 		}, func() {
+			u.changed = true
 			// u.op.UpdateModel() // update camera view
 			// u.mu.Unlock()      // mutex unlock everythink
 		}
@@ -70,12 +73,52 @@ func (u *Undo) Undo() {
 	u.list.Remove(el)
 }
 
-func (u *Undo) Open(name string) {
+func (u *Undo) Open(name string) (err error) {
 	logger.Print("Open")
-	u.model.Open(name)
+	u.list = list.New()
+	err = u.model.Open(name)
+	if err != nil {
+		return
+	}
+	u.StandardView(StandardViewXOYpos)
+	u.changed = false
+	return
 }
 
-func(u *Undo) GetPresentFilename() (name string) {
+func (u *Undo) Save() error {
+	logger.Print("Save")
+	if err := u.model.Save(); err != nil {
+		logger.Printf("Save: %v", err)
+		return err
+	}
+	u.changed = false
+	return nil
+}
+
+func (u *Undo) SaveAs(filename string) error {
+	logger.Print("SaveAs")
+	if err := u.model.SaveAs(filename); err != nil {
+		logger.Printf("Save: %v", err)
+		return err
+	}
+	u.changed = false
+	return nil
+}
+
+func (u *Undo) Close() {
+	logger.Print("Close")
+	*u.op.actions <- func() (fus bool) {
+		close(*u.quit)
+		return false
+	}
+}
+
+func (u *Undo) IsChangedModel() bool {
+	logger.Print("IsChangedModel")
+	return u.changed
+}
+
+func (u *Undo) GetPresentFilename() (name string) {
 	logger.Print("GetPresentFilename")
 	return u.model.GetPresentFilename()
 }

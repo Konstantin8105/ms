@@ -1,8 +1,11 @@
 package ms
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"os"
 	"runtime"
 	"runtime/debug"
 	"strings"
@@ -217,9 +220,47 @@ func (mm *Model) GetPresentFilename() (name string) {
 	return mm.filename
 }
 
-func (mm *Model) Open(name string) {
+func (mm *Model) Save() (err error) {
+	logger.Printf("Save")
+	b, err := json.MarshalIndent(mm, "", "  ")
+	if err != nil {
+		logger.Printf("Save: %v", err)
+		return
+	}
+	err = os.WriteFile(mm.filename, b, 0666)
+	if err != nil {
+		logger.Printf("Save: %v", err)
+		return
+	}
+	return
+}
+
+func (mm *Model) SaveAs(filename string) (err error) {
+	logger.Printf("SaveAs")
+	name := mm.filename
+	mm.filename = filename
+	if err := mm.Save(); err != nil {
+		mm.filename = name
+		return err
+	}
+	return nil
+}
+
+func (mm *Model) Open(filename string) (err error) {
 	logger.Printf("Open")
-	mm.filename = name
+	// read native json file format
+	var b []byte
+	b, err = ioutil.ReadFile(filename)
+	if err != nil {
+		return
+	}
+	var model Model
+	if err = json.Unmarshal(b, &model); err != nil {
+		return
+	}
+	*mm = model
+	mm.filename = filename
+	return
 }
 
 func (mm *Model) AddModel(m Model) {
@@ -2193,12 +2234,13 @@ func min(xs ...float64) (res float64) {
 
 var testCoverageFunc func(m Mesh, ch *chan ds.Action)
 
-func Run(quit <-chan struct{}) (err error) {
+func Run() (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v\n%v\n%v", err, r, string(debug.Stack()))
 		}
 	}()
+	quit := make(chan struct{})
 	// initialize undo chain
 	var (
 		mm        Undo
@@ -2216,6 +2258,7 @@ func Run(quit <-chan struct{}) (err error) {
 	// prepare model
 	// if filename == "" {
 	mm.model = new(Model)
+	mm.quit = &quit
 	// } else if strings.HasSuffix(strings.ToLower(filename), FileExtension) {
 	// 	// read native json file format
 	// 	var b []byte
@@ -2286,7 +2329,7 @@ func Run(quit <-chan struct{}) (err error) {
 		screen.ChangeRatio(0.4) // TODO: add to interface
 		return false
 	}
-	screen.Run(quit)
+	screen.Run(&quit)
 	closedApp = true
 	time.Sleep(2 * time.Second)
 	close(ch)

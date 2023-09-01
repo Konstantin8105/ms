@@ -3,7 +3,7 @@ module github.com/Konstantin8105/ms
 go 1.18
 
 require (
-	github.com/Konstantin8105/ds v0.0.0-20230827090938-eab9dde4bdab
+	github.com/Konstantin8105/ds v0.0.0-20230901130001-2bf3c88c7e33
 	github.com/Konstantin8105/errors v0.1.0
 	github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e
 	github.com/Konstantin8105/gog v0.0.0-20221011134020-d25f31641629
@@ -14,6 +14,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b
+	github.com/ncruces/zenity v0.10.10
 )
 
 require (
@@ -25,7 +26,6 @@ require (
 	github.com/josephspurrier/goversioninfo v1.4.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/ncruces/zenity v0.10.10 // indirect
 	github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	golang.org/x/image v0.11.0 // indirect

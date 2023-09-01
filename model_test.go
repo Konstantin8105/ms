@@ -157,7 +157,6 @@ func TestIntegration(t *testing.T) {
 	// }()
 
 	// tests movements
-	quit := make(chan struct{})
 	defer func() {
 		testCoverageFunc = nil
 	}()
@@ -196,7 +195,7 @@ func TestIntegration(t *testing.T) {
 			wg.Wait()
 			if len(els) == 0 {
 				logger.Printf("Error: SelectElements is zero")
-				close(quit)
+				mm.Close()
 				t.Fatalf("after select screen")
 			}
 		}
@@ -220,7 +219,7 @@ func TestIntegration(t *testing.T) {
 			wg.Wait()
 			if len(els) == 0 {
 				logger.Printf("Error: SelectElements is zero")
-				close(quit)
+				mm.Close()
 				t.Fatalf("after select screen")
 			}
 
@@ -243,7 +242,7 @@ func TestIntegration(t *testing.T) {
 			wg.Wait()
 			if len(els) == 0 {
 				logger.Printf("Error: SelectElements is zero")
-				close(quit)
+				mm.Close()
 				t.Fatalf("after select screen")
 			}
 
@@ -268,7 +267,7 @@ func TestIntegration(t *testing.T) {
 			}
 			wg.Wait()
 			if len(tris) == 0 {
-				close(quit)
+				mm.Close()
 				t.Fatalf("No 3")
 			}
 
@@ -290,7 +289,7 @@ func TestIntegration(t *testing.T) {
 			}
 			wg.Wait()
 			if len(tris) == 0 {
-				close(quit)
+				mm.Close()
 				t.Fatalf("No 4")
 			}
 			run("MoveCopyNodesDistance", func() {
@@ -311,10 +310,10 @@ func TestIntegration(t *testing.T) {
 			run("Undo", func() { mm.Undo() })
 		}
 		run("StandardView", func() { mm.StandardView(StandardViewXOZpos) })
-		close(quit)
+		mm.Close()
 	}
 	// create a new model
-	if err := Run("", quit); err != nil {
+	if err := Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}
