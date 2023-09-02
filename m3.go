@@ -1268,13 +1268,21 @@ func (ms *MouseSelect) Preview(xinit, yinit int32) {
 	// draw select rectangle
 	if x2 < x1 {
 		gl.Color3ub(255, 0, 0) // Red
+		gl.Begin(gl.LINES)
+		defer func() {
+			gl.End()
+		}()
 	} else {
-		gl.Enable(gl.LINE_STIPPLE)
 		gl.LineStipple(1, 0x00FF)
-		gl.Color3ub(0, 0, 255) // Blue
+		gl.Enable(gl.LINE_STIPPLE)
+		gl.Begin(gl.LINE_STRIP)
+		defer func() {
+			gl.End()
+			gl.Disable(gl.LINE_STIPPLE)
+		}()
+		gl.Color3ub(0, 0, 255)    // Blue
 	}
 	gl.LineWidth(1)
-	gl.Begin(gl.LINES)
 	gl.Vertex2i(x1, y1)
 	gl.Vertex2i(x1, y2)
 
@@ -1286,8 +1294,6 @@ func (ms *MouseSelect) Preview(xinit, yinit int32) {
 
 	gl.Vertex2i(x2, y1)
 	gl.Vertex2i(x1, y1)
-	gl.End()
-	gl.Disable(gl.LINE_STIPPLE)
 }
 
 func (ms *MouseSelect) Action(op *Opengl) {
