@@ -2285,12 +2285,13 @@ func Run() (err error) {
 	// }
 
 	// tui
-	tui, err := NewTui(&mm, &closedApp, &ch)
+	tui,initialization, err := NewTui(&mm, &closedApp, &ch)
 	if err != nil {
 		return
 	}
 	tuiWindow := window.NewTui(tui)
 	ws[0] = tuiWindow
+	mm.addTuiInitialization(initialization)
 
 	// 3d model
 	opWindow, err := NewOpengl(&mm, &ch)

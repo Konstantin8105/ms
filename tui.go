@@ -99,7 +99,7 @@ func init() {
 	group := File
 	ops := []Operation{{
 		Name: "Open file",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			list.Add(vl.TextStatic("Present file"))
@@ -144,10 +144,12 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}}, {
 		Name: "Save",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var res vl.Text
@@ -165,10 +167,12 @@ func init() {
 			list.Add(&b)
 			list.Add(&res)
 
-			return &list
+			return &list, func() {
+				res.SetText("")
+			}
 		}}, {
 		Name: "Save As",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var b vl.Button
@@ -193,10 +197,12 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}}, {
 		Name: "Close",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var b vl.Button
@@ -223,10 +229,12 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}}, {
 		Name: "Name of actual model/part",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var pre vl.Text
@@ -270,10 +278,12 @@ func init() {
 					*actions <- update
 				}
 			}()
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}}, {
 		Name: "Choose model/part",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var rg vl.RadioGroup
@@ -322,10 +332,12 @@ func init() {
 				}
 			}()
 
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}}, {
 		Name: "Create a new part",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var listH vl.ListH
@@ -346,10 +358,12 @@ func init() {
 				m.PartNew(n)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				name.SetText("")
+			}
 		}}, {
 		Name: "Rename model/part",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var listH vl.ListH
@@ -390,7 +404,9 @@ func init() {
 				}
 			}()
 
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}},
 	}
 	for i := range ops {
@@ -408,7 +424,7 @@ func init() {
 	group := Edit
 	ops := []Operation{{
 		Name: "Undo",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.ListH
 
 			list.Add(vl.TextStatic("Undo operation for erase last change of model"))
@@ -420,7 +436,9 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}},
 	}
 	for i := range ops {
@@ -476,7 +494,7 @@ func init() {
 	name := group.String()
 	ops := []Operation{{
 		Name: "Standard View",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var names []string
@@ -498,10 +516,12 @@ func init() {
 				m.StandardView(SView(pos))
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}}, {
 		Name: "Color edges of elements",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var rg vl.RadioGroup
@@ -518,7 +538,9 @@ func init() {
 				m.ColorEdge(pos == 1)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}},
 	}
 	for i := range ops {
@@ -609,10 +631,10 @@ func init() {
 	group := AddRemove
 	ops := []Operation{{
 		Name: "Add node by coordinate [X,Y,Z]",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			w, gt := Input3Float(
+			w, gt, initf := Input3Float(
 				"Coordinate:",
 				[3]string{"X", "Y", "Z"},
 				[3]string{"meter", "meter", "meter"},
@@ -629,14 +651,16 @@ func init() {
 				m.AddNode(vs[0], vs[1], vs[2])
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				initf()
+			}
 		}}, {
 		Name: "Add line2 by nodes",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			b, bgt := Select("Select node1", Single, m.GetSelectNodes)
+			b, bgt, initb := Select("Select node1", Single, m.GetSelectNodes)
 			list.Add(b)
-			e, egt := Select("Select node2", Single, m.GetSelectNodes)
+			e, egt, inite := Select("Select node2", Single, m.GetSelectNodes)
 			list.Add(e)
 
 			var bi vl.Button
@@ -654,16 +678,19 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				initb()
+				inite()
+			}
 		}}, {
 		Name: "Add triangle3 by nodes",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			n1, n1gt := Select("Select node1", Single, m.GetSelectNodes)
+			n1, n1gt, init1 := Select("Select node1", Single, m.GetSelectNodes)
 			list.Add(n1)
-			n2, n2gt := Select("Select node2", Single, m.GetSelectNodes)
+			n2, n2gt, init2 := Select("Select node2", Single, m.GetSelectNodes)
 			list.Add(n2)
-			n3, n3gt := Select("Select node3", Single, m.GetSelectNodes)
+			n3, n3gt, init3 := Select("Select node3", Single, m.GetSelectNodes)
 			list.Add(n3)
 
 			var bi vl.Button
@@ -685,10 +712,14 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				init1()
+				init2()
+				init3()
+			}
 		}}, {
 		Name: "Add by left cursor button",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var names []string
@@ -706,14 +737,16 @@ func init() {
 				m.AddLeftCursor(LeftCursor(rg.GetPos()))
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				// do nothing
+			}
 		}}, {
 		Name: "Split line2 by distance from node",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			s, sgt := Select("Select lines", Many, m.GetSelectLines)
+			s, sgt, inits := Select("Select lines", Many, m.GetSelectLines)
 			list.Add(s)
-			d, dgt := InputFloat("Distance", "meter")
+			d, dgt, initd := InputFloat("Distance", "meter")
 			list.Add(d)
 
 			var rg vl.RadioGroup
@@ -731,14 +764,17 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				inits()
+				initd()
+			}
 		}}, {
 		Name: "Split Line2 by ratio",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			s, sgt := Select("Select line", Many, m.GetSelectLines)
+			s, sgt, inits := Select("Select line", Many, m.GetSelectLines)
 			list.Add(s)
-			d, dgt := InputFloat("Ratio", "")
+			d, dgt, initd := InputFloat("Ratio", "")
 			list.Add(d)
 
 			var rg vl.RadioGroup
@@ -756,15 +792,18 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				inits()
+				initd()
+			}
 		}}, {
 		Name: "Split Line2 to equal parts",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			ns, nsgt := Select("Select lines", Many, m.GetSelectLines)
+			ns, nsgt, inits := Select("Select lines", Many, m.GetSelectLines)
 			list.Add(ns)
 
-			r, rgt := InputUnsigned("Amount parts", "")
+			r, rgt, initr := InputUnsigned("Amount parts", "")
 			list.Add(r)
 
 			var bi vl.Button
@@ -778,12 +817,15 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				inits()
+				initr()
+			}
 		}}, {
 		Name: "Split Triangle3 to 3 Triangle3",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			ns, nsgt := Select("Select triangles3", Many, m.GetSelectTriangles)
+			ns, nsgt, initn := Select("Select triangles3", Many, m.GetSelectTriangles)
 			list.Add(ns)
 
 			var bi vl.Button
@@ -793,10 +835,12 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				initn()
+			}
 		}}, {
 		Name: "Intersection between nodes and elements",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -813,13 +857,15 @@ func init() {
 				m.Intersection(cs, es)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Merge nodes",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			d, dgt := InputFloat("Minimal distance", "meter")
+			d, dgt,initd := InputFloat("Minimal distance", "meter")
 			list.Add(d)
 
 			var b vl.Button
@@ -835,13 +881,16 @@ func init() {
 				m.MergeNodes(d)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				initd()
+				//TODO clean
+			}
 		}}, {
 		Name: "Merge lines",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			s, sgt := Select("Select lines", Many, m.GetSelectLines)
+			s, sgt,inits := Select("Select lines", Many, m.GetSelectLines)
 			list.Add(s)
 
 			var b vl.Button
@@ -850,10 +899,13 @@ func init() {
 				m.MergeLines(sgt())
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				inits()
+				//TODO clean
+			}
 		}}, {
 		Name: "Remove nodes with same coordinates",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var bi vl.Button
@@ -863,10 +915,12 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Remove nodes without connection to element",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var bi vl.Button
@@ -876,10 +930,12 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Remove lines with zero lenght",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var bi vl.Button
@@ -889,10 +945,12 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Remove triangles with zero area",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var bi vl.Button
@@ -902,10 +960,12 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Remove selected",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -923,7 +983,9 @@ func init() {
 			}
 			list.Add(&bi)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}},
 	}
 	for i := range ops {
@@ -943,10 +1005,10 @@ func init() {
 	name := group.String()
 	ops := []Operation{{
 		Name: "Ignore elements",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			elf, elfgt := Select("Select elements", Many, m.GetSelectElements)
+			elf, elfgt,inite := Select("Select elements", Many, m.GetSelectElements)
 			list.Add(elf)
 
 			var b vl.Button
@@ -960,10 +1022,13 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				inite()
+				//TODO clean
+			}
 		}}, {
 		Name: "Clear ignoring elements",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var b vl.Button
@@ -973,7 +1038,9 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}},
 	}
 	for i := range ops {
@@ -991,7 +1058,7 @@ func init() {
 	group := Hide
 	ops := []Operation{{
 		Name: "Hide",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -1009,10 +1076,12 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Show only selected",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var b vl.Button
@@ -1026,10 +1095,12 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Unhide all",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var b vl.Button
@@ -1039,7 +1110,9 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}},
 	}
 	for i := range ops {
@@ -1128,7 +1201,7 @@ func init() {
 	name := group.String()
 	ops := []Operation{{
 		Name: "Left cursor selection",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var nodes vl.CheckBox
@@ -1153,10 +1226,12 @@ func init() {
 				m.SelectLeftCursor(nodes.Checked, lines.Checked, tris.Checked, qs.Checked)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Invert selection",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var nodes vl.CheckBox
@@ -1182,10 +1257,12 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Select ortho lines parallel axes X, Y, Z",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var x vl.CheckBox
@@ -1207,10 +1284,12 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Select lines on plane XOY, YOZ, XOZ",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var xoy vl.CheckBox
@@ -1232,13 +1311,15 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Select lines parallel lines",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			lf, lfgt := Select("Lines", Many, m.GetSelectLines)
+			lf, lfgt, initl := Select("Lines", Many, m.GetSelectLines)
 			list.Add(lf)
 
 			var b vl.Button
@@ -1252,17 +1333,20 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				initl()
+				//TODO clean
+			}
 		}}, {
 		Name: "Select lines by lenght",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var rg vl.RadioGroup
 			rg.AddText([]string{"More", "Less"}...)
 			list.Add(&rg)
 
-			d, dgt := InputFloat("Lenght", "meter")
+			d, dgt , initd := InputFloat("Lenght", "meter")
 			list.Add(d)
 
 			var b vl.Button
@@ -1279,13 +1363,16 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				initd()
+				//TODO clean
+			}
 		}}, {
 		Name: "Select lines in cylinder system coordinate",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			nf, nfgt := Select("Node", Single, m.GetSelectNodes)
+			nf, nfgt, initn := Select("Node", Single, m.GetSelectNodes)
 			list.Add(nf)
 
 			list.Add(vl.TextStatic("Lines:"))
@@ -1316,10 +1403,13 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				initn()
+				//TODO clean
+			}
 		}}, {
 		Name: "Deselect all",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var b vl.Button
@@ -1329,10 +1419,12 @@ func init() {
 			}
 			list.Add(&b)
 
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Select all",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var nodes vl.CheckBox
@@ -1353,7 +1445,9 @@ func init() {
 				m.SelectAll(nodes.Checked, lines.Checked, tris.Checked)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}},
 	}
 	for i := range ops {
@@ -1402,7 +1496,7 @@ type MoveCopyble interface {
 func init() {
 	ops := []Operation{{
 		Name: "Move/Rotate",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -1413,15 +1507,18 @@ func init() {
 				getC func() (basePoint [3]float64, dc diffCoordinate, ok bool)
 			}
 			var paths []path
+			var inits []func()
 			{ // from node to node
 				var ch vl.CollapsingHeader
 				ch.SetText("Move from node to node:")
 
 				var list vl.List
-				nf, nfgt := Select("From node", Single, m.GetSelectNodes)
+				nf, nfgt ,init1 := Select("From node", Single, m.GetSelectNodes)
 				list.Add(nf)
-				nt, ntgt := Select("To node", Single, m.GetSelectNodes)
+				inits = append(inits, init1)
+				nt, ntgt , init2 := Select("To node", Single, m.GetSelectNodes)
 				list.Add(nt)
+				inits = append(inits, init2)
 
 				ch.Root = &list
 				paths = append(paths, path{
@@ -1456,11 +1553,12 @@ func init() {
 				var ch vl.CollapsingHeader
 				ch.SetText("Move by coordinate different [dX,dY,dZ]:")
 
-				w, gt := Input3Float(
+				w, gt, initw := Input3Float(
 					"",
 					[3]string{"dX", "dY", "dZ"},
 					[3]string{"meter", "meter", "meter"},
 				)
+				inits = append(inits, initw)
 
 				ch.Root = w
 				paths = append(paths, path{
@@ -1484,16 +1582,18 @@ func init() {
 
 				var list vl.List
 
-				nt, ntgt := Select("Center of rotation", Single, m.GetSelectNodes)
+				nt, ntgt, initn := Select("Center of rotation", Single, m.GetSelectNodes)
 				list.Add(nt)
+				inits = append(inits, initn)
 
 				list.Add(new(vl.Separator))
-				w, gt := Input3Float(
+				w, gt, initi := Input3Float(
 					"Angle of rotation",
 					[3]string{"around axe X", "around axe Y", "around axe Z"},
 					[3]string{"degree", "degree", "degree"},
 				)
 				list.Add(w)
+				inits = append(inits, initi)
 
 				ch.Root = &list
 				paths = append(paths, path{
@@ -1541,10 +1641,12 @@ func init() {
 				m.Move(coordgt(), elgt(), bp, p)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				//TODO clean
+			}
 		}}, {
 		Name: "Translational/Circular repeat/Spiral",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -1555,18 +1657,22 @@ func init() {
 				getC func() (basePoint [3]float64, dcs []diffCoordinate, ok bool)
 			}
 			var paths []path
+			var inits []func()
 			{ // from node to node with equal parts
 				var ch vl.CollapsingHeader
 				ch.SetText("Copy from node to node with equal parts:")
 
 				var list vl.List
-				nf, nfgt := Select("From node", Single, m.GetSelectNodes)
+				nf, nfgt, initn1 := Select("From node", Single, m.GetSelectNodes)
 				list.Add(nf)
-				nt, ntgt := Select("To node", Single, m.GetSelectNodes)
+				inits = append(inits, initn1)
+				nt, ntgt, initn2 := Select("To node", Single, m.GetSelectNodes)
 				list.Add(nt)
+				inits = append(inits, initn2)
 
-				parts, partsgt := InputUnsigned("Amount equal parts", "items")
+				parts, partsgt, initp := InputUnsigned("Amount equal parts", "items")
 				list.Add(parts)
+				inits = append(inits, initp)
 
 				ch.Root = &list
 				paths = append(paths, path{
@@ -1611,15 +1717,17 @@ func init() {
 				ch.SetText("Copy by coordinate different [dX,dY,dZ] with equal parts:")
 
 				var list vl.List
-				w, gt := Input3Float(
+				w, gt, initw := Input3Float(
 					"",
 					[3]string{"dX", "dY", "dZ"},
 					[3]string{"meter", "meter", "meter"},
 				)
 				list.Add(w)
+				inits = append(inits, initw)
 
-				parts, partsgt := InputUnsigned("Amount equal parts", "items")
+				parts, partsgt, initp := InputUnsigned("Amount equal parts", "items")
 				list.Add(parts)
+				inits = append(inits, initp)
 
 				ch.Root = &list
 				paths = append(paths, path{
@@ -1668,7 +1776,7 @@ func init() {
 				var bAdd vl.Button
 				bAdd.SetText("Add distance")
 				bAdd.OnClick = func() {
-					w, gt := InputFloat(
+					w, gt, _ := InputFloat(
 						fmt.Sprintf("%d", distances.Size()+1),
 						"meter",
 					)
@@ -1721,19 +1829,22 @@ func init() {
 
 				var list vl.List
 
-				nt, ntgt := Select("Center of rotation", Single, m.GetSelectNodes)
+				nt, ntgt, initn := Select("Center of rotation", Single, m.GetSelectNodes)
 				list.Add(nt)
+				inits = append(inits, initn)
 
 				list.Add(new(vl.Separator))
-				w, gt := Input3Float(
+				w, gt, initw := Input3Float(
 					"Angle of rotation",
 					[3]string{"around axe X", "around axe Y", "around axe Z"},
 					[3]string{"degree", "degree", "degree"},
 				)
 				list.Add(w)
+				inits = append(inits, initw)
 
-				parts, partsgt := InputUnsigned("Amount equal parts", "items")
+				parts, partsgt, initp := InputUnsigned("Amount equal parts", "items")
 				list.Add(parts)
+				inits = append(inits, initp)
 
 				ch.Root = &list
 				paths = append(paths, path{
@@ -1800,10 +1911,17 @@ func init() {
 				m.Copy(coordgt(), elgt(), bp, ps, lines.Checked, tris.Checked)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				for i := range inits {
+					if f := inits[i]; f != nil {
+						f()
+					}
+				}
+				//TODO clean
+			}
 		}}, {
 		Name: "Mirror",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			ns, coordgt, elgt := SelectAll(m)
@@ -1814,14 +1932,16 @@ func init() {
 				getC func() (basePoint [3][3]float64, ok bool)
 			}
 			var paths []path
+			var inits []func()
 			{
 				var ch vl.CollapsingHeader
 				ch.SetText("Node and plane:")
 
 				var list vl.List
 
-				n, ngt := Select("Select node", Single, m.GetSelectNodes)
+				n, ngt, initn := Select("Select node", Single, m.GetSelectNodes)
 				list.Add(n)
+				inits = append(inits, initn)
 
 				list.Add(new(vl.Separator))
 				list.Add(vl.TextStatic("Choose plane:"))
@@ -1885,12 +2005,15 @@ func init() {
 
 				var list vl.List
 
-				n0, ngt0 := Select("Select node 1:", Single, m.GetSelectNodes)
+				n0, ngt0, init0 := Select("Select node 1:", Single, m.GetSelectNodes)
 				list.Add(n0)
-				n1, ngt1 := Select("Select node 2:", Single, m.GetSelectNodes)
+				inits = append(inits, init0)
+				n1, ngt1, init1 := Select("Select node 2:", Single, m.GetSelectNodes)
 				list.Add(n1)
-				n2, ngt2 := Select("Select node 3:", Single, m.GetSelectNodes)
+				inits = append(inits, init1)
+				n2, ngt2, init2 := Select("Select node 3:", Single, m.GetSelectNodes)
 				list.Add(n2)
+				inits = append(inits, init2)
 
 				ch.Root = &list
 
@@ -1976,7 +2099,14 @@ func init() {
 					lines.Checked, tris.Checked)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				for i := range inits {
+					if f := inits[i]; f != nil {
+						f()
+					}
+				}
+				//TODO clean
+			}
 		}},
 	}
 	for i := range ops {
@@ -2061,10 +2191,10 @@ func init() {
 	group := Plugin
 	ops := []Operation{{
 		Name: "Demo: spiral",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget) {
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			r, rgt := InputUnsigned("Amount levels", "")
+			r, rgt, initr := InputUnsigned("Amount levels", "")
 			list.Add(r)
 
 			var b vl.Button
@@ -2080,7 +2210,10 @@ func init() {
 				m.DemoSpiral(n)
 			}
 			list.Add(&b)
-			return &list
+			return &list, func() {
+				initr()
+				//TODO clean
+			}
 		}},
 	}
 	for i := range ops {
@@ -2115,12 +2248,19 @@ type Operation struct {
 		m Mesh,
 		actions *chan ds.Action,
 		closedApp *bool,
-	) (w vl.Widget)
+	) (
+		w vl.Widget,
+		initialization func(), // initialization values after open another file
+	)
 }
 
 var Operations []Operation
 
-func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() (_ uint, ok bool)) {
+func InputUnsigned(prefix, postfix string) (
+	w vl.Widget,
+	gettext func() (_ uint, ok bool),
+	initialization func(),
+) {
 	var (
 		list vl.ListH
 		in   vl.Inputbox
@@ -2137,10 +2277,16 @@ func InputUnsigned(prefix, postfix string) (w vl.Widget, gettext func() (_ uint,
 			return 0, false
 		}
 		return uint(value), true
+	}, func() {
+		in.SetText("2")
 	}
 }
 
-func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() (_ float64, ok bool)) {
+func InputFloat(prefix, postfix string) (
+	w vl.Widget,
+	gettext func() (_ float64, ok bool),
+	initialization func(),
+) {
 	var (
 		list vl.ListH
 		in   vl.Inputbox
@@ -2154,40 +2300,51 @@ func InputFloat(prefix, postfix string) (w vl.Widget, gettext func() (_ float64,
 	list.Add(&in)
 	list.Add(vl.TextStatic(postfix))
 	return &list, func() (v float64, ok bool) {
-		str := in.GetText()
-		clearValue(&str)
-		v, err := strconv.ParseFloat(str, 64)
-		if err != nil {
-			in.SetText(Default)
-			return
+			str := in.GetText()
+			clearValue(&str)
+			v, err := strconv.ParseFloat(str, 64)
+			if err != nil {
+				in.SetText(Default)
+				return
+			}
+			return v, true
+		}, func() {
+			in.SetText("")
 		}
-		return v, true
-	}
 }
 
 func Input3Float(header string, prefix, postfix [3]string) (
 	w vl.Widget,
 	gettext func() (_ [3]float64, ok bool),
+	initialization func(),
 ) {
 	var list vl.List
 	list.Add(vl.TextStatic(header))
 	var gt [3]func() (_ float64, ok bool)
+	var inits [3]func()
 	for i := 0; i < 3; i++ {
-		w, wgt := InputFloat(prefix[i], postfix[i])
+		w, wgt, init := InputFloat(prefix[i], postfix[i])
 		list.Add(w)
 		gt[i] = wgt
+		inits[i] = init
 	}
 	return &list, func() (vs [3]float64, ok bool) {
-		for i := 0; i < 3; i++ {
-			v, vok := gt[i]()
-			if !vok {
-				return
+			for i := 0; i < 3; i++ {
+				v, vok := gt[i]()
+				if !vok {
+					return
+				}
+				vs[i] = v
 			}
-			vs[i] = v
+			ok = true
+			return
+		}, func() {
+			for i := range inits {
+				if f := inits[i]; f != nil {
+					f()
+				}
+			}
 		}
-		ok = true
-		return
-	}
 }
 
 func SelectAll(m Mesh) (
@@ -2245,6 +2402,7 @@ func SelectAll(m Mesh) (
 func Select(name string, single bool, selector func(single bool) []uint) (
 	w vl.Widget,
 	gettext func() []uint,
+	initialization func(),
 ) {
 	var l vl.ListH
 	l.Add(vl.TextStatic(name))
@@ -2278,8 +2436,10 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 	}
 	l.Add(&b)
 	return &l, func() (ids []uint) {
-		return convertUint(id.GetText())
-	}
+			return convertUint(id.GetText())
+		}, func() {
+			id.SetText("")
+		}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2331,7 +2491,7 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 // 	return vl.Run(tui.root, tui.actions, quit, tcell.KeyCtrlC)
 // }
 
-func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget, err error) {
+func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget, initialization func(), err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			// safety ignore panic
@@ -2362,6 +2522,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 		colHeader[g].Root = &sublist
 		list.Add(&colHeader[g])
 	}
+	var is []func()
 	for g := range colHeader {
 		for i := range Operations {
 			if Operations[i].Group != GroupID(g) {
@@ -2375,10 +2536,18 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 				return
 			}
 			// r := part(tui.mesh, tui.actions)
-			r := part(mesh, actions, closedApp)
+			r, inits := part(mesh, actions, closedApp)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true
+			is = append(is, inits)
+		}
+	}
+	initialization = func() {
+		for i := range is {
+			if f := is[i]; f != nil {
+				f()
+			}
 		}
 	}
 	{

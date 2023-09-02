@@ -15,8 +15,13 @@ type Undo struct {
 	model *Model  // actual model
 	op    *Opengl // for 3d
 	// tui   *Tui    // for terminal ui
-	changed bool
-	quit    *chan struct{}
+	changed        bool
+	quit           *chan struct{}
+	initialization func()
+}
+
+func (u *Undo) addTuiInitialization(f func()) {
+	u.initialization = f
 }
 
 func (u *Undo) sync(isUndo bool) (pre, post func()) {
@@ -82,6 +87,9 @@ func (u *Undo) Open(name string) (err error) {
 	}
 	u.StandardView(StandardViewXOYpos)
 	u.changed = false
+	if f := u.initialization; f != nil {
+		f()
+	}
 	return
 }
 
