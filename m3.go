@@ -1080,19 +1080,16 @@ func (op *Opengl) ColorEdge(isColor bool) {
 	}
 }
 
-func (op *Opengl) SelectLeftCursor(nodes, lines, tria, quards bool) {
+func (op *Opengl) SelectLeftCursor(nodes bool, elements []bool) {
 	op.cursorLeft = 0
 	if nodes {
 		op.cursorLeft |= selectPoints
 	}
-	if lines {
-		op.cursorLeft |= selectLines
-	}
-	if tria {
-		op.cursorLeft |= selectTriangles
-	}
-	if quards {
-		op.cursorLeft |= selectQuadrs
+	for el := Line2; el < lastElement; el = el+1 {
+		if !elements[int(el)] {
+			continue
+		}
+		op.cursorLeft |= el.getSelect()
 	}
 }
 
@@ -1280,7 +1277,7 @@ func (ms *MouseSelect) Preview(xinit, yinit int32) {
 			gl.End()
 			gl.Disable(gl.LINE_STIPPLE)
 		}()
-		gl.Color3ub(0, 0, 255)    // Blue
+		gl.Color3ub(0, 0, 255) // Blue
 	}
 	gl.LineWidth(1)
 	gl.Vertex2i(x1, y1)

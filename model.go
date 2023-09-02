@@ -39,6 +39,30 @@ const (
 	ElRemove = math.MaxUint8 // 255
 )
 
+func (e ElType) String() string {
+	switch e {
+	case Line2:
+		return "Line with 2 points"
+	case Triangle3:
+		return "Triangle with 3 points"
+	case Quadr4:
+		return "Quard with 4 points"
+	}
+	return "Undefined type element"
+}
+
+func (e ElType) getSelect() viewState {
+	switch e {
+	case Line2:
+		return selectLines
+	case Triangle3:
+		return selectTriangles
+	case Quadr4:
+		return selectQuadrs
+	}
+	panic(fmt.Errorf("undefined getSelect: %v", e))
+}
+
 // Element is typical element for FEM. Examples:
 //
 //	Line o======o                                             //
@@ -651,9 +675,9 @@ func (mm *Model) Unignore() {
 	*ignore = nil
 }
 
-func (mm *Model) SelectLeftCursor(nodes, lines, tria, quards bool) {
-	logger.Printf("Model not implemented SelectLeftCursor: %v %v %v %v",
-		nodes, lines, tria, quards)
+func (mm *Model) SelectLeftCursor(nodes bool, elements []bool) {
+	logger.Printf("Model not implemented SelectLeftCursor: %v %v",
+		nodes, elements)
 }
 
 func (mm *Model) GetSelectNodes(single bool) (ids []uint) {
@@ -2285,7 +2309,7 @@ func Run() (err error) {
 	// }
 
 	// tui
-	tui,initialization, err := NewTui(&mm, &closedApp, &ch)
+	tui, initialization, err := NewTui(&mm, &closedApp, &ch)
 	if err != nil {
 		return
 	}

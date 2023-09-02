@@ -1179,7 +1179,7 @@ func (d Direction) String() string {
 type Selectable interface {
 	// TODO select deeper or only first iteration
 
-	SelectLeftCursor(nodes, lines, tria, quards bool)
+	SelectLeftCursor(nodes bool, elements []bool)
 
 	GetSelectNodes(single bool) (ids []uint)
 	GetSelectLines(single bool) (ids []uint)
@@ -1223,26 +1223,24 @@ func init() {
 			nodes.SetText("Nodes")
 			list.Add(&nodes)
 
-			var lines vl.CheckBox
-			lines.SetText("Lines")
-			list.Add(&lines)
-
-			var tris vl.CheckBox
-			tris.SetText("Triangles")
-			list.Add(&tris)
-
-			var qs vl.CheckBox
-			qs.SetText("Quards")
-			list.Add(&qs)
+			els := make([]vl.CheckBox, lastElement)
+			for e := Line2; e < lastElement; e++ {
+				els[int(e)].SetText(ElType(e).String())
+				list.Add(&els[int(e)])
+			}
 
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				m.SelectLeftCursor(nodes.Checked, lines.Checked, tris.Checked, qs.Checked)
+				ls := make([]bool, len(els))
+				for i := range els {
+					ls[i] = els[i].Checked
+				}
+				m.SelectLeftCursor(nodes.Checked, ls)
 			}
 			list.Add(&b)
 			return &list, func() {
-				//TODO clean
+				// do nothing
 			}
 		}}, {
 		Name: "Invert selection",

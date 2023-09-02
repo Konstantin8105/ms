@@ -256,9 +256,9 @@ func (u *Undo) AddLeftCursor(lc LeftCursor) {
 	u.op.AddLeftCursor(lc)
 }
 
-func (u *Undo) SelectLeftCursor(nodes, lines, tria, quards bool) {
+func (u *Undo) SelectLeftCursor(nodes bool,elements []bool) {
 	logger.Print("SelectLeftCursor")
-	u.op.SelectLeftCursor(nodes, lines, tria, quards)
+	u.op.SelectLeftCursor(nodes, elements)
 }
 
 func (u *Undo) AddModel(m Model) {
