@@ -19,6 +19,7 @@ const (
 	File GroupID = iota
 	Edit
 	View
+	PartOperations
 	Selection
 	AddRemove
 	Ignore
@@ -44,6 +45,8 @@ func (g GroupID) String() string {
 		return "Edit"
 	case View:
 		return "View"
+	case PartOperations:
+		return "Part operations"
 	case Selection:
 		return "Select"
 	case AddRemove:
@@ -79,20 +82,6 @@ type Filable interface {
 	// 2D model: axesymm
 	// Convert to 2d
 
-	// Delete part
-
-	PartPresent() (id uint)
-	PartsName() (names []string)
-	PartChange(id uint)
-	PartNew(str string)
-	PartRename(id uint, str string)
-}
-
-func defaultPartName(id int) string {
-	if id == 0 {
-		return "base model"
-	}
-	return fmt.Sprintf("part %02d", id)
 }
 
 func init() {
@@ -232,7 +221,33 @@ func init() {
 			return &list, func() {
 				// do nothing
 			}
-		}}, {
+		}},
+	}
+	for i := range ops {
+		ops[i].Group = group
+	}
+	Operations = append(Operations, ops...)
+}
+
+type Partable interface {
+	PartPresent() (id uint)
+	PartsName() (names []string)
+	PartChange(id uint)
+	PartNew(str string)
+	PartRename(id uint, str string)
+	// Delete part
+}
+
+func defaultPartName(id int) string {
+	if id == 0 {
+		return "base model"
+	}
+	return fmt.Sprintf("part %02d", id)
+}
+
+func init() {
+	group := PartOperations
+	ops := []Operation{{
 		Name: "Name of actual model/part",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
@@ -865,7 +880,7 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			d, dgt,initd := InputFloat("Minimal distance", "meter")
+			d, dgt, initd := InputFloat("Minimal distance", "meter")
 			list.Add(d)
 
 			var b vl.Button
@@ -890,7 +905,7 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			s, sgt,inits := Select("Select lines", Many, m.GetSelectLines)
+			s, sgt, inits := Select("Select lines", Many, m.GetSelectLines)
 			list.Add(s)
 
 			var b vl.Button
@@ -1008,7 +1023,7 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			elf, elfgt,inite := Select("Select elements", Many, m.GetSelectElements)
+			elf, elfgt, inite := Select("Select elements", Many, m.GetSelectElements)
 			list.Add(elf)
 
 			var b vl.Button
@@ -1346,7 +1361,7 @@ func init() {
 			rg.AddText([]string{"More", "Less"}...)
 			list.Add(&rg)
 
-			d, dgt , initd := InputFloat("Lenght", "meter")
+			d, dgt, initd := InputFloat("Lenght", "meter")
 			list.Add(d)
 
 			var b vl.Button
@@ -1513,10 +1528,10 @@ func init() {
 				ch.SetText("Move from node to node:")
 
 				var list vl.List
-				nf, nfgt ,init1 := Select("From node", Single, m.GetSelectNodes)
+				nf, nfgt, init1 := Select("From node", Single, m.GetSelectNodes)
 				list.Add(nf)
 				inits = append(inits, init1)
-				nt, ntgt , init2 := Select("To node", Single, m.GetSelectNodes)
+				nt, ntgt, init2 := Select("To node", Single, m.GetSelectNodes)
 				list.Add(nt)
 				inits = append(inits, init2)
 
@@ -2225,6 +2240,7 @@ func init() {
 type Mesh interface {
 	Filable
 	Viewable
+	Partable
 	AddRemovable
 	Editable
 	Ignorable
@@ -2271,15 +2287,15 @@ func InputUnsigned(prefix, postfix string) (
 	list.Add(&in)
 	list.Add(vl.TextStatic(postfix))
 	return &list, func() (uint, bool) {
-		text := in.GetText()
-		value, err := strconv.ParseUint(text, 10, 64)
-		if err != nil {
-			return 0, false
+			text := in.GetText()
+			value, err := strconv.ParseUint(text, 10, 64)
+			if err != nil {
+				return 0, false
+			}
+			return uint(value), true
+		}, func() {
+			in.SetText("2")
 		}
-		return uint(value), true
-	}, func() {
-		in.SetText("2")
-	}
 }
 
 func InputFloat(prefix, postfix string) (
