@@ -733,7 +733,7 @@ func (mm *Model) GetSelectElements(single bool) (ids []uint) {
 	return
 }
 
-func (mm *Model) InvertSelect(nodes, lines, triangles, quards bool) {
+func (mm *Model) InvertSelect(nodes bool, elements []bool) {
 	if nodes {
 		for i := range mm.Coords {
 			if mm.Coords[i].Removed {
@@ -742,25 +742,12 @@ func (mm *Model) InvertSelect(nodes, lines, triangles, quards bool) {
 			mm.Coords[i].selected = !mm.Coords[i].selected
 		}
 	}
-	if lines {
-		for i := range mm.Elements {
-			if mm.Elements[i].ElementType != Line2 {
-				continue
-			}
-			mm.Elements[i].selected = !mm.Elements[i].selected
+	for el := Line2; el < lastElement; el++ {
+		if !elements[el] {
+			continue
 		}
-	}
-	if triangles {
 		for i := range mm.Elements {
-			if mm.Elements[i].ElementType != Triangle3 {
-				continue
-			}
-			mm.Elements[i].selected = !mm.Elements[i].selected
-		}
-	}
-	if quards {
-		for i := range mm.Elements {
-			if mm.Elements[i].ElementType != Quadr4 {
+			if mm.Elements[i].ElementType != el {
 				continue
 			}
 			mm.Elements[i].selected = !mm.Elements[i].selected
@@ -1032,23 +1019,18 @@ func (mm *Model) DeselectAll() {
 	}
 }
 
-func (mm *Model) SelectAll(nodes, lines, tria bool) {
+func (mm *Model) SelectAll(nodes bool, elements []bool) {
 	if nodes {
 		for i := range mm.Coords {
 			mm.Coords[i].selected = true
 		}
 	}
-	if lines {
-		for i := range mm.Elements {
-			if mm.Elements[i].ElementType != Line2 {
-				continue
-			}
-			mm.Elements[i].selected = true
+	for el := Line2; el < lastElement; el++ {
+		if !elements[el] {
+			continue
 		}
-	}
-	if tria {
 		for i := range mm.Elements {
-			if mm.Elements[i].ElementType != Triangle3 {
+			if mm.Elements[i].ElementType != el {
 				continue
 			}
 			mm.Elements[i].selected = true

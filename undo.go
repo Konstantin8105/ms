@@ -291,9 +291,9 @@ func (u *Undo) GetSelectElements(single bool) (ids []uint) {
 	return u.model.GetSelectElements(single)
 }
 
-func (u *Undo) InvertSelect(nodes, lines, triangles, quards bool) {
+func (u *Undo) InvertSelect(nodes bool, elements []bool) {
 	logger.Print("InvertSelect")
-	u.model.InvertSelect(nodes, lines, triangles, quards)
+	u.model.InvertSelect(nodes, elements)
 }
 
 func (u *Undo) SelectLinesOrtho(x, y, z bool) {
@@ -331,9 +331,9 @@ func (u *Undo) DeselectAll() {
 	u.model.DeselectAll()
 }
 
-func (u *Undo) SelectAll(nodes, lines, triangles bool) {
+func (u *Undo) SelectAll(nodes bool, elements []bool) {
 	logger.Print("SelectAll")
-	u.model.SelectAll(nodes, lines, triangles)
+	u.model.SelectAll(nodes, elements)
 }
 
 func (u *Undo) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {

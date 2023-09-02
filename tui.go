@@ -1102,7 +1102,11 @@ func init() {
 			var b vl.Button
 			b.SetText("Show only selected")
 			b.OnClick = func() {
-				m.InvertSelect(true, true, true, true)
+				ls := make([]bool, lastElement)
+				for e := Line2; e < lastElement; e++ {
+					ls[e] = true
+				}
+				m.InvertSelect(true, ls)
 				ns := m.GetSelectNodes(Many)
 				es := m.GetSelectElements(Many)
 				m.DeselectAll()
@@ -1186,7 +1190,7 @@ type Selectable interface {
 	GetSelectTriangles(single bool) (ids []uint)
 	GetSelectElements(single bool) (ids []uint)
 
-	InvertSelect(nodes, lines, triangles, quards bool)
+	InvertSelect(nodes bool, elements []bool)
 
 	SelectLinesOrtho(x, y, z bool)
 	SelectLinesOnPlane(xoy, xoz, yoz bool)
@@ -1203,7 +1207,7 @@ type Selectable interface {
 	// Select Snow/Wind elements
 	// SelectByGroup
 
-	SelectAll(nodes, lines, tria bool)
+	SelectAll(nodes bool, elements []bool)
 	DeselectAll()
 
 	SelectScreen(from, to [2]int32)
@@ -1251,22 +1255,20 @@ func init() {
 			nodes.SetText("Nodes")
 			list.Add(&nodes)
 
-			var lines vl.CheckBox
-			lines.SetText("Lines")
-			list.Add(&lines)
-
-			var tris vl.CheckBox
-			tris.SetText("Triangles")
-			list.Add(&tris)
-
-			var quards vl.CheckBox
-			quards.SetText("Triangles")
-			list.Add(&quards)
+			els := make([]vl.CheckBox, lastElement)
+			for e := Line2; e < lastElement; e++ {
+				els[int(e)].SetText(ElType(e).String())
+				list.Add(&els[int(e)])
+			}
 
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				m.InvertSelect(nodes.Checked, lines.Checked, tris.Checked, quards.Checked)
+				ls := make([]bool, len(els))
+				for i := range els {
+					ls[i] = els[i].Checked
+				}
+				m.InvertSelect(nodes.Checked, ls)
 			}
 			list.Add(&b)
 
@@ -1444,18 +1446,20 @@ func init() {
 			nodes.SetText("Nodes")
 			list.Add(&nodes)
 
-			var lines vl.CheckBox
-			lines.SetText("Lines")
-			list.Add(&lines)
-
-			var tris vl.CheckBox
-			tris.SetText("Triangles")
-			list.Add(&tris)
+			els := make([]vl.CheckBox, lastElement)
+			for e := Line2; e < lastElement; e++ {
+				els[int(e)].SetText(ElType(e).String())
+				list.Add(&els[int(e)])
+			}
 
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				m.SelectAll(nodes.Checked, lines.Checked, tris.Checked)
+				ls := make([]bool, len(els))
+				for i := range els {
+					ls[i] = els[i].Checked
+				}
+				m.SelectAll(nodes.Checked, ls)
 			}
 			list.Add(&b)
 			return &list, func() {
