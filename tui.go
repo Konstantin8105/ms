@@ -858,7 +858,7 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			ns, coordgt, elgt := SelectAll(m)
+			ns, coordgt, elgt, inits := SelectAll(m)
 			list.Add(ns)
 
 			var b vl.Button
@@ -873,7 +873,7 @@ func init() {
 			}
 			list.Add(&b)
 			return &list, func() {
-				//TODO clean
+				inits()
 			}
 		}}, {
 		Name: "Merge nodes",
@@ -898,7 +898,6 @@ func init() {
 			list.Add(&b)
 			return &list, func() {
 				initd()
-				//TODO clean
 			}
 		}}, {
 		Name: "Merge lines",
@@ -916,7 +915,6 @@ func init() {
 			list.Add(&b)
 			return &list, func() {
 				inits()
-				//TODO clean
 			}
 		}}, {
 		Name: "Remove nodes with same coordinates",
@@ -931,7 +929,7 @@ func init() {
 			list.Add(&bi)
 
 			return &list, func() {
-				//TODO clean
+				// do nothing
 			}
 		}}, {
 		Name: "Remove nodes without connection to element",
@@ -946,7 +944,7 @@ func init() {
 			list.Add(&bi)
 
 			return &list, func() {
-				//TODO clean
+				// do nothing
 			}
 		}}, {
 		Name: "Remove lines with zero lenght",
@@ -961,7 +959,7 @@ func init() {
 			list.Add(&bi)
 
 			return &list, func() {
-				//TODO clean
+				// do nothing
 			}
 		}}, {
 		Name: "Remove triangles with zero area",
@@ -976,14 +974,14 @@ func init() {
 			list.Add(&bi)
 
 			return &list, func() {
-				//TODO clean
+				// do nothing
 			}
 		}}, {
 		Name: "Remove selected",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			ns, coordgt, elgt := SelectAll(m)
+			ns, coordgt, elgt, inits := SelectAll(m)
 			list.Add(ns)
 
 			var bi vl.Button
@@ -999,7 +997,7 @@ func init() {
 			list.Add(&bi)
 
 			return &list, func() {
-				//TODO clean
+				inits()
 			}
 		}},
 	}
@@ -1039,7 +1037,6 @@ func init() {
 
 			return &list, func() {
 				inite()
-				//TODO clean
 			}
 		}}, {
 		Name: "Clear ignoring elements",
@@ -1054,7 +1051,7 @@ func init() {
 			list.Add(&b)
 
 			return &list, func() {
-				//TODO clean
+				// do nothing
 			}
 		}},
 	}
@@ -1076,7 +1073,7 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			ns, coordgt, elgt := SelectAll(m)
+			ns, coordgt, elgt, initsel := SelectAll(m)
 			list.Add(ns)
 
 			var b vl.Button
@@ -1092,7 +1089,7 @@ func init() {
 			list.Add(&b)
 
 			return &list, func() {
-				//TODO clean
+				initsel()
 			}
 		}}, {
 		Name: "Show only selected",
@@ -1115,7 +1112,7 @@ func init() {
 			list.Add(&b)
 
 			return &list, func() {
-				//TODO clean
+				// do nothing
 			}
 		}}, {
 		Name: "Unhide all",
@@ -1130,7 +1127,7 @@ func init() {
 			list.Add(&b)
 
 			return &list, func() {
-				//TODO clean
+				// do nothing
 			}
 		}},
 	}
@@ -1273,7 +1270,10 @@ func init() {
 			list.Add(&b)
 
 			return &list, func() {
-				//TODO clean
+				nodes.Checked = false
+				for i := range els {
+					els[i].Checked = false
+				}
 			}
 		}}, {
 		Name: "Select ortho lines parallel axes X, Y, Z",
@@ -1300,7 +1300,9 @@ func init() {
 			list.Add(&b)
 
 			return &list, func() {
-				//TODO clean
+				x.Checked = false
+				y.Checked = false
+				z.Checked = false
 			}
 		}}, {
 		Name: "Select lines on plane XOY, YOZ, XOZ",
@@ -1327,7 +1329,9 @@ func init() {
 			list.Add(&b)
 
 			return &list, func() {
-				//TODO clean
+				xoy.Checked = false
+				yoz.Checked = false
+				xoz.Checked = false
 			}
 		}}, {
 		Name: "Select lines parallel lines",
@@ -1350,7 +1354,6 @@ func init() {
 
 			return &list, func() {
 				initl()
-				//TODO clean
 			}
 		}}, {
 		Name: "Select lines by lenght",
@@ -1380,7 +1383,6 @@ func init() {
 
 			return &list, func() {
 				initd()
-				//TODO clean
 			}
 		}}, {
 		Name: "Select lines in cylinder system coordinate",
@@ -1420,7 +1422,8 @@ func init() {
 
 			return &list, func() {
 				initn()
-				//TODO clean
+				radiant.Checked = false
+				conc.Checked = false
 			}
 		}}, {
 		Name: "Deselect all",
@@ -1435,7 +1438,7 @@ func init() {
 			list.Add(&b)
 
 			return &list, func() {
-				//TODO clean
+				// do nothing
 			}
 		}}, {
 		Name: "Select all",
@@ -1463,7 +1466,10 @@ func init() {
 			}
 			list.Add(&b)
 			return &list, func() {
-				//TODO clean
+				nodes.Checked = false
+				for i := range els {
+					els[i].Checked = false
+				}
 			}
 		}},
 	}
@@ -1516,15 +1522,16 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			ns, coordgt, elgt := SelectAll(m)
+			var inits []func()
+			ns, coordgt, elgt, initsel := SelectAll(m)
 			list.Add(ns)
+			inits = append(inits, initsel)
 
 			type path struct {
 				w    vl.Widget
 				getC func() (basePoint [3]float64, dc diffCoordinate, ok bool)
 			}
 			var paths []path
-			var inits []func()
 			{ // from node to node
 				var ch vl.CollapsingHeader
 				ch.SetText("Move from node to node:")
@@ -1659,22 +1666,27 @@ func init() {
 			}
 			list.Add(&b)
 			return &list, func() {
-				//TODO clean
+				for i := range inits {
+					if f := inits[i]; f != nil {
+						f()
+					}
+				}
 			}
 		}}, {
 		Name: "Translational/Circular repeat/Spiral",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			ns, coordgt, elgt := SelectAll(m)
+			var inits []func()
+			ns, coordgt, elgt, initsel := SelectAll(m)
 			list.Add(ns)
+			inits = append(inits, initsel)
 
 			type path struct {
 				w    vl.Widget
 				getC func() (basePoint [3]float64, dcs []diffCoordinate, ok bool)
 			}
 			var paths []path
-			var inits []func()
 			{ // from node to node with equal parts
 				var ch vl.CollapsingHeader
 				ch.SetText("Copy from node to node with equal parts:")
@@ -1808,6 +1820,7 @@ func init() {
 					bAdd.OnClick() // one empty distance
 				}
 				bClear.OnClick() // default clear
+				inits = append(inits, func() { bClear.OnClick() })
 				list.Add(&distances)
 				{
 					var h vl.ListH
@@ -1934,22 +1947,22 @@ func init() {
 						f()
 					}
 				}
-				//TODO clean
 			}
 		}}, {
 		Name: "Mirror",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			ns, coordgt, elgt := SelectAll(m)
+			var inits []func()
+			ns, coordgt, elgt, initsel := SelectAll(m)
 			list.Add(ns)
+			inits = append(inits, initsel)
 
 			type path struct {
 				w    vl.Widget
 				getC func() (basePoint [3][3]float64, ok bool)
 			}
 			var paths []path
-			var inits []func()
 			{
 				var ch vl.CollapsingHeader
 				ch.SetText("Node and plane:")
@@ -2090,9 +2103,11 @@ func init() {
 			var cop vl.List
 			var lines vl.CheckBox
 			lines.SetText("Add intermediant lines")
+			inits = append(inits, func() { lines.Checked = false })
 			cop.Add(&lines)
 			var tris vl.CheckBox
 			tris.SetText("Add intermediant triangles")
+			inits = append(inits, func() { tris.Checked = false })
 			cop.Add(&tris)
 			mir.Add(&cop)
 
@@ -2122,7 +2137,6 @@ func init() {
 						f()
 					}
 				}
-				//TODO clean
 			}
 		}},
 	}
@@ -2229,7 +2243,6 @@ func init() {
 			list.Add(&b)
 			return &list, func() {
 				initr()
-				//TODO clean
 			}
 		}},
 	}
@@ -2327,7 +2340,7 @@ func InputFloat(prefix, postfix string) (
 			}
 			return v, true
 		}, func() {
-			in.SetText("")
+			in.SetText(Default)
 		}
 }
 
@@ -2369,6 +2382,7 @@ func SelectAll(m Mesh) (
 	w vl.Widget,
 	getCoords func() []uint,
 	getElements func() []uint,
+	initialization func(),
 ) {
 	var (
 		verticalList vl.List
@@ -2414,6 +2428,9 @@ func SelectAll(m Mesh) (
 			return convertUint(coords.GetText())
 		}, func() (ids []uint) {
 			return convertUint(els.GetText())
+		}, func() {
+			coords.SetText(Default)
+			els.SetText(Default)
 		}
 }
 
@@ -2456,7 +2473,7 @@ func Select(name string, single bool, selector func(single bool) []uint) (
 	return &l, func() (ids []uint) {
 			return convertUint(id.GetText())
 		}, func() {
-			id.SetText("")
+			id.SetText(Default)
 		}
 }
 
