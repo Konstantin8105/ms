@@ -178,7 +178,21 @@ func (mm *Model) Check() error {
 	if et.IsError() {
 		return et
 	}
+
+	// TODO check - not same coordiantes
+	// TODO check - not on one line
+	// TODO check - on one plane
 	return nil
+}
+
+// TODO
+type Metadata struct {
+	// TODO Group by parts
+	// TODO Material
+	// TODO Text on point
+	// TODO Loads
+	// TODO Local axes
+	// TODO reverse localc axes
 }
 
 type Part struct {
