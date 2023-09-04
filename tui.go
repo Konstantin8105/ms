@@ -2492,12 +2492,16 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 		// widgets amount
 		logger.Printf(fmt.Sprintf("Amount widgets: %d", len(Operations)))
 	}
+
 	var (
-		scroll vl.Scroll
 		list   vl.List
+		scroll = vl.Scroll{Root: &list}
+		// tabs   vl.Tabs
 	)
+	// tabs.Add("Source tree", vl.TextStatic("TOPTOPTOPTOP"))
+	// tabs.Add("Editor", &scroll)
+	// tui = &tabs
 	tui = &scroll
-	scroll.Root = &list
 
 	view := make([]bool, len(Operations))
 	colHeader := make([]vl.CollapsingHeader, endGroup)

@@ -23,7 +23,7 @@ func color(c tcell.Color) (R, G, B float32) {
 
 func NewTui(w vl.Widget) *Tui {
 	t := new(Tui)
-	t.screen = vl.Screen{Root: &vl.Scroll{Root: w}}
+	t.screen = vl.Screen{Root: w}
 	return t
 }
 
