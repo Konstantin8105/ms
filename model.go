@@ -709,6 +709,7 @@ func (mm *Model) GetSelectNodes(single bool) (ids []uint) {
 }
 
 func (mm *Model) GetSelectLines(single bool) (ids []uint) {
+	// TODO single ?????
 	for i, el := range mm.Elements {
 		vis, ok := mm.IsVisibleLine(uint(i))
 		if !vis || !ok {
@@ -723,6 +724,7 @@ func (mm *Model) GetSelectLines(single bool) (ids []uint) {
 }
 
 func (mm *Model) GetSelectTriangles(single bool) (ids []uint) {
+	// TODO single ?????
 	for i, el := range mm.Elements {
 		if !el.selected {
 			continue
@@ -736,6 +738,7 @@ func (mm *Model) GetSelectTriangles(single bool) (ids []uint) {
 }
 
 func (mm *Model) GetSelectElements(single bool) (ids []uint) {
+	// TODO single ?????
 	for i, el := range mm.Elements {
 		if el.ElementType == ElRemove {
 			continue
