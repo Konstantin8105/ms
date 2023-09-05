@@ -131,30 +131,30 @@ func (u *Undo) GetPresentFilename() (name string) {
 	return u.model.GetPresentFilename()
 }
 
-func (u *Undo) PartPresent() (id uint) {
-	// too many : logger.Print("PartPresent")
-	return u.model.PartPresent()
-}
-
-func (u *Undo) PartsName() (names []string) {
-	// too many : logger.Print("PartsName")
-	return u.model.PartsName()
-}
-
-func (u *Undo) PartChange(id uint) {
-	// too many : logger.Print("PartChange")
-	u.model.PartChange(id)
-}
-
-func (u *Undo) PartNew(str string) {
-	logger.Print("PartNew")
-	u.model.PartNew(str)
-}
-
-func (u *Undo) PartRename(id uint, str string) {
-	// too many: logger.Print("PartRename")
-	u.model.PartRename(id, str)
-}
+// func (u *Undo) PartPresent() (id uint) {
+// 	// too many : logger.Print("PartPresent")
+// 	return u.model.PartPresent()
+// }
+//
+// func (u *Undo) PartsName() (names []string) {
+// 	// too many : logger.Print("PartsName")
+// 	return u.model.PartsName()
+// }
+//
+// func (u *Undo) PartChange(id uint) {
+// 	// too many : logger.Print("PartChange")
+// 	u.model.PartChange(id)
+// }
+//
+// func (u *Undo) PartNew(str string) {
+// 	logger.Print("PartNew")
+// 	u.model.PartNew(str)
+// }
+//
+// func (u *Undo) PartRename(id uint, str string) {
+// 	// too many: logger.Print("PartRename")
+// 	u.model.PartRename(id, str)
+// }
 
 func (u *Undo) StandardView(view SView) {
 	logger.Print("StandardView")
@@ -216,30 +216,30 @@ func (u *Undo) GetElements() []Element {
 	return u.model.GetElements()
 }
 
-func (u *Undo) IgnoreModelElements(ids []uint) {
-	logger.Print("IgnoreModelElements")
-	// sync
-	pre, post := u.sync(false)
-	pre()
-	defer post()
-	// action
-	u.model.IgnoreModelElements(ids)
-}
-
-func (u *Undo) Unignore() {
-	logger.Print("Unignore")
-	// sync
-	pre, post := u.sync(false)
-	pre()
-	defer post()
-	// action
-	u.model.Unignore()
-}
-
-func (u *Undo) IsIgnore(elID uint) bool {
-	// too many logs: logger.Print("IsIgnore")
-	return u.model.IsIgnore(elID)
-}
+// func (u *Undo) IgnoreModelElements(ids []uint) {
+// 	logger.Print("IgnoreModelElements")
+// 	// sync
+// 	pre, post := u.sync(false)
+// 	pre()
+// 	defer post()
+// 	// action
+// 	u.model.IgnoreModelElements(ids)
+// }
+//
+// func (u *Undo) Unignore() {
+// 	logger.Print("Unignore")
+// 	// sync
+// 	pre, post := u.sync(false)
+// 	pre()
+// 	defer post()
+// 	// action
+// 	u.model.Unignore()
+// }
+//
+// func (u *Undo) IsIgnore(elID uint) bool {
+// 	// too many logs: logger.Print("IsIgnore")
+// 	return u.model.IsIgnore(elID)
+// }
 
 func (u *Undo) Hide(coordinates, elements []uint) {
 	logger.Print("Hide")
@@ -256,7 +256,7 @@ func (u *Undo) AddLeftCursor(lc LeftCursor) {
 	u.op.AddLeftCursor(lc)
 }
 
-func (u *Undo) SelectLeftCursor(nodes bool,elements []bool) {
+func (u *Undo) SelectLeftCursor(nodes bool, elements []bool) {
 	logger.Print("SelectLeftCursor")
 	u.op.SelectLeftCursor(nodes, elements)
 }

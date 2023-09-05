@@ -8,7 +8,6 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
-	"strings"
 	"sync"
 	"time"
 
@@ -136,7 +135,8 @@ func (c Coordinate) Check() error {
 
 // Named intermediant named structure
 type Named struct{ Name string }
-type Ignored struct{ IgnoreElements []bool }
+
+// type Ignored struct{ IgnoreElements []bool }
 
 // TODO : type MultiModel struct { Models []Model}
 
@@ -146,11 +146,11 @@ type Model struct {
 	actual int
 
 	Named
-	Ignored
+	// 	Ignored
 	Elements []Element
 	Coords   []Coordinate
 
-	Parts []Part
+	// 	Parts []Part
 
 	filename string
 }
@@ -195,63 +195,63 @@ type Metadata struct {
 	// TODO reverse localc axes
 }
 
-type Part struct {
-	Named
-	Ignored
-}
+// type Part struct {
+// 	Named
+// 	Ignored
+// }
 
 func (mm *Model) Undo() {}
 func (mm *Model) Redo() {}
 
-func clearPartName(name *string) {
-	*name = strings.ReplaceAll(*name, "\n", "")
-	*name = strings.ReplaceAll(*name, "\r", "")
-	*name = strings.ReplaceAll(*name, "\t", "")
-}
-
-func (mm *Model) PartsName() (names []string) {
-	names = append(names, mm.Name)
-	for i := range mm.Parts {
-		names = append(names, mm.Parts[i].Name)
-	}
-	return
-}
-
-func (mm *Model) PartPresent() (id uint) {
-	return uint(mm.actual)
-}
-
-func (mm *Model) PartChange(id uint) {
-	if id == 0 {
-		mm.actual = 0
-		return
-	}
-	id = id - 1 // convert to part indexes
-	if int(id) <= len(mm.Parts) {
-		mm.actual = int(id) + 1
-	}
-	// no changes
-}
-
-func (mm *Model) PartNew(name string) {
-	clearPartName(&name)
-	var p Part
-	p.Name = name
-	mm.Parts = append(mm.Parts, p)
-	mm.actual = len(mm.Parts) // no need `-1`, because base model
-}
-
-func (mm *Model) PartRename(id uint, name string) {
-	clearPartName(&name)
-	if id == 0 {
-		mm.Name = name
-		return
-	}
-	if len(mm.Parts) < int(id) {
-		return
-	}
-	mm.Parts[id-1].Name = name
-}
+// func clearPartName(name *string) {
+// 	*name = strings.ReplaceAll(*name, "\n", "")
+// 	*name = strings.ReplaceAll(*name, "\r", "")
+// 	*name = strings.ReplaceAll(*name, "\t", "")
+// }
+//
+// func (mm *Model) PartsName() (names []string) {
+// 	names = append(names, mm.Name)
+// 	for i := range mm.Parts {
+// 		names = append(names, mm.Parts[i].Name)
+// 	}
+// 	return
+// }
+//
+// func (mm *Model) PartPresent() (id uint) {
+// 	return uint(mm.actual)
+// }
+//
+// func (mm *Model) PartChange(id uint) {
+// 	if id == 0 {
+// 		mm.actual = 0
+// 		return
+// 	}
+// 	id = id - 1 // convert to part indexes
+// 	if int(id) <= len(mm.Parts) {
+// 		mm.actual = int(id) + 1
+// 	}
+// 	// no changes
+// }
+//
+// func (mm *Model) PartNew(name string) {
+// 	clearPartName(&name)
+// 	var p Part
+// 	p.Name = name
+// 	mm.Parts = append(mm.Parts, p)
+// 	mm.actual = len(mm.Parts) // no need `-1`, because base model
+// }
+//
+// func (mm *Model) PartRename(id uint, name string) {
+// 	clearPartName(&name)
+// 	if id == 0 {
+// 		mm.Name = name
+// 		return
+// 	}
+// 	if len(mm.Parts) < int(id) {
+// 		return
+// 	}
+// 	mm.Parts[id-1].Name = name
+// }
 
 func (mm *Model) GetPresentFilename() (name string) {
 	logger.Printf("GetPresentFilename")
@@ -525,9 +525,9 @@ func (mm *Model) Remove(nodes, elements []uint) {
 			if mm.Elements[i].ElementType == ElRemove {
 				continue
 			}
-			if !mm.IsIgnore(uint(i)) {
-				continue
-			}
+			// 			if !mm.IsIgnore(uint(i)) {
+			// 				continue
+			// 			}
 			// ignored coordinate on ignored elements
 			for k := range mm.Elements[i].Indexes {
 				if mm.Elements[i].Indexes[k] == int(p) {
@@ -545,9 +545,9 @@ func (mm *Model) Remove(nodes, elements []uint) {
 		mm.Coords[p].Removed = true
 		// remove elements with coordinate
 		for i := range mm.Elements {
-			if mm.IsIgnore(uint(i)) {
-				continue
-			}
+			// 			if mm.IsIgnore(uint(i)) {
+			// 				continue
+			// 			}
 			// ignored coordinate on ignored elements
 			for k := range mm.Elements[i].Indexes {
 				if mm.Elements[i].Indexes[k] == int(p) {
@@ -647,47 +647,47 @@ func (mm *Model) RemoveZeroTriangles() {
 	}
 }
 
-func (mm *Model) IsIgnore(elID uint) bool {
-	if 0 < mm.actual && int(elID) < len(mm.Parts[mm.actual-1].IgnoreElements) {
-		// it is part
-		return mm.Parts[mm.actual-1].IgnoreElements[int(elID)]
-	}
-	if int(elID) < len(mm.IgnoreElements) {
-		return mm.IgnoreElements[int(elID)]
-	}
-	return false
-}
+// func (mm *Model) IsIgnore(elID uint) bool {
+// 	if 0 < mm.actual && int(elID) < len(mm.Parts[mm.actual-1].IgnoreElements) {
+// 		// it is part
+// 		return mm.Parts[mm.actual-1].IgnoreElements[int(elID)]
+// 	}
+// 	if int(elID) < len(mm.IgnoreElements) {
+// 		return mm.IgnoreElements[int(elID)]
+// 	}
+// 	return false
+// }
 
 func (mm *Model) ColorEdge(isColor bool) {
 	logger.Printf("Model not implemented ColorEdge: %v", isColor)
 }
 
-func (mm *Model) IgnoreModelElements(ids []uint) {
-	if len(ids) == 0 {
-		return
-	}
-	ignore := &mm.IgnoreElements
-	if 0 < mm.actual {
-		ignore = &mm.Parts[mm.actual-1].IgnoreElements
-	}
-	if len(mm.Elements) < len(*ignore) {
-		*ignore = (*ignore)[:len(mm.Elements)]
-	}
-	if len(*ignore) != len(mm.Elements) {
-		*ignore = append(*ignore, make([]bool, len(mm.Elements)-len(*ignore))...)
-	}
-	for _, p := range ids {
-		(*ignore)[p] = true
-	}
-}
-
-func (mm *Model) Unignore() {
-	ignore := &mm.IgnoreElements
-	if 0 < mm.actual {
-		ignore = &mm.Parts[mm.actual-1].IgnoreElements
-	}
-	*ignore = nil
-}
+// func (mm *Model) IgnoreModelElements(ids []uint) {
+// 	if len(ids) == 0 {
+// 		return
+// 	}
+// 	ignore := &mm.IgnoreElements
+// 	if 0 < mm.actual {
+// 		ignore = &mm.Parts[mm.actual-1].IgnoreElements
+// 	}
+// 	if len(mm.Elements) < len(*ignore) {
+// 		*ignore = (*ignore)[:len(mm.Elements)]
+// 	}
+// 	if len(*ignore) != len(mm.Elements) {
+// 		*ignore = append(*ignore, make([]bool, len(mm.Elements)-len(*ignore))...)
+// 	}
+// 	for _, p := range ids {
+// 		(*ignore)[p] = true
+// 	}
+// }
+//
+// func (mm *Model) Unignore() {
+// 	ignore := &mm.IgnoreElements
+// 	if 0 < mm.actual {
+// 		ignore = &mm.Parts[mm.actual-1].IgnoreElements
+// 	}
+// 	*ignore = nil
+// }
 
 func (mm *Model) SelectLeftCursor(nodes bool, elements []bool) {
 	logger.Printf("Model not implemented SelectLeftCursor: %v %v",
@@ -1016,9 +1016,9 @@ func (mm *Model) IsVisibleLine(p uint) (visible, ok bool) {
 	if mm.Elements[p].hided {
 		return
 	}
-	if mm.IsIgnore(uint(p)) {
-		return
-	}
+	// 	if mm.IsIgnore(uint(p)) {
+	// 		return
+	// 	}
 	visible = true
 	return
 }

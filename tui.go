@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"runtime/debug"
 	"strconv"
-	"time"
 
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/gog"
@@ -19,10 +18,10 @@ const (
 	File GroupID = iota
 	Edit
 	View
-	PartOperations
+	// PartOperations
 	Selection
 	AddRemove
-	Ignore
+	// Ignore
 	Hide
 	MoveCopy
 	// 	TypModels
@@ -47,14 +46,14 @@ func (g GroupID) String() string {
 		return "Edit"
 	case View:
 		return "View"
-	case PartOperations:
-		return "Part operations"
+		// 	case PartOperations:
+		// 		return "Part operations"
 	case Selection:
 		return "Select"
 	case AddRemove:
 		return "Add/Modify/Remove"
-	case Ignore:
-		return "Ignore"
+		// 	case Ignore:
+		// 		return "Ignore"
 	case Hide:
 		return "Hide"
 	case MoveCopy:
@@ -231,206 +230,206 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-type Partable interface {
-	PartPresent() (id uint)
-	PartsName() (names []string)
-	PartChange(id uint)
-	PartNew(str string)
-	PartRename(id uint, str string)
-	// Delete part
-}
-
-func defaultPartName(id int) string {
-	if id == 0 {
-		return "base model"
-	}
-	return fmt.Sprintf("part %02d", id)
-}
-
-func init() {
-	group := PartOperations
-	ops := []Operation{{
-		Name: "Name of actual model/part",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
-			var list vl.List
-
-			var pre vl.Text
-			var name vl.Text
-			var lh vl.ListH
-			lh.Add(&pre)
-			lh.Add(&name)
-			list.Add(&lh)
-
-			update := func() (fus bool) {
-				defer func() {
-					if r := recover(); r != nil {
-						// safety ignore panic
-						logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
-					}
-				}()
-				id := m.PartPresent()
-				ns := m.PartsName()
-				if len(ns) <= int(id) {
-					return
-				}
-				part := ns[id]
-				if part == "" {
-					part = defaultPartName(int(id))
-				}
-				prefix := "Base model"
-				if 0 < id {
-					prefix = "Submodel"
-				}
-				pre.SetText(fmt.Sprintf("%02d. %s", id, prefix))
-				name.SetText(part)
-				return false
-			}
-
-			go func() {
-				for {
-					time.Sleep(time.Second)
-					if *closedApp {
-						break
-					}
-					*actions <- update
-				}
-			}()
-			return &list, func() {
-				// do nothing
-			}
-		}}, {
-		Name: "Choose model/part",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
-			var list vl.List
-
-			var rg vl.RadioGroup
-			list.Add(&rg)
-
-			change := func() {
-				pos := rg.GetPos()
-				m.PartChange(pos)
-			}
-
-			update := func() (fus bool) {
-				defer func() {
-					if r := recover(); r != nil {
-						// safety ignore panic
-						logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
-					}
-				}()
-				ns := m.PartsName()
-				id := m.PartPresent()
-				for i := range ns {
-					if ns[i] != "" {
-						continue
-					}
-					if i == 0 {
-						ns[i] = "base model"
-						continue
-					}
-					ns[i] = fmt.Sprintf("part %02d", i)
-				}
-				rg.Clear()
-				rg.AddText(ns...)
-				rg.SetPos(id)
-				change()
-				return false
-			}
-
-			rg.OnChange(change)
-
-			go func() {
-				for {
-					time.Sleep(time.Second)
-					if *closedApp {
-						break
-					}
-					*actions <- update
-				}
-			}()
-
-			return &list, func() {
-				// do nothing
-			}
-		}}, {
-		Name: "Create a new part",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
-			var list vl.List
-
-			var listH vl.ListH
-			listH.Add(vl.TextStatic("Name:"))
-
-			var name vl.Inputbox
-			listH.Add(&name)
-
-			list.Add(&listH)
-
-			var b vl.Button
-			b.SetText("Create")
-			b.OnClick = func() {
-				n := name.GetText()
-				if len(n) == 0 {
-					return
-				}
-				m.PartNew(n)
-			}
-			list.Add(&b)
-			return &list, func() {
-				name.SetText("")
-			}
-		}}, {
-		Name: "Rename model/part",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
-			var list vl.List
-
-			var listH vl.ListH
-			listH.Add(vl.TextStatic("Name:"))
-
-			var name vl.Inputbox
-			listH.Add(&name)
-
-			list.Add(&listH)
-
-			lastID := uint(0)
-
-			update := func() (fus bool) {
-				defer func() {
-					if r := recover(); r != nil {
-						// safety ignore panic
-						logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
-					}
-				}()
-				id := m.PartPresent()
-				if lastID != id {
-					ns := m.PartsName()
-					name.SetText(ns[id])
-					lastID = id
-					return
-				}
-				m.PartRename(id, name.GetText())
-				return false
-			}
-
-			go func() {
-				for {
-					time.Sleep(time.Second)
-					if *closedApp {
-						break
-					}
-					*actions <- update
-				}
-			}()
-
-			return &list, func() {
-				// do nothing
-			}
-		}},
-	}
-	for i := range ops {
-		ops[i].Group = group
-	}
-	Operations = append(Operations, ops...)
-}
+// type Partable interface {
+// 	PartPresent() (id uint)
+// 	PartsName() (names []string)
+// 	PartChange(id uint)
+// 	PartNew(str string)
+// 	PartRename(id uint, str string)
+// 	// Delete part
+// }
+//
+// func defaultPartName(id int) string {
+// 	if id == 0 {
+// 		return "base model"
+// 	}
+// 	return fmt.Sprintf("part %02d", id)
+// }
+//
+// func init() {
+// 	group := PartOperations
+// 	ops := []Operation{{
+// 		Name: "Name of actual model/part",
+// 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+// 			var list vl.List
+//
+// 			var pre vl.Text
+// 			var name vl.Text
+// 			var lh vl.ListH
+// 			lh.Add(&pre)
+// 			lh.Add(&name)
+// 			list.Add(&lh)
+//
+// 			update := func() (fus bool) {
+// 				defer func() {
+// 					if r := recover(); r != nil {
+// 						// safety ignore panic
+// 						logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+// 					}
+// 				}()
+// 				id := m.PartPresent()
+// 				ns := m.PartsName()
+// 				if len(ns) <= int(id) {
+// 					return
+// 				}
+// 				part := ns[id]
+// 				if part == "" {
+// 					part = defaultPartName(int(id))
+// 				}
+// 				prefix := "Base model"
+// 				if 0 < id {
+// 					prefix = "Submodel"
+// 				}
+// 				pre.SetText(fmt.Sprintf("%02d. %s", id, prefix))
+// 				name.SetText(part)
+// 				return false
+// 			}
+//
+// 			go func() {
+// 				for {
+// 					time.Sleep(time.Second)
+// 					if *closedApp {
+// 						break
+// 					}
+// 					*actions <- update
+// 				}
+// 			}()
+// 			return &list, func() {
+// 				// do nothing
+// 			}
+// 		}}, {
+// 		Name: "Choose model/part",
+// 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+// 			var list vl.List
+//
+// 			var rg vl.RadioGroup
+// 			list.Add(&rg)
+//
+// 			change := func() {
+// 				pos := rg.GetPos()
+// 				m.PartChange(pos)
+// 			}
+//
+// 			update := func() (fus bool) {
+// 				defer func() {
+// 					if r := recover(); r != nil {
+// 						// safety ignore panic
+// 						logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+// 					}
+// 				}()
+// 				ns := m.PartsName()
+// 				id := m.PartPresent()
+// 				for i := range ns {
+// 					if ns[i] != "" {
+// 						continue
+// 					}
+// 					if i == 0 {
+// 						ns[i] = "base model"
+// 						continue
+// 					}
+// 					ns[i] = fmt.Sprintf("part %02d", i)
+// 				}
+// 				rg.Clear()
+// 				rg.AddText(ns...)
+// 				rg.SetPos(id)
+// 				change()
+// 				return false
+// 			}
+//
+// 			rg.OnChange(change)
+//
+// 			go func() {
+// 				for {
+// 					time.Sleep(time.Second)
+// 					if *closedApp {
+// 						break
+// 					}
+// 					*actions <- update
+// 				}
+// 			}()
+//
+// 			return &list, func() {
+// 				// do nothing
+// 			}
+// 		}}, {
+// 		Name: "Create a new part",
+// 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+// 			var list vl.List
+//
+// 			var listH vl.ListH
+// 			listH.Add(vl.TextStatic("Name:"))
+//
+// 			var name vl.Inputbox
+// 			listH.Add(&name)
+//
+// 			list.Add(&listH)
+//
+// 			var b vl.Button
+// 			b.SetText("Create")
+// 			b.OnClick = func() {
+// 				n := name.GetText()
+// 				if len(n) == 0 {
+// 					return
+// 				}
+// 				m.PartNew(n)
+// 			}
+// 			list.Add(&b)
+// 			return &list, func() {
+// 				name.SetText("")
+// 			}
+// 		}}, {
+// 		Name: "Rename model/part",
+// 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+// 			var list vl.List
+//
+// 			var listH vl.ListH
+// 			listH.Add(vl.TextStatic("Name:"))
+//
+// 			var name vl.Inputbox
+// 			listH.Add(&name)
+//
+// 			list.Add(&listH)
+//
+// 			lastID := uint(0)
+//
+// 			update := func() (fus bool) {
+// 				defer func() {
+// 					if r := recover(); r != nil {
+// 						// safety ignore panic
+// 						logger.Printf("Safety ignore panic: %s\n%v", r, string(debug.Stack()))
+// 					}
+// 				}()
+// 				id := m.PartPresent()
+// 				if lastID != id {
+// 					ns := m.PartsName()
+// 					name.SetText(ns[id])
+// 					lastID = id
+// 					return
+// 				}
+// 				m.PartRename(id, name.GetText())
+// 				return false
+// 			}
+//
+// 			go func() {
+// 				for {
+// 					time.Sleep(time.Second)
+// 					if *closedApp {
+// 						break
+// 					}
+// 					*actions <- update
+// 				}
+// 			}()
+//
+// 			return &list, func() {
+// 				// do nothing
+// 			}
+// 		}},
+// 	}
+// 	for i := range ops {
+// 		ops[i].Group = group
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
 
 type Editable interface {
 	Undo()
@@ -1009,59 +1008,59 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-type Ignorable interface {
-	IgnoreModelElements(ids []uint)
-	IsIgnore(elID uint) bool
-	Unignore()
-}
-
-func init() {
-	group := Ignore
-	name := group.String()
-	ops := []Operation{{
-		Name: "Ignore elements",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
-			var list vl.List
-
-			elf, elfgt, inite := Select("Select elements", Many, m.GetSelectElements)
-			list.Add(elf)
-
-			var b vl.Button
-			b.SetText(name)
-			b.OnClick = func() {
-				els := elfgt()
-				if len(els) == 0 {
-					return
-				}
-				m.IgnoreModelElements(els)
-			}
-			list.Add(&b)
-
-			return &list, func() {
-				inite()
-			}
-		}}, {
-		Name: "Clear ignoring elements",
-		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
-			var list vl.List
-
-			var b vl.Button
-			b.SetText("Clear")
-			b.OnClick = func() {
-				m.Unignore()
-			}
-			list.Add(&b)
-
-			return &list, func() {
-				// do nothing
-			}
-		}},
-	}
-	for i := range ops {
-		ops[i].Group = group
-	}
-	Operations = append(Operations, ops...)
-}
+// type Ignorable interface {
+// 	IgnoreModelElements(ids []uint)
+// 	IsIgnore(elID uint) bool
+// 	Unignore()
+// }
+//
+// func init() {
+// 	group := Ignore
+// 	name := group.String()
+// 	ops := []Operation{{
+// 		Name: "Ignore elements",
+// 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+// 			var list vl.List
+//
+// 			elf, elfgt, inite := Select("Select elements", Many, m.GetSelectElements)
+// 			list.Add(elf)
+//
+// 			var b vl.Button
+// 			b.SetText(name)
+// 			b.OnClick = func() {
+// 				els := elfgt()
+// 				if len(els) == 0 {
+// 					return
+// 				}
+// 				m.IgnoreModelElements(els)
+// 			}
+// 			list.Add(&b)
+//
+// 			return &list, func() {
+// 				inite()
+// 			}
+// 		}}, {
+// 		Name: "Clear ignoring elements",
+// 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+// 			var list vl.List
+//
+// 			var b vl.Button
+// 			b.SetText("Clear")
+// 			b.OnClick = func() {
+// 				m.Unignore()
+// 			}
+// 			list.Add(&b)
+//
+// 			return &list, func() {
+// 				// do nothing
+// 			}
+// 		}},
+// 	}
+// 	for i := range ops {
+// 		ops[i].Group = group
+// 	}
+// 	Operations = append(Operations, ops...)
+// }
 
 type Hidable interface {
 	Hide(coordinates, elements []uint)
@@ -2257,10 +2256,10 @@ func init() {
 type Mesh interface {
 	Filable
 	Viewable
-	Partable
+	// 	Partable
 	AddRemovable
 	Editable
-	Ignorable
+	// 	Ignorable
 	Hidable
 	Selectable
 	MoveCopyble

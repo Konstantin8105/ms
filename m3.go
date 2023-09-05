@@ -577,9 +577,9 @@ func (op *Opengl) drawElements(s viewState, fill selectState) {
 	var r, g, b uint8
 	// Elements
 	for iel, el := range els {
-		if op.mesh.IsIgnore(uint(iel)) {
-			continue
-		}
+		// 		if op.mesh.IsIgnore(uint(iel)) {
+		// 			continue
+		// 		}
 		// do not show selected elements in Select case
 		if s != normal && s != colorEdgeElements && el.selected {
 			continue
@@ -1085,7 +1085,7 @@ func (op *Opengl) SelectLeftCursor(nodes bool, elements []bool) {
 	if nodes {
 		op.cursorLeft |= selectPoints
 	}
-	for el := Line2; el < lastElement; el = el+1 {
+	for el := Line2; el < lastElement; el = el + 1 {
 		if !elements[int(el)] {
 			continue
 		}
