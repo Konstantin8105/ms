@@ -2496,12 +2496,12 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	var (
 		list   vl.List
 		scroll = vl.Scroll{Root: &list}
-		// tabs   vl.Tabs
+		tabs   vl.Tabs
 	)
-	// tabs.Add("Source tree", vl.TextStatic("Prepared tree of model"))
-	// tabs.Add("Editor", &scroll)
-	// tui = &tabs
-	tui = &scroll
+	tabs.Add("Source tree", SourceTree())
+	tabs.Add("Editor", &scroll)
+	tui = &tabs
+	// tui = &scroll
 
 	view := make([]bool, len(Operations))
 	colHeader := make([]vl.CollapsingHeader, endGroup)
@@ -2551,4 +2551,51 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	}
 
 	return
+}
+
+func SourceTree() (tr vl.Widget) {
+	var list vl.List
+	list.Add(vl.TextStatic("Tree of elements"))
+
+	var btn vl.Button
+	btn.SetText("Create new group")
+	list.Add(&btn)
+
+	var btnDel vl.Button
+	btnDel.SetText("Delete present group")
+	list.Add(&btnDel)
+
+	list.Add(new(vl.Separator))
+	{
+		var rg vl.RadioGroup
+		names := []string{
+			"Base model", "Floor", "Cylinder", "Arch",
+			"Convection module 1",
+			"Convection module 2",
+			"Convection module 3",
+			"Convection module 4",
+			"Breeching",
+			"Stack",
+		}
+		for i := 0; i < 10; i++ {
+			names = append(names, fmt.Sprintf("Pltf %d", i+1))
+		}
+		for in, name := range names {
+			var ch vl.CollapsingHeader
+			ch.SetText(name)
+			var l vl.List
+			ch.Root = &l
+
+			l.Add(vl.TextStatic(fmt.Sprintf("%d points", 20000-in*1000)))
+			l.Add(vl.TextStatic(fmt.Sprintf("%d elements", 10000-in*500)))
+
+			rg.Add(&ch)
+		}
+		rg.SetPos(0)
+		list.Add(&rg)
+	}
+
+	var scroll vl.Scroll
+	scroll.Root = &list
+	return &scroll
 }
