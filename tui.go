@@ -2583,13 +2583,31 @@ func SourceTree() (tr vl.Widget) {
 		for in, name := range names {
 			var ch vl.CollapsingHeader
 			ch.SetText(name)
+			rg.Add(&ch)
 			var l vl.List
 			ch.Root = &l
 
-			l.Add(vl.TextStatic(fmt.Sprintf("%d points", 20000-in*1000)))
-			l.Add(vl.TextStatic(fmt.Sprintf("%d elements", 10000-in*500)))
-
-			rg.Add(&ch)
+			{
+				if in != 0 {
+					l.Add(vl.TextStatic("Link from `Base model`:"))
+				}
+				ns := 20000 - in*1000
+				es := 10000 - in*500
+				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
+				if in == 0 {
+					continue
+				}
+			}
+			l.Add(new(vl.Separator))
+			{
+				l.Add(vl.TextStatic("Geometry specific of group:"))
+				ns := 200 - in*10
+				es := 100 - in*5
+				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
+				var btn vl.Button
+				btn.SetText("Select")
+				l.Add(&btn)
+			}
 		}
 		rg.SetPos(0)
 		list.Add(&rg)
