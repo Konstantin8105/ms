@@ -329,21 +329,21 @@ func (t *Tui) DrawText(cell vl.Cell, x, y, h int) {
 		return
 	case vl.ScrollUp:
 		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl, yd+hgh)
-		gl.Vertex2d(xl+dgw, yd+hgh)
+		gl.Vertex2d(xl, yd+dgh)
+		gl.Vertex2d(xl+dgw, yd+dgh)
 		gl.End()
 		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+hgw, yd+dgh)
 		gl.Vertex2d(xl+hgw, yd)
 		gl.End()
 		return
 	case vl.ScrollDown:
 		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl, yd+hgh)
-		gl.Vertex2d(xl+dgw, yd+hgh)
+		gl.Vertex2d(xl, yd)
+		gl.Vertex2d(xl+dgw, yd)
 		gl.End()
 		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+hgw, yd)
 		gl.Vertex2d(xl+hgw, yd+dgh)
 		gl.End()
 		return
