@@ -17,6 +17,8 @@ require (
 	github.com/ncruces/zenity v0.10.10
 )
 
+// replace github.com/Konstantin8105/vl => ../vl
+
 require (
 	github.com/Konstantin8105/tree v0.1.1 // indirect
 	github.com/akavel/rsrc v0.10.2 // indirect
