@@ -627,7 +627,7 @@ func (op *Opengl) drawElements(s viewState, fill selectState) {
 			case selectPoints:
 				// do nothing
 			case selectLines:
-				gl.LineWidth(1)
+				gl.LineWidth(3)
 				r, g, b = convertToColor(iel)
 				gl.Color3ub(r, g, b)
 				if fill {
