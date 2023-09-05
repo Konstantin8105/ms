@@ -353,6 +353,11 @@ func TestIntegration(t *testing.T) {
 // 	}
 // }
 
+// goos: linux
+// goarch: amd64
+// pkg: github.com/Konstantin8105/ms
+// cpu: Intel(R) Xeon(R) CPU E3-1240 V2 @ 3.40GHz
+// BenchmarkIntersection-4     100	  10671180 ns/op	   45137 B/op	     193 allocs/op
 func BenchmarkIntersection(b *testing.B) {
 	var mm Model
 	mm.DemoSpiral(50)
