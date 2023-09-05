@@ -143,7 +143,7 @@ type Named struct{ Name string }
 type Model struct {
 	// actual = 0, then change Model
 	// 0 < actual, then change Parts[actual - 1]
-	actual int
+	// actual int
 
 	Named
 	// 	Ignored
@@ -695,6 +695,7 @@ func (mm *Model) SelectLeftCursor(nodes bool, elements []bool) {
 }
 
 func (mm *Model) GetSelectNodes(single bool) (ids []uint) {
+	// TODO single ?????
 	for i := range mm.Coords {
 		if !mm.Coords[i].selected {
 			continue
@@ -2312,6 +2313,7 @@ func Run() (err error) {
 	tuiWindow := window.NewTui(tui)
 	ws[0] = tuiWindow
 	mm.addTuiInitialization(initialization)
+	initialization()
 
 	// 3d model
 	opWindow, err := NewOpengl(&mm, &ch)

@@ -2148,6 +2148,7 @@ func init() {
 }
 
 type Checkable interface {
+	Check() error
 	// CheckSingleStructure()     // Multiple structures
 	// CheckDuplicateNodes()      // Node duplicate
 	// CheckDuplicateLines()      // Beam duplicate

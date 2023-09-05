@@ -503,3 +503,13 @@ func (u *Undo) RemoveZeroTriangles() {
 	// action
 	u.model.RemoveZeroTriangles()
 }
+
+func (u *Undo) Check() error {
+	logger.Print("Check")
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	return u.model.Check()
+}

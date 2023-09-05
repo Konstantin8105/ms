@@ -193,6 +193,13 @@ func TestIntegration(t *testing.T) {
 		run("StandardView", func() { mm.StandardView(StandardViewXOZpos) })
 		run("StandardView", func() { mm.StandardView(StandardViewYOZpos) })
 
+		run("Check", func() {
+			if err := mm.Check(); err != nil {
+				t.Errorf("%v", err)
+			}
+		})
+		run("RemoveNodesWithoutElements", func() { mm.RemoveNodesWithoutElements() })
+
 		run("ColorEdge", func() { mm.ColorEdge(false) })
 		for i := 0; i < 15; i++ {
 			run("Undo", func() { mm.Undo() })
