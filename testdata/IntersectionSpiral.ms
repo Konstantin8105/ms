@@ -1,5 +1,4 @@
 {
-  "Name": "",
   "Elements": [
     {
       "ElementType": 1,

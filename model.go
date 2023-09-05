@@ -134,7 +134,7 @@ func (c Coordinate) Check() error {
 }
 
 // Named intermediant named structure
-type Named struct{ Name string }
+// type Named struct{ Name string }
 
 // type Ignored struct{ IgnoreElements []bool }
 
@@ -145,7 +145,7 @@ type Model struct {
 	// 0 < actual, then change Parts[actual - 1]
 	// actual int
 
-	Named
+	// Named
 	// 	Ignored
 	Elements []Element
 	Coords   []Coordinate
