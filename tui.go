@@ -2498,7 +2498,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 		scroll = vl.Scroll{Root: &list}
 		tabs   vl.Tabs
 	)
-	tabs.Add("Source tree", SourceTree())
+	tabs.Add("Group tree", SourceTree())
 	tabs.Add("Editor", &scroll)
 	tui = &tabs
 	// tui = &scroll
@@ -2555,7 +2555,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 
 func SourceTree() (tr vl.Widget) {
 	var list vl.List
-	list.Add(vl.TextStatic("Tree of elements"))
+	list.Add(vl.TextStatic("Tree of groups"))
 
 	var btn vl.Button
 	btn.SetText("Create new group")
@@ -2587,18 +2587,34 @@ func SourceTree() (tr vl.Widget) {
 			var l vl.List
 			ch.Root = &l
 
-			{
-				if in != 0 {
-					l.Add(vl.TextStatic("Link from `Base model`:"))
-				}
+			if in == 0 {
 				ns := 20000 - in*1000
 				es := 10000 - in*500
 				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
-				if in == 0 {
-					continue
-				}
+				continue
 			}
-			l.Add(new(vl.Separator))
+
+			{
+				l.Add(vl.TextStatic("Link from `Base model`:"))
+				ns := 20000 - in*1000
+				es := 10000 - in*500
+				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
+				l.Add(new(vl.Separator))
+			}
+			if in%3 == 0 {
+				l.Add(vl.TextStatic(fmt.Sprintf("Link from `%s`:", names[in/3])))
+				ns := 10000 - in*100
+				es := 100 - in*1
+				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
+				l.Add(new(vl.Separator))
+			}
+			if in%4 == 0 {
+				l.Add(vl.TextStatic(fmt.Sprintf("Link from `%s`:", names[in/4])))
+				ns := 10000 - in*120
+				es := 189 - in*2
+				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
+				l.Add(new(vl.Separator))
+			}
 			{
 				l.Add(vl.TextStatic("Geometry specific of group:"))
 				ns := 200 - in*10
