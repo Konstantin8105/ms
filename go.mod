@@ -10,7 +10,7 @@ require (
 	github.com/Konstantin8105/msh v0.0.0-20230709182739-092b2bf6afb1
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20230612182433-2ec4a099d755
-	github.com/Konstantin8105/vl v0.0.0-20230905065259-4aa15cb7b024
+	github.com/Konstantin8105/vl v0.0.0-20230905082035-6a4126ef6b99
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b

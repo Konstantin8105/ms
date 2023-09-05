@@ -2498,7 +2498,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 		scroll = vl.Scroll{Root: &list}
 		// tabs   vl.Tabs
 	)
-	// tabs.Add("Source tree", vl.TextStatic("TOPTOPTOPTOP"))
+	// tabs.Add("Source tree", vl.TextStatic("Prepared tree of model"))
 	// tabs.Add("Editor", &scroll)
 	// tui = &tabs
 	tui = &scroll

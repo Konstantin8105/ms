@@ -319,19 +319,50 @@ func (t *Tui) DrawText(cell vl.Cell, x, y, h int) {
 		return
 	case vl.ScrollLine:
 		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl+gw4, yd)
-		gl.Vertex2d(xl+gw6, yd+hgh)
-		gl.Vertex2d(xl+gw4, yd+dgh)
+		gl.Vertex2d(xl+hgw, yd)
+		gl.Vertex2d(xl+hgw, yd+hgh*0.2)
+		gl.End()
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl+hgw, yd+hgh*0.8)
+		gl.Vertex2d(xl+hgw, yd+dgh)
 		gl.End()
 		return
 	case vl.ScrollUp:
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl, yd+hgh)
+		gl.Vertex2d(xl+dgw, yd+hgh)
+		gl.End()
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+hgw, yd)
+		gl.End()
+		return
 	case vl.ScrollDown:
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl, yd+hgh)
+		gl.Vertex2d(xl+dgw, yd+hgh)
+		gl.End()
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+hgw, yd+dgh)
+		gl.End()
+		return
+	case vl.ScrollSquare:
+		gl.Begin(gl.QUADS)
+		gl.Vertex2d(xl+dgw*0.3, yd+dgh*0.3)
+		gl.Vertex2d(xl+dgw*0.7, yd+dgh*0.3)
+		gl.Vertex2d(xl+dgw*0.7, yd+dgh*0.7)
+		gl.Vertex2d(xl+dgw*0.3, yd+dgh*0.7)
+		gl.End()
+		return
+	case vl.TreeNodeCircle:
+
 	}
 
 	// draw text symbols
 	if cell.R < runeStart || runeEnd < cell.R {
 		// ignore not ascii symbol
-		cell.R = ' '
+		cell.R = '/'
 	}
 	if cell.R == ' ' {
 		// no need draw that rune
