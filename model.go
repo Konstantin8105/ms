@@ -200,8 +200,12 @@ type Metadata struct {
 // 	Ignored
 // }
 
-func (mm *Model) Undo() {}
-func (mm *Model) Redo() {}
+func (mm *Model) Undo() {
+	// do nothing
+}
+func (mm *Model) Redo() {
+	// go nothing
+}
 
 // func clearPartName(name *string) {
 // 	*name = strings.ReplaceAll(*name, "\n", "")
