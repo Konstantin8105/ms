@@ -179,7 +179,7 @@ func TestIntegration(t *testing.T) {
 		run("DemoSpiral", func() { mm.DemoSpiral(26) })
 		run("DemoSpiral again", func() { mm.DemoSpiral(27) })
 		run("StandardView", func() { mm.StandardView(StandardViewXOYpos) })
-		run("SelectLeftCursor", func() { mm.SelectLeftCursor(true, true, true, true) })
+		run("SelectLeftCursor", func() { mm.SelectLeftCursor(true, []bool{true, true, true, true}) })
 		run("SelectScreen", func() { mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300}) })
 
 		// SelectElements
@@ -204,7 +204,7 @@ func TestIntegration(t *testing.T) {
 		run("color edge false", func() { mm.ColorEdge(false) })
 		run("deselect", func() { mm.DeselectAll() })
 		run("SelectLinesOrtho", func() { mm.SelectLinesOrtho(true, true, true) })
-		run("InvertSelect", func() { mm.InvertSelect(true, true, true, true) })
+		run("InvertSelect", func() { mm.InvertSelect(true, []bool{true, true, true, true}) })
 
 		// SelectElements
 		{
@@ -254,7 +254,7 @@ func TestIntegration(t *testing.T) {
 		run("MergeNodes", func() { mm.MergeNodes(0.050) })
 		run("DeselectAll", func() { mm.DeselectAll() })
 		run("SelectLinesOnPlane", func() { mm.SelectLinesOnPlane(true, true, true) })
-		run("InvertSelect", func() { mm.InvertSelect(true, true, true, true) })
+		run("InvertSelect", func() { mm.InvertSelect(true, []bool{true, true, true, true}) })
 
 		{
 			logger.Printf("SelectTriangles")
@@ -276,7 +276,7 @@ func TestIntegration(t *testing.T) {
 
 		run("DeselectAll", func() { mm.DeselectAll() })
 		run("SelectLinesOnPlane", func() { mm.SelectLinesOnPlane(true, true, true) })
-		run("InvertSelect", func() { mm.InvertSelect(true, false, true, true) })
+		run("InvertSelect", func() { mm.InvertSelect(true, []bool{false, true, true, true}) })
 
 		{
 			logger.Printf("SelectElements")
@@ -357,7 +357,7 @@ func BenchmarkIntersection(b *testing.B) {
 	var mm Model
 	mm.DemoSpiral(50)
 	for n := 0; n < b.N; n++ {
-		mm.SelectAll(true, true, true)
+		mm.SelectAll(true, []bool{true, true, true, true})
 		els := mm.GetSelectElements(false)
 		ns := mm.GetSelectNodes(false)
 		mm.Intersection(ns, els)
@@ -381,7 +381,7 @@ func TestModel(t *testing.T) {
 		mm   func() Model
 	}{
 		{
-			name: "IntersectionPointTriangle",
+			name: "IntersectionPointTriangle.ms",
 			mm: func() Model {
 				var (
 					mm   Model
@@ -393,7 +393,7 @@ func TestModel(t *testing.T) {
 					_    = mm.AddNode(1, 1, 0)
 					_, _ = mm.AddTriangle3ByNodeNumber(L0, L2, R2)
 				)
-				mm.SelectAll(true, true, true)
+				mm.SelectAll(true, []bool{true, true, true, true})
 				els := mm.GetSelectElements(false)
 				ns := mm.GetSelectNodes(false)
 				mm.Intersection(ns, els)
@@ -401,7 +401,7 @@ func TestModel(t *testing.T) {
 			},
 		},
 		{
-			name: "IntersectionTriangleTriangle",
+			name: "IntersectionTriangleTriangle.ms",
 			mm: func() Model {
 				var (
 					mm   Model
@@ -414,7 +414,7 @@ func TestModel(t *testing.T) {
 					_, _ = mm.AddTriangle3ByNodeNumber(a0, a1, a2)
 					_, _ = mm.AddTriangle3ByNodeNumber(b0, b1, b2)
 				)
-				mm.SelectAll(true, true, true)
+				mm.SelectAll(true, []bool{true, true, true, true})
 				els := mm.GetSelectElements(false)
 				ns := mm.GetSelectNodes(false)
 				mm.Intersection(ns, els)
@@ -422,15 +422,15 @@ func TestModel(t *testing.T) {
 			},
 		},
 		{
-			name: "IntersectionSpiral",
+			name: "IntersectionSpiral.ms",
 			mm: func() Model {
 				var mm Model
 				mm.DemoSpiral(3)
-				mm.SelectAll(true, true, true)
+				mm.SelectAll(true, []bool{true, true, true, true})
 				els := mm.GetSelectElements(false)
 				mm.DeselectAll()
 				mm.SplitLinesByEqualParts(els, 4)
-				mm.SelectAll(true, true, true)
+				mm.SelectAll(true, []bool{true, true, true, true})
 				els = mm.GetSelectElements(false)
 				ns := mm.GetSelectNodes(false)
 				mm.Intersection(ns, els)
