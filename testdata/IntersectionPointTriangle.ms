@@ -1,6 +1,5 @@
 {
   "Name": "",
-  "IgnoreElements": null,
   "Elements": [
     {
       "ElementType": 2,
@@ -84,6 +83,5 @@
       ],
       "Removed": false
     }
-  ],
-  "Parts": null
+  ]
 }

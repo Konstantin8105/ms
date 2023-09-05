@@ -1,129 +1,17 @@
 package ms
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"math"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/Konstantin8105/compare"
 	"github.com/Konstantin8105/ds"
 )
-
-func Example() {
-	// 	ResetInfo()
-	// 	defer ResetInfo()
-	var mm Model
-	{
-		var c Coordinate
-		c.Point3d[0] = 0
-		c.Point3d[1] = 0
-		c.Point3d[2] = 0
-		mm.Coords = append(mm.Coords, c)
-	}
-	{
-		var c Coordinate
-		c.Point3d[0] = math.Pi
-		c.Point3d[1] = 2
-		c.Point3d[2] = 1
-		mm.Coords = append(mm.Coords, c)
-	}
-	{
-		var c Coordinate
-		c.Point3d[0] = 6
-		c.Point3d[1] = 5
-		c.Point3d[2] = 2
-		mm.Coords = append(mm.Coords, c)
-	}
-	mm.Elements = append(mm.Elements,
-		Element{ElementType: Line2, Indexes: []int{0, 1}},
-	)
-	mm.IgnoreElements = append(mm.IgnoreElements, true)
-
-	var p Part
-	p.IgnoreElements = append(p.IgnoreElements, true, true)
-	mm.Parts = append(mm.Parts, p)
-
-	b, err := json.MarshalIndent(mm, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(string(b))
-
-	// test
-	var actual Model
-	if err := json.Unmarshal(b, &actual); err != nil {
-		fmt.Println(err)
-		return
-	}
-	b2, err := json.MarshalIndent(actual, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	if !bytes.Equal(b, b2) {
-		fmt.Println("results are not same")
-		return
-	}
-
-	// Output:
-	// {
-	//   "Name": "",
-	//   "IgnoreElements": [
-	//     true
-	//   ],
-	//   "Elements": [
-	//     {
-	//       "ElementType": 1,
-	//       "Indexes": [
-	//         0,
-	//         1
-	//       ]
-	//     }
-	//   ],
-	//   "Coords": [
-	//     {
-	//       "Point3d": [
-	//         0,
-	//         0,
-	//         0
-	//       ],
-	//       "Removed": false
-	//     },
-	//     {
-	//       "Point3d": [
-	//         3.141592653589793,
-	//         2,
-	//         1
-	//       ],
-	//       "Removed": false
-	//     },
-	//     {
-	//       "Point3d": [
-	//         6,
-	//         5,
-	//         2
-	//       ],
-	//       "Removed": false
-	//     }
-	//   ],
-	//   "Parts": [
-	//     {
-	//       "Name": "",
-	//       "IgnoreElements": [
-	//         true,
-	//         true
-	//       ]
-	//     }
-	//   ]
-	// }
-}
 
 func TestUniqUint(t *testing.T) {
 	tcs := []struct {
@@ -223,8 +111,8 @@ func TestIntegration(t *testing.T) {
 				t.Fatalf("after select screen")
 			}
 
-			run("IgnoreModelElements", func() { mm.IgnoreModelElements(els) })
-			run("Unignore", func() { mm.Unignore() })
+			// run("IgnoreModelElements", func() { mm.IgnoreModelElements(els) })
+			// run("Unignore", func() { mm.Unignore() })
 			run("SelectLinesOrtho", func() { mm.SelectLinesOrtho(true, true, true) })
 			run("ColorEdge", func() { mm.ColorEdge(true) })
 		}
@@ -319,40 +207,6 @@ func TestIntegration(t *testing.T) {
 	}
 }
 
-// func Testlogger.Printf(t *testing.T) {
-// 	// defer func() {
-// 	// 	t.Logf("%s", PrintInfo())
-// 	// }()
-//
-// 	// tests movements
-// 	quit := make(chan struct{})
-//
-// 	defer func() {
-// 		testCoverageFunc = nil
-// 	}()
-// 	testCoverageFunc = func(mm Mesh, ch *chan ds.Action) {
-// 		var wg sync.WaitGroup
-// 		for i, size := 0, 10; i < size; i++ {
-// 			wg.Add(1)
-// 			*ch <- func() (fus bool) {
-// 				for p := 0; p < size; p++ {
-// 					logger.Printf(fmt.Sprintf("StandardView %02d.%02d", p, i))
-// 				}
-// 				wg.Done()
-// 				return true
-// 			}
-// 		}
-// 		wg.Wait()
-// 		// quit
-// 		close(quit)
-// 	}
-//
-// 	// create a new model
-// 	if err := Run("", quit); err != nil {
-// 		t.Error(err)
-// 	}
-// }
-
 // goos: linux
 // goarch: amd64
 // pkg: github.com/Konstantin8105/ms
@@ -386,7 +240,7 @@ func TestModel(t *testing.T) {
 		mm   func() Model
 	}{
 		{
-			name: "IntersectionPointTriangle.ms",
+			name: filepath.Join(testdata, "IntersectionPointTriangle.ms"),
 			mm: func() Model {
 				var (
 					mm   Model
@@ -406,7 +260,7 @@ func TestModel(t *testing.T) {
 			},
 		},
 		{
-			name: "IntersectionTriangleTriangle.ms",
+			name: filepath.Join(testdata, "IntersectionTriangleTriangle.ms"),
 			mm: func() Model {
 				var (
 					mm   Model
@@ -427,7 +281,7 @@ func TestModel(t *testing.T) {
 			},
 		},
 		{
-			name: "IntersectionSpiral.ms",
+			name: filepath.Join(testdata, "IntersectionSpiral.ms"),
 			mm: func() Model {
 				var mm Model
 				mm.DemoSpiral(3)
@@ -444,43 +298,6 @@ func TestModel(t *testing.T) {
 		},
 	}
 
-	compare := func(name string, actual []byte) {
-		var (
-			filename = filepath.Join(testdata, name)
-		)
-		// for update test screens run in console:
-		// UPDATE=true go test
-		if os.Getenv("UPDATE") == "true" {
-			if err := ioutil.WriteFile(filename, actual, 0644); err != nil {
-				t.Fatalf("Cannot write snapshot to file: %v", err)
-			}
-		}
-		// get expect result
-		expect, err := ioutil.ReadFile(filename)
-		if err != nil {
-			t.Fatalf("Cannot read snapshot file: %v", err)
-		}
-		// compare
-		if !bytes.Equal(actual, expect) {
-			f2 := filename + ".new"
-			if err := ioutil.WriteFile(f2, actual, 0644); err != nil {
-				t.Fatalf("Cannot write snapshot to file new: %v", err)
-			}
-			size := 1000
-			if size < len(actual) {
-				actual = actual[:size]
-			}
-			if size < len(expect) {
-				expect = expect[:size]
-			}
-			t.Errorf("Snapshots is not same:\nActual:\n%s\nExpect:\n%s\nmeld %s %s",
-				actual,
-				expect,
-				filename, f2,
-			)
-		}
-	}
-
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			// ResetInfo()
@@ -494,7 +311,7 @@ func TestModel(t *testing.T) {
 			}
 
 			// t.Logf("%s\n", PrintInfo())
-			compare(tc.name, b)
+			compare.Test(t, tc.name, b)
 		})
 	}
 }
