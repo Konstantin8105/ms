@@ -318,41 +318,40 @@ func (t *Tui) DrawText(cell vl.Cell, x, y, h int) {
 		gl.End()
 		return
 	case vl.ScrollLine:
-		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl+hgw, yd)
-		gl.Vertex2d(xl+hgw, yd+hgh*0.2)
-		gl.End()
-		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl+hgw, yd+hgh*0.8)
-		gl.Vertex2d(xl+hgw, yd+dgh)
+		gl.PointSize(1)
+		gl.Begin(gl.POINTS)
+		c := 0
+		for x := xl+1; x <= xl+dgw; x++ {
+			for y := yd; y < yd+dgh; y++ {
+				c++
+				if c%2 == 0 {
+					continue
+				}
+				gl.Vertex2d(x, y)
+			}
+		}
 		gl.End()
 		return
 	case vl.ScrollUp:
-		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl, yd+dgh)
-		gl.Vertex2d(xl+dgw, yd+dgh)
-		gl.End()
-		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl+hgw, yd+dgh)
-		gl.Vertex2d(xl+hgw, yd)
+		gl.Begin(gl.TRIANGLES)
+		gl.Vertex2d(xl+hgw, yd+dgh*0.8)
+		gl.Vertex2d(xl+dgw*0.95, yd+dgh*0.2)
+		gl.Vertex2d(xl+dgw*0.05, yd+dgh*0.2)
 		gl.End()
 		return
 	case vl.ScrollDown:
-		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl, yd)
-		gl.Vertex2d(xl+dgw, yd)
-		gl.End()
-		gl.Begin(gl.LINES)
-		gl.Vertex2d(xl+hgw, yd)
-		gl.Vertex2d(xl+hgw, yd+dgh)
+		gl.Begin(gl.TRIANGLES)
+		gl.Vertex2d(xl+hgw, yd+dgh*0.2)
+		gl.Vertex2d(xl+dgw*0.95, yd+dgh*0.8)
+		gl.Vertex2d(xl+dgw*0.05, yd+dgh*0.8)
 		gl.End()
 		return
 	case vl.ScrollSquare:
 		gl.Begin(gl.QUADS)
-		gl.Vertex2d(xl+dgw*0.3, yd+dgh*0.3)
-		gl.Vertex2d(xl+dgw*0.7, yd+dgh*0.3)
-		gl.Vertex2d(xl+dgw*0.7, yd+dgh*0.7)
-		gl.Vertex2d(xl+dgw*0.3, yd+dgh*0.7)
+		gl.Vertex2d(xl+dgw*0.05, yd+dgh*0.0)
+		gl.Vertex2d(xl+dgw*0.95, yd+dgh*0.0)
+		gl.Vertex2d(xl+dgw*0.95, yd+dgh*1.0)
+		gl.Vertex2d(xl+dgw*0.05, yd+dgh*1.0)
 		gl.End()
 		return
 	case vl.TreeNodeCircle:

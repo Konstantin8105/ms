@@ -2599,6 +2599,9 @@ func SourceTree() (tr vl.Widget) {
 				ns := 20000 - in*1000
 				es := 10000 - in*500
 				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
+				var btn vl.Button
+				btn.SetText("Select")
+				l.Add(&btn)
 				l.Add(new(vl.Separator))
 			}
 			if in%3 == 0 {
@@ -2606,6 +2609,9 @@ func SourceTree() (tr vl.Widget) {
 				ns := 10000 - in*100
 				es := 100 - in*1
 				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
+				var btn vl.Button
+				btn.SetText("Select")
+				l.Add(&btn)
 				l.Add(new(vl.Separator))
 			}
 			if in%4 == 0 {
@@ -2613,6 +2619,9 @@ func SourceTree() (tr vl.Widget) {
 				ns := 10000 - in*120
 				es := 189 - in*2
 				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
+				var btn vl.Button
+				btn.SetText("Select")
+				l.Add(&btn)
 				l.Add(new(vl.Separator))
 			}
 			{
