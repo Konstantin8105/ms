@@ -495,7 +495,7 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 }
 
 func (mm *Model) AddLeftCursor(lc LeftCursor) {
-	logger.Printf("Model not implemented AddLeftCursor: %v", lc)
+	// do nothing
 }
 
 func (mm *Model) GetCoordByID(id uint) (c gog.Point3d, ok bool) {
@@ -1043,7 +1043,7 @@ func (mm *Model) SelectAll(nodes bool, elements []bool) {
 }
 
 func (mm *Model) SelectScreen(from, to [2]int32) {
-	logger.Printf("Model is not implement SelectScreen: %v %v", from, to)
+	// do nothing
 }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
@@ -2081,7 +2081,7 @@ func (mm *Model) Mirror(nodes, elements []uint,
 }
 
 func (mm *Model) StandardView(view SView) {
-	logger.Printf("Model not implemented StandardView: %v", view)
+	// do nothing
 }
 
 func max(xs ...float64) (res float64) {
