@@ -345,8 +345,26 @@ func (t *Tui) DrawText(cell vl.Cell, x, y, h int) {
 		gl.Vertex2d(xl+dgw*0.05, yd+dgh*1.0)
 		gl.End()
 		return
-	case vl.TreeNodeCircle:
-
+	case vl.TreeUpDown:
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl+hgw, yd)
+		gl.Vertex2d(xl+hgw, yd+dgh)
+		gl.End()
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+dgw, yd+hgh)
+		gl.End()
+		return
+	case vl.TreeUp:
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+hgw, yd+dgh)
+		gl.End()
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl+hgw, yd+hgh)
+		gl.Vertex2d(xl+dgw, yd+dgh)
+		gl.End()
+		return
 	}
 
 	// draw text symbols
