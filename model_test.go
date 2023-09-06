@@ -76,7 +76,7 @@ func TestIntegration(t *testing.T) {
 			wg.Add(1)
 			var els []uint
 			*ch <- func() (fus bool) {
-				els = mm.GetSelectElements(Many)
+				els = mm.GetSelectElements(Many, nil)
 				wg.Done()
 				return true
 			}
@@ -100,7 +100,7 @@ func TestIntegration(t *testing.T) {
 			wg.Add(1)
 			var els []uint
 			*ch <- func() (fus bool) {
-				els = mm.GetSelectElements(Many)
+				els = mm.GetSelectElements(Many, nil)
 				wg.Done()
 				return true
 			}
@@ -123,7 +123,7 @@ func TestIntegration(t *testing.T) {
 			wg.Add(1)
 			var els []uint
 			*ch <- func() (fus bool) {
-				els = mm.GetSelectElements(Many)
+				els = mm.GetSelectElements(Many, nil)
 				wg.Done()
 				return true
 			}
@@ -149,7 +149,9 @@ func TestIntegration(t *testing.T) {
 			var tris []uint
 			wg.Add(1)
 			*ch <- func() (fus bool) {
-				tris = mm.GetSelectTriangles(Many)
+				tris = mm.GetSelectElements(Many, func(t ElType) bool {
+					return t == Triangle3
+				})
 				wg.Done()
 				return true
 			}
@@ -171,7 +173,7 @@ func TestIntegration(t *testing.T) {
 			var tris []uint
 			wg.Add(1)
 			*ch <- func() (fus bool) {
-				tris = mm.GetSelectElements(Many)
+				tris = mm.GetSelectElements(Many, nil)
 				wg.Done()
 				return true
 			}
@@ -224,7 +226,7 @@ func BenchmarkIntersection(b *testing.B) {
 	mm.DemoSpiral(50)
 	for n := 0; n < b.N; n++ {
 		mm.SelectAll(true, []bool{true, true, true, true})
-		els := mm.GetSelectElements(false)
+		els := mm.GetSelectElements(false, nil)
 		ns := mm.GetSelectNodes(false)
 		mm.Intersection(ns, els)
 	}
@@ -260,7 +262,7 @@ func TestModel(t *testing.T) {
 					_, _ = mm.AddTriangle3ByNodeNumber(L0, L2, R2)
 				)
 				mm.SelectAll(true, []bool{true, true, true, true})
-				els := mm.GetSelectElements(false)
+				els := mm.GetSelectElements(false, nil)
 				ns := mm.GetSelectNodes(false)
 				mm.Intersection(ns, els)
 				return mm
@@ -281,7 +283,7 @@ func TestModel(t *testing.T) {
 					_, _ = mm.AddTriangle3ByNodeNumber(b0, b1, b2)
 				)
 				mm.SelectAll(true, []bool{true, true, true, true})
-				els := mm.GetSelectElements(false)
+				els := mm.GetSelectElements(false, nil)
 				ns := mm.GetSelectNodes(false)
 				mm.Intersection(ns, els)
 				return mm
@@ -293,11 +295,11 @@ func TestModel(t *testing.T) {
 				var mm Model
 				mm.DemoSpiral(3)
 				mm.SelectAll(true, []bool{true, true, true, true})
-				els := mm.GetSelectElements(false)
+				els := mm.GetSelectElements(false, nil)
 				mm.DeselectAll()
 				mm.SplitLinesByEqualParts(els, 4)
 				mm.SelectAll(true, []bool{true, true, true, true})
-				els = mm.GetSelectElements(false)
+				els = mm.GetSelectElements(false, nil)
 				ns := mm.GetSelectNodes(false)
 				mm.Intersection(ns, els)
 				return mm
@@ -307,18 +309,31 @@ func TestModel(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// ResetInfo()
-			// defer ResetInfo()
 			mm := tc.mm()
 
 			b, err := json.MarshalIndent(mm, "", "  ")
 			if err != nil {
-				fmt.Println(err)
-				return
+				t.Fatal(err)
 			}
 
-			// t.Logf("%s\n", PrintInfo())
 			compare.Test(t, tc.name, b)
+
+			mm.filename = tc.name
+			if err = mm.Save(); err != nil {
+				t.Fatal(err)
+			}
+
+			if name := mm.GetPresentFilename(); name != tc.name {
+				t.Fatalf("filenames is not same")
+			}
+
+			var o Model
+			if err = o.Open(tc.name); err != nil {
+				t.Fatal(err)
+			}
+			if fmt.Sprintf("%#v", mm) != fmt.Sprintf("%#v", o) {
+				t.Fatalf("Save-Open operations not same")
+			}
 		})
 	}
 }

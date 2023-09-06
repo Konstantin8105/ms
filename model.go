@@ -663,7 +663,7 @@ func (mm *Model) RemoveZeroTriangles() {
 // }
 
 func (mm *Model) ColorEdge(isColor bool) {
-	logger.Printf("Model not implemented ColorEdge: %v", isColor)
+	// do nothing
 }
 
 // func (mm *Model) IgnoreModelElements(ids []uint) {
@@ -694,12 +694,10 @@ func (mm *Model) ColorEdge(isColor bool) {
 // }
 
 func (mm *Model) SelectLeftCursor(nodes bool, elements []bool) {
-	logger.Printf("Model not implemented SelectLeftCursor: %v %v",
-		nodes, elements)
+	// do nothing
 }
 
 func (mm *Model) GetSelectNodes(single bool) (ids []uint) {
-	// TODO single ?????
 	for i := range mm.Coords {
 		if !mm.Coords[i].selected {
 			continue
@@ -707,50 +705,34 @@ func (mm *Model) GetSelectNodes(single bool) (ids []uint) {
 		if mm.Coords[i].Removed {
 			continue
 		}
+		if mm.Coords[i].hided {
+			continue
+		}
 		ids = append(ids, uint(i))
+		if single {
+			return
+		}
 	}
 	return
 }
 
-func (mm *Model) GetSelectLines(single bool) (ids []uint) {
-	// TODO single ?????
-	for i, el := range mm.Elements {
-		vis, ok := mm.IsVisibleLine(uint(i))
-		if !vis || !ok {
-			continue
-		}
-		if !el.selected {
-			continue
-		}
-		ids = append(ids, uint(i))
-	}
-	return
-}
-
-func (mm *Model) GetSelectTriangles(single bool) (ids []uint) {
-	// TODO single ?????
+func (mm *Model) GetSelectElements(single bool, filter func(_ ElType) (acceptable bool)) (ids []uint) {
 	for i, el := range mm.Elements {
 		if !el.selected {
 			continue
 		}
-		if el.ElementType != Triangle3 {
+		if el.hided {
 			continue
+		}
+		if filter != nil {
+			if !filter(el.ElementType) {
+				continue
+			}
 		}
 		ids = append(ids, uint(i))
-	}
-	return
-}
-
-func (mm *Model) GetSelectElements(single bool) (ids []uint) {
-	// TODO single ?????
-	for i, el := range mm.Elements {
-		if el.ElementType == ElRemove {
-			continue
+		if single {
+			return
 		}
-		if !el.selected {
-			continue
-		}
-		ids = append(ids, uint(i))
 	}
 	return
 }

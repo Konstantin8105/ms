@@ -761,7 +761,11 @@ func init() {
 		Name: "Split line2 by distance from node",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			s, sgt, inits := Select("Select lines", Many, m.GetSelectLines)
+			s, sgt, inits := Select("Select lines", Many, func(single bool) []uint {
+				return m.GetSelectElements(single, func(t ElType) bool {
+					return t == Line2
+				})
+			})
 			list.Add(s)
 			d, dgt, initd := InputFloat("Distance", "meter")
 			list.Add(d)
@@ -789,7 +793,11 @@ func init() {
 		Name: "Split Line2 by ratio",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			s, sgt, inits := Select("Select line", Many, m.GetSelectLines)
+			s, sgt, inits := Select("Select line", Many, func(single bool) []uint {
+				return m.GetSelectElements(single, func(t ElType) bool {
+					return t == Line2
+				})
+			})
 			list.Add(s)
 			d, dgt, initd := InputFloat("Ratio", "")
 			list.Add(d)
@@ -817,7 +825,11 @@ func init() {
 		Name: "Split Line2 to equal parts",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			ns, nsgt, inits := Select("Select lines", Many, m.GetSelectLines)
+			ns, nsgt, inits := Select("Select lines", Many, func(single bool) []uint {
+				return m.GetSelectElements(single, func(t ElType) bool {
+					return t == Line2
+				})
+			})
 			list.Add(ns)
 
 			r, rgt, initr := InputUnsigned("Amount parts", "")
@@ -842,7 +854,11 @@ func init() {
 		Name: "Split Triangle3 to 3 Triangle3",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
-			ns, nsgt, initn := Select("Select triangles3", Many, m.GetSelectTriangles)
+			ns, nsgt, initn := Select("Select triangles3", Many, func(single bool) []uint {
+				return m.GetSelectElements(single, func(t ElType) bool {
+					return t == Triangle3
+				})
+			})
 			list.Add(ns)
 
 			var bi vl.Button
@@ -906,7 +922,11 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			s, sgt, inits := Select("Select lines", Many, m.GetSelectLines)
+			s, sgt, inits := Select("Select lines", Many, func(single bool) []uint {
+				return m.GetSelectElements(single, func(t ElType) bool {
+					return t == Line2
+				})
+			})
 			list.Add(s)
 
 			var b vl.Button
@@ -1107,7 +1127,7 @@ func init() {
 				}
 				m.InvertSelect(true, ls)
 				ns := m.GetSelectNodes(Many)
-				es := m.GetSelectElements(Many)
+				es := m.GetSelectElements(Many, nil)
 				m.DeselectAll()
 				m.Hide(ns, es)
 			}
@@ -1185,9 +1205,7 @@ type Selectable interface {
 	SelectLeftCursor(nodes bool, elements []bool)
 
 	GetSelectNodes(single bool) (ids []uint)
-	GetSelectLines(single bool) (ids []uint)
-	GetSelectTriangles(single bool) (ids []uint)
-	GetSelectElements(single bool) (ids []uint)
+	GetSelectElements(single bool, filter func(_ ElType) (acceptable bool)) (ids []uint)
 
 	InvertSelect(nodes bool, elements []bool)
 
@@ -1340,7 +1358,11 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			lf, lfgt, initl := Select("Lines", Many, m.GetSelectLines)
+			lf, lfgt, initl := Select("Lines", Many, func(single bool) []uint {
+				return m.GetSelectElements(single, func(t ElType) bool {
+					return t == Line2
+				})
+			})
 			list.Add(lf)
 
 			var b vl.Button
@@ -2408,7 +2430,7 @@ func SelectAll(m Mesh) (
 	b.SetText("Select")
 	b.OnClick = func() {
 		coordinates := m.GetSelectNodes(Many)
-		elements := m.GetSelectElements(Many)
+		elements := m.GetSelectElements(Many, nil)
 		if len(coordinates) == 0 && len(elements) == 0 {
 			return
 		}

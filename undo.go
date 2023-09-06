@@ -276,19 +276,9 @@ func (u *Undo) GetSelectNodes(single bool) (ids []uint) {
 	return u.model.GetSelectNodes(single)
 }
 
-func (u *Undo) GetSelectLines(single bool) (ids []uint) {
-	logger.Print("GetSelectLines")
-	return u.model.GetSelectLines(single)
-}
-
-func (u *Undo) GetSelectTriangles(single bool) (ids []uint) {
-	logger.Print("GetSelectTriangles")
-	return u.model.GetSelectTriangles(single)
-}
-
-func (u *Undo) GetSelectElements(single bool) (ids []uint) {
+func (u *Undo) GetSelectElements(single bool, filter func(_ ElType) (acceptable bool)) (ids []uint) {
 	logger.Print("GetSelectElements")
-	return u.model.GetSelectElements(single)
+	return u.model.GetSelectElements(single, filter)
 }
 
 func (u *Undo) InvertSelect(nodes bool, elements []bool) {
