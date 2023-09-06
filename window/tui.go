@@ -318,18 +318,9 @@ func (t *Tui) DrawText(cell vl.Cell, x, y, h int) {
 		gl.End()
 		return
 	case vl.ScrollLine:
-		gl.PointSize(1)
-		gl.Begin(gl.POINTS)
-		c := 0
-		for x := xl+1; x <= xl+dgw; x++ {
-			for y := yd; y < yd+dgh; y++ {
-				c++
-				if c%2 == 0 {
-					continue
-				}
-				gl.Vertex2d(x, y)
-			}
-		}
+		gl.Begin(gl.LINES)
+		gl.Vertex2d(xl+hgw, yd)
+		gl.Vertex2d(xl+hgw, yd+dgh)
 		gl.End()
 		return
 	case vl.ScrollUp:

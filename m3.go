@@ -17,8 +17,6 @@ var _ ds.Window = (*Opengl)(nil)
 
 var WindowRatio float64 = 0.4
 
-// const fontSize = int32(12)
-
 type Opengl struct {
 	font *glsymbol.Font
 
