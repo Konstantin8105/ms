@@ -78,12 +78,13 @@ type Filable interface {
 	Close()
 	// Store all operations
 	// Import from gmsh
+	// Import points coordinates to csv
+	// Export points coordinates to csv
 	// Export to gmsh
 	// View 3D model
-
-	// 2D model: axesymm
+	// 2D planar model
+	// 2D axesymm model
 	// Convert to 2d
-
 }
 
 func init() {
@@ -1214,6 +1215,7 @@ type Selectable interface {
 	SelectLinesParallel(lines []uint)
 	SelectLinesByLenght(more bool, lenght float64)
 	SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction)
+	// SelectElementsOnPlane(xoy, xoz, yoz bool)
 	// SelectLinesSpherical(node uint, radiant, conc bool)
 
 	// SelectPlatesWithAngle
