@@ -8,7 +8,6 @@ require (
 	github.com/Konstantin8105/errors v0.1.0
 	github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e
 	github.com/Konstantin8105/gog v0.0.0-20221011134020-d25f31641629
-	github.com/Konstantin8105/msh v0.0.0-20230709182739-092b2bf6afb1
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20230612182433-2ec4a099d755
 	github.com/Konstantin8105/vl v0.0.0-20230906103044-6e4c2e5b1f34

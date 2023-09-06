@@ -2499,10 +2499,16 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 		scroll = vl.Scroll{Root: &list}
 		tabs   vl.Tabs
 	)
-	tabs.Add("Group tree", SourceTree())
 	tabs.Add("Editor", &scroll)
+	// TODO tabs.Add("Model tree", SourceTree())
+	// TODO tabs.Add("Loads", LoadTree())
+	// TODO tabs.Add("Supports", SupportTree())
+	// TODO tabs.Add("Sections", new(vl.Separator))
+	// TODO tabs.Add("Specifications", new(vl.Separator))
+	// TODO tabs.Add("Material", new(vl.Separator))
+	// TODO tabs.Add("Analysis", new(vl.Separator))
+	// TODO tabs.Add("Design", new(vl.Separator))
 	tui = &tabs
-	// tui = &scroll
 
 	view := make([]bool, len(Operations))
 	colHeader := make([]vl.CollapsingHeader, endGroup)
@@ -2556,6 +2562,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 
 func SourceTree() (tr vl.Widget) {
 	var list vl.List
+
 	list.Add(vl.TextStatic("Tree of groups"))
 
 	var btn vl.Button
@@ -2634,74 +2641,6 @@ func SourceTree() (tr vl.Widget) {
 				btn.SetText("Select")
 				l.Add(&btn)
 			}
-			{ // tree
-				gen := func(name string, v float64) vl.Tree {
-					var lh vl.ListH
-					lh.Add(vl.TextStatic(name))
-					var btn vl.Button
-					btn.SetText("Select")
-					lh.Add(&btn)
-
-					var Value vl.List
-					Value.Add(vl.TextStatic("Value"))
-					var vq vl.Inputbox
-					vq.SetText(fmt.Sprintf("%.1f", v))
-					Value.Add(&vq)
-
-					var Dir vl.List
-					Dir.Add(vl.TextStatic("Direction"))
-					var dir vl.Combobox
-					dir.Add([]string{"X", "Y", "Z"}...)
-					Dir.Add(&dir)
-
-					var Sys vl.List
-					Sys.Add(vl.TextStatic("System coordinate"))
-					var sys vl.Combobox
-					sys.Add([]string{"Global", "Local"}...)
-					Sys.Add(&sys)
-
-					return vl.Tree{
-						Root: &lh,
-						Nodes: []vl.Tree{
-							vl.Tree{Root: &Value},
-							vl.Tree{Root: &Dir},
-							vl.Tree{Root: &Sys},
-						},
-					}
-				}
-				un := func(v float64) vl.Tree{
-					return gen("Uniform load on line",v)
-				}
-				nl := func(v float64) vl.Tree{
-					return gen("Node load",v)
-				}
-				load := func(i int, f float64) vl.Widget {
-					var ch vl.CollapsingHeader
-					ch.SetText(fmt.Sprintf("Load: %d", i))
-					t := vl.Tree{
-						Root: vl.TextStatic("List of loads"),
-						Nodes: []vl.Tree{
-							nl(f * 10000),
-							un(f * -22.2),
-							un(f * 102.2),
-							nl(f * -200),
-						},
-					}
-					for p := 0; p < i; p++ {
-						t.Nodes = append(t.Nodes, nl(rand.Float64()*32.3))
-						t.Nodes = append(t.Nodes, un(rand.Float64()*1.2310231))
-					}
-					ch.Root = &t
-					return &ch
-				}
-
-				var ll vl.List
-				ll.Add(load(1, 1))
-				ll.Add(load(2, -0.2))
-				ll.Add(load(3, -2.1212))
-
-				l.Add(&ll)
-			}
 		}
 		rg.SetPos(0)
 		list.Add(&rg)
@@ -2710,4 +2649,88 @@ func SourceTree() (tr vl.Widget) {
 	var scroll vl.Scroll
 	scroll.Root = &list
 	return &scroll
+}
+
+func LoadTree() (tr vl.Widget) {
+	var list vl.List
+	list.Add(vl.TextStatic("Tree of loads"))
+
+	// tree
+	gen := func(name string, v float64) vl.Tree {
+		var lh vl.ListH
+		lh.Add(vl.TextStatic(name))
+		var btn vl.Button
+		btn.SetText("Select")
+		lh.Add(&btn)
+
+		var Value vl.List
+		Value.Add(vl.TextStatic("Value"))
+		var vq vl.Inputbox
+		vq.SetText(fmt.Sprintf("%.1f", v))
+		Value.Add(&vq)
+
+		var Dir vl.List
+		Dir.Add(vl.TextStatic("Direction"))
+		var dir vl.Combobox
+		dir.Add([]string{"X", "Y", "Z"}...)
+		Dir.Add(&dir)
+
+		var Sys vl.List
+		Sys.Add(vl.TextStatic("System coordinate"))
+		var sys vl.Combobox
+		sys.Add([]string{"Global", "Local"}...)
+		Sys.Add(&sys)
+
+		return vl.Tree{
+			Root: &lh,
+			Nodes: []vl.Tree{
+				vl.Tree{Root: &Value},
+				vl.Tree{Root: &Dir},
+				vl.Tree{Root: &Sys},
+			},
+		}
+	}
+	un := func(v float64) vl.Tree {
+		return gen("Uniform load on line", v)
+	}
+	nl := func(v float64) vl.Tree {
+		return gen("Node load", v)
+	}
+	load := func(i int, f float64) vl.Widget {
+		var ch vl.CollapsingHeader
+		ch.SetText(fmt.Sprintf("Load: %d", i))
+		t := vl.Tree{
+			Root: vl.TextStatic("List of loads"),
+			Nodes: []vl.Tree{
+				nl(f * 10000),
+				un(f * -22.2),
+				un(f * 102.2),
+				nl(f * -200),
+			},
+		}
+		for p := 0; p < i; p++ {
+			t.Nodes = append(t.Nodes, nl(rand.Float64()*32.3))
+			t.Nodes = append(t.Nodes, un(rand.Float64()*1.2310231))
+		}
+		ch.Root = &t
+		return &ch
+	}
+
+	var ll vl.List
+	for in := 1; in < 40; in++ {
+		value := rand.Float64() - 0.5
+		value *= rand.Float64() * 100
+		ll.Add(load(in, value))
+	}
+	list.Add(&ll)
+
+	var scroll vl.Scroll
+	scroll.Root = &list
+	return &scroll
+}
+
+func SupportTree() (tr vl.Widget) {
+	var list vl.List
+	list.Add(vl.TextStatic("Tree of support"))
+	return &list
 }
