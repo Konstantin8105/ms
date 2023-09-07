@@ -203,11 +203,11 @@ func (op *Opengl) Init() {
 		op.state = normal
 	}
 	op.cursorLeft = selectPoints
+	*op.actions <- func() bool { return true }
 }
 
 func NewOpengl(m Mesh, actions *chan ds.Action) (op *Opengl, err error) {
 	op = new(Opengl)
-	op.Init()
 	op.mesh = m
 	op.actions = actions
 
@@ -251,6 +251,9 @@ func NewOpengl(m Mesh, actions *chan ds.Action) (op *Opengl, err error) {
 
 	// mouse initialize
 	op.MouseDefault()
+
+	// initialize
+	op.Init()
 
 	return
 }

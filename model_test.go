@@ -44,6 +44,8 @@ func TestIntegration(t *testing.T) {
 	// 	t.Logf("%s", PrintInfo())
 	// }()
 
+	const reset = "Reset"
+
 	// tests movements
 	defer func() {
 		testCoverageFunc = nil
@@ -65,6 +67,9 @@ func TestIntegration(t *testing.T) {
 			logger.Printf(fmt.Sprintf("end of %s", name))
 
 			// screenshoot
+			if name == reset {
+				return
+			}
 			screenshot(filepath.Join(
 				testdata,
 				fmt.Sprintf("%03d-%s.png", counter, name),
@@ -72,13 +77,26 @@ func TestIntegration(t *testing.T) {
 			counter++
 		}
 
+		clean := func() {
+			run(reset, func() { mm.ColorEdge(false) })
+			for i := 0; i < 45; i++ {
+				run(reset, func() { mm.Undo() })
+			}
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+		}
+		testHeader := func(n int) {
+			logger.Printf("============== TEST %02d ==============", n)
+		}
+
+		// test 0
+		testHeader(0)
 		run("DemoSpiral", func() { mm.DemoSpiral(26) })
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
 		run("DemoSpiral again", func() { mm.DemoSpiral(27) })
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
 		run("StandardView", func() { mm.StandardView(StandardViewXOYpos) })
 		run("SelectLeftCursor", func() { mm.SelectLeftCursor(true, []bool{true, true, true, true}) })
 		run("SelectScreen", func() { mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300}) })
-
-		// SelectElements
 		{
 			logger.Printf("SelectElements")
 			wg.Add(1)
@@ -210,11 +228,40 @@ func TestIntegration(t *testing.T) {
 		})
 		run("RemoveNodesWithoutElements", func() { mm.RemoveNodesWithoutElements() })
 
-		run("ColorEdge", func() { mm.ColorEdge(false) })
-		for i := 0; i < 15; i++ {
-			run("Undo", func() { mm.Undo() })
+		// test 1
+		clean()
+		{
+			testHeader(1)
+			run("DemoSpiral", func() { mm.DemoSpiral(20) })
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+			run("SelectAll", func() { mm.SelectAll(true, []bool{false, false, false, false, false}) })
+
+			logger.Printf("SelectNodes")
+			wg.Add(1)
+			var ns []uint
+			*ch <- func() (fus bool) {
+				ns = mm.GetSelectNodes(Many)
+				wg.Done()
+				return true
+			}
+			wg.Wait()
+			if len(ns) == 0 {
+				logger.Printf("Error: GetSelectNodes is zero")
+				mm.Close()
+				t.Fatalf("after select screen")
+			}
+
+			run("DeselectAll", func() { mm.DeselectAll() })
+			run("Move half points", func() {
+				mm.Move(
+					ns[len(ns)/2:], nil,
+					[3]float64{0, 0, 0},
+					[6]float64{1, 1}, // diffCoordinate
+				)
+			})
 		}
-		run("StandardView", func() { mm.StandardView(StandardViewXOZpos) })
+
+		// close model
 		mm.Close()
 	}
 	// create a new model
