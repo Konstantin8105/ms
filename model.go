@@ -1074,6 +1074,26 @@ func (mm *Model) SelectScreen(from, to [2]int32) {
 }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
+	// initialization
+	if len(lines) == 0 {
+		// do nothing
+		return
+	}
+	for _, l := range lines {
+		if l < 0 || len(mm.Elements) <= int(l) {
+			logger.Printf("SplitLinesByRatio: invalid list of elements")
+			return
+		}
+		if mm.Elements[l].ElementType != Line2 {
+			logger.Printf("SplitLinesByRatio: invalid list of elements is not line")
+			return
+		}
+		if mm.Elements[l].hided {
+			logger.Printf("SplitLinesByRatio: invalid list of elements is hided")
+			return
+		}
+	}
+	// action
 	defer mm.DeselectAll() // deselect
 	if distance == 0 {
 		// split by begin/end point
@@ -1141,6 +1161,26 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 }
 
 func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
+	// initialization
+	if len(lines) == 0 {
+		// do nothing
+		return
+	}
+	for _, l := range lines {
+		if l < 0 || len(mm.Elements) <= int(l) {
+			logger.Printf("SplitLinesByRatio: invalid list of elements")
+			return
+		}
+		if mm.Elements[l].ElementType != Line2 {
+			logger.Printf("SplitLinesByRatio: invalid list of elements is not line")
+			return
+		}
+		if mm.Elements[l].hided {
+			logger.Printf("SplitLinesByRatio: invalid list of elements is hided")
+			return
+		}
+	}
+	// action
 	defer mm.DeselectAll() // deselect
 	if proportional == 0 || proportional == 1 {
 		return
@@ -1171,6 +1211,26 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 }
 
 func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
+	// initialization
+	if len(lines) == 0 {
+		// do nothing
+		return
+	}
+	for _, l := range lines {
+		if l < 0 || len(mm.Elements) <= int(l) {
+			logger.Printf("SplitLinesByEqualParts: invalid list of elements")
+			return
+		}
+		if mm.Elements[l].ElementType != Line2 {
+			logger.Printf("SplitLinesByEqualParts: invalid list of elements is not line")
+			return
+		}
+		if mm.Elements[l].hided {
+			logger.Printf("SplitLinesByEqualParts: invalid list of elements is hided")
+			return
+		}
+	}
+	// action
 	defer mm.DeselectAll() // deselect
 	if parts < 2 {
 		return
@@ -1339,6 +1399,7 @@ func (mm *Model) MergeLines(lines []uint) {
 			return
 		}
 	}
+	// action
 	// merge 2 lines rules:
 	//	* common point of 2 that lines
 	//	* common line index = minimal of lines with common point
