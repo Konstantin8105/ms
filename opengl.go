@@ -488,9 +488,9 @@ func (op *Opengl) drawPoints(s viewState, fill selectState) {
 	// prepare colors
 	var r, g, b uint8
 	// Point
-	gl.PointSize(5)
 	switch s {
 	case normal, colorEdgeElements:
+		gl.PointSize(5)
 		gl.Begin(gl.POINTS)
 		for i := range cos {
 			if cos[i].Removed {
@@ -509,6 +509,7 @@ func (op *Opengl) drawPoints(s viewState, fill selectState) {
 		}
 		gl.End()
 	case selectPoints:
+		gl.PointSize(5)
 		gl.Begin(gl.POINTS)
 		for i := range cos {
 			if cos[i].Removed {
