@@ -2002,9 +2002,6 @@ func (mm *Model) Move(nodes, elements []uint,
 		}
 	}
 	nodes = uniqUint(nodes)
-	if len(nodes) == 0 {
-		return
-	}
 	// moving
 	for _, id := range nodes {
 		from := [3]float64(mm.Coords[id].Point3d)
@@ -2090,10 +2087,6 @@ func (mm *Model) Copy(nodes, elements []uint,
 	}
 	nodes = uniqUint(nodes)
 	elements = uniqUint(elements)
-	if len(nodes) == 0 || len(elements) == 0 {
-		// do nothing
-		return
-	}
 	if len(paths) == 0 {
 		// do nothing
 		return
