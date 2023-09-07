@@ -305,6 +305,27 @@ func TestModel(t *testing.T) {
 				return mm
 			},
 		},
+		{
+			name: filepath.Join(testdata, "IntersectionInsideTriangle.ms"),
+			mm: func() Model {
+				var (
+					mm   Model
+					a0   = mm.AddNode(-2.0, -1.0, 0)
+					a1   = mm.AddNode(+2.0, -1.0, 0)
+					a2   = mm.AddNode(+0.0, +2.0, 0)
+					b0   = mm.AddNode(-1.0, -0.5, 0)
+					b1   = mm.AddNode(+1.0, -0.5, 0)
+					b2   = mm.AddNode(+0.0, +1.0, 0)
+					_, _ = mm.AddTriangle3ByNodeNumber(a0, a1, a2)
+					_, _ = mm.AddTriangle3ByNodeNumber(b0, b1, b2)
+				)
+				mm.SelectAll(true, []bool{true, true, true, true})
+				els := mm.GetSelectElements(false, nil)
+				ns := mm.GetSelectNodes(false)
+				mm.Intersection(ns, els)
+				return mm
+			},
+		},
 	}
 
 	for _, tc := range tcs {
