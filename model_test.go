@@ -286,6 +286,26 @@ func TestIntegration(t *testing.T) {
 			})
 			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
 			run("RemoveSameCoordinates", func() { mm.RemoveSameCoordinates() })
+
+			run("Copy with intermediant parts", func() {
+				var diff diffCoordinate = [6]float64{-1, -1, -1}
+				mm.Copy(
+					nil, []uint{uint(len(mm.GetElements()) - 1)},
+					[3]float64{0, 0, 0},
+					[]diffCoordinate{diff},
+					true, true,
+				)
+			})
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+			run("Move", func() {
+				mm.Move(
+					nil, []uint{uint(len(mm.GetElements()) - 1)},
+					[3]float64{0, 0, 0},
+					[6]float64{1, 1, 1},
+				)
+			})
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+			run("RemoveSameCoordinates", func() { mm.RemoveSameCoordinates() })
 		}
 
 		// close model
