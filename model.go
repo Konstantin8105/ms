@@ -1344,101 +1344,44 @@ func (mm *Model) MergeLines(lines []uint) {
 	//	* common line index = minimal of lines with common point
 	//	* common point not removed
 	//	* lines on one line
-
 	iteration := func() bool {
-		//logger.Printf(">>>>>>>>>> lines = %v", lines)
 		for i := range lines {
 			for j := range lines {
 				if i <= j {
 					continue
 				}
-				//logger.Printf("::: %d %d %v %v", i, j, lines[i], lines[j])
 				// j < i
 				l1 := &mm.Elements[lines[i]] // will be removed if ok
 				l2 := &mm.Elements[lines[j]]
-				//logger.Printf("::: elements %v %v", *l1, *l2)
 				// on one line
-				var (
-					dx1 = mm.Coords[(*l1).Indexes[0]].Point3d[0] - mm.Coords[(*l1).Indexes[1]].Point3d[0]
-					dy1 = mm.Coords[(*l1).Indexes[0]].Point3d[1] - mm.Coords[(*l1).Indexes[1]].Point3d[1]
-					dz1 = mm.Coords[(*l1).Indexes[0]].Point3d[2] - mm.Coords[(*l1).Indexes[1]].Point3d[2]
-
-					dx2 = mm.Coords[(*l2).Indexes[0]].Point3d[0] - mm.Coords[(*l2).Indexes[1]].Point3d[0]
-					dy2 = mm.Coords[(*l2).Indexes[0]].Point3d[1] - mm.Coords[(*l2).Indexes[1]].Point3d[1]
-					dz2 = mm.Coords[(*l2).Indexes[0]].Point3d[2] - mm.Coords[(*l2).Indexes[1]].Point3d[2]
-				)
-				const eps = 1e-5 // TODO remove
-				if math.Abs(dx1) < eps && eps < math.Abs(dx2-dx1) {
-					continue
-				}
-				if math.Abs(dy1) < eps && eps < math.Abs(dy2-dy1) {
-					continue
-				}
-				if math.Abs(dz1) < eps && eps < math.Abs(dz2-dz1) {
-					continue
-				}
-				if eps < math.Abs(dx1) && eps < math.Abs((dx2-dx1)/dx1) {
-					continue
-				}
-				if eps < math.Abs(dy1) && eps < math.Abs((dy2-dy1)/dy1) {
-					continue
-				}
-				if eps < math.Abs(dz1) && eps < math.Abs((dz2-dz1)/dz1) {
+				if !gog.IsParallelLine3d(
+					mm.Coords[(*l1).Indexes[0]].Point3d,
+					mm.Coords[(*l1).Indexes[1]].Point3d,
+					mm.Coords[(*l2).Indexes[0]].Point3d,
+					mm.Coords[(*l2).Indexes[1]].Point3d,
+				) {
 					continue
 				}
 
-				// intersect := gog.LineLine3d(
-				// 	mm.Coords[(*l1).Indexes[0]].Point3d,
-				// 	mm.Coords[(*l2).Indexes[0]].Point3d,
-				// 	mm.Coords[(*l2).Indexes[1]].Point3d,
-				// ) || gog.PointLine3d(
-				// 	mm.Coords[(*l1).Indexes[1]].Point3d,
-				// 	mm.Coords[(*l2).Indexes[0]].Point3d,
-				// 	mm.Coords[(*l2).Indexes[1]].Point3d,
-				// )
-				// if !intersect {
-				// 	logger.Printf("no intersect 1: %v %v ",
-				// 		(*l1).Indexes,
-				// 		(*l2).Indexes,
-				// 	)
-				// 	continue
-				// }
 				// check common point
-				found := false
 				if (*l1).Indexes[0] == (*l2).Indexes[0] {
-					//logger.Printf("f1:::: %v %v", (*l1).Indexes, (*l2).Indexes)
 					(*l2).Indexes[0] = (*l1).Indexes[1]
-					found = true
-					//logger.Printf("f1   : %v %v", (*l1).Indexes, (*l2).Indexes)
 				} else if (*l1).Indexes[1] == (*l2).Indexes[0] {
-					//logger.Printf("f2:::: %v %v", (*l1).Indexes, (*l2).Indexes)
 					(*l2).Indexes[0] = (*l1).Indexes[0]
-					found = true
-					//logger.Printf("f2   : %v %v", (*l1).Indexes, (*l2).Indexes)
 				} else if (*l1).Indexes[0] == (*l2).Indexes[1] {
-					//logger.Printf("f3:::: %v %v", (*l1).Indexes, (*l2).Indexes)
 					(*l2).Indexes[1] = (*l1).Indexes[1]
-					found = true
-					//logger.Printf("f3   : %v %v", (*l1).Indexes, (*l2).Indexes)
 				} else if (*l1).Indexes[1] == (*l2).Indexes[1] {
-					//logger.Printf("f4:::: %v %v", (*l1).Indexes, (*l2).Indexes)
 					(*l2).Indexes[1] = (*l1).Indexes[0]
-					found = true
-					//logger.Printf("f4   : %v %v", (*l1).Indexes, (*l2).Indexes)
+				} else {
+					continue
 				}
-				if found {
-					mm.Remove(nil, []uint{lines[i]})
-					lines = append(lines[:i], lines[i+1:]...)
-					//logger.Printf("iteration: found")
-					return true
-				}
+				mm.Remove(nil, []uint{lines[i]})
+				lines = append(lines[:i], lines[i+1:]...)
+				return true
 			}
 		}
-		//logger.Printf("iteration: not found")
 		return false
 	}
-	// TODO add merge in case 
-	// сдлева и справа от элемента можено объединить
 	for iter, maxiter := 0, 100000; iter < maxiter; iter++ {
 		if !iteration() {
 			break

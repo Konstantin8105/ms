@@ -84,13 +84,6 @@
     {
       "ElementType": 1,
       "Indexes": [
-        0,
-        6
-      ]
-    },
-    {
-      "ElementType": 1,
-      "Indexes": [
         6,
         7
       ]
@@ -107,13 +100,6 @@
       "Indexes": [
         8,
         1
-      ]
-    },
-    {
-      "ElementType": 1,
-      "Indexes": [
-        2,
-        9
       ]
     },
     {
@@ -140,13 +126,6 @@
     {
       "ElementType": 1,
       "Indexes": [
-        0,
-        12
-      ]
-    },
-    {
-      "ElementType": 1,
-      "Indexes": [
         12,
         13
       ]
@@ -163,13 +142,6 @@
       "Indexes": [
         14,
         2
-      ]
-    },
-    {
-      "ElementType": 1,
-      "Indexes": [
-        1,
-        15
       ]
     },
     {
@@ -196,13 +168,6 @@
     {
       "ElementType": 1,
       "Indexes": [
-        4,
-        18
-      ]
-    },
-    {
-      "ElementType": 1,
-      "Indexes": [
         18,
         19
       ]
@@ -224,13 +189,6 @@
     {
       "ElementType": 1,
       "Indexes": [
-        2,
-        21
-      ]
-    },
-    {
-      "ElementType": 1,
-      "Indexes": [
         21,
         22
       ]
@@ -247,13 +205,6 @@
       "Indexes": [
         23,
         4
-      ]
-    },
-    {
-      "ElementType": 1,
-      "Indexes": [
-        3,
-        24
       ]
     },
     {

@@ -9,8 +9,8 @@ github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibU
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
 github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e h1:mRPpDK0aP/qASyuHCJ3NlddUJsWpVGI7Q+OaHiNidb8=
 github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e/go.mod h1:dQY/BbYDz+cmioaRNjG5Nj9QSueytBNIvRaKMWFOXNg=
-github.com/Konstantin8105/gog v0.0.0-20221011134020-d25f31641629 h1:osJtN6gKI9PflLDHStla36K0reECn60SPa+5XHIjmp8=
-github.com/Konstantin8105/gog v0.0.0-20221011134020-d25f31641629/go.mod h1:lECN7ur7B+Jy6dgggiJWuV6Ierk4QGqDtPEaJw9c0b8=
+github.com/Konstantin8105/gog v0.0.0-20230907182845-794fa2ef97e3 h1:GcPdEml8aT4A0zfyf2MS93XYC6bIqac/iC6DIQ36yko=
+github.com/Konstantin8105/gog v0.0.0-20230907182845-794fa2ef97e3/go.mod h1:UM0DqR5bpbNxbPfZrl9uXeJx6blaLQNOdmkf/e+yXMQ=
 github.com/Konstantin8105/pow v0.1.0 h1:1FBuKD4UEXKRsP0snDUGqbok5LcwYPUbq5ClVOW++cE=
 github.com/Konstantin8105/pow v0.1.0/go.mod h1:4Xe+OUZ7jwe74BFzgLepZw57cSFWba1/o6gTk53RBdI=
 github.com/Konstantin8105/tf v0.0.0-20230612182433-2ec4a099d755 h1:b0IwUiE3srBU6AknJSPAXxkROognrzuKcS60GYiK3eI=
