@@ -1326,7 +1326,7 @@ func (mm *Model) MergeNodes(minDistance float64) {
 		}
 	}
 
-	size := runtime.NumCPU()
+	size := runtime.NumCPU() // TODO cannot test concerency algorithm
 	if size < 1 {
 		size = 1
 	}
@@ -1474,7 +1474,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 	defer mm.DeselectAll()
 	// remove not valid coordinates and elements
 	{
-		var wg sync.WaitGroup
+		var wg sync.WaitGroup // TODO cannot test concerency algorithm
 		fs := []func(){
 			mm.RemoveZeroLines,
 			mm.RemoveZeroTriangles,
