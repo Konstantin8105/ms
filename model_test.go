@@ -53,6 +53,12 @@ func TestIntegration(t *testing.T) {
 	}()
 	testCoverageFunc = func(mm Mesh, ch *chan ds.Action, screenshot func(filename string)) {
 
+		var testCounter int
+		testHeader := func() {
+			logger.Printf("============== TEST %02d ==============", testCounter)
+			testCounter++
+		}
+
 		var counter int
 		var wg sync.WaitGroup
 		run := func(name string, f func()) {
@@ -74,7 +80,7 @@ func TestIntegration(t *testing.T) {
 			name = strings.ReplaceAll(name, " ", "_")
 			screenshot(filepath.Join(
 				testdata,
-				fmt.Sprintf("%03d-%s.png", counter, name),
+				fmt.Sprintf("Test%03d-%03d-%s.png",testCounter, counter, name),
 			))
 			counter++
 		}
@@ -85,11 +91,6 @@ func TestIntegration(t *testing.T) {
 				run(reset, func() { mm.Undo() })
 			}
 			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
-		}
-		var testCounter int
-		testHeader := func() {
-			logger.Printf("============== TEST %02d ==============", testCounter)
-			testCounter++
 		}
 
 		// test
