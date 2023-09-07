@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -70,6 +71,7 @@ func TestIntegration(t *testing.T) {
 			if name == reset {
 				return
 			}
+			name = strings.ReplaceAll(name, " ", "_")
 			screenshot(filepath.Join(
 				testdata,
 				fmt.Sprintf("%03d-%s.png", counter, name),
@@ -264,6 +266,26 @@ func TestIntegration(t *testing.T) {
 			run("Remove half points", func() {
 				mm.Remove(ns[:len(ns)/2], nil)
 			})
+			run("RemoveSameCoordinates", func() { mm.RemoveSameCoordinates() })
+			run("Copy", func() {
+				var diff diffCoordinate = [6]float64{-1, -1, -1}
+				mm.Copy(
+					nil, []uint{uint(len(mm.GetElements()) - 1)},
+					[3]float64{0, 0, 0},
+					[]diffCoordinate{diff},
+					false, false,
+				)
+			})
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+			run("Move", func() {
+				mm.Move(
+					nil, []uint{uint(len(mm.GetElements()) - 1)},
+					[3]float64{0, 0, 0},
+					[6]float64{1, 1, 1},
+				)
+			})
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+			run("RemoveSameCoordinates", func() { mm.RemoveSameCoordinates() })
 		}
 
 		// close model

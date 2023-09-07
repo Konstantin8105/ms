@@ -1965,6 +1965,25 @@ func (mm *Model) Copy(nodes, elements []uint,
 	basePoint [3]float64,
 	paths []diffCoordinate,
 	addLines, addTri bool) {
+	// check input data
+	if len(nodes) == 0 && len(elements) == 0 {
+		// do nothing
+		return
+	}
+	// check valid lists
+	for _, n := range nodes {
+		if n < 0 || len(mm.Coords) <= int(n) {
+			logger.Printf("Copy: invalid list of nodes")
+			return
+		}
+	}
+	for _, e := range elements {
+		if e < 0 || len(mm.Elements) <= int(e) {
+			logger.Printf("Copy: invalid list of elements")
+			return
+		}
+	}
+
 	defer mm.DeselectAll() // deselect
 	// nodes appending
 	for _, ie := range elements {
@@ -1975,9 +1994,11 @@ func (mm *Model) Copy(nodes, elements []uint,
 	nodes = uniqUint(nodes)
 	elements = uniqUint(elements)
 	if len(nodes) == 0 || len(elements) == 0 {
+		// do nothing
 		return
 	}
 	if len(paths) == 0 {
+		// do nothing
 		return
 	}
 	// create copy of model
@@ -1995,6 +2016,7 @@ func (mm *Model) Copy(nodes, elements []uint,
 			// do nothing
 			continue
 		}
+		// find indexes of each point in new model
 		ids := make([]uint, len(el.Indexes))
 		for i := range ids {
 			id := cModel.AddNode(
@@ -2004,6 +2026,7 @@ func (mm *Model) Copy(nodes, elements []uint,
 			)
 			ids[i] = id
 		}
+		// create element in new model
 		switch el.ElementType {
 		case Line2:
 			cModel.AddLineByNodeNumber(ids[0], ids[1])
