@@ -48,8 +48,9 @@ func TestIntegration(t *testing.T) {
 	defer func() {
 		testCoverageFunc = nil
 	}()
-	testCoverageFunc = func(mm Mesh, ch *chan ds.Action) {
+	testCoverageFunc = func(mm Mesh, ch *chan ds.Action, screenshot func(filename string)) {
 
+		var counter int
 		var wg sync.WaitGroup
 		run := func(name string, f func()) {
 			logger.Printf(fmt.Sprintf("begin of %s", name))
@@ -62,6 +63,13 @@ func TestIntegration(t *testing.T) {
 			wg.Wait()
 			// time.Sleep(time.Second)
 			logger.Printf(fmt.Sprintf("end of %s", name))
+
+			// screenshoot
+			screenshot(filepath.Join(
+				testdata,
+				fmt.Sprintf("%03d-%s.png", counter, name),
+			))
+			counter++
 		}
 
 		run("DemoSpiral", func() { mm.DemoSpiral(26) })

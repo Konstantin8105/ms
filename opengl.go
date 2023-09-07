@@ -3,7 +3,6 @@ package ms
 import (
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/glsymbol"
@@ -36,9 +35,6 @@ type Opengl struct {
 		center       gog.Point3d
 		moveX, moveY float64
 	}
-
-	// calculate data for FPS
-	fps Fps
 
 	// mouses
 	mouses   [3]Mouse  // left, middle, right
@@ -173,7 +169,6 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 	// minimal screen notes
 	openGlScreenCoordinate(x, y, w, h)
 	gl.Color3f(0.7, 0.2, 0.2)
-	op.font.Printf(10, 10, fmt.Sprintf("FPS       : %6.2f", op.fps.Get()))
 	if op.mesh != nil {
 		op.font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
 			len(op.mesh.GetCoords())))
@@ -198,8 +193,6 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 
 	// 			op.window.MakeContextCurrent()
 	// 			op.window.SwapBuffers()
-
-	op.fps.EndFrame()
 
 	// TODO
 }
@@ -253,7 +246,6 @@ func NewOpengl(m Mesh, actions *chan ds.Action) (op *Opengl, err error) {
 	// 	}
 	// 	// font is prepared
 	//
-	op.fps.Init()
 
 	// TODO : gl.Disable(gl.LIGHTING)
 
@@ -268,31 +260,6 @@ func (op *Opengl) MouseDefault() {
 	op.mouses[1] = new(MouseMove)   // right button
 	op.mouses[2] = new(MouseRotate) // middle button
 	op.mouseMid = new(MouseZoom)    // middle scroll
-}
-
-type Fps struct {
-	framesCount int64
-	framesTime  time.Time
-	last        float32
-}
-
-func (f *Fps) Init() {
-	f.framesTime = time.Now()
-}
-
-func (f *Fps) Get() float32 {
-	ms := time.Since(f.framesTime).Milliseconds()
-	if ms < 1000 && f.framesCount < 100 {
-		return f.last
-	}
-	f.last = float32(f.framesCount) / float32(ms) * 1000.0
-	f.framesCount = 0
-	f.framesTime = time.Now()
-	return f.last
-}
-
-func (f *Fps) EndFrame() {
-	f.framesCount++
 }
 
 // TODO: aadd to TUI and other
