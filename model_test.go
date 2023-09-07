@@ -308,6 +308,20 @@ func TestIntegration(t *testing.T) {
 			run("RemoveSameCoordinates", func() { mm.RemoveSameCoordinates() })
 		}
 
+		// SelectLinesCylindrical
+		// MergeLines
+		// Hide
+		// UnhideAll
+		// IsChangedModel
+		// GetPresentFilename
+		// Save
+		// ViewAll
+		// AddNode
+		// AddLineByNodeNumber
+		// AddTriangle3ByNodeNumber
+		// GetCoordByID
+		// AddLeftCursor
+
 		// close model
 		mm.Close()
 	}

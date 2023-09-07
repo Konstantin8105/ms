@@ -159,6 +159,7 @@ func (u *Undo) GetPresentFilename() (name string) {
 func (u *Undo) StandardView(view SView) {
 	logger.Print("StandardView")
 	u.op.StandardView(view)
+	u.ViewAll(true)
 }
 
 func (u *Undo) ColorEdge(isColor bool) {
