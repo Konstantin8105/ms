@@ -84,16 +84,18 @@ func TestIntegration(t *testing.T) {
 			}
 			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
 		}
-		testHeader := func(n int) {
-			logger.Printf("============== TEST %02d ==============", n)
+		var testCounter int
+		testHeader := func() {
+			logger.Printf("============== TEST %02d ==============", testCounter)
+			testCounter++
 		}
 
-		// test 0
-		testHeader(0)
+		// test
+		testHeader()
 		run("DemoSpiral", func() { mm.DemoSpiral(26) })
-			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+		run(reset, func() { mm.StandardView(StandardViewXOYpos) })
 		run("DemoSpiral again", func() { mm.DemoSpiral(27) })
-			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+		run(reset, func() { mm.StandardView(StandardViewXOYpos) })
 		run("StandardView", func() { mm.StandardView(StandardViewXOYpos) })
 		run("SelectLeftCursor", func() { mm.SelectLeftCursor(true, []bool{true, true, true, true}) })
 		run("SelectScreen", func() { mm.SelectScreen([2]int32{0, 0}, [2]int32{400, 300}) })
@@ -228,10 +230,10 @@ func TestIntegration(t *testing.T) {
 		})
 		run("RemoveNodesWithoutElements", func() { mm.RemoveNodesWithoutElements() })
 
-		// test 1
+		// test
 		clean()
 		{
-			testHeader(1)
+			testHeader()
 			run("DemoSpiral", func() { mm.DemoSpiral(20) })
 			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
 			run("SelectAll", func() { mm.SelectAll(true, []bool{false, false, false, false, false}) })
@@ -258,6 +260,9 @@ func TestIntegration(t *testing.T) {
 					[3]float64{0, 0, 0},
 					[6]float64{1, 1}, // diffCoordinate
 				)
+			})
+			run("Remove half points", func() {
+				mm.Remove(ns[:len(ns)/2], nil)
 			})
 		}
 

@@ -517,29 +517,46 @@ func (mm *Model) GetElements() []Element {
 }
 
 func (mm *Model) Remove(nodes, elements []uint) {
+	if len(nodes) == 0 && len(elements) == 0 {
+		// do nothing
+		return
+	}
+	// check valid lists
+	for _, n := range nodes {
+		if n < 0 || len(mm.Coords) <= int(n) {
+			logger.Printf("Remove: invalid list of nodes")
+			return
+		}
+	}
+	for _, e := range elements {
+		if e < 0 || len(mm.Elements) <= int(e) {
+			logger.Printf("Remove: invalid list of elements")
+			return
+		}
+	}
 	// it is part/model
 	// do not remove nodes in ignore list
 	ignore := make([]bool, len(nodes))
-	for ind, p := range nodes {
-		if mm.Coords[int(p)].hided || mm.Coords[int(p)].Removed {
-			ignore[ind] = true
-			continue
-		}
-		for i := range mm.Elements {
-			if mm.Elements[i].ElementType == ElRemove {
-				continue
-			}
-			// 			if !mm.IsIgnore(uint(i)) {
-			// 				continue
-			// 			}
-			// ignored coordinate on ignored elements
-			for k := range mm.Elements[i].Indexes {
-				if mm.Elements[i].Indexes[k] == int(p) {
-					ignore[ind] = true
-				}
-			}
-		}
-	}
+	// for ind, p := range nodes {
+	// 	if mm.Coords[int(p)].hided || mm.Coords[int(p)].Removed {
+	// 		ignore[ind] = true
+	// 		continue
+	// 	}
+	// 	for i := range mm.Elements {
+	// 		if mm.Elements[i].ElementType == ElRemove {
+	// 			continue
+	// 		}
+	// 		if !mm.IsIgnore(uint(i)) {
+	// 			continue
+	// 		}
+	// 		// ignored coordinate on ignored elements
+	// 		for k := range mm.Elements[i].Indexes {
+	// 			if mm.Elements[i].Indexes[k] == int(p) {
+	// 				ignore[ind] = true
+	// 			}
+	// 		}
+	// 	}
+	// }
 	// remove
 	for ind, p := range nodes {
 		if ignore[ind] {
@@ -549,9 +566,9 @@ func (mm *Model) Remove(nodes, elements []uint) {
 		mm.Coords[p].Removed = true
 		// remove elements with coordinate
 		for i := range mm.Elements {
-			// 			if mm.IsIgnore(uint(i)) {
-			// 				continue
-			// 			}
+			// if mm.IsIgnore(uint(i)) {
+			// 	continue
+			// }
 			// ignored coordinate on ignored elements
 			for k := range mm.Elements[i].Indexes {
 				if mm.Elements[i].Indexes[k] == int(p) {
