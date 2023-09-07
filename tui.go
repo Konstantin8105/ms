@@ -1524,7 +1524,7 @@ type MoveCopyble interface {
 		paths []diffCoordinate,
 		addLines, addTri bool)
 	Mirror(nodes, elements []uint,
-		basePoint [3][3]float64,
+		basePoint [3]gog.Point3d,
 		copy bool,
 		addLines, addTri bool)
 	// TODO do not copy lines Collinear on copy direction
@@ -1986,7 +1986,7 @@ func init() {
 
 			type path struct {
 				w    vl.Widget
-				getC func() (basePoint [3][3]float64, ok bool)
+				getC func() (basePoint [3]gog.Point3d, ok bool)
 			}
 			var paths []path
 			{
@@ -2013,7 +2013,7 @@ func init() {
 
 				paths = append(paths, path{
 					w: &ch,
-					getC: func() (basePoint [3][3]float64, ok bool) {
+					getC: func() (basePoint [3]gog.Point3d, ok bool) {
 						ns := ngt()
 						if len(ns) != 1 {
 							return
@@ -2075,7 +2075,7 @@ func init() {
 
 				paths = append(paths, path{
 					w: &ch,
-					getC: func() (basePoint [3][3]float64, ok bool) {
+					getC: func() (basePoint [3]gog.Point3d, ok bool) {
 						n0 := ngt0()
 						if len(n0) != 1 {
 							return

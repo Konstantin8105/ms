@@ -64,23 +64,23 @@ func (e ElType) getSelect() viewState {
 
 // Element is typical element for FEM. Examples:
 //
-//	Line o======o                                             //
-//	ElType : 1                                                //
-//	Indexes: 2 (amount indexes of coordinates)                //
+//	Line o======o
+//	ElType : 1
+//	Indexes: 2 (amount indexes of coordinates)
 //
-//	Triangle o======o                                         //
-//	          \    /                                          //
-//	           \  /                                           //
-//	            o                                             //
-//	ElType : 2                                                //
-//	Indexes: 3 (amount indexes of coordinates)                //
+//	Triangle o======o
+//	          \    /
+//	           \  /
+//	            o
+//	ElType : 2
+//	Indexes: 3 (amount indexes of coordinates)
 //
-//	Quadr4 o======o                                           //
-//	       |      |                                           //
-//	       |      |                                           //
-//	       o======o                                           //
-//	ElType : 3                                                //
-//	Indexes: 4 (amount indexes of coordinates)                //
+//	Quadr4 o======o
+//	       |      |
+//	       |      |
+//	       o======o
+//	ElType : 3
+//	Indexes: 4 (amount indexes of coordinates)
 type Element struct {
 	object3d
 	ElementType ElType
@@ -2265,7 +2265,7 @@ func (mm *Model) Copy(nodes, elements []uint,
 }
 
 func (mm *Model) Mirror(nodes, elements []uint,
-	basePoint [3][3]float64,
+	basePoint [3]gog.Point3d,
 	copy bool,
 	addLines, addTri bool) {
 	// TODO gog.Mirror3d for points

@@ -424,7 +424,7 @@ func (u *Undo) Copy(nodes, elements []uint,
 }
 
 func (u *Undo) Mirror(nodes, elements []uint,
-	basePoint [3][3]float64,
+	basePoint [3]gog.Point3d,
 	copy bool,
 	addLines, addTri bool) {
 	logger.Print("Mirror")
