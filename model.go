@@ -174,6 +174,16 @@ func (mm *Model) Check() error {
 				et.Add(fmt.Errorf("Element: %d\nCoordinate index is too big", i))
 			}
 		}
+		for i := range el.Indexes {
+			for j := range el.Indexes {
+				if i <= j {
+					continue
+				}
+				if el.Indexes[i] == el.Indexes[j] {
+					et.Add(fmt.Errorf("Element: same indexes %v", el.Indexes))
+				}
+			}
+		}
 	}
 	if et.IsError() {
 		return et
@@ -1185,7 +1195,7 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 			// do nothing
 			continue
 		}
-		var ids []uint
+		ids := []uint{uint(el.Indexes[0])}
 		for p := uint(0); p < parts-1; p++ {
 			proportional := float64(p+1) / float64(parts)
 			b := cs[el.Indexes[0]] // begin point
@@ -1197,15 +1207,21 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 			)
 			ids = append(ids, id)
 		}
+		ids = append(ids, uint(el.Indexes[1]))
 		for i := range ids {
 			if i == 0 {
-				mm.AddLineByNodeNumber(uint(el.Indexes[0]), ids[0])
+				continue
+			}
+			if i == 1 {
+				mm.Elements[il].Indexes[1] = int(ids[1])
+				// mm.AddLineByNodeNumber(uint(el.Indexes[0]), ids[0])
 				continue
 			}
 			mm.AddLineByNodeNumber(ids[i-1], ids[i])
 		}
-		mm.AddLineByNodeNumber(ids[len(ids)-1], uint(el.Indexes[1]))
-		el.Indexes[1] = int(ids[0])
+		// logger.Printf("SplitLinesByEqualParts: Add Points %v", ids)
+		// mm.AddLineByNodeNumber(ids[len(ids)-1], uint(el.Indexes[1]))
+		// el.Indexes[1] = int(ids[0])
 	}
 }
 
@@ -1298,54 +1314,133 @@ func (mm *Model) MergeNodes(minDistance float64) {
 }
 
 func (mm *Model) MergeLines(lines []uint) {
-	// 2 lines merged in case:
-	//	* common point of 2 that lines
-	//	* common point not removed at the end
+	// uniq lines
 	lines = uniqUint(lines)
+	if len(lines) < 2 {
+		// do nothing
+		return
+	}
+	// initialization
+	if len(lines) == 0 {
+		// do nothing
+		return
+	}
+	for _, l := range lines {
+		if l < 0 || len(mm.Elements) <= int(l) {
+			logger.Printf("MergeLines: invalid list of elements")
+			return
+		}
+		if mm.Elements[l].ElementType != Line2 {
+			logger.Printf("MergeLines: invalid list of elements is not line")
+			return
+		}
+		if mm.Elements[l].hided {
+			logger.Printf("MergeLines: invalid list of elements is hided")
+			return
+		}
+	}
+	// merge 2 lines rules:
+	//	* common point of 2 that lines
+	//	* common line index = minimal of lines with common point
+	//	* common point not removed
+	//	* lines on one line
 
-	counter := 1 // default value
-	for iter := 0; 0 < counter; iter++ {
-		counter = 0
+	iteration := func() bool {
+		//logger.Printf(">>>>>>>>>> lines = %v", lines)
 		for i := range lines {
-			eli := mm.Elements[lines[i]]
-			if eli.ElementType != Line2 {
-				continue
-			}
 			for j := range lines {
 				if i <= j {
 					continue
 				}
-				elj := mm.Elements[lines[j]]
-				if elj.ElementType != Line2 {
+				//logger.Printf("::: %d %d %v %v", i, j, lines[i], lines[j])
+				// j < i
+				l1 := &mm.Elements[lines[i]] // will be removed if ok
+				l2 := &mm.Elements[lines[j]]
+				//logger.Printf("::: elements %v %v", *l1, *l2)
+				// on one line
+				var (
+					dx1 = mm.Coords[(*l1).Indexes[0]].Point3d[0] - mm.Coords[(*l1).Indexes[1]].Point3d[0]
+					dy1 = mm.Coords[(*l1).Indexes[0]].Point3d[1] - mm.Coords[(*l1).Indexes[1]].Point3d[1]
+					dz1 = mm.Coords[(*l1).Indexes[0]].Point3d[2] - mm.Coords[(*l1).Indexes[1]].Point3d[2]
+
+					dx2 = mm.Coords[(*l2).Indexes[0]].Point3d[0] - mm.Coords[(*l2).Indexes[1]].Point3d[0]
+					dy2 = mm.Coords[(*l2).Indexes[0]].Point3d[1] - mm.Coords[(*l2).Indexes[1]].Point3d[1]
+					dz2 = mm.Coords[(*l2).Indexes[0]].Point3d[2] - mm.Coords[(*l2).Indexes[1]].Point3d[2]
+				)
+				const eps = 1e-5 // TODO remove
+				if math.Abs(dx1) < eps && eps < math.Abs(dx2-dx1) {
 					continue
 				}
-				var ok bool
-				switch {
-				case eli.Indexes[0] == elj.Indexes[0]:
-					eli.Indexes[0] = elj.Indexes[1]
-					ok = true
-
-				case eli.Indexes[1] == elj.Indexes[0]:
-					eli.Indexes[1] = elj.Indexes[1]
-					ok = true
-
-				case eli.Indexes[0] == elj.Indexes[1]:
-					eli.Indexes[0] = elj.Indexes[0]
-					ok = true
-
-				case eli.Indexes[1] == elj.Indexes[1]:
-					eli.Indexes[1] = elj.Indexes[0]
-					ok = true
+				if math.Abs(dy1) < eps && eps < math.Abs(dy2-dy1) {
+					continue
 				}
-				if ok {
-					mm.Elements[lines[j]].ElementType = ElRemove
-					counter++
-					break
+				if math.Abs(dz1) < eps && eps < math.Abs(dz2-dz1) {
+					continue
+				}
+				if eps < math.Abs(dx1) && eps < math.Abs((dx2-dx1)/dx1) {
+					continue
+				}
+				if eps < math.Abs(dy1) && eps < math.Abs((dy2-dy1)/dy1) {
+					continue
+				}
+				if eps < math.Abs(dz1) && eps < math.Abs((dz2-dz1)/dz1) {
+					continue
+				}
+
+				// intersect := gog.LineLine3d(
+				// 	mm.Coords[(*l1).Indexes[0]].Point3d,
+				// 	mm.Coords[(*l2).Indexes[0]].Point3d,
+				// 	mm.Coords[(*l2).Indexes[1]].Point3d,
+				// ) || gog.PointLine3d(
+				// 	mm.Coords[(*l1).Indexes[1]].Point3d,
+				// 	mm.Coords[(*l2).Indexes[0]].Point3d,
+				// 	mm.Coords[(*l2).Indexes[1]].Point3d,
+				// )
+				// if !intersect {
+				// 	logger.Printf("no intersect 1: %v %v ",
+				// 		(*l1).Indexes,
+				// 		(*l2).Indexes,
+				// 	)
+				// 	continue
+				// }
+				// check common point
+				found := false
+				if (*l1).Indexes[0] == (*l2).Indexes[0] {
+					//logger.Printf("f1:::: %v %v", (*l1).Indexes, (*l2).Indexes)
+					(*l2).Indexes[0] = (*l1).Indexes[1]
+					found = true
+					//logger.Printf("f1   : %v %v", (*l1).Indexes, (*l2).Indexes)
+				} else if (*l1).Indexes[1] == (*l2).Indexes[0] {
+					//logger.Printf("f2:::: %v %v", (*l1).Indexes, (*l2).Indexes)
+					(*l2).Indexes[0] = (*l1).Indexes[0]
+					found = true
+					//logger.Printf("f2   : %v %v", (*l1).Indexes, (*l2).Indexes)
+				} else if (*l1).Indexes[0] == (*l2).Indexes[1] {
+					//logger.Printf("f3:::: %v %v", (*l1).Indexes, (*l2).Indexes)
+					(*l2).Indexes[1] = (*l1).Indexes[1]
+					found = true
+					//logger.Printf("f3   : %v %v", (*l1).Indexes, (*l2).Indexes)
+				} else if (*l1).Indexes[1] == (*l2).Indexes[1] {
+					//logger.Printf("f4:::: %v %v", (*l1).Indexes, (*l2).Indexes)
+					(*l2).Indexes[1] = (*l1).Indexes[0]
+					found = true
+					//logger.Printf("f4   : %v %v", (*l1).Indexes, (*l2).Indexes)
+				}
+				if found {
+					mm.Remove(nil, []uint{lines[i]})
+					lines = append(lines[:i], lines[i+1:]...)
+					//logger.Printf("iteration: found")
+					return true
 				}
 			}
 		}
-		if 1000 < iter {
-			logger.Printf("Too many iterations in MergeLines")
+		//logger.Printf("iteration: not found")
+		return false
+	}
+	// TODO add merge in case 
+	// сдлева и справа от элемента можено объединить
+	for iter, maxiter := 0, 100000; iter < maxiter; iter++ {
+		if !iteration() {
 			break
 		}
 	}

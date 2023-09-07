@@ -3,6 +3,7 @@ package ms
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,13 +54,14 @@ func TestIntegration(t *testing.T) {
 	}()
 	testCoverageFunc = func(mm Mesh, ch *chan ds.Action, screenshot func(filename string)) {
 
+		var counter int
 		var testCounter int
 		testHeader := func() {
 			logger.Printf("============== TEST %02d ==============", testCounter)
 			testCounter++
+			counter = 0
 		}
 
-		var counter int
 		var wg sync.WaitGroup
 		run := func(name string, f func()) {
 			logger.Printf(fmt.Sprintf("begin of %s", name))
@@ -358,9 +360,67 @@ func TestIntegration(t *testing.T) {
 			run("Hide", func() { mm.Hide(ns, es) })
 			run("Unhide", func() { mm.UnhideAll() })
 		}
+		// test
+		clean()
+		{
+			testHeader()
+			run(reset, func() { mm.DemoSpiral(10) })
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+			run("ViewAll", func() { mm.ViewAll(true) })
+			run("SelectLinesParallel", func() {
+				var lines []uint
+				els := mm.GetElements()
+				ns := mm.GetCoords()
+				for i := len(els) - 1; 0 <= i; i-- {
+					if els[i].ElementType != Line2 {
+						continue
+					}
+					if 1e-3 < math.Abs(ns[els[i].Indexes[0]].Point3d[1]-ns[els[i].Indexes[1]].Point3d[1]) {
+						continue
+					}
+					lines = append(lines, uint(i))
+					break
+				}
+				mm.SelectLinesParallel(lines)
+			})
+			run("InvertSelect", func() {
+				mm.InvertSelect(true, []bool{true, true, true, true})
+			})
+			var ns, es []uint
+			run(reset, func() {
+				ns = mm.GetSelectNodes(false)
+				es = mm.GetSelectElements(false, nil)
+			})
+			run("Hide", func() { mm.Hide(ns, es) })
+			run("SelectAll", func() {
+				mm.SelectAll(true, []bool{true, true, true, true})
+			})
+
+			run(reset, func() {
+				es = mm.GetSelectElements(false, func(e ElType) bool {
+					return e == Line2
+				})
+			})
+			run("SplitLinesByEqualParts", func() {
+				mm.SplitLinesByEqualParts(es, 10)
+				if err := mm.Check(); err != nil {
+					t.Fatal(err)
+				}
+			})
+
+			run("SelectAll", func() {
+				mm.SelectAll(true, []bool{true, true, true, true})
+			})
+			run(reset, func() {
+				es = mm.GetSelectElements(false, func(e ElType) bool {
+					return e == Line2
+				})
+			})
+			run("DeselectAll", func() { mm.DeselectAll() })
+			run("MergeLines", func() { mm.MergeLines(es) })
+			run("RemoveNodesWithoutElements", func() { mm.RemoveNodesWithoutElements() })
+		}
 		// MergeLines
-		// Hide
-		// UnhideAll
 		// IsChangedModel
 		// GetPresentFilename
 		// Save
