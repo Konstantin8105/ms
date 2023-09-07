@@ -308,6 +308,26 @@ func TestIntegration(t *testing.T) {
 			run("RemoveSameCoordinates", func() { mm.RemoveSameCoordinates() })
 		}
 
+		// test
+		clean()
+		{
+			testHeader()
+			run("DemoSpiral", func() { mm.DemoSpiral(10) })
+			run("XOYpos", func() { mm.StandardView(StandardViewXOYpos) })
+			run("YOZpos", func() { mm.StandardView(StandardViewYOZpos) })
+			run("XOZpos", func() { mm.StandardView(StandardViewXOZpos) })
+			run("XOYneg", func() { mm.StandardView(StandardViewXOYneg) })
+			run("YOZneg", func() { mm.StandardView(StandardViewYOZneg) })
+			run("XOZneg", func() { mm.StandardView(StandardViewXOZneg) })
+		}
+
+		// test
+		clean()
+		{
+			testHeader()
+			run("DemoSpiral", func() { mm.DemoSpiral(10) })
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+		}
 		// SelectLinesCylindrical
 		// MergeLines
 		// Hide
