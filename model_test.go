@@ -80,7 +80,7 @@ func TestIntegration(t *testing.T) {
 			name = strings.ReplaceAll(name, " ", "_")
 			screenshot(filepath.Join(
 				testdata,
-				fmt.Sprintf("Test%03d-%03d-%s.png",testCounter, counter, name),
+				fmt.Sprintf("Test%03d-%03d-%s.png", testCounter, counter, name),
 			))
 			counter++
 		}
@@ -326,17 +326,44 @@ func TestIntegration(t *testing.T) {
 		clean()
 		{
 			testHeader()
-			run("DemoSpiral", func() { mm.DemoSpiral(10) })
+			run(reset, func() { mm.DemoSpiral(10) })
 			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+			run("ViewAll", func() { mm.ViewAll(true) })
+			var id uint
+			run("AddNode", func() { id = mm.AddNode(0, 0, 0) })
+			run("SelectLinesCylindrical - radiant", func() {
+				mm.SelectLinesCylindrical(
+					id,
+					true, false,
+					DirY,
+				)
+			})
+			var ns, es []uint
+			run(reset, func() {
+				ns = mm.GetSelectNodes(false)
+				es = mm.GetSelectElements(false, nil)
+			})
+			run("Hide", func() { mm.Hide(ns, es) })
+			run("SelectLinesCylindrical - conc", func() {
+				mm.SelectLinesCylindrical(
+					id,
+					false, true,
+					DirY,
+				)
+			})
+			run(reset, func() {
+				ns = mm.GetSelectNodes(false)
+				es = mm.GetSelectElements(false, nil)
+			})
+			run("Hide", func() { mm.Hide(ns, es) })
+			run("Unhide", func() { mm.UnhideAll() })
 		}
-		// SelectLinesCylindrical
 		// MergeLines
 		// Hide
 		// UnhideAll
 		// IsChangedModel
 		// GetPresentFilename
 		// Save
-		// ViewAll
 		// AddNode
 		// AddLineByNodeNumber
 		// AddTriangle3ByNodeNumber

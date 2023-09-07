@@ -245,6 +245,7 @@ func (u *Undo) GetElements() []Element {
 func (u *Undo) Hide(coordinates, elements []uint) {
 	logger.Print("Hide")
 	u.model.Hide(coordinates, elements)
+	u.DeselectAll()
 }
 
 func (u *Undo) UnhideAll() {
