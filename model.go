@@ -1392,7 +1392,25 @@ func (mm *Model) MergeLines(lines []uint) {
 var IntersectionThreads = 6
 
 func (mm *Model) Intersection(nodes, elements []uint) {
-	mm.DeselectAll()
+	// check
+	if len(nodes) == 0 && len(elements) == 0 {
+		// do nothing
+		return
+	}
+	for _, n := range nodes {
+		if n < 0 || len(mm.Coords) <= int(n) {
+			logger.Printf("Intersection: not valid nodes")
+			return
+		}
+	}
+	for _, e := range elements {
+		if e < 0 || len(mm.Elements) <= int(e) {
+			logger.Printf("Intersection: not valid elements")
+			return
+		}
+	}
+	// action
+	defer mm.DeselectAll()
 	// remove not valid coordinates and elements
 	{
 		var wg sync.WaitGroup
@@ -1873,20 +1891,27 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 	}
 }
 
-func (mm *Model) SplitTri3To3Tri3(tris []uint) {
-	defer mm.DeselectAll() // deselect
-	if len(tris) == 0 {
+func (mm *Model) SplitTri3To3Tri3(elements []uint) {
+	// check
+	if len(elements) == 0 {
+		// do nothing
 		return
 	}
+	for _, e := range elements {
+		if e < 0 || len(mm.Elements) <= int(e) {
+			logger.Printf("SplitTri3To3Tri3: not valid elements")
+			return
+		}
+		if mm.Elements[e].ElementType != Triangle3 {
+			logger.Printf("SplitTri3To3Tri3: not valid elements is not triangle")
+			return
+		}
+	}
+	// action
+	defer mm.DeselectAll() // deselect
 	const one3 = 1.0 / 3.0
-	for _, it := range tris {
-		if len(mm.Elements) <= int(it) {
-			continue
-		}
+	for _, it := range elements {
 		el := mm.Elements[it]
-		if el.ElementType != Triangle3 {
-			continue
-		}
 		ns := []Coordinate{
 			mm.Coords[el.Indexes[0]],
 			mm.Coords[el.Indexes[1]],
@@ -1905,14 +1930,31 @@ func (mm *Model) SplitTri3To3Tri3(tris []uint) {
 }
 
 func (mm *Model) Hide(nodes, elements []uint) {
+	// check
+	if len(nodes) == 0 && len(elements) == 0 {
+		// do nothing
+		return
+	}
+	for _, n := range nodes {
+		if n < 0 || len(mm.Coords) <= int(n) {
+			logger.Printf("Hide: not valid nodes")
+			return
+		}
+	}
+	for _, e := range elements {
+		if e < 0 || len(mm.Elements) <= int(e) {
+			logger.Printf("Hide: not valid elements")
+			return
+		}
+	}
+	// action
 	for _, p := range nodes {
 		mm.Coords[p].hided = true
 	}
 	for _, p := range elements {
 		mm.Elements[p].hided = true
 	}
-	for i := range mm.Elements {
-		el := mm.Elements[i]
+	for _, el := range mm.Elements {
 		if el.hided {
 			continue
 		}
@@ -1934,6 +1976,24 @@ func (mm *Model) UnhideAll() {
 func (mm *Model) Move(nodes, elements []uint,
 	basePoint [3]float64,
 	path diffCoordinate) {
+	// check
+	if len(nodes) == 0 && len(elements) == 0 {
+		// do nothing
+		return
+	}
+	for _, n := range nodes {
+		if n < 0 || len(mm.Coords) <= int(n) {
+			logger.Printf("Move: not valid nodes")
+			return
+		}
+	}
+	for _, e := range elements {
+		if e < 0 || len(mm.Elements) <= int(e) {
+			logger.Printf("Move: not valid elements")
+			return
+		}
+	}
+	// action
 	defer mm.DeselectAll() // deselect
 	// nodes appending
 	for _, ie := range elements {
@@ -2003,25 +2063,24 @@ func (mm *Model) Copy(nodes, elements []uint,
 	basePoint [3]float64,
 	paths []diffCoordinate,
 	addLines, addTri bool) {
-	// check input data
+	// check
 	if len(nodes) == 0 && len(elements) == 0 {
 		// do nothing
 		return
 	}
-	// check valid lists
 	for _, n := range nodes {
 		if n < 0 || len(mm.Coords) <= int(n) {
-			logger.Printf("Copy: invalid list of nodes")
+			logger.Printf("Copy: not valid nodes")
 			return
 		}
 	}
 	for _, e := range elements {
 		if e < 0 || len(mm.Elements) <= int(e) {
-			logger.Printf("Copy: invalid list of elements")
+			logger.Printf("Copy: not valid elements")
 			return
 		}
 	}
-
+	// action
 	defer mm.DeselectAll() // deselect
 	// nodes appending
 	for _, ie := range elements {
