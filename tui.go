@@ -562,6 +562,20 @@ func init() {
 			return &list, func() {
 				// do nothing
 			}
+		}}, {
+		Name: "View all",
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+			var list vl.List
+
+			var b vl.Button
+			b.SetText("View all")
+			b.OnClick = func() {
+				m.ViewAll(true)
+			}
+			list.Add(&b)
+			return &list, func() {
+				// do nothing
+			}
 		}},
 	}
 	for i := range ops {
