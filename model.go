@@ -189,6 +189,7 @@ func (mm *Model) Check() error {
 		return et
 	}
 
+	// TODO check infinite coordinate
 	// TODO check - not same coordiantes
 	// TODO check - not on one line
 	// TODO check - on one plane
@@ -274,6 +275,7 @@ func (mm *Model) GetPresentFilename() (name string) {
 
 func (mm *Model) Save() (err error) {
 	logger.Printf("Save")
+	// actions
 	b, err := json.MarshalIndent(mm, "", "  ")
 	if err != nil {
 		logger.Printf("Save: %v", err)
@@ -289,6 +291,12 @@ func (mm *Model) Save() (err error) {
 
 func (mm *Model) SaveAs(filename string) (err error) {
 	logger.Printf("SaveAs")
+	// check
+	if filename == "" {
+		err = fmt.Errorf("empty filename")
+		return
+	}
+	// actions
 	name := mm.filename
 	mm.filename = filename
 	if err := mm.Save(); err != nil {
@@ -300,6 +308,12 @@ func (mm *Model) SaveAs(filename string) (err error) {
 
 func (mm *Model) Open(filename string) (err error) {
 	logger.Printf("Open")
+	// check
+	if filename == "" {
+		err = fmt.Errorf("empty filename")
+		return
+	}
+	// actions
 	// read native json file format
 	var b []byte
 	b, err = ioutil.ReadFile(filename)
@@ -316,6 +330,10 @@ func (mm *Model) Open(filename string) (err error) {
 }
 
 func (mm *Model) AddModel(m Model) {
+	if err := m.Check(); err != nil {
+		logger.Printf("AddModel: Model not valid\n%v", err)
+		return
+	}
 	newID := make([]int, len(m.Coords))
 	for i := range m.Coords {
 		if m.Coords[i].Removed {
@@ -405,7 +423,19 @@ func (mm *Model) DemoSpiral(n uint) {
 const distanceError = 1e-6
 
 func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
+	// check
+	for _, p := range []*float64{&X, &Y, &Z} {
+		if math.Abs(*p) < gog.Eps3D {
+			*p = 0
+		}
+		if !mm.isValidValue(*p) {
+			logger.Printf("AddNode: not valid value: %v", *p)
+			return
+		}
+	}
+	// actions
 	var c Coordinate
+	// TODO check infinite coordinate
 	c.Point3d[0] = X
 	c.Point3d[1] = Y
 	c.Point3d[2] = Z
@@ -425,6 +455,12 @@ func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 }
 
 func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (id uint) {
+	// check
+	if s := []uint{n1, n2}; !mm.isValidNodeId(s) {
+		logger.Printf("AddLineByNodeNumber: not valid node id: %v", s)
+		return
+	}
+	// actions
 	// type convection
 	ni1 := int(n1)
 	ni2 := int(n2)
@@ -449,6 +485,12 @@ func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 }
 
 func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
+	// check
+	if s := []uint{n1, n2, n3}; !mm.isValidNodeId(s) {
+		logger.Printf("AddTriangle3ByNodeNumber: not valid node id: %v", s)
+		return
+	}
+	// actions
 	// type convection
 	ni1 := int(n1)
 	ni2 := int(n2)
@@ -464,11 +506,6 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 		mm.Coords[ni3].Point3d,
 	) {
 		logger.Printf("AddTriangle3ByNodeNumber: ZeroTriangle3d")
-		// TODO: logger.Printf("Zero:\n%v\n%v\n%v",
-		// TODO: 	mm.Coords[ni1].Point3d,
-		// TODO: 	mm.Coords[ni2].Point3d,
-		// TODO: 	mm.Coords[ni3].Point3d,
-		// TODO: )
 		return
 	}
 	// check is this coordinate exist?
@@ -509,6 +546,12 @@ func (mm *Model) AddLeftCursor(lc LeftCursor) {
 }
 
 func (mm *Model) GetCoordByID(id uint) (c gog.Point3d, ok bool) {
+	// check
+	if s := []uint{id}; !mm.isValidNodeId(s) {
+		logger.Printf("GetCoordByID: not valid node id: %v", s)
+		return
+	}
+	// actions
 	if len(mm.Coords) <= int(id) {
 		return
 	}
@@ -531,19 +574,16 @@ func (mm *Model) Remove(nodes, elements []uint) {
 		// do nothing
 		return
 	}
-	// check valid lists
-	for _, n := range nodes {
-		if n < 0 || len(mm.Coords) <= int(n) {
-			logger.Printf("Remove: invalid list of nodes")
-			return
-		}
+	// check
+	if s := nodes; !mm.isValidNodeId(s) {
+		logger.Printf("Remove: not valid node id: %v", s)
+		return
 	}
-	for _, e := range elements {
-		if e < 0 || len(mm.Elements) <= int(e) {
-			logger.Printf("Remove: invalid list of elements")
-			return
-		}
+	if s := elements; !mm.isValidElementId(elements, nil) {
+		logger.Printf("Remove: not valid element id: %v", s)
+		return
 	}
+	// actions
 	// it is part/model
 	// do not remove nodes in ignore list
 	ignore := make([]bool, len(nodes))
@@ -851,17 +891,12 @@ func (mm *Model) SelectLinesOnPlane(xoy, yoz, xoz bool) {
 }
 
 func (mm *Model) SelectLinesParallel(lines []uint) {
-	// check input data
-	for _, p := range lines {
-		if len(mm.Elements) <= int(p) || int(p) < 0 {
-			logger.Printf("SelectLinesParallel: not valid index %d", p)
-			return
-		}
-		if mm.Elements[p].ElementType != Line2 {
-			logger.Printf("SelectLinesParallel: is not line %v", mm.Elements[p])
-			return
-		}
+	// check
+	if !mm.isValidElementId(lines, func(e ElType) bool { return e == Line2 }) {
+		logger.Printf("SelectLinesParallel: not valid line id: %v", lines)
+		return
 	}
+	// actions
 	// selection
 	type ratio struct{ dx, dy, dz float64 }
 
@@ -940,6 +975,17 @@ func (mm *Model) SelectLinesParallel(lines []uint) {
 }
 
 func (mm *Model) SelectLinesByLenght(more bool, lenght float64) {
+	// check
+	for _, p := range []*float64{&lenght} {
+		if math.Abs(*p) < gog.Eps3D {
+			*p = 0
+		}
+		if !mm.isValidValue(*p) {
+			logger.Printf("SelectLinesByLenght: not valid value: %v", *p)
+			return
+		}
+	}
+	// actions
 	if lenght <= 0.0 {
 		return
 	}
@@ -962,10 +1008,12 @@ func (mm *Model) SelectLinesByLenght(more bool, lenght float64) {
 }
 
 func (mm *Model) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction) {
-	if int(node) < 0 || len(mm.Coords) <= int(node) {
-		logger.Printf("SelectLinesCylindrical: not valid node %d", node)
+	// check
+	if s := []uint{node}; !mm.isValidNodeId(s) {
+		logger.Printf("SelectLinesCylindrical: not valid node id: %v", s)
 		return
 	}
+	// actions
 	for i, el := range mm.Elements {
 		vis, ok := mm.IsVisibleLine(uint(i))
 		if !vis || !ok {
@@ -1021,14 +1069,14 @@ func (mm *Model) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direc
 	}
 }
 
+// TODO remove
 func (mm *Model) IsVisibleLine(p uint) (visible, ok bool) {
-	if int(p) < 0 || len(mm.Elements) <= int(p) {
-		logger.Printf("IsVisibleLine: not valid index %d", p)
+	// check
+	if s := []uint{p}; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+		logger.Printf("IsVisibleLine: not valid line id: %v", s)
 		return
 	}
-	if mm.Elements[p].ElementType != Line2 {
-		return
-	}
+	// actions
 	ok = true
 	if mm.Elements[p].hided {
 		return
@@ -1074,7 +1122,12 @@ func (mm *Model) SelectScreen(from, to [2]int32) {
 }
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
-	// initialization
+	// check
+	if s := lines; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+		logger.Printf("IsVisibleLine: not valid lines id: %v", s)
+		return
+	}
+	// actions
 	if len(lines) == 0 {
 		// do nothing
 		return
@@ -1161,7 +1214,12 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 }
 
 func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
-	// initialization
+	// check
+	if s := lines; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+		logger.Printf("SplitLinesByRatio: not valid lines id: %v", s)
+		return
+	}
+	// actions
 	if len(lines) == 0 {
 		// do nothing
 		return
@@ -1211,7 +1269,12 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 }
 
 func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
-	// initialization
+	// check
+	if s := lines; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+		logger.Printf("SplitLinesByEqualParts: not valid lines id: %v", s)
+		return
+	}
+	// actions
 	if len(lines) == 0 {
 		// do nothing
 		return
@@ -1292,6 +1355,17 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 // }
 
 func (mm *Model) MergeNodes(minDistance float64) {
+	// check
+	for _, p := range []*float64{&minDistance} {
+		if math.Abs(*p) < gog.Eps3D {
+			*p = 0
+		}
+		if !mm.isValidValue(*p) {
+			logger.Printf("MergeNodes: not valid value: %v", *p)
+			return
+		}
+	}
+	// actions
 	if minDistance <= 0.0 {
 		return
 	}
@@ -1374,6 +1448,12 @@ func (mm *Model) MergeNodes(minDistance float64) {
 }
 
 func (mm *Model) MergeLines(lines []uint) {
+	// check
+	if s := lines; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+		logger.Printf("MergeLines: not valid lines id: %v", s)
+		return
+	}
+	// actions
 	// uniq lines
 	lines = uniqUint(lines)
 	if len(lines) < 2 {
@@ -1454,23 +1534,20 @@ var IntersectionThreads = 6
 
 func (mm *Model) Intersection(nodes, elements []uint) {
 	// check
+	if s := nodes; !mm.isValidNodeId(nodes) {
+		logger.Printf("Intersection: not valid node id: %v", s)
+		return
+	}
+	if s := elements; !mm.isValidElementId(s, nil) {
+		logger.Printf("Intersection: not valid elements id: %v", s)
+		return
+	}
+	// actions
+	// check
 	if len(nodes) == 0 && len(elements) == 0 {
 		// do nothing
 		return
 	}
-	for _, n := range nodes {
-		if n < 0 || len(mm.Coords) <= int(n) {
-			logger.Printf("Intersection: not valid nodes")
-			return
-		}
-	}
-	for _, e := range elements {
-		if e < 0 || len(mm.Elements) <= int(e) {
-			logger.Printf("Intersection: not valid elements")
-			return
-		}
-	}
-	// action
 	defer mm.DeselectAll()
 	// remove not valid coordinates and elements
 	{
@@ -1954,19 +2031,15 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 
 func (mm *Model) SplitTri3To3Tri3(elements []uint) {
 	// check
+	if s := elements; !mm.isValidElementId(s, func(e ElType) bool { return e == Triangle3 }) {
+		logger.Printf("SplitTri3To3Tri3: not valid elements id: %v", s)
+		return
+	}
+	// actions
+	// check
 	if len(elements) == 0 {
 		// do nothing
 		return
-	}
-	for _, e := range elements {
-		if e < 0 || len(mm.Elements) <= int(e) {
-			logger.Printf("SplitTri3To3Tri3: not valid elements")
-			return
-		}
-		if mm.Elements[e].ElementType != Triangle3 {
-			logger.Printf("SplitTri3To3Tri3: not valid elements is not triangle")
-			return
-		}
 	}
 	// action
 	defer mm.DeselectAll() // deselect
@@ -1992,23 +2065,19 @@ func (mm *Model) SplitTri3To3Tri3(elements []uint) {
 
 func (mm *Model) Hide(nodes, elements []uint) {
 	// check
+	if s := nodes; !mm.isValidNodeId(nodes) {
+		logger.Printf("Hide: not valid node id: %v", s)
+		return
+	}
+	if s := elements; !mm.isValidElementId(s, nil) {
+		logger.Printf("Hide: not valid elements id: %v", s)
+		return
+	}
+	// actions
 	if len(nodes) == 0 && len(elements) == 0 {
 		// do nothing
 		return
 	}
-	for _, n := range nodes {
-		if n < 0 || len(mm.Coords) <= int(n) {
-			logger.Printf("Hide: not valid nodes")
-			return
-		}
-	}
-	for _, e := range elements {
-		if e < 0 || len(mm.Elements) <= int(e) {
-			logger.Printf("Hide: not valid elements")
-			return
-		}
-	}
-	// action
 	for _, p := range nodes {
 		mm.Coords[p].hided = true
 	}
@@ -2038,23 +2107,19 @@ func (mm *Model) Move(nodes, elements []uint,
 	basePoint [3]float64,
 	path diffCoordinate) {
 	// check
+	if s := nodes; !mm.isValidNodeId(nodes) {
+		logger.Printf("Move: not valid node id: %v", s)
+		return
+	}
+	if s := elements; !mm.isValidElementId(s, nil) {
+		logger.Printf("Move: not valid elements id: %v", s)
+		return
+	}
+	// actions
 	if len(nodes) == 0 && len(elements) == 0 {
 		// do nothing
 		return
 	}
-	for _, n := range nodes {
-		if n < 0 || len(mm.Coords) <= int(n) {
-			logger.Printf("Move: not valid nodes")
-			return
-		}
-	}
-	for _, e := range elements {
-		if e < 0 || len(mm.Elements) <= int(e) {
-			logger.Printf("Move: not valid elements")
-			return
-		}
-	}
-	// action
 	defer mm.DeselectAll() // deselect
 	// nodes appending
 	for _, ie := range elements {
@@ -2122,23 +2187,19 @@ func (mm *Model) Copy(nodes, elements []uint,
 	paths []diffCoordinate,
 	addLines, addTri bool) {
 	// check
+	if s := nodes; !mm.isValidNodeId(nodes) {
+		logger.Printf("Copy: not valid node id: %v", s)
+		return
+	}
+	if s := elements; !mm.isValidElementId(s, nil) {
+		logger.Printf("Copy: not valid elements id: %v", s)
+		return
+	}
+	// actions
 	if len(nodes) == 0 && len(elements) == 0 {
 		// do nothing
 		return
 	}
-	for _, n := range nodes {
-		if n < 0 || len(mm.Coords) <= int(n) {
-			logger.Printf("Copy: not valid nodes")
-			return
-		}
-	}
-	for _, e := range elements {
-		if e < 0 || len(mm.Elements) <= int(e) {
-			logger.Printf("Copy: not valid elements")
-			return
-		}
-	}
-	// action
 	defer mm.DeselectAll() // deselect
 	// nodes appending
 	for _, ie := range elements {
@@ -2268,6 +2329,16 @@ func (mm *Model) Mirror(nodes, elements []uint,
 	basePoint [3]gog.Point3d,
 	copy bool,
 	addLines, addTri bool) {
+	// check
+	if s := nodes; !mm.isValidNodeId(nodes) {
+		logger.Printf("Mirror: not valid node id: %v", s)
+		return
+	}
+	if s := elements; !mm.isValidElementId(s, nil) {
+		logger.Printf("Mirror: not valid elements id: %v", s)
+		return
+	}
+	// actions
 	// TODO gog.Mirror3d for points
 }
 
@@ -2434,6 +2505,47 @@ func min(xs ...float64) (res float64) {
 //	                                                             //
 
 var testCoverageFunc func(m Mesh, ch *chan ds.Action, screenshot func(filename string))
+
+////////////////////////////////////////////////////////////////////////////////
+
+func (mm *Model) isValidValue(v float64) bool {
+	if math.IsNaN(v) {
+		return false
+	}
+	if math.IsInf(v, 0) {
+		return false
+	}
+	return true
+}
+
+func (mm *Model) isValidNodeId(ids []uint) bool {
+	for _, id := range ids {
+		if id < 0 || len(mm.Coords) <= int(id) {
+			return false
+		}
+		if mm.Coords[id].Removed {
+			return false
+		}
+	}
+	return true
+}
+
+func (mm *Model) isValidElementId(ids []uint, filter func(ElType) bool) bool {
+	for _, id := range ids {
+		if id < 0 || len(mm.Elements) <= int(id) {
+			return false
+		}
+		if mm.Elements[id].ElementType == ElRemove {
+			return false
+		}
+		if filter != nil && !filter(mm.Elements[id].ElementType) {
+			return false
+		}
+	}
+	return true
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 func Run() (err error) {
 	defer func() {
