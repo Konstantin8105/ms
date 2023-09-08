@@ -1561,7 +1561,7 @@ func (mm *Model) MergeLines(lines []uint) {
 	}
 }
 
-var IntersectionThreads = 6
+var IntersectionThreads = 1 // TODO remove
 
 func (mm *Model) Intersection(nodes, elements []uint) {
 	// check
@@ -2067,7 +2067,6 @@ func (mm *Model) SplitTri3To3Tri3(elements []uint) {
 		return
 	}
 	// actions
-	// check
 	if len(elements) == 0 {
 		// do nothing
 		return
@@ -2075,8 +2074,8 @@ func (mm *Model) SplitTri3To3Tri3(elements []uint) {
 	// action
 	defer mm.DeselectAll() // deselect
 	const one3 = 1.0 / 3.0
-	for _, it := range elements {
-		el := mm.Elements[it]
+	for _, id := range elements {
+		el := mm.Elements[id]
 		ns := []Coordinate{
 			mm.Coords[el.Indexes[0]],
 			mm.Coords[el.Indexes[1]],
@@ -2090,7 +2089,7 @@ func (mm *Model) SplitTri3To3Tri3(elements []uint) {
 		// TODO loads on all elements
 		mm.AddTriangle3ByNodeNumber(uint(el.Indexes[0]), uint(el.Indexes[1]), id)
 		mm.AddTriangle3ByNodeNumber(uint(el.Indexes[1]), uint(el.Indexes[2]), id)
-		mm.Elements[it].Indexes = []int{el.Indexes[2], el.Indexes[0], int(id)}
+		mm.Elements[id].Indexes = []int{el.Indexes[2], el.Indexes[0], int(id)}
 	}
 }
 
