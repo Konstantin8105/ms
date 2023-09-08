@@ -202,6 +202,16 @@ func (u *Undo) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 	return u.model.AddTriangle3ByNodeNumber(n1, n2, n3)
 }
 
+func (u *Undo) AddQuadr4ByNodeNumber(n1, n2, n3, n4 uint) (id uint, ok bool) {
+	logger.Print("AddQuadr4ByNodeNumber")
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	return u.model.AddQuadr4ByNodeNumber(n1, n2, n3, n4)
+}
+
 func (u *Undo) GetCoordByID(id uint) (_ gog.Point3d, ok bool) {
 	logger.Print("GetCoordByID")
 	return u.model.GetCoordByID(id)

@@ -504,7 +504,6 @@ type Viewable interface {
 	StandardView(view SView)
 	ColorEdge(isColor bool)
 	ViewAll(centerCorrection bool)
-	// Isometric views
 	// View node number
 	// View line number
 	// View element number
@@ -588,6 +587,8 @@ type AddRemovable interface {
 	AddNode(X, Y, Z float64) (id uint)
 	AddLineByNodeNumber(n1, n2 uint) (id uint)
 	AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool)
+	AddQuadr4ByNodeNumber(n1, n2, n3, n4 uint) (id uint, ok bool)
+
 	AddModel(m Model)
 
 	AddLeftCursor(lc LeftCursor)
@@ -753,13 +754,58 @@ func init() {
 				init3()
 			}
 		}}, {
+		Name: "Add quadrs4 by nodes",
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+			var list vl.List
+			n1, n1gt, init1 := Select("Select node 1", Single, m.GetSelectNodes)
+			list.Add(n1)
+			n2, n2gt, init2 := Select("Select node 2", Single, m.GetSelectNodes)
+			list.Add(n2)
+			n3, n3gt, init3 := Select("Select node 3", Single, m.GetSelectNodes)
+			list.Add(n3)
+			n4, n4gt, init4 := Select("Select node 4", Single, m.GetSelectNodes)
+			list.Add(n4)
+
+			var bi vl.Button
+			bi.SetText("Add")
+			bi.OnClick = func() {
+				n1, ok := isOne(n1gt)
+				if !ok {
+					return
+				}
+				n2, ok := isOne(n2gt)
+				if !ok {
+					return
+				}
+				n3, ok := isOne(n3gt)
+				if !ok {
+					return
+				}
+				n4, ok := isOne(n4gt)
+				if !ok {
+					return
+				}
+				m.AddQuadr4ByNodeNumber(n1, n2, n3, n4)
+			}
+			list.Add(&bi)
+
+			return &list, func() {
+				init1()
+				init2()
+				init3()
+				init4()
+			}
+		}}, {
 		Name: "Add by left cursor button",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
 			var names []string
-			for i := 0; i < int(endLC); i++ {
-				names = append(names, LeftCursor(i).String())
+			for i := range valids {
+				if valids[i].e == ElRemove {
+					break
+				}
+				names = append(names, valids[i].e.String())
 			}
 
 			var rg vl.RadioGroup
@@ -769,7 +815,7 @@ func init() {
 			var b vl.Button
 			b.SetText("Change")
 			b.OnClick = func() {
-				m.AddLeftCursor(LeftCursor(rg.GetPos()))
+				m.AddLeftCursor(valids[rg.GetPos()].lc)
 			}
 			list.Add(&b)
 			return &list, func() {

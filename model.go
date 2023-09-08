@@ -87,18 +87,21 @@ type Element struct {
 	Indexes     []int // index of coordinate
 }
 
-// valid matrix element constants
-var valid = [...][2]int{
-	{int(Line2), 2},
-	{int(Triangle3), 3},
-	{int(Quadr4), 4},
-	{int(ElRemove), 0},
+var valids = []struct {
+	e      ElType
+	amount int
+	lc     LeftCursor
+}{
+	{Line2, 2, AddLinesLC},
+	{Triangle3, 3, AddTrianglesLC},
+	{Quadr4, 4, AddQuardsLC},
+	{e: ElRemove, amount: 0},
 }
 
 func (e Element) Check() error {
 	index := -1
-	for i := range valid {
-		if int(e.ElementType) == valid[i][0] {
+	for i := range valids {
+		if e.ElementType == valids[i].e {
 			index = i
 			break
 		}
@@ -106,7 +109,7 @@ func (e Element) Check() error {
 	if index < 0 {
 		return fmt.Errorf("undefined type: %v", e)
 	}
-	if len(e.Indexes) != valid[index][1] {
+	if len(e.Indexes) != valids[index].amount {
 		return fmt.Errorf("unacceptable element: %v", e)
 	}
 	return nil
@@ -367,6 +370,13 @@ func (mm *Model) AddModel(m Model) {
 				uint(newID[el.Indexes[1]]),
 				uint(newID[el.Indexes[2]]),
 			)
+		case Quadr4:
+			mm.AddQuadr4ByNodeNumber(
+				uint(newID[el.Indexes[0]]),
+				uint(newID[el.Indexes[1]]),
+				uint(newID[el.Indexes[2]]),
+				uint(newID[el.Indexes[3]]),
+			)
 		default:
 			logger.Printf("AddModel: not implemented %v", el)
 		}
@@ -494,47 +504,132 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 		return
 	}
 	// actions
-	// type convection
-	ni1 := int(n1)
-	ni2 := int(n2)
-	ni3 := int(n3)
 	// triangle not on one line
 	if gog.ZeroTriangle3d(
-		mm.Coords[ni1].Point3d,
-		mm.Coords[ni2].Point3d,
-		mm.Coords[ni3].Point3d,
+		mm.Coords[int(n1)].Point3d,
+		mm.Coords[int(n2)].Point3d,
+		mm.Coords[int(n3)].Point3d,
 	) {
 		logger.Printf("AddTriangle3ByNodeNumber: ZeroTriangle3d")
 		return
 	}
-	// check is this coordinate exist?
+	// check that triangle is not exist
+	nis := [][3]uint{
+		{n1, n2, n3}, {n2, n3, n1}, {n3, n1, n2},
+		{n3, n2, n1}, {n2, n1, n3}, {n1, n3, n2},
+	}
 	for i, el := range mm.Elements {
 		if el.ElementType != Triangle3 {
 			continue
 		}
-		if el.Indexes[0] == ni1 && el.Indexes[1] == ni2 && el.Indexes[2] == ni3 {
-			return uint(i), true
-		}
-		if el.Indexes[0] == ni2 && el.Indexes[1] == ni3 && el.Indexes[2] == ni1 {
-			return uint(i), true
-		}
-		if el.Indexes[0] == ni3 && el.Indexes[1] == ni1 && el.Indexes[2] == ni2 {
-			return uint(i), true
-		}
-		if el.Indexes[0] == ni3 && el.Indexes[1] == ni2 && el.Indexes[2] == ni1 {
-			return uint(i), true
-		}
-		if el.Indexes[0] == ni2 && el.Indexes[1] == ni1 && el.Indexes[2] == ni3 {
-			return uint(i), true
-		}
-		if el.Indexes[0] == ni1 && el.Indexes[1] == ni3 && el.Indexes[2] == ni2 {
-			return uint(i), true
+		for _, ni := range nis {
+			if el.Indexes[0] == int(ni[0]) &&
+				el.Indexes[1] == int(ni[1]) &&
+				el.Indexes[2] == int(ni[2]) {
+				return uint(i), true
+			}
 		}
 	}
 	// append
 	mm.Elements = append(mm.Elements, Element{
 		ElementType: Triangle3,
-		Indexes:     []int{ni1, ni2, ni3},
+		Indexes:     []int{int(n1), int(n2), int(n3)},
+	})
+	return uint(len(mm.Elements) - 1), true
+}
+
+func (mm *Model) AddQuadr4ByNodeNumber(n1, n2, n3, n4 uint) (id uint, ok bool) {
+	// check
+	if s := []uint{n1, n2, n3, n4}; !mm.isValidNodeId(s) {
+		logger.Printf("AddQuadr4ByNodeNumber: not valid node id: %v", s)
+		return
+	}
+	// actions
+	// check triangle not on one line
+	if gog.ZeroTriangle3d(
+		mm.Coords[int(n1)].Point3d,
+		mm.Coords[int(n2)].Point3d,
+		mm.Coords[int(n3)].Point3d,
+	) || gog.ZeroTriangle3d(
+		mm.Coords[int(n2)].Point3d,
+		mm.Coords[int(n3)].Point3d,
+		mm.Coords[int(n4)].Point3d,
+	) {
+		logger.Printf("AddQuadr4ByNodeNumber: ZeroTriangle3d")
+		return
+	}
+	// check all points on one plane
+	{
+		A, B, C, D := gog.Plane(
+			mm.Coords[int(n1)].Point3d,
+			mm.Coords[int(n2)].Point3d,
+			mm.Coords[int(n3)].Point3d,
+		)
+		if !gog.PointOnPlane3d(
+			A, B, C, D,
+			mm.Coords[int(n4)].Point3d,
+		) {
+			logger.Printf("AddQuadr4ByNodeNumber: not on one plane")
+			return
+		}
+	}
+	// check that triangle is not exist
+	nis := [][4]uint{
+		{n1, n2, n3, n4},
+		{n2, n3, n4, n1},
+		{n3, n4, n1, n2},
+		{n4, n1, n2, n3},
+
+		{n1, n2, n4, n3},
+		{n2, n4, n3, n1},
+		{n4, n3, n1, n2},
+		{n3, n1, n2, n4},
+
+		{n1, n3, n2, n4},
+		{n3, n2, n4, n1},
+		{n2, n4, n1, n3},
+		{n4, n1, n3, n2},
+
+		{n1, n4, n3, n2},
+		{n4, n3, n2, n1},
+		{n3, n2, n1, n4},
+		{n2, n1, n4, n3},
+	}
+	for i, el := range mm.Elements {
+		if el.ElementType != Quadr4 {
+			continue
+		}
+		for _, ni := range nis {
+			if el.Indexes[0] == int(ni[0]) &&
+				el.Indexes[1] == int(ni[1]) &&
+				el.Indexes[2] == int(ni[2]) &&
+				el.Indexes[3] == int(ni[3]) {
+				return uint(i), true
+			}
+		}
+	}
+	// avoid insection with it-self
+	{
+		_, _, intersection1 := gog.LineLine3d(
+			mm.Coords[int(n1)].Point3d,
+			mm.Coords[int(n2)].Point3d,
+			mm.Coords[int(n3)].Point3d,
+			mm.Coords[int(n4)].Point3d,
+		)
+		_, _, intersection2 := gog.LineLine3d(
+			mm.Coords[int(n2)].Point3d,
+			mm.Coords[int(n3)].Point3d,
+			mm.Coords[int(n4)].Point3d,
+			mm.Coords[int(n1)].Point3d,
+		)
+		if intersection1 || intersection2 {
+			n3, n4 = n4, n3 // swap nodes
+		}
+	}
+	// append
+	mm.Elements = append(mm.Elements, Element{
+		ElementType: Quadr4,
+		Indexes:     []int{int(n1), int(n2), int(n3), int(n4)},
 	})
 	return uint(len(mm.Elements) - 1), true
 }
@@ -2284,6 +2379,8 @@ func (mm *Model) Copy(nodes, elements []uint,
 			cModel.AddLineByNodeNumber(ids[0], ids[1])
 		case Triangle3:
 			cModel.AddTriangle3ByNodeNumber(ids[0], ids[1], ids[2])
+		case Quadr4:
+			cModel.AddQuadr4ByNodeNumber(ids[0], ids[1], ids[2], ids[3])
 		default:
 			logger.Printf("Undefined: %v", el.ElementType)
 		}
@@ -2446,6 +2543,8 @@ func (mm *Model) Mirror(nodes, elements []uint,
 			mm.AddLineByNodeNumber(ids[0], ids[1])
 		case Triangle3:
 			mm.AddTriangle3ByNodeNumber(ids[0], ids[1], ids[2])
+		case Quadr4:
+			mm.AddQuadr4ByNodeNumber(ids[0], ids[1], ids[2], ids[3])
 		default:
 			logger.Printf("Undefined: %v", el.ElementType)
 		}

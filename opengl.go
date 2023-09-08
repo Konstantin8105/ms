@@ -1088,30 +1088,6 @@ const (
 	endLC
 )
 
-func (lc LeftCursor) AmountNodes() int {
-	switch lc {
-	case AddLinesLC:
-		return 2
-	case AddTrianglesLC:
-		return 3
-	case AddQuardsLC:
-		return 4
-	}
-	return -1
-}
-
-func (lc LeftCursor) String() string {
-	switch lc {
-	case AddLinesLC:
-		return "Lines"
-	case AddTrianglesLC:
-		return "Triangles"
-	case AddQuardsLC:
-		return "Quadr"
-	}
-	return "Undefined"
-}
-
 func (op *Opengl) AddLeftCursor(lc LeftCursor) {
 	var ma MouseAdd
 	ma.LC = lc
@@ -1589,8 +1565,15 @@ func (ma *MouseAdd) Action(op *Opengl) {
 	// TODO : add preview indicated points
 	op.mesh.DeselectAll()
 
-	if len(ma.ps) != ma.LC.AmountNodes() {
-		return
+	for i := range valids {
+		if valids[i].lc != ma.LC {
+			continue
+		}
+		if len(ma.ps) != valids[i].amount {
+			return
+		} else {
+			break
+		}
 	}
 	// action
 	switch ma.LC {
@@ -1604,6 +1587,13 @@ func (ma *MouseAdd) Action(op *Opengl) {
 			ma.ps[0],
 			ma.ps[1],
 			ma.ps[2],
+		)
+	case AddQuardsLC:
+		op.mesh.AddQuadr4ByNodeNumber(
+			ma.ps[0],
+			ma.ps[1],
+			ma.ps[2],
+			ma.ps[3],
 		)
 	}
 	ma.Reset()
