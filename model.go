@@ -362,7 +362,7 @@ func (mm *Model) AddModel(m Model) {
 				uint(newID[el.Indexes[2]]),
 			)
 		default:
-			logger.Printf("not implemented %v", el)
+			logger.Printf("AddModel: not implemented %v", el)
 		}
 	}
 }
@@ -2200,6 +2200,10 @@ func (mm *Model) Copy(nodes, elements []uint,
 		// do nothing
 		return
 	}
+	if len(paths) == 0 {
+		// do nothing
+		return
+	}
 	defer mm.DeselectAll() // deselect
 	// nodes appending
 	for _, ie := range elements {
@@ -2209,10 +2213,6 @@ func (mm *Model) Copy(nodes, elements []uint,
 	}
 	nodes = uniqUint(nodes)
 	elements = uniqUint(elements)
-	if len(paths) == 0 {
-		// do nothing
-		return
-	}
 	// create copy of model
 	var cModel Model
 	for _, n := range nodes { // add all points
@@ -2327,7 +2327,7 @@ func (mm *Model) Copy(nodes, elements []uint,
 
 func (mm *Model) Mirror(nodes, elements []uint,
 	basePoint [3]gog.Point3d,
-	copy bool,
+	copyModel bool,
 	addLines, addTri bool) {
 	// check
 	if s := nodes; !mm.isValidNodeId(nodes) {
@@ -2339,7 +2339,90 @@ func (mm *Model) Mirror(nodes, elements []uint,
 		return
 	}
 	// actions
-	// TODO gog.Mirror3d for points
+	if len(nodes) == 0 && len(elements) == 0 {
+		// do nothing
+		return
+	}
+	if onOneLine := gog.PointLine3d(
+		basePoint[0],
+		basePoint[1],
+		basePoint[2],
+	); onOneLine {
+		logger.Printf("Mirror: base points of plane")
+		return
+	}
+	// nodes appending
+	for _, ie := range elements {
+		for _, ind := range mm.Elements[ie].Indexes {
+			nodes = append(nodes, uint(ind))
+		}
+	}
+	// uniq indexes
+	nodes = uniqUint(nodes)
+	elements = uniqUint(elements)
+	// prepare mirror points
+	var points []gog.Point3d
+	for _, n := range nodes {
+		points = append(points, mm.Coords[n].Point3d)
+	}
+	mir := gog.Mirror3d(basePoint, points...)
+	// mirror move only nodes
+	if !copyModel {
+		for i, n := range nodes {
+			mm.Coords[n].Point3d = mir[i]
+		}
+		return
+	}
+	// copy mirror
+	var newID []uint
+	for i := range nodes { // create id of mirror nodes
+		id := mm.AddNode(mir[i][0], mir[i][1], mir[i][2])
+		newID = append(newID, id)
+	}
+	// create mirror elements
+	for _, pe := range elements { // add all elements
+		el := mm.Elements[pe]
+		// find indexes of each point in new model
+		ids := make([]uint, len(el.Indexes))
+		for i := range ids { // copy old nodes ids
+			ids[i] = uint(el.Indexes[i])
+		}
+		for i := range ids { // convert to new ids
+			for pos, n := range nodes {
+				if n != ids[i] {
+					continue
+				}
+				ids[i] = newID[pos]
+				break
+			}
+		}
+		// create element in new model
+		switch el.ElementType {
+		case Line2:
+			mm.AddLineByNodeNumber(ids[0], ids[1])
+		case Triangle3:
+			mm.AddTriangle3ByNodeNumber(ids[0], ids[1], ids[2])
+		default:
+			logger.Printf("Undefined: %v", el.ElementType)
+		}
+		// add triangles by lines
+		if addTri {
+			if el.ElementType != Line2 {
+				continue
+			}
+			mm.AddTriangle3ByNodeNumber(uint(el.Indexes[0]), ids[0], uint(el.Indexes[1]))
+			mm.AddTriangle3ByNodeNumber(uint(el.Indexes[1]), ids[0], ids[1])
+		}
+	}
+	if addLines {
+		for i := range nodes {
+			if newID[i] == nodes[i] {
+				// zero lenght line
+				continue
+			}
+			mm.AddLineByNodeNumber(nodes[i], newID[i])
+		}
+	}
 }
 
 func (mm *Model) StandardView(view SView) {

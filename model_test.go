@@ -13,6 +13,7 @@ import (
 
 	"github.com/Konstantin8105/compare"
 	"github.com/Konstantin8105/ds"
+	"github.com/Konstantin8105/gog"
 )
 
 func TestUniqUint(t *testing.T) {
@@ -419,6 +420,92 @@ func TestIntegration(t *testing.T) {
 			run("DeselectAll", func() { mm.DeselectAll() })
 			run("MergeLines", func() { mm.MergeLines(es) })
 			run("RemoveNodesWithoutElements", func() { mm.RemoveNodesWithoutElements() })
+		}
+
+		// test
+		clean()
+		{
+			testHeader()
+			run(reset, func() { mm.DemoSpiral(10) })
+			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
+			run("ViewAll", func() { mm.ViewAll(true) })
+			run("SelectAll", func() {
+				mm.SelectAll(true, []bool{true, true, true, true})
+			})
+			var ns, es []uint
+			run(reset, func() {
+				ns = mm.GetSelectNodes(false)
+				es = mm.GetSelectElements(false, nil)
+			})
+
+			run("Mirror-copy-all", func() {
+				mm.Mirror(ns, es,
+					[3]gog.Point3d{
+						[3]float64{0, 0, 0},
+						[3]float64{1, 0, 0},
+						[3]float64{0, 0, 1},
+					},
+					true,
+					true, true,
+				)
+			})
+			run("ViewAll", func() { mm.ViewAll(true) })
+			run("Undo", func() { mm.Undo() })
+
+			run("Mirror-copy-only tri", func() {
+				mm.Mirror(ns, es,
+					[3]gog.Point3d{
+						[3]float64{0, 0, 0},
+						[3]float64{1, 0, 0},
+						[3]float64{0, 0, 1},
+					},
+					true,
+					false, true,
+				)
+			})
+			run("ViewAll", func() { mm.ViewAll(true) })
+			run("Undo", func() { mm.Undo() })
+
+			run("Mirror-copy-only lines", func() {
+				mm.Mirror(ns, es,
+					[3]gog.Point3d{
+						[3]float64{0, 0, 0},
+						[3]float64{1, 0, 0},
+						[3]float64{0, 0, 1},
+					},
+					true,
+					true, false,
+				)
+			})
+			run("ViewAll", func() { mm.ViewAll(true) })
+			run("Undo", func() { mm.Undo() })
+
+			run("Mirror-move", func() {
+				mm.Mirror(ns, es,
+					[3]gog.Point3d{
+						[3]float64{0, 0, 0},
+						[3]float64{1, 0, 0},
+						[3]float64{0, 0, 1},
+					},
+					false,
+					false, false,
+				)
+			})
+			run("ViewAll", func() { mm.ViewAll(true) })
+
+			run("Mirror-copy-all-any-plane", func() {
+				mm.Mirror(ns, es,
+					[3]gog.Point3d{
+						[3]float64{0, 1, 0},
+						[3]float64{1, 3, 0},
+						[3]float64{0, 2, 1},
+					},
+					true,
+					false, true,
+				)
+			})
+			run("ViewAll", func() { mm.ViewAll(true) })
+			run("Undo", func() { mm.Undo() })
 		}
 		// MergeLines
 		// IsChangedModel
