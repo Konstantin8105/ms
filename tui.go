@@ -1122,11 +1122,11 @@ func init() {
 			var b vl.Button
 			b.SetText("Show only selected")
 			b.OnClick = func() {
-				ls := make([]bool, lastElement)
+				choosed := make([]bool, lastElement)
 				for e := Line2; e < lastElement; e++ {
-					ls[e] = true
+					choosed[e] = true
 				}
-				m.InvertSelect(true, ls)
+				m.InvertSelect(true, choosed)
 				ns := m.GetSelectNodes(Many)
 				es := m.GetSelectElements(Many, nil)
 				m.DeselectAll()
@@ -1201,8 +1201,6 @@ func (d Direction) String() string {
 }
 
 type Selectable interface {
-	// TODO select deeper or only first iteration
-
 	SelectLeftCursor(nodes bool, elements []bool)
 
 	GetSelectNodes(single bool) (ids []uint)
@@ -1211,12 +1209,13 @@ type Selectable interface {
 	InvertSelect(nodes bool, elements []bool)
 
 	SelectLinesOrtho(x, y, z bool)
-	SelectLinesOnPlane(xoy, xoz, yoz bool)
 	SelectLinesParallel(lines []uint)
 	SelectLinesByLenght(more bool, lenght float64)
+
+	SelectElementsOnPlane(xoy, xoz, yoz bool, elements []bool)
+	// TODO rename  to SelectElementsCylindrical
 	SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction)
-	// SelectElementsOnPlane(xoy, xoz, yoz bool)
-	// SelectLinesSpherical(node uint, radiant, conc bool)
+	// SelectElementsSpherical(node uint, radiant, conc bool)
 
 	// SelectPlatesWithAngle
 	// SelectPlatesParallel// XY, YZ, XZ
@@ -1255,11 +1254,11 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				ls := make([]bool, len(els))
+				choosed := make([]bool, len(els))
 				for i := range els {
-					ls[i] = els[i].Checked
+					choosed[i] = els[i].Checked
 				}
-				m.SelectLeftCursor(nodes.Checked, ls)
+				m.SelectLeftCursor(nodes.Checked, choosed)
 			}
 			list.Add(&b)
 			return &list, func() {
@@ -1283,11 +1282,11 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				ls := make([]bool, len(els))
+				choosed := make([]bool, len(els))
 				for i := range els {
-					ls[i] = els[i].Checked
+					choosed[i] = els[i].Checked
 				}
-				m.InvertSelect(nodes.Checked, ls)
+				m.InvertSelect(nodes.Checked, choosed)
 			}
 			list.Add(&b)
 
@@ -1331,6 +1330,7 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
+			list.Add(vl.TextStatic("Planes for selection:"))
 			var xoy vl.CheckBox
 			xoy.SetText("XOY")
 			list.Add(&xoy)
@@ -1343,10 +1343,26 @@ func init() {
 			xoz.SetText("XOZ")
 			list.Add(&xoz)
 
+			list.Add(new(vl.Separator))
+
+			list.Add(vl.TextStatic("Elements for selection:"))
+			els := make([]vl.CheckBox, lastElement)
+			for e := Line2; e < lastElement; e++ {
+				els[int(e)].SetText(ElType(e).String())
+				list.Add(&els[int(e)])
+			}
+
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				m.SelectLinesOnPlane(xoy.Checked, yoz.Checked, xoz.Checked)
+				choosed := make([]bool, len(els))
+				for i := range els {
+					choosed[i] = els[i].Checked
+				}
+				m.SelectElementsOnPlane(
+					xoy.Checked, yoz.Checked, xoz.Checked,
+					choosed,
+				)
 			}
 			list.Add(&b)
 
@@ -1484,11 +1500,11 @@ func init() {
 			var b vl.Button
 			b.SetText(name)
 			b.OnClick = func() {
-				ls := make([]bool, len(els))
+				choosed := make([]bool, len(els))
 				for i := range els {
-					ls[i] = els[i].Checked
+					choosed[i] = els[i].Checked
 				}
-				m.SelectAll(nodes.Checked, ls)
+				m.SelectAll(nodes.Checked, choosed)
 			}
 			list.Add(&b)
 			return &list, func() {

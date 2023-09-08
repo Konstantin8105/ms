@@ -293,9 +293,9 @@ func (u *Undo) SelectLinesOrtho(x, y, z bool) {
 	u.model.SelectLinesOrtho(x, y, z)
 }
 
-func (u *Undo) SelectLinesOnPlane(xoy, xoz, yoz bool) {
-	logger.Print("SelectLinesOnPlane")
-	u.model.SelectLinesOnPlane(xoy, xoz, yoz)
+func (u *Undo) SelectElementsOnPlane(xoy, xoz, yoz bool, elements []bool) {
+	logger.Print("SelectElementsOnPlane")
+	u.model.SelectElementsOnPlane(xoy, xoz, yoz, elements)
 }
 
 func (u *Undo) SelectLinesParallel(lines []uint) {

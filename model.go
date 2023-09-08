@@ -855,33 +855,43 @@ func (mm *Model) SelectLinesOrtho(x, y, z bool) {
 	})
 }
 
-func (mm *Model) SelectLinesOnPlane(xoy, yoz, xoz bool) {
+func (mm *Model) SelectElementsOnPlane(xoy, yoz, xoz bool, elements []bool) {
 	if !xoy && !yoz && !xoz {
 		return
 	}
-	mm.filterByElement(func(e ElType) bool { // filter
-		return e == Line2
-	}, func(id int) { // run
-		if mm.Elements[id].selected {
-			return
+	for etype := Line2; etype < lastElement; etype++ {
+		if !elements[etype] {
+			continue
 		}
-		var (
-			b  = mm.Coords[mm.Elements[id].Indexes[0]]
-			f  = mm.Coords[mm.Elements[id].Indexes[1]]
-			dX = math.Abs(f.Point3d[0] - b.Point3d[0])
-			dY = math.Abs(f.Point3d[1] - b.Point3d[1])
-			dZ = math.Abs(f.Point3d[2] - b.Point3d[2])
-		)
-		if xoy && dZ < gog.Eps3D {
-			mm.Elements[id].selected = true
-		}
-		if yoz && dX < gog.Eps3D {
-			mm.Elements[id].selected = true
-		}
-		if xoz && dY < gog.Eps3D {
-			mm.Elements[id].selected = true
-		}
-	})
+		// check each elements type
+		mm.filterByElement(func(e ElType) bool { // filter
+			return e == etype
+		}, func(id int) { // run
+			el := mm.Elements[id]
+			var dx, dy, dz float64
+			for p := 1; p < len(el.Indexes); p++ {
+				var (
+					b  = mm.Coords[el.Indexes[p-1]]
+					f  = mm.Coords[el.Indexes[p]]
+					dX = math.Abs(f.Point3d[0] - b.Point3d[0])
+					dY = math.Abs(f.Point3d[1] - b.Point3d[1])
+					dZ = math.Abs(f.Point3d[2] - b.Point3d[2])
+				)
+				dx = math.Max(dx, dX)
+				dy = math.Max(dy, dY)
+				dz = math.Max(dz, dZ)
+			}
+			if xoy && dz < gog.Eps3D {
+				mm.Elements[id].selected = true
+			}
+			if yoz && dx < gog.Eps3D {
+				mm.Elements[id].selected = true
+			}
+			if xoz && dy < gog.Eps3D {
+				mm.Elements[id].selected = true
+			}
+		})
+	}
 }
 
 func (mm *Model) SelectLinesParallel(lines []uint) {
