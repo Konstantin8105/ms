@@ -474,6 +474,7 @@ const (
 	StandardViewXOYneg
 	StandardViewYOZneg
 	StandardViewXOZneg
+	StandardViewIsometric
 	endStandardView
 )
 
@@ -491,6 +492,8 @@ func (s SView) String() string {
 		return "-YOZ"
 	case StandardViewXOZneg:
 		return "-XOZ"
+	case StandardViewIsometric:
+		return "Isometric"
 	}
 	return "Undefined view"
 }

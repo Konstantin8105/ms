@@ -1038,6 +1038,9 @@ func (op *Opengl) StandardView(view SView) {
 	case StandardViewXOZneg:
 		op.camera.alpha = 0.0
 		op.camera.betta = 90.0
+	case StandardViewIsometric:
+		op.camera.alpha = -45.0
+		op.camera.betta = 30.0
 	}
 }
 
