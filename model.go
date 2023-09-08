@@ -2088,9 +2088,9 @@ func (mm *Model) SplitTri3To3Tri3(elements []uint) {
 			one3*ns[0].Point3d[2]+one3*ns[1].Point3d[2]+one3*ns[2].Point3d[2],
 		)
 		// TODO loads on all elements
+		mm.AddTriangle3ByNodeNumber(uint(el.Indexes[0]), uint(el.Indexes[1]), id)
 		mm.AddTriangle3ByNodeNumber(uint(el.Indexes[1]), uint(el.Indexes[2]), id)
-		mm.AddTriangle3ByNodeNumber(uint(el.Indexes[2]), uint(el.Indexes[0]), id)
-		el.Indexes = []int{el.Indexes[0], el.Indexes[1], int(id)}
+		mm.Elements[it].Indexes = []int{el.Indexes[2], el.Indexes[0], int(id)}
 	}
 }
 
