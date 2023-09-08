@@ -116,7 +116,7 @@ func (e Element) Check() error {
 type Coordinate struct {
 	object3d
 	gog.Point3d
-	Removed bool // TODO check everywhere
+	Removed bool
 
 	// TODO
 	// index int    // index of Models
@@ -162,6 +162,14 @@ func (mm *Model) Check() error {
 			et.Add(fmt.Errorf("Coordinate: %d\n%v", i, err))
 		}
 	}
+	for i := range mm.Coords {
+		for _, v := range mm.Coords[i].Point3d {
+			if mm.isValidValue(v) {
+				continue
+			}
+			et.Add(fmt.Errorf("Coords: %d\nNot valid value", i))
+		}
+	}
 	for i, el := range mm.Elements {
 		if err := el.Check(); err != nil {
 			et.Add(fmt.Errorf("Element: %d\n%v", i, err))
@@ -188,23 +196,21 @@ func (mm *Model) Check() error {
 	if et.IsError() {
 		return et
 	}
-
-	// TODO check infinite coordinate
 	// TODO check - not same coordiantes
-	// TODO check - not on one line
-	// TODO check - on one plane
+	// TODO check - Triangle3 , Quadr4 not on one line
+	// TODO check - Quadr4 on one plane
 	return nil
 }
 
 // TODO
-type Metadata struct {
-	// TODO Group by parts
-	// TODO Material
-	// TODO Text on point
-	// TODO Loads
-	// TODO Local axes
-	// TODO reverse localc axes
-}
+// type Metadata struct {
+// TODO Group by parts
+// TODO Material
+// TODO Text on point
+// TODO Loads
+// TODO Local axes
+// TODO reverse localc axes
+// }
 
 // type Part struct {
 // 	Named
@@ -420,8 +426,6 @@ func (mm *Model) DemoSpiral(n uint) {
 	mm.AddModel(m)
 }
 
-const distanceError = 1e-6
-
 func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 	// check
 	for _, p := range []*float64{&X, &Y, &Z} {
@@ -435,7 +439,6 @@ func (mm *Model) AddNode(X, Y, Z float64) (id uint) {
 	}
 	// actions
 	var c Coordinate
-	// TODO check infinite coordinate
 	c.Point3d[0] = X
 	c.Point3d[1] = Y
 	c.Point3d[2] = Z
@@ -495,10 +498,6 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 	ni1 := int(n1)
 	ni2 := int(n2)
 	ni3 := int(n3)
-	if mm.Coords[ni1].Removed || mm.Coords[ni2].Removed || mm.Coords[ni3].Removed {
-		logger.Printf("AddTriangle3ByNodeNumber: removed coordinate")
-		return
-	}
 	// triangle not on one line
 	if gog.ZeroTriangle3d(
 		mm.Coords[ni1].Point3d,
@@ -531,7 +530,6 @@ func (mm *Model) AddTriangle3ByNodeNumber(n1, n2, n3 uint) (id uint, ok bool) {
 		if el.Indexes[0] == ni1 && el.Indexes[1] == ni3 && el.Indexes[2] == ni2 {
 			return uint(i), true
 		}
-		// TODO is 3 points on 1 line
 	}
 	// append
 	mm.Elements = append(mm.Elements, Element{
@@ -830,15 +828,14 @@ func (mm *Model) SelectLinesOrtho(x, y, z bool) {
 	if !x && !y && !z {
 		return
 	}
-	for i, el := range mm.Elements {
-		vis, ok := mm.IsVisibleLine(uint(i))
-		if !vis || !ok {
-			continue
-		}
-		if el.selected {
-			continue
+	mm.filterByElement(func(e ElType) bool { // filter
+		return e == Line2
+	}, func(id int) { // run
+		if mm.Elements[id].selected {
+			return
 		}
 		var (
+			el = mm.Elements[id]
 			dx = math.Abs(mm.Coords[el.Indexes[1]].Point3d[0] -
 				mm.Coords[el.Indexes[0]].Point3d[0])
 			dy = math.Abs(mm.Coords[el.Indexes[1]].Point3d[1] -
@@ -846,48 +843,45 @@ func (mm *Model) SelectLinesOrtho(x, y, z bool) {
 			dz = math.Abs(mm.Coords[el.Indexes[1]].Point3d[2] -
 				mm.Coords[el.Indexes[0]].Point3d[2])
 		)
-		if x && dy < distanceError && dz < distanceError {
-			mm.Elements[i].selected = true
+		if x && dy < gog.Eps3D && dz < gog.Eps3D {
+			mm.Elements[id].selected = true
 		}
-		if y && dx < distanceError && dz < distanceError {
-			mm.Elements[i].selected = true
+		if y && dx < gog.Eps3D && dz < gog.Eps3D {
+			mm.Elements[id].selected = true
 		}
-		if z && dx < distanceError && dy < distanceError {
-			mm.Elements[i].selected = true
+		if z && dx < gog.Eps3D && dy < gog.Eps3D {
+			mm.Elements[id].selected = true
 		}
-	}
+	})
 }
 
 func (mm *Model) SelectLinesOnPlane(xoy, yoz, xoz bool) {
 	if !xoy && !yoz && !xoz {
 		return
 	}
-	for i, el := range mm.Elements {
-		vis, ok := mm.IsVisibleLine(uint(i))
-		if !vis || !ok {
-			continue
-		}
-		if el.selected {
-			continue
+	mm.filterByElement(func(e ElType) bool { // filter
+		return e == Line2
+	}, func(id int) { // run
+		if mm.Elements[id].selected {
+			return
 		}
 		var (
-			dX = math.Abs(mm.Coords[el.Indexes[1]].Point3d[0] -
-				mm.Coords[el.Indexes[0]].Point3d[0])
-			dY = math.Abs(mm.Coords[el.Indexes[1]].Point3d[1] -
-				mm.Coords[el.Indexes[0]].Point3d[1])
-			dZ = math.Abs(mm.Coords[el.Indexes[1]].Point3d[2] -
-				mm.Coords[el.Indexes[0]].Point3d[2])
+			b  = mm.Coords[mm.Elements[id].Indexes[0]]
+			f  = mm.Coords[mm.Elements[id].Indexes[1]]
+			dX = math.Abs(f.Point3d[0] - b.Point3d[0])
+			dY = math.Abs(f.Point3d[1] - b.Point3d[1])
+			dZ = math.Abs(f.Point3d[2] - b.Point3d[2])
 		)
-		if xoy && dZ < distanceError {
-			mm.Elements[i].selected = true
+		if xoy && dZ < gog.Eps3D {
+			mm.Elements[id].selected = true
 		}
-		if yoz && dX < distanceError {
-			mm.Elements[i].selected = true
+		if yoz && dX < gog.Eps3D {
+			mm.Elements[id].selected = true
 		}
-		if xoz && dY < distanceError {
-			mm.Elements[i].selected = true
+		if xoz && dY < gog.Eps3D {
+			mm.Elements[id].selected = true
 		}
-	}
+	})
 }
 
 func (mm *Model) SelectLinesParallel(lines []uint) {
@@ -897,81 +891,115 @@ func (mm *Model) SelectLinesParallel(lines []uint) {
 		return
 	}
 	// actions
+	if len(lines) == 0 {
+		// do nothing
+		return
+	}
+	lines = uniqUint(lines)
 	// selection
 	type ratio struct{ dx, dy, dz float64 }
-
 	toOne := func(el Element) (r ratio, ok bool) {
 		r.dx = mm.Coords[el.Indexes[0]].Point3d[0] - mm.Coords[el.Indexes[1]].Point3d[0]
 		r.dy = mm.Coords[el.Indexes[0]].Point3d[1] - mm.Coords[el.Indexes[1]].Point3d[1]
 		r.dz = mm.Coords[el.Indexes[0]].Point3d[2] - mm.Coords[el.Indexes[1]].Point3d[2]
-		if math.Abs(r.dx) < distanceError &&
-			math.Abs(r.dy) < distanceError &&
-			math.Abs(r.dz) < distanceError {
-			// ignore zero lines
+		amplitude := math.Sqrt(pow.E2(r.dx) + pow.E2(r.dy) + pow.E2(r.dz))
+		if amplitude < gog.Eps3D { // zero lenght line
 			return
 		}
-		amplitude := math.Sqrt(pow.E2(r.dx) + pow.E2(r.dy) + pow.E2(r.dz))
 		r.dx /= amplitude
 		r.dy /= amplitude
 		r.dz /= amplitude
 		return r, true
 	}
-
-	compare := func(r1, r2 ratio) bool {
-		if distanceError < math.Abs(r1.dx-r2.dx) {
-			return false
-		}
-		if distanceError < math.Abs(r1.dy-r2.dy) {
-			return false
-		}
-		if distanceError < math.Abs(r1.dz-r2.dz) {
-			return false
-		}
-		return true
-	}
-
+	// create list of vectors
 	var ratios []ratio
-	for _, p := range lines {
-		vis, ok := mm.IsVisibleLine(p)
-		if !vis || !ok {
-			continue
-		}
-		r, ok := toOne(mm.Elements[p])
+	for _, n := range lines {
+		r, ok := toOne(mm.Elements[n])
 		if !ok {
 			continue
 		}
 		ratios = append(ratios, r)
 	}
-
-	for i, el := range mm.Elements {
-		vis, ok := mm.IsVisibleLine(uint(i))
-		if !ok || !vis {
-			continue
+	if len(ratios) == 0 {
+		// do nothing
+		return
+	}
+	// comparing of vectors
+	same := func(r1, r2 ratio) bool {
+		if gog.Eps3D < math.Abs(r1.dx-r2.dx) {
+			return false
 		}
-		if el.selected {
-			continue
+		if gog.Eps3D < math.Abs(r1.dy-r2.dy) {
+			return false
 		}
-		var found bool
-		for _, p := range lines {
-			if int(p) == i {
+		if gog.Eps3D < math.Abs(r1.dz-r2.dz) {
+			return false
+		}
+		return true
+	}
+	// selection
+	mm.filterByElement(func(e ElType) bool { // filter
+		return e == Line2
+	}, func(id int) { // run
+		r, ok := toOne(mm.Elements[id])
+		if !ok {
+			return
+		}
+		found := false
+		for i := range ratios {
+			if same(r, ratios[i]) {
 				found = true
-				mm.Elements[p].selected = true
 				break
 			}
 		}
-		if found {
-			continue
+		if !found {
+			return
 		}
-		re, ok := toOne(el)
-		if !ok {
-			continue
-		}
-		for ri := range ratios {
-			if compare(re, ratios[ri]) {
-				mm.Elements[i].selected = true
-			}
-		}
-	}
+		mm.Elements[id].selected = true
+	})
+	// var ratios []ratio
+	//
+	//	for _, p := range lines {
+	//		ok := mm.IsVisibleLine(p)
+	//		if !ok {
+	//			continue
+	//		}
+	//		r, ok := toOne(mm.Elements[p])
+	//		if !ok {
+	//			continue
+	//		}
+	//		ratios = append(ratios, r)
+	//	}
+	//
+	//	for i, el := range mm.Elements {
+	//		ok := mm.IsVisibleLine(uint(i))
+	//		if !ok {
+	//			continue
+	//		}
+	//		if el.selected {
+	//			continue
+	//		}
+	//		var found bool
+	//		for _, p := range lines {
+	//			if int(p) == i {
+	//				found = true
+	//				mm.Elements[p].selected = true
+	//				break
+	//			}
+	//		}
+	//		if found {
+	//			continue
+	//		}
+	//		re, ok := toOne(el)
+	//		if !ok {
+	//			continue
+	//		}
+	//		for ri := range ratios {
+	//			if compare(re, ratios[ri]) {
+	//				mm.Elements[i].selected = true
+	//			}
+	//		}
+	//	}
 }
 
 func (mm *Model) SelectLinesByLenght(more bool, lenght float64) {
@@ -989,22 +1017,18 @@ func (mm *Model) SelectLinesByLenght(more bool, lenght float64) {
 	if lenght <= 0.0 {
 		return
 	}
-	for i, el := range mm.Elements {
-		vis, ok := mm.IsVisibleLine(uint(i))
-		if !vis || !ok {
-			continue
-		}
-		if el.selected {
-			continue
-		}
-		L := gog.Distance3d(
-			mm.Coords[el.Indexes[0]].Point3d,
-			mm.Coords[el.Indexes[1]].Point3d,
+	mm.filterByElement(func(e ElType) bool { // filter
+		return e == Line2
+	}, func(id int) { // run
+		var (
+			b = mm.Coords[mm.Elements[id].Indexes[0]]
+			f = mm.Coords[mm.Elements[id].Indexes[1]]
 		)
+		L := gog.Distance3d(b.Point3d, f.Point3d)
 		if (more && lenght <= L) || (!more && L <= lenght) {
-			mm.Elements[i].selected = true
+			mm.Elements[id].selected = true
 		}
-	}
+	})
 }
 
 func (mm *Model) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direction) {
@@ -1014,21 +1038,17 @@ func (mm *Model) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direc
 		return
 	}
 	// actions
-	for i, el := range mm.Elements {
-		vis, ok := mm.IsVisibleLine(uint(i))
-		if !vis || !ok {
-			continue
-		}
-		if el.selected {
-			continue
-		}
-		var r0, r1, dr float64
-		var a0, a1, da float64
-
-		ci0 := mm.Coords[el.Indexes[0]]
-		ci1 := mm.Coords[el.Indexes[1]]
-		ccn := mm.Coords[node]
-
+	mm.filterByElement(func(e ElType) bool { // filter
+		return e == Line2
+	}, func(id int) { // run
+		var (
+			r0, r1, dr float64
+			a0, a1, da float64
+			el         = mm.Elements[id]
+			ci0        = mm.Coords[el.Indexes[0]]
+			ci1        = mm.Coords[el.Indexes[1]]
+			ccn        = mm.Coords[node]
+		)
 		switch axe {
 		case DirX:
 			r0 = math.Sqrt(pow.E2(ci0.Point3d[2]-ccn.Point3d[2]) +
@@ -1060,32 +1080,43 @@ func (mm *Model) SelectLinesCylindrical(node uint, radiant, conc bool, axe Direc
 		}
 		dr = math.Abs(r0 - r1)
 		da = math.Abs(a0 - a1)
-		if da < distanceError && radiant {
-			mm.Elements[i].selected = true
+		if da < gog.Eps3D && radiant {
+			mm.Elements[id].selected = true
 		}
-		if dr < distanceError && conc {
-			mm.Elements[i].selected = true
+		if dr < gog.Eps3D && conc {
+			mm.Elements[id].selected = true
 		}
-	}
+	})
 }
 
 // TODO remove
-func (mm *Model) IsVisibleLine(p uint) (visible, ok bool) {
-	// check
-	if s := []uint{p}; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
-		logger.Printf("IsVisibleLine: not valid line id: %v", s)
-		return
+func (mm *Model) filterByElement(filter func(e ElType) bool, run func(id int)) {
+	for id, el := range mm.Elements {
+		if !filter(el.ElementType) {
+			continue
+		}
+		if el.hided {
+			continue
+		}
+		run(id)
 	}
-	// actions
-	ok = true
-	if mm.Elements[p].hided {
-		return
-	}
-	// 	if mm.IsIgnore(uint(p)) {
-	// 		return
-	// 	}
-	visible = true
-	return
+	// // check
+	//
+	//	if s := []uint{p}; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+	//		logger.Printf("IsVisibleLine: not valid line id: %v", s)
+	//		return false
+	//	}
+	//
+	// // actions
+	//
+	//	if mm.Elements[p].hided {
+	//		return false
+	//	}
+	//
+	// // 	if mm.IsIgnore(uint(p)) {
+	// // 		return
+	// // 	}
+	// return true
 }
 
 func (mm *Model) DeselectAll() {
@@ -1124,7 +1155,7 @@ func (mm *Model) SelectScreen(from, to [2]int32) {
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
 	// check
 	if s := lines; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
-		logger.Printf("IsVisibleLine: not valid lines id: %v", s)
+		logger.Printf("SplitLinesByDistance: not valid lines id: %v", s)
 		return
 	}
 	// actions
@@ -1173,16 +1204,16 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 			cs[el.Indexes[0]].Point3d,
 			cs[el.Indexes[1]].Point3d,
 		)
-		if length < distanceError {
+		if length < gog.Eps3D {
 			// do nothing
 			continue
 		}
 		// split point on line corner
-		if atBegin && math.Abs(length-distance) < distanceError {
+		if atBegin && math.Abs(length-distance) < gog.Eps3D {
 			// point at end point
 			continue
 		}
-		if !atBegin && math.Abs(length+distance) < distanceError {
+		if !atBegin && math.Abs(length+distance) < gog.Eps3D {
 			// point at begin point
 			continue
 		}
@@ -1260,7 +1291,7 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 			cs[el.Indexes[0]].Point3d,
 			cs[el.Indexes[1]].Point3d,
 		)
-		if length < distanceError {
+		if length < gog.Eps3D {
 			// do nothing
 			continue
 		}
@@ -1314,7 +1345,7 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 			cs[el.Indexes[0]].Point3d,
 			cs[el.Indexes[1]].Point3d,
 		)
-		if length < distanceError {
+		if length < gog.Eps3D {
 			// do nothing
 			continue
 		}
@@ -1370,7 +1401,7 @@ func (mm *Model) MergeNodes(minDistance float64) {
 		return
 	}
 	if minDistance == 0.0 {
-		minDistance = distanceError
+		minDistance = gog.Eps3D
 	}
 
 	type link struct {
@@ -2314,11 +2345,7 @@ func (mm *Model) Copy(nodes, elements []uint,
 		}
 		beginCoord, endCoord = endCoord, beginCoord
 
-		copyBase := [3]float64{
-			basePoint[0],
-			basePoint[1],
-			basePoint[2],
-		}
+		copyBase := [3]float64{basePoint[0], basePoint[1], basePoint[2]}
 		move(&copyBase, basePoint, path)
 
 		mm.AddModel(cModel)
@@ -2347,6 +2374,14 @@ func (mm *Model) Mirror(nodes, elements []uint,
 		basePoint[0],
 		basePoint[1],
 		basePoint[2],
+	) || gog.PointLine3d(
+		basePoint[1],
+		basePoint[0],
+		basePoint[2],
+	) || gog.PointLine3d(
+		basePoint[2],
+		basePoint[0],
+		basePoint[1],
 	); onOneLine {
 		logger.Printf("Mirror: base points of plane")
 		return
@@ -2609,6 +2644,9 @@ func (mm *Model) isValidNodeId(ids []uint) bool {
 		if mm.Coords[id].Removed {
 			return false
 		}
+		if mm.Coords[id].hided {
+			return false
+		}
 	}
 	return true
 }
@@ -2622,6 +2660,9 @@ func (mm *Model) isValidElementId(ids []uint, filter func(ElType) bool) bool {
 			return false
 		}
 		if filter != nil && !filter(mm.Elements[id].ElementType) {
+			return false
+		}
+		if mm.Elements[id].hided {
 			return false
 		}
 	}
