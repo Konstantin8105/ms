@@ -168,8 +168,8 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 
 	// minimal screen notes
 	openGlScreenCoordinate(x, y, w, h)
-	gl.Color3f(0.7, 0.2, 0.2)
 	if op.mesh != nil {
+		gl.Color3ub(0,0,0) // black
 		op.font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
 			len(op.mesh.GetCoords())))
 		op.font.Printf(10, 40, fmt.Sprintf("Elements  : %6d",
@@ -186,6 +186,31 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 		if op.mouses[i].ReadyPreview() {
 			op.mouses[i].Preview(op.x, op.y)
 		}
+		// view status of mouses
+		x := 10 + float32(w-10)/float32(len(op.mouses))*float32(i)
+		y := float32(h) - 20
+		gl.Color3ub(0,0,0) // black
+		op.font.Printf(x, y, op.mouses[i].Status())
+	}
+	{
+		// view status
+		op.font.Printf(10, float32(h)-35, fmt.Sprintf("%s", op.state))
+
+		name := "Select:"
+		if op.cursorLeft&selectPoints != 0 {
+			name += fmt.Sprintf(" %s", selectPoints)
+		}
+		if op.cursorLeft&selectLines != 0 {
+			name += fmt.Sprintf(" %s", selectLines)
+		}
+		if op.cursorLeft&selectTriangles != 0 {
+			name += fmt.Sprintf(" %s", selectTriangles)
+		}
+		if op.cursorLeft&selectQuadrs != 0 {
+			name += fmt.Sprintf(" %s", selectQuadrs)
+		}
+		gl.Color3ub(0,0,0) // black
+		op.font.Printf(10, float32(h)-50, name)
 	}
 
 	// TODO : REMOVE: gl.Disable(gl.DEPTH_TEST)
@@ -850,17 +875,17 @@ const (
 func (s viewState) String() string {
 	switch s {
 	case normal:
-		return "normal"
+		return "Normal state"
 	case colorEdgeElements:
-		return "colorEdgeElements"
+		return "Color edge state"
 	case selectPoints:
-		return "selectPoints"
+		return "points"
 	case selectLines:
-		return "selectLines"
+		return "lines"
 	case selectTriangles:
-		return "selectTriangles"
+		return "triangles"
 	case selectQuadrs:
-		return "selectQuadrs"
+		return "quadrs"
 	}
 	return fmt.Sprintf("%d", s)
 }
@@ -1131,6 +1156,8 @@ type Mouse interface {
 	Action(op *Opengl)
 
 	Reset()
+
+	Status() string
 }
 
 type Mouse2P struct {
@@ -1188,6 +1215,11 @@ func (m2 *Mouse2P) ReadyAction() bool {
 
 func (m2 *Mouse2P) WithShiftKey(key bool) {
 	// do nothing
+}
+
+func (m2 *Mouse2P) Status() string {
+	// do nothing
+	return ""
 }
 
 type MouseSelect struct {
@@ -1537,6 +1569,10 @@ type MouseAdd struct {
 
 	LC LeftCursor
 	ps []uint
+}
+
+func (ma *MouseAdd) Status() string {
+	return fmt.Sprintf("Added:%d", len(ma.ps))
 }
 
 func (ma *MouseAdd) Action(op *Opengl) {
