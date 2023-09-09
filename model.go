@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
-	"runtime"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -728,40 +727,9 @@ func (mm *Model) Remove(nodes, elements []uint) {
 	}
 }
 
+// TODO remove
 func (mm *Model) RemoveSameCoordinates() {
-	for i := range mm.Coords {
-		if mm.Coords[i].Removed {
-			continue
-		}
-		for j := range mm.Coords {
-			if mm.Coords[j].Removed {
-				continue
-			}
-			if i <= j {
-				continue
-			}
-			if !gog.SamePoints3d(
-				mm.Coords[i].Point3d,
-				mm.Coords[j].Point3d,
-			) {
-				continue
-			}
-			// fix coordinate index in elements
-			from, to := j, i
-			for k, el := range mm.Elements {
-				if el.ElementType == ElRemove {
-					continue
-				}
-				for g := range el.Indexes {
-					if el.Indexes[g] == from {
-						mm.Elements[k].Indexes[g] = to
-					}
-				}
-			}
-			// remove coordinate
-			mm.Coords[j].Removed = true
-		}
-	}
+	mm.MergeNodes(0.0)
 }
 
 func (mm *Model) RemoveNodesWithoutElements() {
@@ -1268,42 +1236,14 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 		// do nothing
 		return
 	}
-	for _, l := range lines {
-		if l < 0 || len(mm.Elements) <= int(l) {
-			logger.Printf("SplitLinesByRatio: invalid list of elements")
-			return
-		}
-		if mm.Elements[l].ElementType != Line2 {
-			logger.Printf("SplitLinesByRatio: invalid list of elements is not line")
-			return
-		}
-		if mm.Elements[l].hided {
-			logger.Printf("SplitLinesByRatio: invalid list of elements is hided")
-			return
-		}
-	}
-	// action
-	defer mm.DeselectAll() // deselect
 	if distance == 0 {
 		// split by begin/end point
 		// do nothing
 		return
 	}
-	if len(lines) == 0 {
-		return
-	}
-	// TODO single change per time Lock/Unlock
-	// TODO unique lines list
-	// TODO concurrency split
+	defer mm.DeselectAll() // deselect
 	cs := mm.Coords
 	for _, il := range lines {
-		// TODO check is line ignored
-		if len(mm.Elements) <= int(il) {
-			continue
-		}
-		if mm.Elements[il].ElementType != Line2 {
-			continue
-		}
 		el := mm.Elements[il]
 		length := gog.Distance3d(
 			cs[el.Indexes[0]].Point3d,
@@ -1360,41 +1300,15 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 		// do nothing
 		return
 	}
-	for _, l := range lines {
-		if l < 0 || len(mm.Elements) <= int(l) {
-			logger.Printf("SplitLinesByRatio: invalid list of elements")
-			return
-		}
-		if mm.Elements[l].ElementType != Line2 {
-			logger.Printf("SplitLinesByRatio: invalid list of elements is not line")
-			return
-		}
-		if mm.Elements[l].hided {
-			logger.Printf("SplitLinesByRatio: invalid list of elements is hided")
-			return
-		}
-	}
-	// action
-	defer mm.DeselectAll() // deselect
 	if proportional == 0 || proportional == 1 {
 		return
 	}
-	if len(lines) == 0 {
-		return
-	}
-	// TODO concurrency split
-	cs := mm.Coords
+	defer mm.DeselectAll() // deselect
 	for _, il := range lines {
-		if len(mm.Elements) <= int(il) {
-			continue
-		}
-		if mm.Elements[il].ElementType != Line2 {
-			continue
-		}
 		el := mm.Elements[il]
 		length := gog.Distance3d(
-			cs[el.Indexes[0]].Point3d,
-			cs[el.Indexes[1]].Point3d,
+			mm.Coords[el.Indexes[0]].Point3d,
+			mm.Coords[el.Indexes[1]].Point3d,
 		)
 		if length < gog.Eps3D {
 			// do nothing
@@ -1415,21 +1329,6 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 		// do nothing
 		return
 	}
-	for _, l := range lines {
-		if l < 0 || len(mm.Elements) <= int(l) {
-			logger.Printf("SplitLinesByEqualParts: invalid list of elements")
-			return
-		}
-		if mm.Elements[l].ElementType != Line2 {
-			logger.Printf("SplitLinesByEqualParts: invalid list of elements is not line")
-			return
-		}
-		if mm.Elements[l].hided {
-			logger.Printf("SplitLinesByEqualParts: invalid list of elements is hided")
-			return
-		}
-	}
-	// action
 	defer mm.DeselectAll() // deselect
 	if parts < 2 {
 		return
@@ -1439,12 +1338,6 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 	}
 	cs := mm.Coords
 	for _, il := range lines {
-		if len(mm.Elements) <= int(il) {
-			continue
-		}
-		if mm.Elements[il].ElementType != Line2 {
-			continue
-		}
 		el := mm.Elements[il]
 		length := gog.Distance3d(
 			cs[el.Indexes[0]].Point3d,
@@ -1502,84 +1395,115 @@ func (mm *Model) MergeNodes(minDistance float64) {
 		}
 	}
 	// actions
-	if minDistance <= 0.0 {
+	if minDistance < 0.0 {
 		return
 	}
 	if minDistance == 0.0 {
 		minDistance = gog.Eps3D
 	}
-
-	type link struct {
-		less, more int
-	}
-
-	in := make(chan link)
-	re := make(chan link)
-
-	compare := func(less, more int) {
-		// SQRT(DX^2+DY^2+DZ^2) < D
-		//      DX^2+DY^2+DZ^2  < D^2
-		// specific cases:
-		//	    DX^2            < D^2, DY=0, DZ=0
-		if more <= less {
-			return
+	for i := range mm.Coords {
+		if mm.Coords[i].Removed {
+			continue
 		}
-		if mm.Coords[less].Removed {
-			return
-		}
-		if mm.Coords[more].Removed {
-			return
-		}
-		if gog.SamePoints3d(mm.Coords[more].Point3d, mm.Coords[less].Point3d) {
-			// Coordinates are same
-			re <- link{less: less, more: more}
-		}
-	}
-
-	size := runtime.NumCPU() // TODO cannot test concerency algorithm
-	if size < 1 {
-		size = 1
-	}
-	var wg sync.WaitGroup
-	wg.Add(size)
-	for i := 0; i < size; i++ {
-		go func() {
-			for l := range in {
-				compare(l.less, l.more)
+		for j := range mm.Coords {
+			if mm.Coords[j].Removed {
+				continue
 			}
-			wg.Done()
-		}()
-	}
-
-	go func() {
-		wg.Wait()
-		close(re)
-	}()
-
-	done := make(chan bool)
-	go func() {
-		for l := range re {
-			for i := range mm.Elements {
-				for j := range mm.Elements[i].Indexes {
-					if mm.Elements[i].Indexes[j] == l.less {
-						mm.Elements[i].Indexes[j] = l.more
+			if i <= j {
+				continue
+			}
+			if !gog.SamePoints3d(mm.Coords[i].Point3d, mm.Coords[j].Point3d) {
+				// Coordinates are not same
+				continue
+			}
+			// fix coordinate index in elements
+			from, to := j, i
+			for k, el := range mm.Elements {
+				if el.ElementType == ElRemove {
+					continue
+				}
+				for g := range el.Indexes {
+					if el.Indexes[g] == from {
+						mm.Elements[k].Indexes[g] = to
 					}
 				}
 			}
-			mm.Coords[l.more].Removed = true
-		}
-		done <- true
-	}()
-
-	for i := range mm.Coords {
-		for j := range mm.Coords {
-			in <- link{less: i, more: j}
+			// remove coordinate
+			mm.Coords[j].Removed = true
 		}
 	}
-	close(in)
-
-	<-done
-	close(done)
+	//	type link struct {
+	//		less, more int
+	//	}
+	//
+	//	in := make(chan link)
+	//	re := make(chan link)
+	//
+	//	compare := func(less, more int) {
+	//		// SQRT(DX^2+DY^2+DZ^2) < D
+	//		//      DX^2+DY^2+DZ^2  < D^2
+	//		// specific cases:
+	//		//	    DX^2            < D^2, DY=0, DZ=0
+	//		if more <= less {
+	//			return
+	//		}
+	//		if mm.Coords[less].Removed {
+	//			return
+	//		}
+	//		if mm.Coords[more].Removed {
+	//			return
+	//		}
+	//		if gog.SamePoints3d(mm.Coords[more].Point3d, mm.Coords[less].Point3d) {
+	//			// Coordinates are same
+	//			re <- link{less: less, more: more}
+	//		}
+	//	}
+	//
+	//	size := runtime.NumCPU() // TODO cannot test concerency algorithm
+	//	if size < 1 {
+	//		size = 1
+	//	}
+	//	var wg sync.WaitGroup
+	//	wg.Add(size)
+	//	for i := 0; i < size; i++ {
+	//		go func() {
+	//			for l := range in {
+	//				compare(l.less, l.more)
+	//			}
+	//			wg.Done()
+	//		}()
+	//	}
+	//
+	//	go func() {
+	//		wg.Wait()
+	//		close(re)
+	//	}()
+	//
+	//	done := make(chan bool)
+	//	go func() {
+	//		for l := range re {
+	//			for i := range mm.Elements {
+	//				for j := range mm.Elements[i].Indexes {
+	//					if mm.Elements[i].Indexes[j] == l.less {
+	//						mm.Elements[i].Indexes[j] = l.more
+	//					}
+	//				}
+	//			}
+	//			mm.Coords[l.more].Removed = true
+	//		}
+	//		done <- true
+	//	}()
+	//
+	//	for i := range mm.Coords {
+	//		for j := range mm.Coords {
+	//			in <- link{less: i, more: j}
+	//		}
+	//	}
+	//	close(in)
+	//
+	//	<-done
+	//	close(done)
+	//
 	// TODO loads merge
 }
 
