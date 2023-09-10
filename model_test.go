@@ -15,7 +15,7 @@ import (
 	"github.com/Konstantin8105/compare"
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/gog"
-diff "github.com/olegfedoseev/image-diff"
+	diff "github.com/olegfedoseev/image-diff"
 )
 
 func TestUniqUint(t *testing.T) {
@@ -67,7 +67,9 @@ func TestIntegration(t *testing.T) {
 
 		var wg sync.WaitGroup
 		run := func(name string, f func()) {
-			logger.Printf(fmt.Sprintf("begin of %s", name))
+			if name != reset {
+				logger.Printf(fmt.Sprintf("begin of %s", name))
+			}
 			wg.Add(1)
 			*ch <- func() (fus bool) {
 				f()
@@ -76,7 +78,9 @@ func TestIntegration(t *testing.T) {
 			}
 			wg.Wait()
 			// time.Sleep(time.Second)
-			logger.Printf(fmt.Sprintf("end of %s", name))
+			if name != reset {
+				logger.Printf(fmt.Sprintf("end of %s", name))
+			}
 
 			// screenshoot
 			if name == reset {
@@ -199,7 +203,7 @@ func TestIntegration(t *testing.T) {
 
 		run("MergeNodes", func() { mm.MergeNodes(0.050) })
 		run("DeselectAll", func() { mm.DeselectAll() })
-		run("SelectElementsOnPlane", func() { mm.SelectElementsOnPlane(true, true, true, []bool {true,true,true,true}) })
+		run("SelectElementsOnPlane", func() { mm.SelectElementsOnPlane(true, true, true, []bool{true, true, true, true}) })
 		run("InvertSelect", func() { mm.InvertSelect(true, []bool{true, true, true, true}) })
 
 		{
@@ -223,7 +227,7 @@ func TestIntegration(t *testing.T) {
 		}
 
 		run("DeselectAll", func() { mm.DeselectAll() })
-		run("SelectElementsOnPlane", func() { mm.SelectElementsOnPlane(true, true, true, []bool{true,true,true,true}) })
+		run("SelectElementsOnPlane", func() { mm.SelectElementsOnPlane(true, true, true, []bool{true, true, true, true}) })
 		run("InvertSelect", func() { mm.InvertSelect(true, []bool{false, true, true, true}) })
 
 		{

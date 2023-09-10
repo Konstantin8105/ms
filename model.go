@@ -1227,7 +1227,7 @@ func (mm *Model) SelectScreen(from, to [2]int32) {
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
 	// check
-	if s := lines; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+	if s := lines; !mm.isValidElementId(s,nil) {
 		logger.Printf("SplitLinesByDistance: not valid lines id: %v", s)
 		return
 	}
@@ -1245,6 +1245,9 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 	cs := mm.Coords
 	for _, il := range lines {
 		el := mm.Elements[il]
+		if el.ElementType != Line2 {
+			continue
+		}
 		length := gog.Distance3d(
 			cs[el.Indexes[0]].Point3d,
 			cs[el.Indexes[1]].Point3d,
@@ -1291,7 +1294,7 @@ func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bo
 
 func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin bool) {
 	// check
-	if s := lines; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+	if s := lines; !mm.isValidElementId(s, nil) {
 		logger.Printf("SplitLinesByRatio: not valid lines id: %v", s)
 		return
 	}
@@ -1306,6 +1309,9 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 	defer mm.DeselectAll() // deselect
 	for _, il := range lines {
 		el := mm.Elements[il]
+		if el.ElementType != Line2 {
+			continue
+		}
 		length := gog.Distance3d(
 			mm.Coords[el.Indexes[0]].Point3d,
 			mm.Coords[el.Indexes[1]].Point3d,
@@ -1320,7 +1326,7 @@ func (mm *Model) SplitLinesByRatio(lines []uint, proportional float64, atBegin b
 
 func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 	// check
-	if s := lines; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+	if s := lines; !mm.isValidElementId(s, nil) {
 		logger.Printf("SplitLinesByEqualParts: not valid lines id: %v", s)
 		return
 	}
@@ -1339,6 +1345,9 @@ func (mm *Model) SplitLinesByEqualParts(lines []uint, parts uint) {
 	cs := mm.Coords
 	for _, il := range lines {
 		el := mm.Elements[il]
+		if el.ElementType != Line2 {
+			continue
+		}
 		length := gog.Distance3d(
 			cs[el.Indexes[0]].Point3d,
 			cs[el.Indexes[1]].Point3d,
@@ -1509,7 +1518,7 @@ func (mm *Model) MergeNodes(minDistance float64) {
 
 func (mm *Model) MergeLines(lines []uint) {
 	// check
-	if s := lines; !mm.isValidElementId(s, func(e ElType) bool { return e == Line2 }) {
+	if s := lines; !mm.isValidElementId(s, nil) {
 		logger.Printf("MergeLines: not valid lines id: %v", s)
 		return
 	}
@@ -1525,20 +1534,6 @@ func (mm *Model) MergeLines(lines []uint) {
 		// do nothing
 		return
 	}
-	for _, l := range lines {
-		if l < 0 || len(mm.Elements) <= int(l) {
-			logger.Printf("MergeLines: invalid list of elements")
-			return
-		}
-		if mm.Elements[l].ElementType != Line2 {
-			logger.Printf("MergeLines: invalid list of elements is not line")
-			return
-		}
-		if mm.Elements[l].hided {
-			logger.Printf("MergeLines: invalid list of elements is hided")
-			return
-		}
-	}
 	// action
 	// merge 2 lines rules:
 	//	* common point of 2 that lines
@@ -1547,7 +1542,13 @@ func (mm *Model) MergeLines(lines []uint) {
 	//	* lines on one line
 	iteration := func() bool {
 		for i := range lines {
+			if mm.Elements[i].ElementType != Line2 {
+				continue
+			}
 			for j := range lines {
+			if mm.Elements[j].ElementType != Line2 {
+				continue
+			}
 				if i <= j {
 					continue
 				}
@@ -2091,7 +2092,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 
 func (mm *Model) SplitTri3To3Tri3(elements []uint) {
 	// check
-	if s := elements; !mm.isValidElementId(s, func(e ElType) bool { return e == Triangle3 }) {
+	if s := elements; !mm.isValidElementId(s, nil) {
 		logger.Printf("SplitTri3To3Tri3: not valid elements id: %v", s)
 		return
 	}
@@ -2103,8 +2104,11 @@ func (mm *Model) SplitTri3To3Tri3(elements []uint) {
 	// action
 	defer mm.DeselectAll() // deselect
 	const one3 = 1.0 / 3.0
-	for _, id := range elements {
-		el := mm.Elements[id]
+	for _, eid := range elements {
+		el := mm.Elements[eid]
+		if el.ElementType != Triangle3 {
+			continue
+		}
 		ns := []Coordinate{
 			mm.Coords[el.Indexes[0]],
 			mm.Coords[el.Indexes[1]],
@@ -2118,7 +2122,7 @@ func (mm *Model) SplitTri3To3Tri3(elements []uint) {
 		// TODO loads on all elements
 		mm.AddTriangle3ByNodeNumber(uint(el.Indexes[0]), uint(el.Indexes[1]), id)
 		mm.AddTriangle3ByNodeNumber(uint(el.Indexes[1]), uint(el.Indexes[2]), id)
-		mm.Elements[id].Indexes = []int{el.Indexes[2], el.Indexes[0], int(id)}
+		mm.Elements[eid].Indexes = []int{el.Indexes[2], el.Indexes[0], int(id)}
 	}
 }
 
@@ -2690,15 +2694,19 @@ func (mm *Model) isValidNodeId(ids []uint) bool {
 func (mm *Model) isValidElementId(ids []uint, filter func(ElType) bool) bool {
 	for _, id := range ids {
 		if id < 0 || len(mm.Elements) <= int(id) {
+			logger.Printf("isValidElementId: outside of range: %d", id)
 			return false
 		}
 		if mm.Elements[id].ElementType == ElRemove {
+			logger.Printf("isValidElementId: removed: %d", id)
 			return false
 		}
 		if filter != nil && !filter(mm.Elements[id].ElementType) {
+			logger.Printf("isValidElementId: not valid type: %d", id)
 			return false
 		}
 		if mm.Elements[id].hided {
+			logger.Printf("isValidElementId: hided element: %d", id)
 			return false
 		}
 	}
