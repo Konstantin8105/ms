@@ -12,6 +12,8 @@
 *.out
 
 testdata/*.new
+testdata/*.new.png
+testdata/*.diff.png
 
 # Dependency directories (remove the comment below to include it)
 # vendor/

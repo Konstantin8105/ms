@@ -88,9 +88,9 @@ func TestIntegration(t *testing.T) {
 				fmt.Sprintf("Test%03d-%03d-%s.png", testCounter, counter, name),
 			)
 			screenshot(
-				name+".new",
+				name+".new.png",
 				func() {
-					diff, percent, err := diff.CompareFiles(name+".new", name)
+					diff, percent, err := diff.CompareFiles(name+".new.png", name)
 					if 0 < percent {
 						t.Errorf("%s: images is different", name)
 					} else {
