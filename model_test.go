@@ -93,6 +93,8 @@ func TestIntegration(t *testing.T) {
 					diff, percent, err := diff.CompareFiles(name+".new", name)
 					if 0 < percent {
 						t.Errorf("%s: images is different", name)
+					} else {
+						return
 					}
 					// run external function
 					f, err := os.Create(name + ".diff.png")
