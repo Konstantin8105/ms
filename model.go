@@ -2654,7 +2654,11 @@ func min(xs ...float64) (res float64) {
 //	 +--------- FREQUENCY                                        //
 //	                                                             //
 
-var testCoverageFunc func(m Mesh, ch *chan ds.Action, screenshot func(filename string))
+var testCoverageFunc func(
+	m Mesh,
+	ch *chan ds.Action,
+	screenshot func(filename string, check func()),
+)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2791,9 +2795,7 @@ func Run() (err error) {
 	// run test function
 	go func() {
 		if f := testCoverageFunc; f != nil {
-			testCoverageFunc(&mm, &ch, func(filename string) {
-				screen.Screenshot(filename, nil)
-			})
+			testCoverageFunc(&mm, &ch, screen.Screenshot)
 		}
 	}()
 	// run and stop
