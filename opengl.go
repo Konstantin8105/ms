@@ -1398,6 +1398,8 @@ func (ms *MouseSelect) Action(op *Opengl) {
 				// gl.ClearColorxOES(0, 0, 0, 0) // ???? TODO ??
 				gl.ClearColor(1, 1, 1, 1)
 				gl.Enable(gl.DEPTH_TEST)
+				// TODO  gl.Disable(gl.DEPTH_TEST)
+				gl.Disable(gl.LIGHTING)
 				gl.Disable(gl.LINE_SMOOTH)
 				gl.Disable(gl.BLEND) // Transparency
 				op.cameraView(op.x, op.y, op.w, op.h)
