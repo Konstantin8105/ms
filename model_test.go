@@ -175,7 +175,7 @@ func TestIntegration(t *testing.T) {
 
 		run("MergeNodes", func() { mm.MergeNodes(0.050) })
 		run("DeselectAll", func() { mm.DeselectAll() })
-		run("SelectLinesOnPlane", func() { mm.SelectLinesOnPlane(true, true, true) })
+		run("SelectElementsOnPlane", func() { mm.SelectElementsOnPlane(true, true, true, []bool {true,true,true,true}) })
 		run("InvertSelect", func() { mm.InvertSelect(true, []bool{true, true, true, true}) })
 
 		{
@@ -199,7 +199,7 @@ func TestIntegration(t *testing.T) {
 		}
 
 		run("DeselectAll", func() { mm.DeselectAll() })
-		run("SelectLinesOnPlane", func() { mm.SelectLinesOnPlane(true, true, true) })
+		run("SelectElementsOnPlane", func() { mm.SelectElementsOnPlane(true, true, true, []bool{true,true,true,true}) })
 		run("InvertSelect", func() { mm.InvertSelect(true, []bool{false, true, true, true}) })
 
 		{
