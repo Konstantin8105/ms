@@ -3,7 +3,7 @@ package ms
 import (
 	"encoding/json"
 	"fmt"
-	"image/png"
+	"image"
 	"math"
 	"os"
 	"path/filepath"
@@ -15,7 +15,6 @@ import (
 	"github.com/Konstantin8105/compare"
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/gog"
-	diff "github.com/olegfedoseev/image-diff"
 )
 
 func TestUniqUint(t *testing.T) {
@@ -55,7 +54,7 @@ func TestIntegration(t *testing.T) {
 	defer func() {
 		testCoverageFunc = nil
 	}()
-	testCoverageFunc = func(mm Mesh, ch *chan ds.Action, screenshot func(filename string, _ func())) {
+	testCoverageFunc = func(mm Mesh, ch *chan ds.Action, screenshot func(func(image.Image))) {
 
 		var counter int
 		var testCounter int
@@ -92,25 +91,8 @@ func TestIntegration(t *testing.T) {
 				fmt.Sprintf("Test%03d-%03d-%s.png", testCounter, counter, name),
 			)
 			screenshot(
-				name+".new.png",
-				func() {
-					diff, percent, err := diff.CompareFiles(name+".new.png", name)
-					if 0 < percent {
-						t.Errorf("%s: images is different", name)
-					} else {
-						return
-					}
-					// run external function
-					f, err := os.Create(name + ".diff.png")
-					if err != nil {
-						t.Fatal(err)
-					}
-					if err := png.Encode(f, diff); err != nil {
-						t.Fatal(err)
-					}
-					if err := f.Close(); err != nil {
-						t.Fatal(err)
-					}
+				func(actual image.Image) {
+					compare.TestPng(t, name, actual)
 				},
 			)
 			counter++

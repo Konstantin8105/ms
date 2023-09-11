@@ -3,8 +3,8 @@ module github.com/Konstantin8105/ms
 go 1.18
 
 require (
-	github.com/Konstantin8105/compare v0.0.0-20230404132328-f605c0d757de
-	github.com/Konstantin8105/ds v0.0.0-20230907102824-5b385a922752
+	github.com/Konstantin8105/compare v0.0.0-20230911091621-333a522a8e96
+	github.com/Konstantin8105/ds v0.0.0-20230911101041-2823ea6497ce
 	github.com/Konstantin8105/errors v0.1.0
 	github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e
 	github.com/Konstantin8105/gog v0.0.0-20230907182845-794fa2ef97e3

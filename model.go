@@ -3,6 +3,7 @@ package ms
 import (
 	"encoding/json"
 	"fmt"
+	"image"
 	"io/ioutil"
 	"math"
 	"os"
@@ -1227,7 +1228,7 @@ func (mm *Model) SelectScreen(from, to [2]int32) {
 
 func (mm *Model) SplitLinesByDistance(lines []uint, distance float64, atBegin bool) {
 	// check
-	if s := lines; !mm.isValidElementId(s,nil) {
+	if s := lines; !mm.isValidElementId(s, nil) {
 		logger.Printf("SplitLinesByDistance: not valid lines id: %v", s)
 		return
 	}
@@ -1546,9 +1547,9 @@ func (mm *Model) MergeLines(lines []uint) {
 				continue
 			}
 			for j := range lines {
-			if mm.Elements[j].ElementType != Line2 {
-				continue
-			}
+				if mm.Elements[j].ElementType != Line2 {
+					continue
+				}
 				if i <= j {
 					continue
 				}
@@ -2661,7 +2662,7 @@ func min(xs ...float64) (res float64) {
 var testCoverageFunc func(
 	m Mesh,
 	ch *chan ds.Action,
-	screenshot func(filename string, check func()),
+	screenshot func(check func(image.Image)),
 )
 
 ////////////////////////////////////////////////////////////////////////////////
