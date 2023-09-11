@@ -169,7 +169,7 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 	// minimal screen notes
 	openGlScreenCoordinate(x, y, w, h)
 	if op.mesh != nil {
-		gl.Color3ub(0,0,0) // black
+		gl.Color3ub(0, 0, 0) // black
 		op.font.Printf(10, 25, fmt.Sprintf("Nodes     : %6d",
 			len(op.mesh.GetCoords())))
 		op.font.Printf(10, 40, fmt.Sprintf("Elements  : %6d",
@@ -189,7 +189,7 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 		// view status of mouses
 		x := 10 + float32(w-10)/float32(len(op.mouses))*float32(i)
 		y := float32(h) - 20
-		gl.Color3ub(0,0,0) // black
+		gl.Color3ub(0, 0, 0) // black
 		op.font.Printf(x, y, op.mouses[i].Status())
 	}
 	{
@@ -209,7 +209,7 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 		if op.cursorLeft&selectQuadrs != 0 {
 			name += fmt.Sprintf(" %s", selectQuadrs)
 		}
-		gl.Color3ub(0,0,0) // black
+		gl.Color3ub(0, 0, 0) // black
 		op.font.Printf(10, float32(h)-50, name)
 	}
 
@@ -1318,8 +1318,17 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		els[i].selected = false
 	}
 
+	var s []bool
+	var added bool
+	state := op.cursorLeft
 	if rightToLeft {
+		added = true
 		op.cursorLeft |= selectPoints
+		ns := op.mesh.GetCoords()
+		s = make([]bool, len(ns))
+		for i := range ns {
+			s[i] = ns[i].selected
+		}
 	}
 
 	// find new selected
@@ -1457,6 +1466,13 @@ func (ms *MouseSelect) Action(op *Opengl) {
 			// element selected
 			for _, index := range els[i].Indexes {
 				cos[index].selected = true
+			}
+		}
+		if added {
+			op.cursorLeft = state
+			ns := op.mesh.GetCoords()
+			for i := range ns {
+				ns[i].selected = s[i]
 			}
 		}
 	}
