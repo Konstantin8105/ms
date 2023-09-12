@@ -175,7 +175,7 @@ func (mm *Model) Check() error {
 	}
 	for i, el := range mm.Elements {
 		if err := el.Check(); err != nil {
-			et.Add(fmt.Errorf("Element: %d\n%v", i, err))
+			et.Add(fmt.Errorf("Element type `%d`: %d\n%v", el.ElementType, i, err))
 		}
 		for _, p := range el.Indexes {
 			if p < 0 {
@@ -471,6 +471,10 @@ func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 	// check
 	if s := []uint{n1, n2}; !mm.isValidNodeId(s) {
 		logger.Printf("AddLineByNodeNumber: not valid node id: %v", s)
+		return
+	}
+	if n1 == n2 {
+		logger.Printf("AddLineByNodeNumber: same indexes: %d", n1)
 		return
 	}
 	// actions
