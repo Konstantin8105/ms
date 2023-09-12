@@ -473,6 +473,13 @@ func (mm *Model) AddLineByNodeNumber(n1, n2 uint) (id uint) {
 		logger.Printf("AddLineByNodeNumber: not valid node id: %v", s)
 		return
 	}
+	if gog.ZeroLine3d(
+		mm.Coords[n1].Point3d,
+		mm.Coords[n2].Point3d,
+	) {
+		logger.Printf("AddLineByNodeNumber: ZeroLine3d")
+		return
+	}
 	if n1 == n2 {
 		logger.Printf("AddLineByNodeNumber: same indexes: %d", n1)
 		return
