@@ -1,7 +1,5 @@
 github.com/Konstantin8105/binaryexpr v0.1.0 h1:2+mmmCRpZ6BDHyaLRAePjGiVp/Hgt7T7z75aRF5CpYM=
 github.com/Konstantin8105/binaryexpr v0.1.0/go.mod h1:prPPFcv/zGCwhx78QW299JwMKP4xSkldgOwhZNr99GQ=
-github.com/Konstantin8105/compare v0.0.0-20230911091621-333a522a8e96 h1:T9Uda37M2BGtdYGWyCPqDQVsyTL6NH7Wwl1ix0MtChg=
-github.com/Konstantin8105/compare v0.0.0-20230911091621-333a522a8e96/go.mod h1:fUpun9N0uSc9BUqjkF1m5yWEliJK6eijIf3n5+zZDIw=
 github.com/Konstantin8105/compare v0.0.0-20230911112847-84f0fc539f0a h1:S3W9OMvjKzoFApWjZ+Mh4AshT1n6RB5bG1Y4D//AMjU=
 github.com/Konstantin8105/compare v0.0.0-20230911112847-84f0fc539f0a/go.mod h1:fUpun9N0uSc9BUqjkF1m5yWEliJK6eijIf3n5+zZDIw=
 github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b h1:IZkvBy8TJTxpPHjOW1R5KqIgVF2lVk8isx9iQBHnOnw=

@@ -1279,7 +1279,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 	}
 	defer ms.Reset()
 
-	rightToLeft := ms.from[0] < ms.to[0]
+	leftToRight := ms.from[0] < ms.to[0]
 
 	// DEBUG : start := time.Now()
 	// DEBUG : logger.Printf("MouseSelect time %v", time.Now())
@@ -1321,7 +1321,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 	var s []bool
 	var added bool
 	state := op.cursorLeft
-	if rightToLeft {
+	if leftToRight && op.cursorLeft & selectPoints == 0{
 		added = true
 		op.cursorLeft |= selectPoints
 		ns := op.mesh.GetCoords()
@@ -1443,7 +1443,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 		}
 	}
 
-	if rightToLeft {
+	if leftToRight {
 		// find real selected elements, if all they coordinate selected
 		for i := range els {
 			if !els[i].selected {
