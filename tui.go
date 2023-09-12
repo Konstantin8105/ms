@@ -37,7 +37,6 @@ const (
 // TODO betta angle for repeat rotate Copy
 // TODO check copy node on distance
 // TODO split elements by plane
-// TODO add lines by convex points on one plane
 
 func (g GroupID) String() string {
 	switch g {
@@ -594,8 +593,10 @@ type AddRemovable interface {
 	AddLeftCursor(lc LeftCursor)
 	// RemoveLeftCursor(nodes, lines, tria bool)
 
-	// TODO REMOVE AddQuadr4ByNodeNumber(n1, n2, n3, n4 string)
-	// TODO REMOVE AddElementsByNodes(ids string, l2, t3, q4 bool)
+	// Add lines by convex points on one plane
+	// AddConvexLines(nodes []uint)
+
+	// TODO REMOVE AddElementsByNodes(ids string, elements []bool)
 	// AddGroup
 	// AddCrossSections
 
@@ -604,6 +605,7 @@ type AddRemovable interface {
 	// Offset inside/outside triangle/triangles
 	// Split triangle inside triangle
 
+	// split elements
 	SplitLinesByDistance(lines []uint, distance float64, atBegin bool)
 	SplitLinesByRatio(lines []uint, proportional float64, atBegin bool)
 	SplitLinesByEqualParts(lines []uint, parts uint)
@@ -621,9 +623,11 @@ type AddRemovable interface {
 	// Intersections outside of FE
 
 	// Engineering change coordinates with precision 0.5 mm = 0.0005 meter
-
 	MergeNodes(minDistance float64)
+
+	// merge lines into one only if have same point
 	MergeLines(lines []uint)
+
 	// MergeTriangles()
 	// MergeMesh()
 
@@ -631,11 +635,13 @@ type AddRemovable interface {
 	// Triangulation exist plates by area
 	// Smooth mesh
 
-	// Parabola
-	// Hyperbola
-	// Shell roof
-
 	// Scale by ratio [sX,sY,sZ] and node
+	// ScaleOrtho(
+	// 	basePoint gog.Point3d, // point for scaling
+	// 	scale [3]float64, // sX, sY, sZ
+	// 	nodes, elements []uint, // elements of scaling
+	// )
+
 	// Scale by cylinder system coordinate
 	// Scale by direction on 2 nodes
 
@@ -650,8 +656,8 @@ type AddRemovable interface {
 
 	// create section by plane
 
+	// remove
 	Remove(nodes, elements []uint)
-
 	RemoveNodesWithoutElements()
 	RemoveSameCoordinates()
 	RemoveZeroLines()
@@ -2322,6 +2328,9 @@ type Pluginable interface {
 	// Stiffening rib
 	// Weld
 	// Group
+	// Parabola
+	// Hyperbola
+	// Shell roof
 }
 
 func init() {
