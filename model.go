@@ -1603,6 +1603,57 @@ func (mm *Model) MergeLines(lines []uint) {
 	}
 }
 
+func (mm *Model) ScaleOrtho(
+	basePoint gog.Point3d, // point for scaling
+	scale [3]float64, // sX, sY, sZ
+	nodes, elements []uint, // elements of scaling
+) {
+	// check
+	if s := nodes; !mm.isValidNodeId(nodes) {
+		logger.Printf("ScaleOrtho: not valid node id: %v", s)
+		return
+	}
+	if s := elements; !mm.isValidElementId(s, nil) {
+		logger.Printf("ScaleOrtho: not valid elements id: %v", s)
+		return
+	}
+	// actions
+	// check
+	if len(nodes) == 0 && len(elements) == 0 {
+		// do nothing
+		return
+	}
+	defer mm.DeselectAll()
+	// add nodes from elements
+	for _, e := range elements {
+		el := mm.Elements[e]
+		if el.ElementType == ElRemove {
+			continue
+		}
+		for _, n := range el.Indexes {
+			nodes = append(nodes, uint(n))
+		}
+	}
+	nodes = uniqUint(nodes)
+	// scaling
+	for _, n := range nodes {
+		if mm.Coords[n].Removed {
+			continue
+		}
+		p3 := mm.Coords[n].Point3d
+		for i := range p3 {
+			if scale[i] == 1.0 {
+				// do nothing
+				continue
+			}
+			// FMA(x,y,z) = x * y + z
+			// p3[i] =  (p3[i]-basePoint[i])*scale[i] + basePoint[i]
+			p3[i] = math.FMA(p3[i]-basePoint[i], scale[i], basePoint[i])
+		}
+		mm.Coords[n].Point3d = p3
+	}
+}
+
 var IntersectionThreads = 1 // TODO remove
 
 func (mm *Model) Intersection(nodes, elements []uint) {

@@ -636,11 +636,11 @@ type AddRemovable interface {
 	// Smooth mesh
 
 	// Scale by ratio [sX,sY,sZ] and node
-	// ScaleOrtho(
-	// 	basePoint gog.Point3d, // point for scaling
-	// 	scale [3]float64, // sX, sY, sZ
-	// 	nodes, elements []uint, // elements of scaling
-	// )
+	ScaleOrtho(
+		basePoint gog.Point3d, // point for scaling
+		scale [3]float64, // sX, sY, sZ
+		nodes, elements []uint, // elements of scaling
+	)
 
 	// Scale by cylinder system coordinate
 	// Scale by direction on 2 nodes
@@ -680,6 +680,7 @@ func init() {
 				"Coordinate:",
 				[3]string{"X", "Y", "Z"},
 				[3]string{"meter", "meter", "meter"},
+				[3]float64{0, 0, 0},
 			)
 			list.Add(w)
 
@@ -837,7 +838,7 @@ func init() {
 				})
 			})
 			list.Add(s)
-			d, dgt, initd := InputFloat("Distance", "meter")
+			d, dgt, initd := InputFloat("Distance", "meter", 0)
 			list.Add(d)
 
 			var rg vl.RadioGroup
@@ -869,7 +870,7 @@ func init() {
 				})
 			})
 			list.Add(s)
-			d, dgt, initd := InputFloat("Ratio", "")
+			d, dgt, initd := InputFloat("Ratio", "", 0.5)
 			list.Add(d)
 
 			var rg vl.RadioGroup
@@ -902,7 +903,7 @@ func init() {
 			})
 			list.Add(ns)
 
-			r, rgt, initr := InputUnsigned("Amount parts", "")
+			r, rgt, initr := InputUnsigned("Amount parts", "", 2)
 			list.Add(r)
 
 			var bi vl.Button
@@ -968,7 +969,7 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			d, dgt, initd := InputFloat("Minimal distance", "meter")
+			d, dgt, initd := InputFloat("Minimal distance", "meter", 0)
 			list.Add(d)
 
 			var b vl.Button
@@ -1007,6 +1008,67 @@ func init() {
 			list.Add(&b)
 			return &list, func() {
 				inits()
+			}
+		}}, {
+		Name: "Scale ortho by direction X,Y,Z",
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+			var list vl.List
+
+			var inits []func()
+			ns, coordgt, elgt, initsel := SelectAll(m)
+			list.Add(ns)
+			inits = append(inits, initsel)
+
+			bw, bgt, initfb := Input3Float(
+				"Coordinate:",
+				[3]string{"X", "Y", "Z"},
+				[3]string{"meter", "meter", "meter"},
+				[3]float64{0, 0, 0},
+			)
+			list.Add(bw)
+			inits = append(inits, initfb)
+
+			list.Add(new(vl.Separator))
+
+			w, gt, initw := Input3Float(
+				"Scale factors:",
+				[3]string{"X", "Y", "Z"},
+				[3]string{"", "", ""},
+				[3]float64{1.0, 1.0, 1.0},
+			)
+			list.Add(w)
+			inits = append(inits, initw)
+
+			var bi vl.Button
+			bi.SetText("Scale")
+			bi.OnClick = func() {
+				cs := coordgt()
+				es := elgt()
+				if len(cs) == 0 && len(es) == 0 {
+					return
+				}
+				bs, bok := bgt()
+				if !bok {
+					return
+				}
+				ss, sok := gt()
+				if !sok {
+					return
+				}
+				m.ScaleOrtho(
+					bs,     // point for scaling
+					ss,     // sX, sY, sZ
+					cs, es, // elements of scaling
+				)
+			}
+			list.Add(&bi)
+
+			return &list, func() {
+				for i := range inits {
+					if f := inits[i]; f != nil {
+						f()
+					}
+				}
 			}
 		}}, {
 		Name: "Remove nodes with same coordinates",
@@ -1475,7 +1537,7 @@ func init() {
 			rg.AddText([]string{"More", "Less"}...)
 			list.Add(&rg)
 
-			d, dgt, initd := InputFloat("Lenght", "meter")
+			d, dgt, initd := InputFloat("Lenght", "meter", 0)
 			list.Add(d)
 
 			var b vl.Button
@@ -1692,6 +1754,7 @@ func init() {
 					"",
 					[3]string{"dX", "dY", "dZ"},
 					[3]string{"meter", "meter", "meter"},
+					[3]float64{0, 0, 0},
 				)
 				inits = append(inits, initw)
 
@@ -1726,6 +1789,7 @@ func init() {
 					"Angle of rotation",
 					[3]string{"around axe X", "around axe Y", "around axe Z"},
 					[3]string{"degree", "degree", "degree"},
+					[3]float64{0, 0, 0},
 				)
 				list.Add(w)
 				inits = append(inits, initi)
@@ -1810,7 +1874,7 @@ func init() {
 				list.Add(nt)
 				inits = append(inits, initn2)
 
-				parts, partsgt, initp := InputUnsigned("Amount equal parts", "items")
+				parts, partsgt, initp := InputUnsigned("Amount equal parts", "items", 2)
 				list.Add(parts)
 				inits = append(inits, initp)
 
@@ -1861,11 +1925,12 @@ func init() {
 					"",
 					[3]string{"dX", "dY", "dZ"},
 					[3]string{"meter", "meter", "meter"},
+					[3]float64{0, 0, 0},
 				)
 				list.Add(w)
 				inits = append(inits, initw)
 
-				parts, partsgt, initp := InputUnsigned("Amount equal parts", "items")
+				parts, partsgt, initp := InputUnsigned("Amount equal parts", "items", 2)
 				list.Add(parts)
 				inits = append(inits, initp)
 
@@ -1919,6 +1984,7 @@ func init() {
 					w, gt, _ := InputFloat(
 						fmt.Sprintf("%d", distances.Size()+1),
 						"meter",
+						0,
 					)
 					distances.Add(w)
 					dgt = append(dgt, gt)
@@ -1979,11 +2045,12 @@ func init() {
 					"Angle of rotation",
 					[3]string{"around axe X", "around axe Y", "around axe Z"},
 					[3]string{"degree", "degree", "degree"},
+					[3]float64{0, 0, 0},
 				)
 				list.Add(w)
 				inits = append(inits, initw)
 
-				parts, partsgt, initp := InputUnsigned("Amount equal parts", "items")
+				parts, partsgt, initp := InputUnsigned("Amount equal parts", "items", 2)
 				list.Add(parts)
 				inits = append(inits, initp)
 
@@ -2340,7 +2407,7 @@ func init() {
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
 
-			r, rgt, initr := InputUnsigned("Amount levels", "")
+			r, rgt, initr := InputUnsigned("Amount levels", "", 10)
 			list.Add(r)
 
 			var b vl.Button
@@ -2402,7 +2469,7 @@ type Operation struct {
 
 var Operations []Operation
 
-func InputUnsigned(prefix, postfix string) (
+func InputUnsigned(prefix, postfix string, defaultValue uint) (
 	w vl.Widget,
 	gettext func() (_ uint, ok bool),
 	initialization func(),
@@ -2412,7 +2479,7 @@ func InputUnsigned(prefix, postfix string) (
 		in   vl.Inputbox
 	)
 	list.Add(vl.TextStatic(prefix))
-	in.SetText("2")
+	in.SetText(fmt.Sprintf("%d", defaultValue))
 	in.Filter(tf.UnsignedInteger)
 	list.Add(&in)
 	list.Add(vl.TextStatic(postfix))
@@ -2424,11 +2491,11 @@ func InputUnsigned(prefix, postfix string) (
 			}
 			return uint(value), true
 		}, func() {
-			in.SetText("2")
+			in.SetText(fmt.Sprintf("%d", defaultValue))
 		}
 }
 
-func InputFloat(prefix, postfix string) (
+func InputFloat(prefix, postfix string, defaultValue float64) (
 	w vl.Widget,
 	gettext func() (_ float64, ok bool),
 	initialization func(),
@@ -2439,7 +2506,7 @@ func InputFloat(prefix, postfix string) (
 	)
 	list.Add(vl.TextStatic(prefix))
 
-	const Default = "0.000"
+	Default := fmt.Sprintf("%.3f", defaultValue)
 
 	in.SetText(Default)
 	in.Filter(tf.Float)
@@ -2459,7 +2526,7 @@ func InputFloat(prefix, postfix string) (
 		}
 }
 
-func Input3Float(header string, prefix, postfix [3]string) (
+func Input3Float(header string, prefix, postfix [3]string, defaultValue [3]float64) (
 	w vl.Widget,
 	gettext func() (_ [3]float64, ok bool),
 	initialization func(),
@@ -2469,7 +2536,7 @@ func Input3Float(header string, prefix, postfix [3]string) (
 	var gt [3]func() (_ float64, ok bool)
 	var inits [3]func()
 	for i := 0; i < 3; i++ {
-		w, wgt, init := InputFloat(prefix[i], postfix[i])
+		w, wgt, init := InputFloat(prefix[i], postfix[i], defaultValue[i])
 		list.Add(w)
 		gt[i] = wgt
 		inits[i] = init

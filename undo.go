@@ -398,6 +398,19 @@ func (u *Undo) MergeLines(lines []uint) {
 	u.model.MergeLines(lines)
 }
 
+func (u *Undo) ScaleOrtho(basePoint gog.Point3d,
+	scale [3]float64,
+	nodes, elements []uint,
+) {
+	logger.Print("ScaleOrtho")
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.ScaleOrtho(basePoint, scale, nodes, elements)
+}
+
 func (u *Undo) Intersection(nodes, elements []uint) {
 	logger.Print("Intersection")
 	// sync
