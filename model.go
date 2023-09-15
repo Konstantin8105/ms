@@ -1773,6 +1773,11 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 	mm.RemoveZeroLines()
 	mm.RemoveZeroTriangles()
 	mm.RemoveSameCoordinates()
+	defer func() {
+		mm.RemoveZeroLines()
+		mm.RemoveZeroTriangles()
+		mm.RemoveSameCoordinates()
+	}()
 	// remove removed nodes, elements
 	{
 		var nn []uint
@@ -1814,7 +1819,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 
 	var LLTT = [3][2]int{{0, 1}, {1, 2}, {2, 0}}
 	intersectTris := func(el0, el1 Element) {
-		// Intersection
+		// Triangle inside triangle
 		if intersect, pi := gog.TriangleTriangle3d(
 			// coordinates triangle 0
 			mm.Coords[el0.Indexes[0]].Point3d,
@@ -1925,9 +1930,7 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 	}
 	close(chNewPoints)
 	<-stop
-
 	logger.Printf("Intersection: find new %d points", len(newPoints))
-
 	// fix zero coordinates
 	for i := range newPoints {
 		for j := range newPoints[i] {
@@ -1936,31 +1939,8 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 			}
 		}
 	}
-
-	// add nodes into newPoints
-	for _, pn := range nodes {
-		if mm.Coords[pn].Removed {
-			continue
-		}
-		newPoints = append(newPoints, mm.Coords[pn].Point3d)
-	}
-
-	// Coordinate-Coordinate
-	// remove same points at list of new points
-	nodes = nil
+	// add all points
 	for i := range newPoints {
-		found := false
-		for j := range newPoints {
-			if i <= j {
-				continue
-			}
-			if gog.SamePoints3d(newPoints[i], newPoints[j]) {
-				found = true
-			}
-		}
-		if found {
-			continue
-		}
 		id := mm.AddNode(
 			newPoints[i][0],
 			newPoints[i][1],
@@ -1969,25 +1949,29 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 		nodes = append(nodes, id)
 	}
 	logger.Printf("Intersection: %d nodes", len(nodes))
-
+	// uniq
+	nodes = uniqUint(nodes)
+	elements = uniqUint(elements)
+	logger.Printf("Intersection: %d nodes", len(nodes))
+	// interation of intersection
 	for iter := 0; ; iter++ { // TODO avoid infinite
 		var newElements []uint
 		for _, pe := range elements {
 			for _, n := range nodes {
 				// avoid Coordinate-Coordinate
-				found := false
-				for _, ind := range mm.Elements[pe].Indexes {
-					if gog.SamePoints3d(
-						mm.Coords[n].Point3d,
-						mm.Coords[ind].Point3d,
-					) {
-						found = true
-						break
-					}
-				}
-				if found {
-					continue
-				}
+				// found := false
+				// for _, ind := range mm.Elements[pe].Indexes {
+				// 	if gog.SamePoints3d(
+				// 		mm.Coords[n].Point3d,
+				// 		mm.Coords[ind].Point3d,
+				// 	) {
+				// 		found = true
+				// 		break
+				// 	}
+				// }
+				// if found {
+				// 	continue
+				// }
 				// intersection
 				switch mm.Elements[pe].ElementType {
 				case ElRemove:
@@ -2090,7 +2074,8 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 					}
 
 				default:
-					logger.Printf("not implemented")
+					logger.Printf("Intersection: not implemented point to `%s`",
+						mm.Elements[pe].ElementType)
 				}
 			}
 		}
@@ -2104,6 +2089,15 @@ func (mm *Model) Intersection(nodes, elements []uint) {
 			break
 		}
 	}
+	// for i := range mm.Elements {
+	// 	fmt.Printf("%d ------- %#v\n", i, mm.Elements[i])
+	// 	for _, k := range mm.Elements[i].Indexes {
+	// 		fmt.Println(k, mm.Coords[k])
+	// 	}
+	// 	ps := mm.getPoint3d(uint(i))
+	// 	min, max := gog.BorderPoints(ps...)
+	// 	fmt.Println(">>>>>", min, max)
+	// }
 }
 
 func (mm *Model) SplitTri3To3Tri3(elements []uint) {

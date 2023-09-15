@@ -576,6 +576,20 @@ func TestModel(t *testing.T) {
 			return mm
 		},
 	}, {
+		name: filepath.Join(testdata, "IntersectionPointTriangle2.ms"),
+		mm: func() (mm Model) {
+			// point
+			mm.AddNode(0, 0, 0)
+			// triangle
+			var (
+				a0 = mm.AddNode(-1, -1, 0)
+				a1 = mm.AddNode(+1, -1, 0)
+				a2 = mm.AddNode(+0, +5, 0)
+			)
+			mm.AddTriangle3ByNodeNumber(a0, a1, a2)
+			return mm
+		},
+	}, {
 		name: filepath.Join(testdata, "IntersectionTriangleTriangle.ms"),
 		mm: func() (mm Model) {
 			var (
@@ -591,12 +605,68 @@ func TestModel(t *testing.T) {
 			return mm
 		},
 	}, {
+		name: filepath.Join(testdata, "IntersectionTriangleTriangle2.ms"),
+		mm: func() (mm Model) {
+			// triangle
+			var (
+				a0 = mm.AddNode(-2, -1, 0)
+				a1 = mm.AddNode(+2, -1, 0)
+				a2 = mm.AddNode(+0, +2, 0)
+			)
+			mm.AddTriangle3ByNodeNumber(a0, a1, a2)
+			// triangle
+			var (
+				b0 = mm.AddNode(+0, +0, 0)
+				b1 = mm.AddNode(+3, +5, 0)
+				b2 = mm.AddNode(-3, +5, 0)
+			)
+			mm.AddTriangle3ByNodeNumber(b0, b1, b2)
+			return mm
+		},
+	},  {
+		name: filepath.Join(testdata, "IntersectionTriangleTriangle3.ms"),
+		mm: func() (mm Model) {
+			// triangle
+			var (
+				a0 = mm.AddNode(-2, -1, 0)
+				a1 = mm.AddNode(+2, -1, 0)
+				a2 = mm.AddNode(+0, +2, 0)
+			)
+			mm.AddTriangle3ByNodeNumber(a0, a1, a2)
+			// triangle
+			var (
+				b0 = mm.AddNode(-2, +1, 0)
+				b1 = mm.AddNode(+2, +1, 0)
+				b2 = mm.AddNode(+0, -2, 0)
+			)
+			mm.AddTriangle3ByNodeNumber(b0, b1, b2)
+			return mm
+		},
+	}, {
 		name: filepath.Join(testdata, "IntersectionLineTriangle.ms"),
 		mm: func() (mm Model) {
 			// line
 			var (
 				a0 = mm.AddNode(-2.0, 0, 0)
 				a1 = mm.AddNode(2.00, 0, 0)
+			)
+			mm.AddLineByNodeNumber(a0, a1)
+			// triangle
+			var (
+				b0 = mm.AddNode(0, -1, -3)
+				b1 = mm.AddNode(0, -1, +3)
+				b2 = mm.AddNode(0, +3, +0)
+			)
+			mm.AddTriangle3ByNodeNumber(b0, b1, b2)
+			return mm
+		},
+	}, {
+		name: filepath.Join(testdata, "IntersectionLineTriangle2.ms"),
+		mm: func() (mm Model) {
+			// line
+			var (
+				a0 = mm.AddNode(0, -5, -5)
+				a1 = mm.AddNode(0, +5, +5)
 			)
 			mm.AddLineByNodeNumber(a0, a1)
 			// triangle

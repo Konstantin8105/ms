@@ -13,6 +13,8 @@ github.com/Konstantin8105/gog v0.0.0-20230914185136-7ed15cf831d5 h1:qtIp31hidoX+
 github.com/Konstantin8105/gog v0.0.0-20230914185136-7ed15cf831d5/go.mod h1:UM0DqR5bpbNxbPfZrl9uXeJx6blaLQNOdmkf/e+yXMQ=
 github.com/Konstantin8105/gog v0.0.0-20230915120303-64dd4691d286 h1:sg5au0Ga35670L7VwoFAsq2H9uTdsNSlRZ7xwpE9Y4s=
 github.com/Konstantin8105/gog v0.0.0-20230915120303-64dd4691d286/go.mod h1:UM0DqR5bpbNxbPfZrl9uXeJx6blaLQNOdmkf/e+yXMQ=
+github.com/Konstantin8105/gog v0.0.0-20230915183518-777c510635ff h1:2Nzk05ThgXZIvN8stGKIxGal/dl/4dShS4sL6ulokmg=
+github.com/Konstantin8105/gog v0.0.0-20230915183518-777c510635ff/go.mod h1:UM0DqR5bpbNxbPfZrl9uXeJx6blaLQNOdmkf/e+yXMQ=
 github.com/Konstantin8105/pow v0.1.0 h1:1FBuKD4UEXKRsP0snDUGqbok5LcwYPUbq5ClVOW++cE=
 github.com/Konstantin8105/pow v0.1.0/go.mod h1:4Xe+OUZ7jwe74BFzgLepZw57cSFWba1/o6gTk53RBdI=
 github.com/Konstantin8105/tf v0.0.0-20230612182433-2ec4a099d755 h1:b0IwUiE3srBU6AknJSPAXxkROognrzuKcS60GYiK3eI=

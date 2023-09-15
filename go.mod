@@ -7,7 +7,7 @@ require (
 	github.com/Konstantin8105/ds v0.0.0-20230911101041-2823ea6497ce
 	github.com/Konstantin8105/errors v0.1.0
 	github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e
-	github.com/Konstantin8105/gog v0.0.0-20230915120303-64dd4691d286
+	github.com/Konstantin8105/gog v0.0.0-20230915183518-777c510635ff
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20230612182433-2ec4a099d755
 	github.com/Konstantin8105/vl v0.0.0-20230906103044-6e4c2e5b1f34
