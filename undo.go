@@ -79,7 +79,7 @@ func (u *Undo) Undo() {
 }
 
 func (u *Undo) Open(name string) (err error) {
-	logger.Print("Open")
+	logger.Print("Open: ", name)
 	u.list = list.New()
 	err = u.model.Open(name)
 	if err != nil {
