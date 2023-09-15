@@ -712,11 +712,9 @@ func (mm *Model) AddConvexLines(nodes, elements []uint) {
 	}
 	// convex hull
 	chain, _ := gog.ConvexHull(p2, false)
-	logger.Printf("AddConvexLines: amount chain %v", chain)
 	for i := range chain {
 		chain[i] = int(nodes[chain[i]])
 	}
-	logger.Printf("AddConvexLines: amount chain %v", chain)
 	// add convex lines
 	for i := range chain {
 		var b, f int
