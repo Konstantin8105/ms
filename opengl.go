@@ -35,6 +35,9 @@ type Opengl struct {
 		center       gog.Point3d
 		moveX, moveY float64
 	}
+	cube struct {
+		min, max gog.Point3d
+	}
 
 	// mouses
 	mouses   [3]Mouse  // left, middle, right
@@ -291,51 +294,8 @@ func (op *Opengl) MouseDefault() {
 }
 
 // TODO: aadd to TUI and other
-func (op *Opengl) ViewAll(centerCorrection bool) {
-	// take only coordinates, because all element are limit be coordinates
-	cos := op.mesh.GetCoords()
-	// for empty coordinate no need to do anythink
-	var initialized bool
-	var xmin, xmax, ymin, ymax, zmin, zmax float64
-	for i := range cos {
-		if cos[i].hided {
-			continue
-		}
-		if cos[i].Removed {
-			continue
-		}
-		if !initialized {
-			initialized = true
-			xmin = cos[i].Point3d[0]
-			xmax = cos[i].Point3d[0]
-			ymin = cos[i].Point3d[1]
-			ymax = cos[i].Point3d[1]
-			zmin = cos[i].Point3d[2]
-			zmax = cos[i].Point3d[2]
-		}
-		// find extemal values
-		xmin = math.Min(xmin, cos[i].Point3d[0])
-		ymin = math.Min(ymin, cos[i].Point3d[1])
-		zmin = math.Min(zmin, cos[i].Point3d[2])
-		xmax = math.Max(xmax, cos[i].Point3d[0])
-		ymax = math.Max(ymax, cos[i].Point3d[1])
-		zmax = math.Max(zmax, cos[i].Point3d[2])
-	}
-	if len(cos) == 0 || !initialized {
-		op.camera.R = 1.0
-		return
-	}
-	// update camera
-	op.camera.R = math.Max(xmax-xmin, math.Max(ymax-ymin, zmax-zmin))
-	if centerCorrection {
-		op.camera.center = gog.Point3d{
-			(xmax + xmin) / 2.0,
-			(ymax + ymin) / 2.0,
-			(zmax + zmin) / 2.0,
-		}
-		return
-	}
-	// without center correction
+func (op *Opengl) ViewAll() {
+	op.updateModel = true
 }
 
 func (op *Opengl) UpdateModel() {
@@ -409,61 +369,69 @@ func (op *Opengl) model3d(s viewState, fill selectState) {
 		gl.PopMatrix()
 	}()
 
-	cos := op.mesh.GetCoords()
-
 	if op.updateModel {
 		op.updateModel = false
-
 		// Do not update angles
 		// angle in global plate XOZ
 		// camera.alpha = 0.0
 		// angle in global plate XOY
 		// camera.betta = 0.0
 
-		// distance from center to camera
+		op.camera.center = gog.Point3d{}
 		op.camera.R = 1.0
+		op.camera.moveX = 0
+		op.camera.moveY = 0
+		// take only coordinates, because all element are limit be coordinates
+		cos := op.mesh.GetCoords()
 		if len(cos) == 0 {
 			return
 		}
-		// calculate radius
-		var (
-			xmin       float64
-			xmax       float64
-			ymin       float64
-			ymax       float64
-			zmin       float64
-			zmax       float64
-			initialize bool
-		)
+		// for empty coordinate no need to do anythink
+		var ps []gog.Point3d
 		for i := range cos {
-			if cos[i].hided {
+			if cos[i].hided || cos[i].Removed {
 				continue
 			}
-			if !initialize {
-				xmin = cos[i].Point3d[0]
-				xmax = cos[i].Point3d[0]
-				ymin = cos[i].Point3d[1]
-				ymax = cos[i].Point3d[1]
-				zmin = cos[i].Point3d[2]
-				zmax = cos[i].Point3d[2]
-				initialize = true
-			}
-			xmin = math.Min(xmin, cos[i].Point3d[0])
-			ymin = math.Min(ymin, cos[i].Point3d[1])
-			zmin = math.Min(zmin, cos[i].Point3d[2])
-			xmax = math.Max(xmax, cos[i].Point3d[0])
-			ymax = math.Max(ymax, cos[i].Point3d[1])
-			zmax = math.Max(zmax, cos[i].Point3d[2])
+			ps = append(ps, cos[i].Point3d)
 		}
-		op.camera.R = math.Max(xmax-xmin, op.camera.R)
-		op.camera.R = math.Max(ymax-ymin, op.camera.R)
-		op.camera.R = math.Max(zmax-zmin, op.camera.R)
+		// update camera
+		min, max := gog.BorderPoints(ps...)
+		// minimal camera radius is diameter of cylinder with object inside
+		dia := math.Sqrt(pow.E2(max[0]-min[0]) + pow.E2(max[2]-min[2]))
+		op.camera.R = dia
+		// size after rotation
+		dz := math.Abs(max[1] - min[1])
+		op.camera.R = math.Max(
+			op.camera.R,
+			math.Abs(dz*math.Cos(op.camera.betta*math.Pi/180)),
+		)
 		op.camera.center = gog.Point3d{
-			(xmax + xmin) / 2.0,
-			(ymax + ymin) / 2.0,
-			(zmax + zmin) / 2.0,
+			(max[0] + min[0]) / 2.0,
+			(max[1] + min[1]) / 2.0,
+			(max[2] + min[2]) / 2.0,
 		}
+		op.camera.R *= 0.5 + 0.05
+		op.cube.min = min
+		op.cube.max = max
 	}
+
+	// for debugging only:
+	// {
+	// 	min := op.cube.min
+	// 	max := op.cube.max
+	// 	gl.Color3ub(240, 240, 240)
+	// 	gl.PointSize(1)
+	// 	gl.Begin(gl.POINTS)
+	// 	gl.Vertex3d(min[0], min[1], min[2])
+	// 	gl.Vertex3d(min[0], max[1], min[2])
+	// 	gl.Vertex3d(max[0], max[1], min[2])
+	// 	gl.Vertex3d(max[0], min[1], min[2])
+	// 	gl.Vertex3d(min[0], min[1], max[2])
+	// 	gl.Vertex3d(min[0], max[1], max[2])
+	// 	gl.Vertex3d(max[0], max[1], max[2])
+	// 	gl.Vertex3d(max[0], min[1], max[2])
+	// 	gl.End()
+	// }
 
 	if !(s == selectTriangles ||
 		s == selectQuadrs ||
@@ -1321,7 +1289,7 @@ func (ms *MouseSelect) Action(op *Opengl) {
 	var s []bool
 	var added bool
 	state := op.cursorLeft
-	if leftToRight && op.cursorLeft & selectPoints == 0{
+	if leftToRight && op.cursorLeft&selectPoints == 0 {
 		added = true
 		op.cursorLeft |= selectPoints
 		ns := op.mesh.GetCoords()

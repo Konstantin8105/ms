@@ -159,7 +159,6 @@ func (u *Undo) GetPresentFilename() (name string) {
 func (u *Undo) StandardView(view SView) {
 	logger.Print("StandardView")
 	u.op.StandardView(view)
-	u.ViewAll(true)
 }
 
 func (u *Undo) ColorEdge(isColor bool) {
@@ -167,9 +166,9 @@ func (u *Undo) ColorEdge(isColor bool) {
 	u.op.ColorEdge(isColor)
 }
 
-func (u *Undo) ViewAll(centerCorrection bool) {
+func (u *Undo) ViewAll() {
 	logger.Print("ViewAll")
-	u.op.ViewAll(centerCorrection)
+	u.op.ViewAll()
 }
 
 func (u *Undo) AddNode(X, Y, Z float64) (id uint) {
@@ -281,6 +280,16 @@ func (u *Undo) AddModel(m Model) {
 	defer post()
 	// action
 	u.model.AddModel(m)
+}
+
+func (u *Undo) AddConvexLines(nodes, elements []uint) {
+	logger.Print("AddConvexLines")
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.AddConvexLines(nodes, elements)
 }
 
 func (u *Undo) GetSelectNodes(single bool) (ids []uint) {

@@ -502,7 +502,7 @@ type Viewable interface {
 	// Solid mode
 	StandardView(view SView)
 	ColorEdge(isColor bool)
-	ViewAll(centerCorrection bool)
+	ViewAll()
 	// View node number
 	// View line number
 	// View element number
@@ -568,7 +568,7 @@ func init() {
 			var b vl.Button
 			b.SetText("View all")
 			b.OnClick = func() {
-				m.ViewAll(true)
+				m.ViewAll()
 			}
 			list.Add(&b)
 			return &list, func() {
@@ -594,7 +594,7 @@ type AddRemovable interface {
 	// RemoveLeftCursor(nodes, lines, tria bool)
 
 	// Add lines by convex points on one plane
-	// AddConvexLines(nodes []uint)
+	AddConvexLines(nodes, elements []uint)
 
 	// TODO REMOVE AddElementsByNodes(ids string, elements []bool)
 	// AddGroup
@@ -829,6 +829,35 @@ func init() {
 				// do nothing
 			}
 		}}, {
+		Name: "Add convex lines by points on single plane",
+		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
+			var list vl.List
+
+			var inits []func()
+			ns, coordgt, elgt, initsel := SelectAll(m)
+			list.Add(ns)
+			inits = append(inits, initsel)
+
+			var b vl.Button
+			b.SetText("Add convex lines")
+			b.OnClick = func() {
+				cs := coordgt()
+				es := elgt()
+				if len(cs) == 0 && len(es) == 0 {
+					return
+				}
+				m.AddConvexLines(cs, es)
+			}
+			list.Add(&b)
+
+			return &list, func() {
+				for i := range inits {
+					if f := inits[i]; f != nil {
+						f()
+					}
+				}
+			}
+		}}, {
 		Name: "Split line2 by distance from node",
 		Part: func(m Mesh, actions *chan ds.Action, closedApp *bool) (w vl.Widget, f func()) {
 			var list vl.List
@@ -1015,7 +1044,7 @@ func init() {
 			var list vl.List
 
 			var inits []func()
-			ns, coordgt, elgt, initsel := SelectAll(m)
+			ns, coordgt, elgt, initsel := SelectAll(m) // TODO delect only points
 			list.Add(ns)
 			inits = append(inits, initsel)
 

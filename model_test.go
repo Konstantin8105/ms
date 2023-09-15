@@ -341,7 +341,7 @@ func TestIntegration(t *testing.T) {
 			testHeader()
 			run(reset, func() { mm.DemoSpiral(10) })
 			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
-			run("ViewAll", func() { mm.ViewAll(true) })
+			run("ViewAll", func() { mm.ViewAll() })
 			var id uint
 			run("AddNode", func() { id = mm.AddNode(0, 0, 0) })
 			run("SelectLinesCylindrical - radiant", func() {
@@ -377,7 +377,7 @@ func TestIntegration(t *testing.T) {
 			testHeader()
 			run(reset, func() { mm.DemoSpiral(10) })
 			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
-			run("ViewAll", func() { mm.ViewAll(true) })
+			run("ViewAll", func() { mm.ViewAll() })
 			run("SelectLinesParallel", func() {
 				var lines []uint
 				els := mm.GetElements()
@@ -438,7 +438,7 @@ func TestIntegration(t *testing.T) {
 			testHeader()
 			run(reset, func() { mm.DemoSpiral(10) })
 			run(reset, func() { mm.StandardView(StandardViewXOYpos) })
-			run("ViewAll", func() { mm.ViewAll(true) })
+			run("ViewAll", func() { mm.ViewAll() })
 			run("SelectAll", func() {
 				mm.SelectAll(true, []bool{true, true, true, true})
 			})
@@ -459,7 +459,7 @@ func TestIntegration(t *testing.T) {
 					true, true,
 				)
 			})
-			run("ViewAll", func() { mm.ViewAll(true) })
+			run("ViewAll", func() { mm.ViewAll() })
 			run("Undo", func() { mm.Undo() })
 
 			run("Mirror-copy-only tri", func() {
@@ -473,7 +473,7 @@ func TestIntegration(t *testing.T) {
 					false, true,
 				)
 			})
-			run("ViewAll", func() { mm.ViewAll(true) })
+			run("ViewAll", func() { mm.ViewAll() })
 			run("Undo", func() { mm.Undo() })
 
 			run("Mirror-copy-only lines", func() {
@@ -487,7 +487,7 @@ func TestIntegration(t *testing.T) {
 					true, false,
 				)
 			})
-			run("ViewAll", func() { mm.ViewAll(true) })
+			run("ViewAll", func() { mm.ViewAll() })
 			run("Undo", func() { mm.Undo() })
 
 			run("Mirror-move", func() {
@@ -501,7 +501,7 @@ func TestIntegration(t *testing.T) {
 					false, false,
 				)
 			})
-			run("ViewAll", func() { mm.ViewAll(true) })
+			run("ViewAll", func() { mm.ViewAll() })
 
 			run("Mirror-copy-all-any-plane", func() {
 				mm.Mirror(ns, es,
@@ -514,7 +514,7 @@ func TestIntegration(t *testing.T) {
 					false, true,
 				)
 			})
-			run("ViewAll", func() { mm.ViewAll(true) })
+			run("ViewAll", func() { mm.ViewAll() })
 			run("Undo", func() { mm.Undo() })
 		}
 		// MergeLines

@@ -645,6 +645,91 @@ func (mm *Model) AddQuadr4ByNodeNumber(n1, n2, n3, n4 uint) (id uint, ok bool) {
 	return uint(len(mm.Elements) - 1), true
 }
 
+func (mm *Model) AddConvexLines(nodes, elements []uint) {
+	// check
+	if s := nodes; !mm.isValidNodeId(nodes) {
+		logger.Printf("AddConvexLines: not valid node id: %v", s)
+		return
+	}
+	if s := elements; !mm.isValidElementId(s, nil) {
+		logger.Printf("AddConvexLines: not valid elements id: %v", s)
+		return
+	}
+	// actions
+	// check
+	if len(nodes) == 0 && len(elements) == 0 {
+		// do nothing
+		return
+	}
+	defer mm.DeselectAll()
+	// add nodes from elements
+	for _, e := range elements {
+		el := mm.Elements[e]
+		if el.ElementType == ElRemove {
+			continue
+		}
+		for _, n := range el.Indexes {
+			nodes = append(nodes, uint(n))
+		}
+	}
+	nodes = uniqUint(nodes)
+	if len(nodes) < 2 {
+		logger.Printf("AddConvexLines: not enought nodes")
+		return
+	}
+	// calculate average plane
+	var ps []gog.Point3d
+	for _, n := range nodes {
+		ps = append(ps, mm.Coords[n].Point3d)
+	}
+	min, max := gog.BorderPoints(ps...)
+	dm := gog.Point3d{
+		math.Abs(max[0] - min[0]),
+		math.Abs(max[1] - min[1]),
+		math.Abs(max[2] - min[2]),
+	}
+	p2 := make([]gog.Point, len(ps))
+	if dm[0] <= dm[1] && dm[0] <= dm[2] {
+		// Y-Z plane
+		for i := range ps {
+			p2[i].X = ps[i][1]
+			p2[i].Y = ps[i][2]
+		}
+	} else if dm[1] <= dm[0] && dm[1] <= dm[2] {
+		// X-Z plane
+		for i := range ps {
+			p2[i].X = ps[i][0]
+			p2[i].Y = ps[i][2]
+		}
+	} else if dm[2] <= dm[0] && dm[2] <= dm[1] {
+		// X-Y plane
+		for i := range ps {
+			p2[i].X = ps[i][0]
+			p2[i].Y = ps[i][1]
+		}
+	} else {
+		return
+	}
+	// convex hull
+	chain, _ := gog.ConvexHull(p2, false)
+	logger.Printf("AddConvexLines: amount chain %v", chain)
+	for i := range chain {
+		chain[i] = int(nodes[chain[i]])
+	}
+	logger.Printf("AddConvexLines: amount chain %v", chain)
+	// add convex lines
+	for i := range chain {
+		var b, f int
+		if i == 0 {
+			b = len(chain) - 1
+		} else {
+			b = i-1
+		}
+		f = i
+		mm.AddLineByNodeNumber(uint(chain[b]), uint(chain[f]))
+	}
+}
+
 func (mm *Model) AddLeftCursor(lc LeftCursor) {
 	// do nothing
 }
