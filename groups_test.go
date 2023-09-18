@@ -10,14 +10,21 @@ import (
 )
 
 func TestGroupsSave(t *testing.T) {
-	var tcs []Group
+	type tc struct {
+		name  string
+		group Group
+	}
+	var tcs []tc
 	for i := uint16(0); i < math.MaxUint16; i++ {
 		gi := GroupIndex(i)
 		g, ok := gi.newInstance()
 		if !ok {
 			continue
 		}
-		tcs = append(tcs, g)
+		tcs = append(tcs, tc{
+			name:  fmt.Sprintf("%06d", i),
+			group: g,
+		})
 	}
 
 	{
@@ -37,15 +44,18 @@ func TestGroupsSave(t *testing.T) {
 		s.Direction = [6]bool{true, true, false, true, false, false}
 		m.Groups = append(m.Groups, &s)
 
-		tcs = append(tcs, &m)
+		tcs = append(tcs, tc{
+			name:  fmt.Sprintf("%06d_example", m.GetId()),
+			group: &m,
+		})
 	}
 
 	for i := range tcs {
-		name := fmt.Sprintf("%04d.group", i)
+		name := fmt.Sprintf("%s.group", tcs[i].name)
 		t.Run(name, func(t *testing.T) {
-			e := tcs[i]
+			e := tcs[i].group
 			// save
-			bs, err := e.Save()
+			bs, err := SaveGroup(e)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -56,8 +66,8 @@ func TestGroupsSave(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if fmt.Sprintf("%#v", e) != fmt.Sprintf("%#v", gr) {
-				t.Fatalf("not same after parse")
+			if s1, s2 := fmt.Sprintf("%s", e), fmt.Sprintf("%s", gr); s1 != s2 {
+				t.Fatalf("not same after parse:\n%s\n%s", s1, s2)
 			}
 		})
 	}
