@@ -69,15 +69,16 @@ func saveGroup(group Group) (Id uint64, Information []byte, err error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-type Named struct {
-	Name string
-}
+type Named struct{ Name string }
 
 func (m Named) GetShortName() (name string) {
 	if m.Name == "" {
 		return "undefined"
 	}
 	return m.Name
+}
+func (m Named) GetWidget() vl.Widget {
+	return vl.TextStatic("Undefined widget:" + m.Name)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -89,9 +90,14 @@ type Meta struct {
 	Groups []Group
 }
 
-func (m *Meta) Update() (nodes, elements *[]uint) { return nil, nil }
-func (m *Meta) GetWidget() vl.Widget              { return new(vl.Separator) }
+func (m *Meta) Update() (nodes, elements *[]uint)                { return nil, nil }
 func (m *Meta) Save() (Id uint64, Information []byte, err error) { return saveGroup(m) }
+func (m *Meta) Add(g Group) {
+	if g == nil {
+		return
+	}
+	m.Groups = append(m.Groups, g)
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -113,14 +119,7 @@ type NamedList struct {
 	Nodes, Elements []uint
 }
 
-func (m *NamedList) Update() (nodes, elements *[]uint) { return &m.Nodes, &m.Elements }
-func (m *NamedList) GetWidget() vl.Widget {
-	var list vl.List
-	list.Add(vl.TextStatic("Name"))
-	list.Add(vl.TextStatic("Nodes: 1,4,6,8"))
-	list.Add(vl.TextStatic("Elements: 12,42,63,85"))
-	return &list
-}
+func (m *NamedList) Update() (nodes, elements *[]uint)                { return &m.Nodes, &m.Elements }
 func (m *NamedList) Save() (Id uint64, Information []byte, err error) { return saveGroup(m) }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -128,6 +127,7 @@ func (m *NamedList) Save() (Id uint64, Information []byte, err error) { return s
 var _ Group = new(NodeSupports)
 
 type NodeSupports struct {
+	Named
 	Nodes     []uint
 	Direction [6]bool
 }
@@ -146,12 +146,6 @@ func (m NodeSupports) GetShortName() (name string) {
 
 func (m *NodeSupports) Update() (nodes, elements *[]uint) {
 	return &m.Nodes, nil
-}
-
-func (m *NodeSupports) GetWidget() vl.Widget {
-	var list vl.List
-	list.Add(vl.TextStatic("Node supports"))
-	return &list
 }
 
 func (m *NodeSupports) Save() (Id uint64, Information []byte, err error) { return saveGroup(m) }
