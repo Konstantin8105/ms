@@ -42,7 +42,7 @@ func (gi GroupIndex) newInstance() (_ Group, ok bool) {
 
 type Record struct {
 	Index GroupIndex
-	Data  []byte
+	Data  string
 }
 
 // SaveGroup return stored information at json format
@@ -51,7 +51,7 @@ func (gi GroupIndex) Save(g Group) (_ []byte, err error) {
 	if err != nil {
 		return
 	}
-	r := Record{Index: gi, Data: b}
+	r := Record{Index: gi, Data: string(b)}
 	return json.Marshal(&r)
 }
 
@@ -59,7 +59,7 @@ func (gi GroupIndex) Save(g Group) (_ []byte, err error) {
 //		// ...
 //		Data []struct {
 //			Id          GroupIndex
-//			Information []byte
+//			bs []byte
 //			group       Group
 //		}
 //		// ...
@@ -69,18 +69,30 @@ type Group interface {
 	GetShortName() string              // return short name
 	Update() (nodes, elements *[]uint) // update nodes, elements indexes
 	GetWidget() vl.Widget              // return gui widget
-	Save() (Information []byte, err error)
+	Save() (bs []byte, err error)
+	Parse(bs []byte) (err error)
 }
 
 // ParseGroup return group from json
-func ParseGroup(Id GroupIndex, Information []byte) (group Group, err error) {
+func ParseGroup(bs []byte) (group Group, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("ParseGroup: %v", err)
+		}
+	}()
+	var r Record
+	err = json.Unmarshal(bs, &r)
+	if err != nil {
+		return
+	}
+	Id := r.Index
 	var ok bool
 	group, ok = Id.newInstance()
 	if !ok {
 		err = fmt.Errorf("cannot create new instance for: %d", uint16(Id))
 		return
 	}
-	err = json.Unmarshal(Information, group)
+	err = group.Parse(bs)
 	return
 }
 
@@ -109,17 +121,44 @@ type Meta struct {
 
 func (m Meta) GetId() GroupIndex                  { return MetaIndex }
 func (m *Meta) Update() (nodes, elements *[]uint) { return nil, nil }
-func (m *Meta) Save() (Information []byte, err error) {
-	type store struct {
-		Name    string
-		Records []Record
+func (m *Meta) Save() (bs []byte, err error) {
+	var store struct {
+		Index GroupIndex
+		Name  string
+		Data  []string
 	}
-	var rs []Record
+	store.Index = m.GetId()
 	for _, g := range m.Groups {
-		r := Record{Index: g.GetId(), Data: m.Groups}
-		rs = append(rs, r)
+		var b []byte
+		b, err = g.Save()
+		if err != nil {
+			return
+		}
+		store.Data = append(store.Data, string(b))
 	}
-	return json.Marshal(&rs)
+	return json.Marshal(&store)
+}
+func (m *Meta) Parse(bs []byte) (err error) {
+	var store struct {
+		Index GroupIndex
+		Name  string
+		Data  []string
+	}
+	err = json.Unmarshal(bs, &store)
+	if err != nil {
+		return
+	}
+	m.Name = store.Name
+	m.Groups = nil
+	for i := range store.Data {
+		var g Group
+		g, err = ParseGroup([]byte(store.Data[i]))
+		if err != nil {
+			return
+		}
+		m.Groups = append(m.Groups, g)
+	}
+	return
 }
 func (m *Meta) Add(g Group) {
 	if g == nil {
@@ -137,7 +176,7 @@ func (m *Meta) Add(g Group) {
 // func (Empty) GetShortName() (name string)       { return "empty" }
 // func (Empty) Update() (nodes, elements *[]uint) { return nil, nil }
 // func (Empty) GetWidget() vl.Widget              { return new(vl.Separator) }
-// func (Empty) Save() (Id uint16, Information []byte, err error) { return saveGroup(m) }
+// func (Empty) Save() (Id uint16, bs []byte, err error) { return saveGroup(m) }
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -148,9 +187,22 @@ type NamedList struct {
 	Nodes, Elements []uint
 }
 
-func (m NamedList) GetId() GroupIndex                      { return NamedListIndex }
-func (m *NamedList) Update() (nodes, elements *[]uint)     { return &m.Nodes, &m.Elements }
-func (m *NamedList) Save() (Information []byte, err error) { return m.GetId().Save(m) }
+func (m NamedList) GetId() GroupIndex                  { return NamedListIndex }
+func (m *NamedList) Update() (nodes, elements *[]uint) { return &m.Nodes, &m.Elements }
+func (m *NamedList) Save() (bs []byte, err error)      { return m.GetId().Save(m) }
+func (m *NamedList) Parse(bs []byte) (err error) {
+	var r Record
+	err = json.Unmarshal(bs, &r)
+	if err != nil {
+		return
+	}
+	if r.Index != m.GetId() {
+		err = fmt.Errorf("not valid group index: %d != %d", r.Index, m.GetId())
+		return
+	}
+	err = json.Unmarshal([]byte(r.Data), m)
+	return 
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -182,6 +234,19 @@ func (m *NodeSupports) Update() (nodes, elements *[]uint) {
 	return &m.Nodes, nil
 }
 
-func (m *NodeSupports) Save() (Information []byte, err error) { return m.GetId().Save(m) }
+func (m *NodeSupports) Save() (bs []byte, err error) { return m.GetId().Save(m) }
+func (m *NodeSupports) Parse(bs []byte) (err error) {
+	var r Record
+	err = json.Unmarshal(bs, &r)
+	if err != nil {
+		return
+	}
+	if r.Index != m.GetId() {
+		err = fmt.Errorf("not valid group index: %d != %d", r.Index, m.GetId())
+		return
+	}
+	err = json.Unmarshal([]byte(r.Data), m)
+	return 
+}
 
 ///////////////////////////////////////////////////////////////////////////////

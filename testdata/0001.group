@@ -1,12 +1,1 @@
-{
-  "Name": "",
-  "Nodes": null,
-  "Direction": [
-    false,
-    false,
-    false,
-    false,
-    false,
-    false
-  ]
-}
+{"Index":1000,"Data":"{\"Name\":\"\",\"Nodes\":null,\"Direction\":[false,false,false,false,false,false]}"}

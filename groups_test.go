@@ -45,14 +45,14 @@ func TestGroupsSave(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			e := tcs[i]
 			// save
-			info, err := e.Save()
+			bs, err := e.Save()
 			if err != nil {
 				t.Fatal(err)
 			}
 			name := filepath.Join(testdata, name)
-			compare.Test(t, name, info)
+			compare.Test(t, name, bs)
 			// parse
-			gr, err := ParseGroup(e.GetId(), info)
+			gr, err := ParseGroup(bs)
 			if err != nil {
 				t.Fatal(err)
 			}
