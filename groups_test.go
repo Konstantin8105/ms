@@ -35,15 +35,23 @@ func TestGroupsSave(t *testing.T) {
 
 		var n NamedList
 		n.Name = "lug"
-		n.Nodes = []uint{1, 2, 46, 6}
-		n.Elements = []uint{34, 67, 231, 124}
+		n.Nodes = []uint{1, 2, 32, 576, 90, 98, 345, 234, 456, 5678, 7689, 46, 6}
+		n.Elements = []uint{34, 67, 23, 53465, 65, 68, 23, 657, 9, 143, 231, 124}
 		m.Groups = append(m.Groups, &n)
+		tcs = append(tcs, tc{
+			name:  fmt.Sprintf("%06d_example", n.GetId()),
+			group: &n,
+		})
 
 		var s NodeSupports
 		s.Name = "base support"
-		s.Nodes = []uint{23, 52, 12}
+		s.Nodes = []uint{23, 52, 12, 23, 34, 456, 57, 68, 79, 14, 25, 36, 47, 58, 69}
 		s.Direction = [6]bool{true, true, false, true, false, false}
 		m.Groups = append(m.Groups, &s)
+		tcs = append(tcs, tc{
+			name:  fmt.Sprintf("%06d_example", s.GetId()),
+			group: &s,
+		})
 		{
 			var sub Meta
 			sub.Name = "Submodel"
