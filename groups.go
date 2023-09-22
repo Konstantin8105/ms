@@ -53,9 +53,9 @@ func (gi GroupIndex) newInstance() (_ Group, ok bool) {
 //	}
 type Group interface {
 	GetId() GroupIndex
-	String() string                    // return short name
-	Update() (nodes, elements *[]uint) // update nodes, elements indexes
-	GetWidget() vl.Widget              // return gui widget
+	String() string                                  // return short name
+	Update() (nodes, elements *[]uint)               // update nodes, elements indexes
+	GetWidget() (_ vl.Widget, initialization func()) // return gui widget
 }
 
 type record struct {
@@ -136,12 +136,47 @@ func ParseGroup(bs []byte) (g Group, err error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-func treeNode(g Group, w vl.Widget) (t vl.Tree) {
-	t.Root = vl.TextStatic(g.GetId().String() + ":\n" + g.String())
+func treeNode(g Group, w *vl.Widget) (t vl.Tree, initialization func()) {
+	if g == nil {
+		return
+	}
+	var inits []func()
+	defer func() {
+		initialization = func() {
+			for i := range inits {
+				if f := inits[i]; f != nil {
+					f()
+				}
+			}
+		}
+	}()
+
+	// prepare edit widget
+	var list vl.List
+	list.Add(vl.TextStatic(g.GetId().String() + ":"))
+	var btn vl.Button
+	btn.Compress = true
+	btn.SetText(g.String())
+	btn.OnClick = func() {
+		if w == nil {
+			return
+		}
+		edit, init := g.GetWidget()
+		inits = append(inits, init)
+		if edit == nil {
+			return
+		}
+		*w = edit
+	}
+	list.Add(&btn)
+	t.Root = &list
+
 	switch m := g.(type) {
 	case *Meta:
 		for i := range m.Groups {
-			t.Nodes = append(t.Nodes, treeNode(m.Groups[i], w))
+			w, init := treeNode(m.Groups[i], w)
+			inits = append(inits, init)
+			t.Nodes = append(t.Nodes, w)
 		}
 		return
 	}
@@ -155,7 +190,8 @@ func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Wi
 	var w vl.Widget = vl.TextStatic("Click on tree for modify")
 
 	// group tree
-	tree := treeNode(mesh.GetRootGroup(), w)
+	var tree vl.Tree
+	tree, initialization = treeNode(mesh.GetRootGroup(), &w)
 	list.Add(&tree)
 	list.Add(w)
 
@@ -173,8 +209,24 @@ func (m Named) String() (name string) {
 	}
 	return strings.ToUpper(m.Name)
 }
-func (m Named) GetWidget() vl.Widget {
-	return vl.TextStatic("Undefined widget:" + m.Name)
+func (m *Named) GetWidget() (w vl.Widget, initialization func()) {
+	var list vl.List
+
+	list.Add(vl.TextStatic("Rename:"))
+	var name vl.Inputbox
+	list.Add(&name)
+	initialization = func() {
+		name.SetText(m.Name)
+	}
+	var btn vl.Button
+	btn.SetText("Rename")
+	btn.OnClick = func() {
+		m.Name = name.GetText()
+	}
+	list.Add(&btn)
+
+	w = &list
+	return
 }
 
 ///////////////////////////////////////////////////////////////////////////////

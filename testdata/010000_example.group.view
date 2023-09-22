@@ -1,13 +1,13 @@
 000000001|Meta:                                             | width:000000050
-000000002|EXAMPLE OF META                                   | width:000000050
+000000002|[ EXAMPLE OF META   ]                             | width:000000050
 000000003|+-Named list:                                     | width:000000050
-000000004|| LUG: for 4 nodes and 4 elements                 | width:000000050
+000000004|| [ LUG: for 4 nodes and 4 elements   ]           | width:000000050
 000000005|+-Node supports:                                  | width:000000050
-000000006|| BASE SUPPORT: Dx Dy Rx for 3 nodes              | width:000000050
+000000006|| [ BASE SUPPORT: Dx Dy Rx for 3 nodes   ]        | width:000000050
 000000007|+-Meta:                                           | width:000000050
-000000008|  SUBMODEL                                        | width:000000050
+000000008|  [ SUBMODEL   ]                                  | width:000000050
 000000009|  +-Named list:                                   | width:000000050
-000000010|    HOLE: for 4 nodes and 4 elements              | width:000000050
+000000010|    [ HOLE: for 4 nodes and 4 elements   ]        | width:000000050
 000000011|                                                  | width:000000050
 000000012|                                                  | width:000000050
 000000013|                                                  | width:000000050

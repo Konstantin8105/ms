@@ -81,13 +81,26 @@ func TestGroupsSave(t *testing.T) {
 				t.Fatalf("not same after parse:\n%s\n%s", s1, s2)
 			}
 			// visualize
-			tr := treeNode(gr, nil)
-			var sc vl.Screen
-			sc.Root = &tr
-			var cells [][]vl.Cell
-			sc.SetHeight(20)
-			sc.GetContents(50, &cells)
-			compare.Test(t, name+".view", []byte(vl.Convert(cells)))
+			{
+				tr, init := treeNode(gr, nil)
+				init()
+				var sc vl.Screen
+				sc.Root = &tr
+				var cells [][]vl.Cell
+				sc.SetHeight(20)
+				sc.GetContents(50, &cells)
+				compare.Test(t, name+".view", []byte(vl.Convert(cells)))
+			}
+			{
+				var sc vl.Screen
+				var init func()
+				sc.Root, init = gr.GetWidget()
+				init()
+				var cells [][]vl.Cell
+				sc.SetHeight(20)
+				sc.GetContents(50, &cells)
+				compare.Test(t, name+".widgets", []byte(vl.Convert(cells)))
+			}
 		})
 	}
 }
