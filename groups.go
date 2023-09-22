@@ -387,8 +387,11 @@ func (m *NamedList) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 		list.Add(new(vl.Separator))
 	}
 	{
-		list.Add(vl.TextStatic("Change:"))
-		// TODO add for nodes, elements
+		change, init := Change(mm, true, true, &m.Nodes, &m.Elements)
+		list.Add(change)
+		inits = append(inits, init)
+		list.Add(new(vl.Separator))
+		// TODO update screen
 	}
 	return
 }
@@ -468,11 +471,91 @@ func (m *NodeSupports) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 			}
 			list.Add(&ch)
 		}
+		list.Add(new(vl.Separator))
 	}
 	{
-		// TODO : Nodes modifications
+		change, init := Change(mm, true, false, &m.Nodes, nil)
+		list.Add(change)
+		inits = append(inits, init)
+		list.Add(new(vl.Separator))
+		// TODO update screen
 	}
 	return
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+func Change(m Mesh,
+	nb, eb bool,
+	nodes, elements *[]uint,
+) (
+	w vl.Widget,
+	initialization func(),
+) {
+	var inits []func()
+	defer func() {
+		initialization = func() {
+			for i := range inits {
+				if f := inits[i]; f != nil {
+					f()
+				}
+			}
+		}
+	}()
+	var list vl.List
+	defer func() {
+		w = &list
+	}()
+
+	if !nb && !eb {
+		panic("no need widget")
+	}
+
+	var (
+		l1     vl.ListH
+		coords vl.Text
+		b      vl.Button
+		l2     vl.ListH
+		els    vl.Text
+	)
+
+	list.Add(vl.TextStatic("List of nodes and elements:"))
+
+	l1.Add(vl.TextStatic("Nodes:"))
+
+	coords.SetLinesLimit(3)
+	inits = append(inits, func() {
+		coords.SetText(fmt.Sprintf("%d", *nodes))
+	})
+	l1.Add(&coords)
+
+	b.SetText("Change")
+	b.OnClick = func() {
+		coordinates := m.GetSelectNodes(Many)
+		elements := m.GetSelectElements(Many, nil)
+		if len(coordinates) == 0 && len(elements) == 0 {
+			return
+		}
+		coords.SetText(fmt.Sprintf("%v", coordinates))
+		els.SetText(fmt.Sprintf("%v", elements))
+	}
+	l1.Add(&b)
+	if nb {
+		list.Add(&l1)
+	}
+
+	l2.Add(vl.TextStatic("Elements:"))
+
+	els.SetLinesLimit(3)
+	inits = append(inits, func() {
+		els.SetText(fmt.Sprintf("%d", *nodes))
+	})
+	l2.Add(&els)
+
+	l2.Add(vl.TextStatic(""))
+	if eb {
+		list.Add(&l2)
+	}
+
+	return
+}

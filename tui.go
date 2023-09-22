@@ -2616,7 +2616,7 @@ func SelectAll(m Mesh) (
 		els          vl.Text
 	)
 
-	verticalList.Add(vl.TextStatic("Select:"))
+	verticalList.Add(vl.TextStatic("List of nodes and elements:"))
 
 	l1.Add(vl.TextStatic("Nodes:"))
 	const Default = "NONE"
