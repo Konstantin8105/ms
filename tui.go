@@ -2463,6 +2463,11 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
+
+type Groupable interface {
+	GetRootGroup() *Meta
+}
+
 type Mesh interface {
 	Filable
 	Viewable
@@ -2476,7 +2481,11 @@ type Mesh interface {
 	Checkable
 	Pluginable
 	Measurementable
+
+	Groupable
 }
+
+
 
 const (
 	Single = true

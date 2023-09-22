@@ -81,7 +81,7 @@ func TestGroupsSave(t *testing.T) {
 				t.Fatalf("not same after parse:\n%s\n%s", s1, s2)
 			}
 			// visualize
-			tr := treeNode(gr)
+			tr := treeNode(gr, nil)
 			var sc vl.Screen
 			sc.Root = &tr
 			var cells [][]vl.Cell

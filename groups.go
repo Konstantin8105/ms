@@ -136,24 +136,28 @@ func ParseGroup(bs []byte) (g Group, err error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-func treeNode(g Group) (t vl.Tree) {
+func treeNode(g Group, w vl.Widget) (t vl.Tree) {
 	t.Root = vl.TextStatic(g.GetId().String() + ":\n" + g.String())
 	switch m := g.(type) {
 	case *Meta:
 		for i := range m.Groups {
-			t.Nodes = append(t.Nodes, treeNode(m.Groups[i]))
+			t.Nodes = append(t.Nodes, treeNode(m.Groups[i], w))
 		}
 		return
 	}
 	return
 }
 
-func NewGroupTree(mainGroup *Meta, closedApp *bool, actions *chan ds.Action) (gt vl.Widget, initialization func(), err error) {
+func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Widget, initialization func(), err error) {
 	var list vl.List
 
+	// default tree node widget
+	var w vl.Widget = vl.TextStatic("Click on tree for modify")
+
 	// group tree
-	tree := treeNode(mainGroup)
+	tree := treeNode(mesh.GetRootGroup(), w)
 	list.Add(&tree)
+	list.Add(w)
 
 	gt = &list
 	return

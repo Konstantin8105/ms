@@ -2510,6 +2510,13 @@ func (mm *Model) StandardView(view SView) {
 	// do nothing
 }
 
+func (mm *Model) GetRootGroup() *Meta {
+	// TODO
+	return nil
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 func max(xs ...float64) (res float64) {
 	if len(xs) == 0 {
 		logger.Printf("not valid: zero lenght")

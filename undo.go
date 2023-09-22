@@ -537,3 +537,13 @@ func (u *Undo) Check() error {
 	// action
 	return u.model.Check()
 }
+
+func (u *Undo) GetRootGroup() *Meta {
+	logger.Print("GetRootGroup")
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	return u.model.GetRootGroup()
+}
