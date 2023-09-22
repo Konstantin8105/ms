@@ -368,9 +368,9 @@ func (m *NodeSupports) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 			var ch vl.CheckBox
 			ch.SetText(dir[i])
 			ch.Checked = m.Direction[i]
-			ch.OnChange(func() {
+			ch.OnChange = func() {
 				m.Direction[i] = ch.Checked
-			})
+			}
 			list.Add(&ch)
 		}
 	}
