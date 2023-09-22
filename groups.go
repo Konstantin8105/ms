@@ -262,6 +262,42 @@ func (m NamedList) String() (name string) {
 }
 func (m NamedList) GetId() GroupIndex                  { return NamedListIndex }
 func (m *NamedList) Update() (nodes, elements *[]uint) { return &m.Nodes, &m.Elements }
+func (m *NamedList) GetWidget() (w vl.Widget, initialization func()) {
+	var inits []func()
+	defer func() {
+		initialization = func() {
+			for i := range inits {
+				if f := inits[i]; f != nil {
+					f()
+				}
+			}
+		}
+	}()
+	var list vl.List
+
+	n, ni := m.Named.GetWidget()
+	list.Add(n)
+	inits = append(inits, ni)
+	list.Add(new(vl.Separator))
+
+	{
+		var btn vl.Button
+		btn.SetText("Select")
+		btn.OnClick = func() {
+			// TODO
+		}
+		list.Add(&btn)
+	}
+	list.Add(new(vl.Separator))
+
+	list.Add(vl.TextStatic("Change:"))
+	list.Add(new(vl.Separator))
+
+	// TODO add for nodes, elements
+
+	w = &list
+	return
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
