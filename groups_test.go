@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Konstantin8105/compare"
+	"github.com/Konstantin8105/vl"
 )
 
 func TestGroupsSave(t *testing.T) {
@@ -43,6 +44,16 @@ func TestGroupsSave(t *testing.T) {
 		s.Nodes = []uint{23, 52, 12}
 		s.Direction = [6]bool{true, true, false, true, false, false}
 		m.Groups = append(m.Groups, &s)
+		{
+			var sub Meta
+			sub.Name = "Submodel"
+			var n NamedList
+			n.Name = "Hole"
+			n.Nodes = []uint{1, 2, 46, 6}
+			n.Elements = []uint{34, 67, 231, 124}
+			sub.Groups = append(sub.Groups, &n)
+			m.Groups = append(m.Groups, &sub)
+		}
 
 		tcs = append(tcs, tc{
 			name:  fmt.Sprintf("%06d_example", m.GetId()),
@@ -69,6 +80,14 @@ func TestGroupsSave(t *testing.T) {
 			if s1, s2 := fmt.Sprintf("%s", e), fmt.Sprintf("%s", gr); s1 != s2 {
 				t.Fatalf("not same after parse:\n%s\n%s", s1, s2)
 			}
+			// visualize
+			tr := treeNode(gr)
+			var sc vl.Screen
+			sc.Root = &tr
+			var cells [][]vl.Cell
+			sc.SetHeight(20)
+			sc.GetContents(50, &cells)
+			compare.Test(t, name+".view", []byte(vl.Convert(cells)))
 		})
 	}
 }

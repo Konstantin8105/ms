@@ -3,7 +3,9 @@ package ms
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
+	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/vl"
 )
 
@@ -51,7 +53,7 @@ func (gi GroupIndex) newInstance() (_ Group, ok bool) {
 //	}
 type Group interface {
 	GetId() GroupIndex
-	GetShortName() string              // return short name
+	String() string                    // return short name
 	Update() (nodes, elements *[]uint) // update nodes, elements indexes
 	GetWidget() vl.Widget              // return gui widget
 }
@@ -134,13 +136,38 @@ func ParseGroup(bs []byte) (g Group, err error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+func treeNode(g Group) (t vl.Tree) {
+	t.Root = vl.TextStatic(g.GetId().String() + ":\n" + g.String())
+	switch m := g.(type) {
+	case *Meta:
+		for i := range m.Groups {
+			t.Nodes = append(t.Nodes, treeNode(m.Groups[i]))
+		}
+		return
+	}
+	return
+}
+
+func NewGroupTree(mainGroup *Meta, closedApp *bool, actions *chan ds.Action) (gt vl.Widget, initialization func(), err error) {
+	var list vl.List
+
+	// group tree
+	tree := treeNode(mainGroup)
+	list.Add(&tree)
+
+	gt = &list
+	return
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 type Named struct{ Name string }
 
-func (m Named) GetShortName() (name string) {
+func (m Named) String() (name string) {
 	if m.Name == "" {
-		return "undefined"
+		return "noname"
 	}
-	return m.Name
+	return strings.ToUpper(m.Name)
 }
 func (m Named) GetWidget() vl.Widget {
 	return vl.TextStatic("Undefined widget:" + m.Name)
@@ -173,6 +200,10 @@ type NamedList struct {
 	Nodes, Elements []uint
 }
 
+func (m NamedList) String() (name string) {
+	return fmt.Sprintf("%s: for %d nodes and %d elements",
+		m.Named.String(), len(m.Nodes), len(m.Elements))
+}
 func (m NamedList) GetId() GroupIndex                  { return NamedListIndex }
 func (m *NamedList) Update() (nodes, elements *[]uint) { return &m.Nodes, &m.Elements }
 
@@ -190,7 +221,8 @@ func (m NodeSupports) GetId() GroupIndex {
 	return NodeSupportsIndex
 }
 
-func (m NodeSupports) GetShortName() (name string) {
+func (m NodeSupports) String() (name string) {
+	name += fmt.Sprintf("%s: ", m.Named.String())
 	dir := [6]string{"Dx", "Dy", "Dz", "Rx", "Ry", "Rz"}
 	for i := range m.Direction {
 		if !m.Direction[i] {
@@ -198,7 +230,7 @@ func (m NodeSupports) GetShortName() (name string) {
 		}
 		name += dir[i] + " "
 	}
-	name += fmt.Sprintf("for %d nodes", m.Nodes)
+	name += fmt.Sprintf("for %d nodes", len(m.Nodes))
 	return
 }
 

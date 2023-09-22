@@ -9,10 +9,6 @@ github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibU
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
 github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e h1:mRPpDK0aP/qASyuHCJ3NlddUJsWpVGI7Q+OaHiNidb8=
 github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e/go.mod h1:dQY/BbYDz+cmioaRNjG5Nj9QSueytBNIvRaKMWFOXNg=
-github.com/Konstantin8105/gog v0.0.0-20230914185136-7ed15cf831d5 h1:qtIp31hidoX+2jpaiEoLOS6/64ox8J9TXP9cq+F4IHU=
-github.com/Konstantin8105/gog v0.0.0-20230914185136-7ed15cf831d5/go.mod h1:UM0DqR5bpbNxbPfZrl9uXeJx6blaLQNOdmkf/e+yXMQ=
-github.com/Konstantin8105/gog v0.0.0-20230915120303-64dd4691d286 h1:sg5au0Ga35670L7VwoFAsq2H9uTdsNSlRZ7xwpE9Y4s=
-github.com/Konstantin8105/gog v0.0.0-20230915120303-64dd4691d286/go.mod h1:UM0DqR5bpbNxbPfZrl9uXeJx6blaLQNOdmkf/e+yXMQ=
 github.com/Konstantin8105/gog v0.0.0-20230915183518-777c510635ff h1:2Nzk05ThgXZIvN8stGKIxGal/dl/4dShS4sL6ulokmg=
 github.com/Konstantin8105/gog v0.0.0-20230915183518-777c510635ff/go.mod h1:UM0DqR5bpbNxbPfZrl9uXeJx6blaLQNOdmkf/e+yXMQ=
 github.com/Konstantin8105/pow v0.1.0 h1:1FBuKD4UEXKRsP0snDUGqbok5LcwYPUbq5ClVOW++cE=
@@ -22,8 +18,8 @@ github.com/Konstantin8105/tf v0.0.0-20230612182433-2ec4a099d755/go.mod h1:ttVpgk
 github.com/Konstantin8105/tree v0.1.0/go.mod h1:/KrCn6rMgf1uoXUY2HjVvML1LeLUULD1BDiHWJhJwII=
 github.com/Konstantin8105/tree v0.1.1 h1:EaEOLocAJ5IyQ+KisgY43X/TXoVyFXVd1nsykCleBxw=
 github.com/Konstantin8105/tree v0.1.1/go.mod h1:/KrCn6rMgf1uoXUY2HjVvML1LeLUULD1BDiHWJhJwII=
-github.com/Konstantin8105/vl v0.0.0-20230906103044-6e4c2e5b1f34 h1:JUXahSyJjS7GbxMLNlh2FXkCbEt3jhV6OEvkXD4ykJ4=
-github.com/Konstantin8105/vl v0.0.0-20230906103044-6e4c2e5b1f34/go.mod h1:LAt18EJKOvejjNx4HEa9OHdxLe5bKD+1cKPYu93Mq/A=
+github.com/Konstantin8105/vl v0.0.0-20230922074056-87768e000703 h1:MhDyqs+Y04j4Sgzb+drCuSqvu9qvWTfzY/d/TJfvgEA=
+github.com/Konstantin8105/vl v0.0.0-20230922074056-87768e000703/go.mod h1:LAt18EJKOvejjNx4HEa9OHdxLe5bKD+1cKPYu93Mq/A=
 github.com/akavel/rsrc v0.10.2 h1:Zxm8V5eI1hW4gGaYsJQUhxpjkENuG91ki8B4zCrvEsw=
 github.com/akavel/rsrc v0.10.2/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
