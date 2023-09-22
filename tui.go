@@ -2468,6 +2468,7 @@ func init() {
 
 type Groupable interface {
 	GetRootGroup() *Meta
+	Update(nodes, elements *uint)
 }
 
 type Mesh interface {

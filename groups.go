@@ -55,7 +55,7 @@ func (gi GroupIndex) newInstance() (_ Group, ok bool) {
 type Group interface {
 	GetId() GroupIndex
 	String() string                                         // return short name
-	Update() (nodes, elements *[]uint)                      // update nodes, elements indexes
+	Update(updating func(nodes, elements *[]uint))          // update nodes, elements indexes
 	GetWidget(mm Mesh) (_ vl.Widget, initialization func()) // return gui widget
 }
 
@@ -210,6 +210,7 @@ func (m Named) String() (name string) {
 	}
 	return strings.ToUpper(m.Name)
 }
+
 func (m *Named) GetWidget(mesh Mesh) (w vl.Widget, initialization func()) {
 	var list vl.List
 
@@ -239,13 +240,14 @@ type Meta struct {
 	Groups []Group
 }
 
-func (m Meta) GetId() GroupIndex                  { return MetaIndex }
-func (m *Meta) Update() (nodes, elements *[]uint) { return nil, nil }
-func (m *Meta) Add(g Group) {
-	if g == nil {
-		return
+func (m Meta) GetId() GroupIndex { return MetaIndex }
+func (m *Meta) Update(updating func(nodes, elements *[]uint)) {
+	for _, gr := range m.Groups {
+		if gr == nil {
+			continue
+		}
+		gr.Update(updating)
 	}
-	m.Groups = append(m.Groups, g)
 }
 func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 	var inits []func()
@@ -299,6 +301,7 @@ func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 			}
 			m.Groups = append(m.Groups, g)
 			// TODO update view
+			// TODO update initialization funcs
 		}
 		list.Add(&btn)
 		list.Add(new(vl.Separator))
@@ -328,6 +331,7 @@ func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 			pos -= 1
 			m.Groups = append(m.Groups[:pos], m.Groups[pos+1:]...)
 			// TODO update view
+			// TODO update initialization funcs
 		}
 		list.Add(&btn)
 		list.Add(new(vl.Separator))
@@ -348,8 +352,10 @@ func (m NamedList) String() (name string) {
 	return fmt.Sprintf("%s: for %d nodes and %d elements",
 		m.Named.String(), len(m.Nodes), len(m.Elements))
 }
-func (m NamedList) GetId() GroupIndex                  { return NamedListIndex }
-func (m *NamedList) Update() (nodes, elements *[]uint) { return &m.Nodes, &m.Elements }
+func (m NamedList) GetId() GroupIndex { return NamedListIndex }
+func (m *NamedList) Update(updating func(nodes, elements *[]uint)) {
+	updating(&m.Nodes, &m.Elements)
+}
 func (m *NamedList) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 	var inits []func()
 	defer func() {
@@ -415,8 +421,8 @@ func (m NodeSupports) String() (name string) {
 	return
 }
 
-func (m *NodeSupports) Update() (nodes, elements *[]uint) {
-	return &m.Nodes, nil
+func (m *NodeSupports) Update(updating func(nodes, elements *[]uint)) {
+	updating(&m.Nodes, nil)
 }
 
 func (m *NodeSupports) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {

@@ -552,3 +552,13 @@ func (u *Undo) GetRootGroup() *Meta {
 	// action
 	return u.model.GetRootGroup()
 }
+
+func (u *Undo) Update(nodes, elements *uint) {
+	logger.Print("Update")
+	// sync
+	pre, post := u.sync(false)
+	pre()
+	defer post()
+	// action
+	u.model.Update(nodes, elements)
+}

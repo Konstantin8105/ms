@@ -2530,8 +2530,14 @@ func (mm *Model) StandardView(view SView) {
 }
 
 func (mm *Model) GetRootGroup() *Meta {
+	logger.Printf("not implemented GetRootGroup")
 	// TODO
 	return nil
+}
+
+func (mm *Model) Update(nodes, elements *uint) {
+	logger.Printf("not implemented Update")
+	// TODO
 }
 
 ///////////////////////////////////////////////////////////////////////////////
