@@ -3,6 +3,7 @@ package ms
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/Konstantin8105/ds"
@@ -246,6 +247,59 @@ func (m *Meta) Add(g Group) {
 	}
 	m.Groups = append(m.Groups, g)
 }
+func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
+	var inits []func()
+	defer func() {
+		initialization = func() {
+			for i := range inits {
+				if f := inits[i]; f != nil {
+					f()
+				}
+			}
+		}
+	}()
+	var list vl.List
+	defer func() {
+		w = &list
+	}()
+	{
+		n, ni := m.Named.GetWidget(mm)
+		list.Add(n)
+		inits = append(inits, ni)
+		list.Add(new(vl.Separator))
+	}
+	{
+		list.Add(vl.TextStatic("Add new group:"))
+		var ids []GroupIndex
+		var names []string
+		for i := uint16(0); i < math.MaxUint16; i++ {
+			gi := GroupIndex(i)
+			_, ok := gi.newInstance()
+			if !ok {
+				continue
+			}
+			ids = append(ids, gi)
+			names = append(names, gi.String())
+		}
+		var combo vl.Combobox
+		combo.Add(names...)
+		list.Add(&combo)
+		var btn vl.Button
+		btn.SetText("Add group")
+		btn.Compress = true
+		btn.OnClick = func() {
+			pos := combo.GetPos()
+			gi := GroupIndex(ids[pos])
+			g, ok := gi.newInstance()
+			if !ok {
+				return
+			}
+			m.Groups = append(m.Groups, g)
+		}
+		list.Add(&btn)
+	}
+	return
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -370,6 +424,7 @@ func (m *NodeSupports) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 			ch.Checked = m.Direction[i]
 			ch.OnChange = func() {
 				m.Direction[i] = ch.Checked
+				// TODO update screen
 			}
 			list.Add(&ch)
 		}
