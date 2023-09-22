@@ -284,6 +284,9 @@ func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 		var combo vl.Combobox
 		combo.Add(names...)
 		list.Add(&combo)
+		inits = append(inits, func() {
+			combo.SetPos(0)
+		})
 		var btn vl.Button
 		btn.SetText("Add group")
 		btn.Compress = true
@@ -295,8 +298,39 @@ func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 				return
 			}
 			m.Groups = append(m.Groups, g)
+			// TODO update view
 		}
 		list.Add(&btn)
+		list.Add(new(vl.Separator))
+	}
+	{
+		list.Add(vl.TextStatic("Remove group:"))
+		var names []string
+		var combo vl.Combobox
+		list.Add(&combo)
+		inits = append(inits, func() {
+			combo.Clear()
+			names = []string{"NONE"}
+			for _, gr := range m.Groups {
+				names = append(names, gr.GetId().String()+": "+gr.String())
+			}
+			combo.Add(names...)
+			combo.SetPos(0)
+		})
+		var btn vl.Button
+		btn.SetText("Remove group")
+		btn.Compress = true
+		btn.OnClick = func() {
+			pos := combo.GetPos()
+			if pos == 0 {
+				return // NONE selected group
+			}
+			pos -= 1
+			m.Groups = append(m.Groups[:pos], m.Groups[pos+1:]...)
+			// TODO update view
+		}
+		list.Add(&btn)
+		list.Add(new(vl.Separator))
 	}
 	return
 }
