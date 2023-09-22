@@ -519,7 +519,13 @@ func Change(m Mesh,
 		els    vl.Text
 	)
 
-	list.Add(vl.TextStatic("List of nodes and elements:"))
+	if nb && eb {
+		list.Add(vl.TextStatic("List of nodes and elements:"))
+	} else if nb {
+		list.Add(vl.TextStatic("List of nodes:"))
+	} else {
+		list.Add(vl.TextStatic("List of elements:"))
+	}
 
 	l1.Add(vl.TextStatic("Nodes:"))
 
