@@ -1363,6 +1363,8 @@ func (d Direction) String() string {
 type Selectable interface {
 	SelectLeftCursor(nodes bool, elements []bool)
 
+	Select(nodes, elements []uint)
+
 	GetSelectNodes(single bool) (ids []uint)
 	GetSelectElements(single bool, filter func(_ ElType) (acceptable bool)) (ids []uint)
 

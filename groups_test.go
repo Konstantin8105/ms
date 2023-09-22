@@ -82,7 +82,8 @@ func TestGroupsSave(t *testing.T) {
 			}
 			// visualize
 			{
-				tr, init := treeNode(gr, nil)
+				var mesh Mesh
+				tr, init := treeNode(gr, mesh, nil)
 				init()
 				var sc vl.Screen
 				sc.Root = &tr
@@ -92,9 +93,10 @@ func TestGroupsSave(t *testing.T) {
 				compare.Test(t, name+".view", []byte(vl.Convert(cells)))
 			}
 			{
+				var mesh Mesh
 				var sc vl.Screen
 				var init func()
-				sc.Root, init = gr.GetWidget()
+				sc.Root, init = gr.GetWidget(mesh)
 				init()
 				var cells [][]vl.Cell
 				sc.SetHeight(20)

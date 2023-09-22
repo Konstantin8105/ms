@@ -342,6 +342,11 @@ func (u *Undo) DeselectAll() {
 	u.model.DeselectAll()
 }
 
+func (u *Undo) Select(nodes, elements []uint) {
+	logger.Print("Select")
+	u.model.Select(nodes, elements)
+}
+
 func (u *Undo) SelectAll(nodes bool, elements []bool) {
 	logger.Print("SelectAll")
 	u.model.SelectAll(nodes, elements)

@@ -1312,6 +1312,25 @@ func (mm *Model) DeselectAll() {
 	}
 }
 
+func (mm *Model) Select(nodes, elements []uint) {
+	mm.DeselectAll()
+	// check
+	if s := nodes; !mm.isValidNodeId(nodes) {
+		logger.Printf("Select: not valid node id: %v", s)
+		return
+	}
+	if s := elements; !mm.isValidElementId(s, nil) {
+		logger.Printf("Select: not valid elements id: %v", s)
+		return
+	}
+	for _, id := range nodes {
+		mm.Coords[id].selected = true
+	}
+	for _, id := range elements {
+		mm.Elements[id].selected = true
+	}
+}
+
 func (mm *Model) SelectAll(nodes bool, elements []bool) {
 	if nodes {
 		for i := range mm.Coords {

@@ -53,9 +53,9 @@ func (gi GroupIndex) newInstance() (_ Group, ok bool) {
 //	}
 type Group interface {
 	GetId() GroupIndex
-	String() string                                  // return short name
-	Update() (nodes, elements *[]uint)               // update nodes, elements indexes
-	GetWidget() (_ vl.Widget, initialization func()) // return gui widget
+	String() string                                         // return short name
+	Update() (nodes, elements *[]uint)                      // update nodes, elements indexes
+	GetWidget(mm Mesh) (_ vl.Widget, initialization func()) // return gui widget
 }
 
 type record struct {
@@ -136,7 +136,7 @@ func ParseGroup(bs []byte) (g Group, err error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-func treeNode(g Group, w *vl.Widget) (t vl.Tree, initialization func()) {
+func treeNode(g Group, mesh Mesh, w *vl.Widget) (t vl.Tree, initialization func()) {
 	if g == nil {
 		return
 	}
@@ -161,7 +161,7 @@ func treeNode(g Group, w *vl.Widget) (t vl.Tree, initialization func()) {
 		if w == nil {
 			return
 		}
-		edit, init := g.GetWidget()
+		edit, init := g.GetWidget(mesh)
 		inits = append(inits, init)
 		if edit == nil {
 			return
@@ -174,7 +174,7 @@ func treeNode(g Group, w *vl.Widget) (t vl.Tree, initialization func()) {
 	switch m := g.(type) {
 	case *Meta:
 		for i := range m.Groups {
-			w, init := treeNode(m.Groups[i], w)
+			w, init := treeNode(m.Groups[i], mesh, w)
 			inits = append(inits, init)
 			t.Nodes = append(t.Nodes, w)
 		}
@@ -191,7 +191,7 @@ func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Wi
 
 	// group tree
 	var tree vl.Tree
-	tree, initialization = treeNode(mesh.GetRootGroup(), &w)
+	tree, initialization = treeNode(mesh.GetRootGroup(), mesh, &w)
 	list.Add(&tree)
 	list.Add(w)
 
@@ -209,7 +209,7 @@ func (m Named) String() (name string) {
 	}
 	return strings.ToUpper(m.Name)
 }
-func (m *Named) GetWidget() (w vl.Widget, initialization func()) {
+func (m *Named) GetWidget(mesh Mesh) (w vl.Widget, initialization func()) {
 	var list vl.List
 
 	list.Add(vl.TextStatic("Rename:"))
@@ -262,7 +262,7 @@ func (m NamedList) String() (name string) {
 }
 func (m NamedList) GetId() GroupIndex                  { return NamedListIndex }
 func (m *NamedList) Update() (nodes, elements *[]uint) { return &m.Nodes, &m.Elements }
-func (m *NamedList) GetWidget() (w vl.Widget, initialization func()) {
+func (m *NamedList) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 	var inits []func()
 	defer func() {
 		initialization = func() {
@@ -274,39 +274,41 @@ func (m *NamedList) GetWidget() (w vl.Widget, initialization func()) {
 		}
 	}()
 	var list vl.List
-
-	n, ni := m.Named.GetWidget()
-	list.Add(n)
-	inits = append(inits, ni)
-	list.Add(new(vl.Separator))
-
+	defer func() {
+		w = &list
+	}()
+	{
+		n, ni := m.Named.GetWidget(mm)
+		list.Add(n)
+		inits = append(inits, ni)
+		list.Add(new(vl.Separator))
+	}
 	{
 		var btn vl.Button
 		btn.SetText("Select")
 		btn.OnClick = func() {
-			// TODO
+			mm.Select(m.Nodes, m.Elements)
 		}
 		list.Add(&btn)
+		list.Add(new(vl.Separator))
 	}
-	list.Add(new(vl.Separator))
-
-	list.Add(vl.TextStatic("Change:"))
-	list.Add(new(vl.Separator))
-
-	// TODO add for nodes, elements
-
-	w = &list
+	{
+		list.Add(vl.TextStatic("Change:"))
+		// TODO add for nodes, elements
+	}
 	return
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
+var dir = [6]string{"Dx", "Dy", "Dz", "Rx", "Ry", "Rz"}
+
 var _ Group = new(NodeSupports)
 
 type NodeSupports struct {
 	Named
-	Nodes     []uint
 	Direction [6]bool
+	Nodes     []uint
 }
 
 func (m NodeSupports) GetId() GroupIndex {
@@ -315,7 +317,6 @@ func (m NodeSupports) GetId() GroupIndex {
 
 func (m NodeSupports) String() (name string) {
 	name += fmt.Sprintf("%s: ", m.Named.String())
-	dir := [6]string{"Dx", "Dy", "Dz", "Rx", "Ry", "Rz"}
 	for i := range m.Direction {
 		if !m.Direction[i] {
 			continue
@@ -328,6 +329,55 @@ func (m NodeSupports) String() (name string) {
 
 func (m *NodeSupports) Update() (nodes, elements *[]uint) {
 	return &m.Nodes, nil
+}
+
+func (m *NodeSupports) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
+	var inits []func()
+	defer func() {
+		initialization = func() {
+			for i := range inits {
+				if f := inits[i]; f != nil {
+					f()
+				}
+			}
+		}
+	}()
+	var list vl.List
+	defer func() {
+		w = &list
+	}()
+	{
+		n, ni := m.Named.GetWidget(mm)
+		list.Add(n)
+		inits = append(inits, ni)
+		list.Add(new(vl.Separator))
+	}
+	{
+		var btn vl.Button
+		btn.SetText("Select")
+		btn.OnClick = func() {
+			mm.Select(m.Nodes, nil)
+		}
+		list.Add(&btn)
+		list.Add(new(vl.Separator))
+	}
+	{
+		list.Add(vl.TextStatic("Fixed node support direction:"))
+		for i := range m.Direction {
+			i := i
+			var ch vl.CheckBox
+			ch.SetText(dir[i])
+			ch.Checked = m.Direction[i]
+			ch.OnChange(func() {
+				m.Direction[i] = ch.Checked
+			})
+			list.Add(&ch)
+		}
+	}
+	{
+		// TODO : Nodes modifications
+	}
+	return
 }
 
 ///////////////////////////////////////////////////////////////////////////////
