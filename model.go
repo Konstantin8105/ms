@@ -143,17 +143,12 @@ func (c Coordinate) Check() error {
 // TODO : type MultiModel struct { Models []Model}
 
 type Model struct {
-	// actual = 0, then change Model
-	// 0 < actual, then change Parts[actual - 1]
-	// actual int
-
-	// Named
-	// 	Ignored
 	Elements []Element
 	Coords   []Coordinate
-	Base     Meta
-	// 	Parts []Part
-
+	Groups   struct {
+		Data string
+		meta Meta
+	}
 	filename string
 }
 
@@ -300,6 +295,13 @@ func (mm *Model) GetPresentFilename() (name string) {
 func (mm *Model) Save() (err error) {
 	logger.Printf("Save")
 	// actions
+	var bs []byte
+	bs, err = SaveGroup(&mm.Groups.meta)
+	if err != nil {
+		logger.Printf("Save: %v", err)
+		return
+	}
+	mm.Groups.Data = string(bs)
 	b, err := json.MarshalIndent(mm, "", "  ")
 	if err != nil {
 		logger.Printf("Save: %v", err)
@@ -342,14 +344,27 @@ func (mm *Model) Open(filename string) (err error) {
 	var b []byte
 	b, err = ioutil.ReadFile(filename)
 	if err != nil {
+		err = fmt.Errorf("Oper error: %v", err)
 		return
 	}
 	var model Model
 	if err = json.Unmarshal(b, &model); err != nil {
+		err = fmt.Errorf("Oper error: %v", err)
 		return
 	}
 	*mm = model
 	mm.filename = filename
+	var gr Group
+	gr, err = ParseGroup([]byte(mm.Groups.Data))
+	if err != nil {
+		err = fmt.Errorf("Oper error: %v", err)
+		return
+	}
+	if m, ok := gr.(*Meta); ok {
+		mm.Groups.meta = *m
+	} else {
+		err = fmt.Errorf("Oper error: is not Meta")
+	}
 	return
 }
 
@@ -2530,7 +2545,7 @@ func (mm *Model) StandardView(view SView) {
 }
 
 func (mm *Model) GetRootGroup() *Meta {
-	return &mm.Base
+	return &mm.Groups.meta
 }
 
 func (mm *Model) Update(nodes, elements *uint) {

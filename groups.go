@@ -48,15 +48,6 @@ func (gi GroupIndex) newInstance() (_ Group, ok bool) {
 	return nil, false
 }
 
-//	type Model2 struct {
-//		// ...
-//		Data []struct {
-//			Id          GroupIndex
-//			bs []byte
-//			group       Group
-//		}
-//		// ...
-//	}
 type Group interface {
 	GetId() GroupIndex
 	String() string                                                 // return short name

@@ -163,8 +163,7 @@
       "Removed": false
     }
   ],
-  "Base": {
-    "Name": "",
-    "Groups": null
+  "Groups": {
+    "Data": "{\"Index\":10000,\"Data\":\"{\\\"Name\\\":\\\"\\\",\\\"Datas\\\":null}\"}"
   }
 }
