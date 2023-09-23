@@ -344,12 +344,12 @@ func (mm *Model) Open(filename string) (err error) {
 	var b []byte
 	b, err = ioutil.ReadFile(filename)
 	if err != nil {
-		err = fmt.Errorf("Oper error: %v", err)
+		err = fmt.Errorf("Open error: %v", err)
 		return
 	}
 	var model Model
 	if err = json.Unmarshal(b, &model); err != nil {
-		err = fmt.Errorf("Oper error: %v", err)
+		err = fmt.Errorf("Open error: %v", err)
 		return
 	}
 	*mm = model
@@ -357,7 +357,7 @@ func (mm *Model) Open(filename string) (err error) {
 	var gr Group
 	gr, err = ParseGroup([]byte(mm.Groups.Data))
 	if err != nil {
-		err = fmt.Errorf("Oper error: %v", err)
+		err = fmt.Errorf("Open error: %v", err)
 		return
 	}
 	if m, ok := gr.(*Meta); ok {
