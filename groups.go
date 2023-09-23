@@ -251,6 +251,7 @@ func (m *Named) Update(updating func(nodes, elements *[]uint)) { return }
 
 func (m *Named) GetWidget(mesh Mesh, updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
+	list.IgnoreVerticalFix = true
 
 	list.Add(vl.TextStatic("Rename:"))
 	var name vl.Inputbox
@@ -288,6 +289,7 @@ func (m *Meta) Update(updating func(nodes, elements *[]uint)) {
 }
 func (m *Meta) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
+	list.IgnoreVerticalFix = true
 	defer func() {
 		w = &list
 	}()
@@ -380,6 +382,7 @@ func (m *NamedList) Update(updating func(nodes, elements *[]uint)) {
 }
 func (m *NamedList) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
+	list.IgnoreVerticalFix = true
 	defer func() {
 		w = &list
 	}()
@@ -444,6 +447,7 @@ func (m *NodeSupports) Update(updating func(nodes, elements *[]uint)) {
 
 func (m *NodeSupports) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
+	list.IgnoreVerticalFix = true
 	defer func() {
 		w = &list
 	}()
@@ -499,6 +503,7 @@ func Change(m Mesh,
 	w vl.Widget,
 ) {
 	var list vl.List
+	list.IgnoreVerticalFix = true
 	defer func() {
 		w = &list
 	}()
@@ -526,7 +531,9 @@ func Change(m Mesh,
 	l1.Add(vl.TextStatic("Nodes:"))
 
 	coords.SetLinesLimit(3)
-	coords.SetText(fmt.Sprintf("%d", *nodes))
+	if nodes != nil {
+		coords.SetText(fmt.Sprintf("%d", *nodes))
+	}
 	l1.Add(&coords)
 
 	b.SetText("Change")
@@ -548,7 +555,9 @@ func Change(m Mesh,
 	l2.Add(vl.TextStatic("Elements:"))
 
 	els.SetLinesLimit(3)
-	els.SetText(fmt.Sprintf("%d", *nodes))
+	if elements != nil {
+		els.SetText(fmt.Sprintf("%d", *elements))
+	}
 	l2.Add(&els)
 
 	l2.Add(vl.TextStatic(""))
