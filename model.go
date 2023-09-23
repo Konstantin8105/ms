@@ -363,7 +363,7 @@ func (mm *Model) Open(filename string) (err error) {
 	if m, ok := gr.(*Meta); ok {
 		mm.Groups.meta = *m
 	} else {
-		err = fmt.Errorf("Oper error: is not Meta")
+		err = fmt.Errorf("Open error: is not Meta")
 	}
 	return
 }
