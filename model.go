@@ -2529,10 +2529,14 @@ func (mm *Model) StandardView(view SView) {
 	// do nothing
 }
 
+
+// TODO remove
+var m Meta
+
 func (mm *Model) GetRootGroup() *Meta {
 	logger.Printf("not implemented GetRootGroup")
 	// TODO
-	return new(Meta)
+	return &m
 }
 
 func (mm *Model) Update(nodes, elements *uint) {

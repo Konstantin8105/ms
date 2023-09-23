@@ -14,13 +14,16 @@ import (
 type GroupIndex uint16
 
 const (
-	NamedListIndex    GroupIndex = 100
+	NamedIndex        GroupIndex = 80
+	NamedListIndex               = 100
 	NodeSupportsIndex            = 1000
 	MetaIndex                    = 10000
 )
 
 func (gi GroupIndex) String() string {
 	switch gi {
+	case NamedIndex:
+		return "Comments"
 	case NamedListIndex:
 		return "Named list"
 	case NodeSupportsIndex:
@@ -33,6 +36,8 @@ func (gi GroupIndex) String() string {
 
 func (gi GroupIndex) newInstance() (_ Group, ok bool) {
 	switch gi {
+	case NamedIndex:
+		return new(Named), true
 	case NamedListIndex:
 		return new(NamedList), true
 	case NodeSupportsIndex:
@@ -54,9 +59,9 @@ func (gi GroupIndex) newInstance() (_ Group, ok bool) {
 //	}
 type Group interface {
 	GetId() GroupIndex
-	String() string                                         // return short name
-	Update(updating func(nodes, elements *[]uint))          // update nodes, elements indexes
-	GetWidget(mm Mesh) (_ vl.Widget, initialization func()) // return gui widget
+	String() string                                                 // return short name
+	Update(updating func(nodes, elements *[]uint))                  // update nodes, elements indexes
+	GetWidget(mm Mesh, updateTree func(detail Group)) (_ vl.Widget) // return gui widget
 }
 
 type record struct {
@@ -137,23 +142,15 @@ func ParseGroup(bs []byte) (g Group, err error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-func treeNode(g Group, mesh Mesh, w vl.Widget, updateDetail func(w vl.Widget)) (
+func treeNode(
+	g Group, mesh Mesh,
+	updateTree func(g Group),
+	updateDetail func(w vl.Widget),
+) (
 	t vl.Tree,
-	initialization func(),
 ) {
 	if g == nil {
 	}
-	var inits []func()
-	defer func() {
-		initialization = func() {
-			for i := range inits {
-				if f := inits[i]; f != nil {
-					f()
-				}
-			}
-		}
-	}()
-
 	// prepare edit widget
 	var list vl.List
 	list.Add(vl.TextStatic(g.GetId().String() + ":"))
@@ -161,11 +158,7 @@ func treeNode(g Group, mesh Mesh, w vl.Widget, updateDetail func(w vl.Widget)) (
 	btn.Compress = true
 	btn.SetText(g.String())
 	btn.OnClick = func() {
-		if w == nil {
-			return
-		}
-		edit, init := g.GetWidget(mesh)
-		inits = append(inits, init)
+		edit := g.GetWidget(mesh, updateTree)
 		if edit == nil {
 			return
 		}
@@ -180,8 +173,7 @@ func treeNode(g Group, mesh Mesh, w vl.Widget, updateDetail func(w vl.Widget)) (
 			if m.Groups[i] == nil {
 				logger.Printf("NOT ACCEPTABLE NIL")
 			}
-			w, init := treeNode(m.Groups[i], mesh, w, updateDetail)
-			inits = append(inits, init)
+			w := treeNode(m.Groups[i], mesh, updateTree, updateDetail)
 			t.Nodes = append(t.Nodes, w)
 		}
 		return
@@ -189,27 +181,58 @@ func treeNode(g Group, mesh Mesh, w vl.Widget, updateDetail func(w vl.Widget)) (
 	return
 }
 
+type modelTree struct {
+	Tree          vl.Widget
+	Detail        vl.Widget
+	currentDetail vl.Widget
+}
+
 func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Widget, initialization func(), err error) {
 	var list vl.List
+	defer func() {
+		gt = &list
+	}()
 
-	// default tree node widget
-	txt := vl.TextStatic("Click on tree for modify")
-	var frame vl.Frame
-	frame.Root = txt
-	var w vl.Widget = &frame
+	list.Add(vl.TextStatic("model tree"))
+	list.Add(vl.TextStatic("detail of model tree nodes"))
 
-	// group tree
-	var tree vl.Tree
-	tree, initialization = treeNode(
-		mesh.GetRootGroup(), mesh, w,
-		func(nw vl.Widget) {
-			list.Update(1, nw)
-		},
-	)
-	list.Add(&tree)
-	list.Add(w)
+	var updateDetail func(w vl.Widget)
+	updateDetail = func(w vl.Widget) {
+		if w == nil {
+			updateDetail(vl.TextStatic("Choose node of model tree for modification"))
+			return
+		}
+		if l1, ok := list.Get(1).(*vl.Scroll); ok {
+			l1.Root = w
+		} else {
+			var scroll vl.Scroll
+			scroll.Root = w
+			list.Update(1, &scroll)
+		}
+	}
 
-	gt = &list
+	var updateTree func(detail Group)
+	updateTree = func(detail Group) {
+		tree := treeNode(
+			mesh.GetRootGroup(), mesh,
+			updateTree,
+			updateDetail,
+		)
+		if l0, ok := list.Get(0).(*vl.Scroll); ok {
+			l0.Root = &tree
+		} else {
+			var scroll vl.Scroll
+			scroll.Root = &tree
+			list.Update(0, &scroll)
+		}
+		updateDetail(detail.GetWidget(mesh, updateTree))
+	}
+
+	// first update
+	initialization = func() {
+		updateTree(mesh.GetRootGroup())
+	}
+
 	return
 }
 
@@ -217,26 +240,27 @@ func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Wi
 
 type Named struct{ Name string }
 
+func (m Named) GetId() GroupIndex { return NamedIndex }
 func (m Named) String() (name string) {
 	if m.Name == "" {
 		return "noname"
 	}
 	return strings.ToUpper(m.Name)
 }
+func (m *Named) Update(updating func(nodes, elements *[]uint)) { return }
 
-func (m *Named) GetWidget(mesh Mesh) (w vl.Widget, initialization func()) {
+func (m *Named) GetWidget(mesh Mesh, updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
 
 	list.Add(vl.TextStatic("Rename:"))
 	var name vl.Inputbox
 	list.Add(&name)
-	initialization = func() {
-		name.SetText(m.Name)
-	}
+	name.SetText(m.Name)
 	var btn vl.Button
 	btn.SetText("Rename")
 	btn.OnClick = func() {
 		m.Name = name.GetText()
+		updateTree(m)
 	}
 	list.Add(&btn)
 
@@ -262,27 +286,18 @@ func (m *Meta) Update(updating func(nodes, elements *[]uint)) {
 		gr.Update(updating)
 	}
 }
-func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
-	var inits []func()
-	defer func() {
-		initialization = func() {
-			for i := range inits {
-				if f := inits[i]; f != nil {
-					f()
-				}
-			}
-		}
-	}()
+func (m *Meta) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
 	defer func() {
 		w = &list
 	}()
 	{
-		n, ni := m.Named.GetWidget(mm)
+		n := m.Named.GetWidget(mm, func(_ Group) {
+			updateTree(m)
+		})
 		list.Add(n)
-		inits = append(inits, ni)
-		list.Add(new(vl.Separator))
 	}
+	list.Add(new(vl.Separator))
 	{
 		list.Add(vl.TextStatic("Add new group:"))
 		var ids []GroupIndex
@@ -299,12 +314,9 @@ func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 		var combo vl.Combobox
 		combo.Add(names...)
 		list.Add(&combo)
-		inits = append(inits, func() {
-			if len(names) == 0 {
-				return
-			}
+		if 0 < len(names) {
 			combo.SetPos(0)
-		})
+		}
 		var btn vl.Button
 		btn.SetText("Add group")
 		btn.Compress = true
@@ -316,26 +328,22 @@ func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 				return
 			}
 			m.Groups = append(m.Groups, g)
-			// TODO update view
-			// TODO update initialization funcs
+			updateTree(m)
 		}
 		list.Add(&btn)
-		list.Add(new(vl.Separator))
 	}
+	list.Add(new(vl.Separator))
 	{
 		list.Add(vl.TextStatic("Remove group:"))
 		var names []string
 		var combo vl.Combobox
 		list.Add(&combo)
-		inits = append(inits, func() {
-			combo.Clear()
-			names = []string{"NONE"}
-			for _, gr := range m.Groups {
-				names = append(names, gr.GetId().String()+": "+gr.String())
-			}
-			combo.Add(names...)
-			combo.SetPos(0)
-		})
+		names = []string{"NONE"}
+		for _, gr := range m.Groups {
+			names = append(names, gr.GetId().String()+": "+gr.String())
+		}
+		combo.Add(names...)
+		combo.SetPos(0)
 		var btn vl.Button
 		btn.SetText("Remove group")
 		btn.Compress = true
@@ -346,11 +354,9 @@ func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 			}
 			pos -= 1
 			m.Groups = append(m.Groups[:pos], m.Groups[pos+1:]...)
-			// TODO update view
-			// TODO update initialization funcs
+			updateTree(m)
 		}
 		list.Add(&btn)
-		list.Add(new(vl.Separator))
 	}
 	return
 }
@@ -372,25 +378,16 @@ func (m NamedList) GetId() GroupIndex { return NamedListIndex }
 func (m *NamedList) Update(updating func(nodes, elements *[]uint)) {
 	updating(&m.Nodes, &m.Elements)
 }
-func (m *NamedList) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
-	var inits []func()
-	defer func() {
-		initialization = func() {
-			for i := range inits {
-				if f := inits[i]; f != nil {
-					f()
-				}
-			}
-		}
-	}()
+func (m *NamedList) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
 	defer func() {
 		w = &list
 	}()
 	{
-		n, ni := m.Named.GetWidget(mm)
+		n := m.Named.GetWidget(mm, func(_ Group) {
+			updateTree(m)
+		})
 		list.Add(n)
-		inits = append(inits, ni)
 		list.Add(new(vl.Separator))
 	}
 	{
@@ -403,9 +400,10 @@ func (m *NamedList) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 		list.Add(new(vl.Separator))
 	}
 	{
-		change, init := Change(mm, true, true, &m.Nodes, &m.Elements)
+		change := Change(mm, true, true, &m.Nodes, &m.Elements, func() {
+			updateTree(m)
+		})
 		list.Add(change)
-		inits = append(inits, init)
 		list.Add(new(vl.Separator))
 		// TODO update screen
 	}
@@ -444,25 +442,16 @@ func (m *NodeSupports) Update(updating func(nodes, elements *[]uint)) {
 	updating(&m.Nodes, nil)
 }
 
-func (m *NodeSupports) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
-	var inits []func()
-	defer func() {
-		initialization = func() {
-			for i := range inits {
-				if f := inits[i]; f != nil {
-					f()
-				}
-			}
-		}
-	}()
+func (m *NodeSupports) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
 	defer func() {
 		w = &list
 	}()
 	{
-		n, ni := m.Named.GetWidget(mm)
+		n := m.Named.GetWidget(mm, func(_ Group) {
+			updateTree(m)
+		})
 		list.Add(n)
-		inits = append(inits, ni)
 		list.Add(new(vl.Separator))
 	}
 	{
@@ -483,16 +472,17 @@ func (m *NodeSupports) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 			ch.Checked = m.Direction[i]
 			ch.OnChange = func() {
 				m.Direction[i] = ch.Checked
-				// TODO update screen
+				updateTree(m)
 			}
 			list.Add(&ch)
 		}
 		list.Add(new(vl.Separator))
 	}
 	{
-		change, init := Change(mm, true, false, &m.Nodes, nil)
+		change := Change(mm, true, false, &m.Nodes, nil, func() {
+			updateTree(m)
+		})
 		list.Add(change)
-		inits = append(inits, init)
 		list.Add(new(vl.Separator))
 		// TODO update screen
 	}
@@ -504,20 +494,10 @@ func (m *NodeSupports) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 func Change(m Mesh,
 	nb, eb bool,
 	nodes, elements *[]uint,
+	update func(),
 ) (
 	w vl.Widget,
-	initialization func(),
 ) {
-	var inits []func()
-	defer func() {
-		initialization = func() {
-			for i := range inits {
-				if f := inits[i]; f != nil {
-					f()
-				}
-			}
-		}
-	}()
 	var list vl.List
 	defer func() {
 		w = &list
@@ -546,9 +526,7 @@ func Change(m Mesh,
 	l1.Add(vl.TextStatic("Nodes:"))
 
 	coords.SetLinesLimit(3)
-	inits = append(inits, func() {
-		coords.SetText(fmt.Sprintf("%d", *nodes))
-	})
+	coords.SetText(fmt.Sprintf("%d", *nodes))
 	l1.Add(&coords)
 
 	b.SetText("Change")
@@ -560,6 +538,7 @@ func Change(m Mesh,
 		}
 		coords.SetText(fmt.Sprintf("%v", coordinates))
 		els.SetText(fmt.Sprintf("%v", elements))
+		update()
 	}
 	l1.Add(&b)
 	if nb {
@@ -569,9 +548,7 @@ func Change(m Mesh,
 	l2.Add(vl.TextStatic("Elements:"))
 
 	els.SetLinesLimit(3)
-	inits = append(inits, func() {
-		els.SetText(fmt.Sprintf("%d", *nodes))
-	})
+	els.SetText(fmt.Sprintf("%d", *nodes))
 	l2.Add(&els)
 
 	l2.Add(vl.TextStatic(""))
