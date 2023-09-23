@@ -151,7 +151,7 @@ type Model struct {
 	// 	Ignored
 	Elements []Element
 	Coords   []Coordinate
-
+	Base     Meta
 	// 	Parts []Part
 
 	filename string
@@ -2529,14 +2529,8 @@ func (mm *Model) StandardView(view SView) {
 	// do nothing
 }
 
-
-// TODO remove
-var m Meta
-
 func (mm *Model) GetRootGroup() *Meta {
-	logger.Printf("not implemented GetRootGroup")
-	// TODO
-	return &m
+	return &mm.Base
 }
 
 func (mm *Model) Update(nodes, elements *uint) {

@@ -202,5 +202,9 @@
       ],
       "Removed": false
     }
-  ]
+  ],
+  "Base": {
+    "Name": "",
+    "Groups": null
+  }
 }
