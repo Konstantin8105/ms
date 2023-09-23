@@ -252,20 +252,22 @@ func (m *Named) Update(updating func(nodes, elements *[]uint)) { return }
 func (m *Named) GetWidget(mesh Mesh, updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
 	list.IgnoreVerticalFix = true
-
-	list.Add(vl.TextStatic("Rename:"))
-	var name vl.Inputbox
-	list.Add(&name)
-	name.SetText(m.Name)
-	var btn vl.Button
-	btn.SetText("Rename")
-	btn.OnClick = func() {
-		m.Name = name.GetText()
-		updateTree(m)
+	defer func() {
+		w = &list
+	}()
+	{
+		list.Add(vl.TextStatic("Rename:"))
+		var name vl.Inputbox
+		list.Add(&name)
+		name.SetText(m.Name)
+		var btn vl.Button
+		btn.SetText("Rename")
+		btn.OnClick = func() {
+			m.Name = name.GetText()
+			updateTree(m)
+		}
+		list.Add(&btn)
 	}
-	list.Add(&btn)
-
-	w = &list
 	return
 }
 
