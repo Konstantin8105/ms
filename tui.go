@@ -2,7 +2,6 @@ package ms
 
 import (
 	"fmt"
-	"math/rand"
 	"runtime/debug"
 	"strconv"
 
@@ -2465,7 +2464,6 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-
 type Groupable interface {
 	GetRootGroup() *Meta
 	Update(nodes, elements *uint)
@@ -2487,8 +2485,6 @@ type Mesh interface {
 
 	Groupable
 }
-
-
 
 const (
 	Single = true
@@ -2714,20 +2710,23 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 		logger.Printf(fmt.Sprintf("Amount widgets: %d", len(Operations)))
 	}
 
+	// prepare geometry editor
 	var (
 		list   vl.List
 		scroll = vl.Scroll{Root: &list}
 		tabs   vl.Tabs
+		inits  []func()
 	)
 	tabs.Add("Editor", &scroll)
-	// TODO tabs.Add("Model tree", SourceTree())
-	// TODO tabs.Add("Loads", LoadTree())
-	// TODO tabs.Add("Supports", SupportTree())
-	// TODO tabs.Add("Sections", new(vl.Separator))
-	// TODO tabs.Add("Specifications", new(vl.Separator))
-	// TODO tabs.Add("Material", new(vl.Separator))
-	// TODO tabs.Add("Analysis", new(vl.Separator))
-	// TODO tabs.Add("Design", new(vl.Separator))
+
+	// prepare group tree
+	tree, init, err := NewGroupTree(mesh, closedApp, actions)
+	if err != nil {
+		return
+	}
+	inits = append(inits, init)
+
+	tabs.Add("Model tree", tree)
 	tui = &tabs
 
 	view := make([]bool, len(Operations))
@@ -2738,7 +2737,6 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 		colHeader[g].Root = &sublist
 		list.Add(&colHeader[g])
 	}
-	var is []func()
 	for g := range colHeader {
 		for i := range Operations {
 			if Operations[i].Group != GroupID(g) {
@@ -2751,16 +2749,16 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 				err = fmt.Errorf("widget %02d is empty: %#v", i, Operations[i])
 				return
 			}
-			r, inits := part(mesh, actions, closedApp)
+			r, init := part(mesh, actions, closedApp)
 			c.Root = r
 			colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true
-			is = append(is, inits)
+			inits = append(inits, init)
 		}
 	}
 	initialization = func() {
-		for i := range is {
-			if f := is[i]; f != nil {
+		for i := range inits {
+			if f := inits[i]; f != nil {
 				f()
 			}
 		}
@@ -2778,179 +2776,4 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	}
 
 	return
-}
-
-func SourceTree() (tr vl.Widget) {
-	var list vl.List
-
-	list.Add(vl.TextStatic("Tree of groups"))
-
-	var btn vl.Button
-	btn.SetText("Create new group")
-	list.Add(&btn)
-
-	var btnDel vl.Button
-	btnDel.SetText("Delete present group")
-	list.Add(&btnDel)
-
-	list.Add(new(vl.Separator))
-	{
-		var rg vl.RadioGroup
-		names := []string{
-			"Base model", "Floor", "Cylinder", "Arch",
-			"Convection module 1",
-			"Convection module 2",
-			"Convection module 3",
-			"Convection module 4",
-			"Breeching",
-			"Stack",
-		}
-		for i := 0; i < 10; i++ {
-			names = append(names, fmt.Sprintf("Pltf %d", i+1))
-		}
-		for in, name := range names {
-			var ch vl.CollapsingHeader
-			ch.SetText(name)
-			rg.Add(&ch)
-			var l vl.List
-			ch.Root = &l
-
-			if in == 0 {
-				ns := 20000 - in*1000
-				es := 10000 - in*500
-				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
-				continue
-			}
-
-			{
-				l.Add(vl.TextStatic("Link from `Base model`:"))
-				ns := 20000 - in*1000
-				es := 10000 - in*500
-				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
-				var btn vl.Button
-				btn.SetText("Select")
-				l.Add(&btn)
-				l.Add(new(vl.Separator))
-			}
-			if in%3 == 0 {
-				l.Add(vl.TextStatic(fmt.Sprintf("Link from `%s`:", names[in/3])))
-				ns := 10000 - in*100
-				es := 100 - in*1
-				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
-				var btn vl.Button
-				btn.SetText("Select")
-				l.Add(&btn)
-				l.Add(new(vl.Separator))
-			}
-			if in%4 == 0 {
-				l.Add(vl.TextStatic(fmt.Sprintf("Link from `%s`:", names[in/4])))
-				ns := 10000 - in*120
-				es := 189 - in*2
-				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
-				var btn vl.Button
-				btn.SetText("Select")
-				l.Add(&btn)
-				l.Add(new(vl.Separator))
-			}
-			{
-				l.Add(vl.TextStatic("Geometry specific of group:"))
-				ns := 200 - in*10
-				es := 100 - in*5
-				l.Add(vl.TextStatic(fmt.Sprintf("%d points\n%d elements", ns, es)))
-				var btn vl.Button
-				btn.SetText("Select")
-				l.Add(&btn)
-			}
-		}
-		rg.SetPos(0)
-		list.Add(&rg)
-	}
-
-	var scroll vl.Scroll
-	scroll.Root = &list
-	return &scroll
-}
-
-func LoadTree() (tr vl.Widget) {
-	var list vl.List
-	list.Add(vl.TextStatic("Tree of loads"))
-
-	// tree
-	gen := func(name string, v float64) vl.Tree {
-		var lh vl.ListH
-		lh.Add(vl.TextStatic(name))
-		var btn vl.Button
-		btn.SetText("Select")
-		lh.Add(&btn)
-
-		var Value vl.List
-		Value.Add(vl.TextStatic("Value"))
-		var vq vl.Inputbox
-		vq.SetText(fmt.Sprintf("%.1f", v))
-		Value.Add(&vq)
-
-		var Dir vl.List
-		Dir.Add(vl.TextStatic("Direction"))
-		var dir vl.Combobox
-		dir.Add([]string{"X", "Y", "Z"}...)
-		Dir.Add(&dir)
-
-		var Sys vl.List
-		Sys.Add(vl.TextStatic("System coordinate"))
-		var sys vl.Combobox
-		sys.Add([]string{"Global", "Local"}...)
-		Sys.Add(&sys)
-
-		return vl.Tree{
-			Root: &lh,
-			Nodes: []vl.Tree{
-				vl.Tree{Root: &Value},
-				vl.Tree{Root: &Dir},
-				vl.Tree{Root: &Sys},
-			},
-		}
-	}
-	un := func(v float64) vl.Tree {
-		return gen("Uniform load on line", v)
-	}
-	nl := func(v float64) vl.Tree {
-		return gen("Node load", v)
-	}
-	load := func(i int, f float64) vl.Widget {
-		var ch vl.CollapsingHeader
-		ch.SetText(fmt.Sprintf("Load: %d", i))
-		t := vl.Tree{
-			Root: vl.TextStatic("List of loads"),
-			Nodes: []vl.Tree{
-				nl(f * 10000),
-				un(f * -22.2),
-				un(f * 102.2),
-				nl(f * -200),
-			},
-		}
-		for p := 0; p < i; p++ {
-			t.Nodes = append(t.Nodes, nl(rand.Float64()*32.3))
-			t.Nodes = append(t.Nodes, un(rand.Float64()*1.2310231))
-		}
-		ch.Root = &t
-		return &ch
-	}
-
-	var ll vl.List
-	for in := 1; in < 40; in++ {
-		value := rand.Float64() - 0.5
-		value *= rand.Float64() * 100
-		ll.Add(load(in, value))
-	}
-	list.Add(&ll)
-
-	var scroll vl.Scroll
-	scroll.Root = &list
-	return &scroll
-}
-
-func SupportTree() (tr vl.Widget) {
-	var list vl.List
-	list.Add(vl.TextStatic("Tree of support"))
-	return &list
 }

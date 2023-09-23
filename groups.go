@@ -137,9 +137,11 @@ func ParseGroup(bs []byte) (g Group, err error) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-func treeNode(g Group, mesh Mesh, w *vl.Widget) (t vl.Tree, initialization func()) {
+func treeNode(g Group, mesh Mesh, w vl.Widget, updateDetail func(w vl.Widget)) (
+	t vl.Tree,
+	initialization func(),
+) {
 	if g == nil {
-		return
 	}
 	var inits []func()
 	defer func() {
@@ -167,7 +169,7 @@ func treeNode(g Group, mesh Mesh, w *vl.Widget) (t vl.Tree, initialization func(
 		if edit == nil {
 			return
 		}
-		*w = edit
+		updateDetail(edit)
 	}
 	list.Add(&btn)
 	t.Root = &list
@@ -175,7 +177,10 @@ func treeNode(g Group, mesh Mesh, w *vl.Widget) (t vl.Tree, initialization func(
 	switch m := g.(type) {
 	case *Meta:
 		for i := range m.Groups {
-			w, init := treeNode(m.Groups[i], mesh, w)
+			if m.Groups[i] == nil {
+				logger.Printf("NOT ACCEPTABLE NIL")
+			}
+			w, init := treeNode(m.Groups[i], mesh, w, updateDetail)
 			inits = append(inits, init)
 			t.Nodes = append(t.Nodes, w)
 		}
@@ -188,11 +193,19 @@ func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Wi
 	var list vl.List
 
 	// default tree node widget
-	var w vl.Widget = vl.TextStatic("Click on tree for modify")
+	txt := vl.TextStatic("Click on tree for modify")
+	var frame vl.Frame
+	frame.Root = txt
+	var w vl.Widget = &frame
 
 	// group tree
 	var tree vl.Tree
-	tree, initialization = treeNode(mesh.GetRootGroup(), mesh, &w)
+	tree, initialization = treeNode(
+		mesh.GetRootGroup(), mesh, w,
+		func(nw vl.Widget) {
+			list.Update(1, nw)
+		},
+	)
 	list.Add(&tree)
 	list.Add(w)
 
@@ -287,6 +300,9 @@ func (m *Meta) GetWidget(mm Mesh) (w vl.Widget, initialization func()) {
 		combo.Add(names...)
 		list.Add(&combo)
 		inits = append(inits, func() {
+			if len(names) == 0 {
+				return
+			}
 			combo.SetPos(0)
 		})
 		var btn vl.Button
