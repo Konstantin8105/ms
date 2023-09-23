@@ -538,13 +538,19 @@ func Change(m Mesh,
 
 	b.SetText("Change")
 	b.OnClick = func() {
-		coordinates := m.GetSelectNodes(Many)
-		elements := m.GetSelectElements(Many, nil)
-		if len(coordinates) == 0 && len(elements) == 0 {
+		newCoordinates := m.GetSelectNodes(Many)
+		newElements := m.GetSelectElements(Many, nil)
+		if len(newCoordinates) == 0 && len(newElements) == 0 {
 			return
 		}
-		coords.SetText(fmt.Sprintf("%v", coordinates))
-		els.SetText(fmt.Sprintf("%v", elements))
+		if nb {
+			*nodes = newCoordinates
+			coords.SetText(fmt.Sprintf("%v", newCoordinates))
+		}
+		if eb {
+			*elements = newElements
+			els.SetText(fmt.Sprintf("%v", newElements))
+		}
 		update()
 	}
 	l1.Add(&b)
