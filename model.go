@@ -340,6 +340,10 @@ func (mm *Model) Open(mesh groups.Mesh, filename string) (err error) {
 		err = fmt.Errorf("empty filename")
 		return
 	}
+	if mesh == nil {
+		err = fmt.Errorf("mesh is nil")
+		return
+	}
 	// actions
 	// read native json file format
 	var b []byte
