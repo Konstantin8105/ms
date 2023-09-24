@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/Konstantin8105/gog"
+	"github.com/Konstantin8105/ms/groups"
 )
 
 type Undo struct {
@@ -302,6 +303,13 @@ func (u *Undo) GetSelectElements(single bool, filter func(_ ElType) (acceptable 
 	return u.model.GetSelectElements(single, filter)
 }
 
+func (u *Undo) GetSelected() (nodes, elements []uint) {
+	logger.Printf("GetSelected")
+	nodes = u.GetSelectNodes(false)
+	elements = u.GetSelectElements(false, nil)
+	return
+}
+
 func (u *Undo) InvertSelect(nodes bool, elements []bool) {
 	logger.Print("InvertSelect")
 	u.model.InvertSelect(nodes, elements)
@@ -543,7 +551,7 @@ func (u *Undo) Check() error {
 	return u.model.Check()
 }
 
-func (u *Undo) GetRootGroup() *Meta {
+func (u *Undo) GetRootGroup() groups.Group {
 	// action
 	return u.model.GetRootGroup()
 }

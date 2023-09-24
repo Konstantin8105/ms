@@ -15,6 +15,7 @@ import (
 	"github.com/Konstantin8105/compare"
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/gog"
+	"github.com/Konstantin8105/ms/groups"
 )
 
 func TestUniqUint(t *testing.T) {
@@ -748,8 +749,9 @@ func TestModel(t *testing.T) {
 				t.Fatalf("filenames is not same")
 			}
 
+			var mesh groups.GroupTest
 			var o Model
-			if err = o.Open(nil, tc.name); err != nil {
+			if err = o.Open(&mesh, tc.name); err != nil {
 				t.Fatal(err)
 			}
 			if fmt.Sprintf("%#v", mm) != fmt.Sprintf("%#v", o) {

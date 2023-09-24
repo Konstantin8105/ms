@@ -17,8 +17,7 @@ type Mesh interface {
 	Update(nodes, elements *uint)
 
 	Select(nodes, elements []uint)
-	GetSelectNodes() (ids []uint)
-	GetSelectElements() (ids []uint)
+	GetSelected() (nodes, elements []uint)
 }
 
 func FixMesh(mesh Mesh) {
@@ -35,6 +34,9 @@ func FixMesh(mesh Mesh) {
 		}
 		var walk func(g Group)
 		walk = func(gr Group) {
+			if gr == nil {
+				return
+			}
 			compare(gr.GetUniqueId())
 			switch n := gr.(type) {
 			case *Meta:
@@ -48,6 +50,9 @@ func FixMesh(mesh Mesh) {
 	// set id only if equal zero and root
 	{
 		set := func(gr Group) {
+			if gr == nil {
+				return
+			}
 			gr.SetRoot(mesh)
 			if gr.GetUniqueId() == 0 {
 				maxId++
@@ -67,6 +72,17 @@ func FixMesh(mesh Mesh) {
 		walk(mesh.GetRootGroup())
 	}
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+type GroupTest struct{ base Group }
+
+func (g GroupTest) GetRootGroup() Group {
+	return g.base
+}
+func (g GroupTest) Update(nodes, elements *uint)          {}
+func (g GroupTest) Select(nodes, elements []uint)         {}
+func (g GroupTest) GetSelected() (nodes, elements []uint) { return nil, nil }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -711,8 +727,7 @@ func Change(m Mesh,
 
 	b.SetText("Change")
 	b.OnClick = func() {
-		newCoordinates := m.GetSelectNodes()
-		newElements := m.GetSelectElements()
+		newCoordinates, newElements := m.GetSelected()
 		if len(newCoordinates) == 0 && len(newElements) == 0 {
 			return
 		}

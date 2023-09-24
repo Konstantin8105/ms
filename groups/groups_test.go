@@ -14,16 +14,6 @@ const (
 	testdata = "../testdata"
 )
 
-type GroupTest struct{ base Group }
-
-func (g GroupTest) GetRootGroup() Group {
-	return g.base
-}
-func (g GroupTest) Update(nodes, elements *uint)    {}
-func (g GroupTest) Select(nodes, elements []uint)   {}
-func (g GroupTest) GetSelectNodes() (ids []uint)    { return nil }
-func (g GroupTest) GetSelectElements() (ids []uint) { return nil }
-
 func TestGroupsSave(t *testing.T) {
 	type tc struct {
 		name  string

@@ -14,6 +14,7 @@ import (
 	etree "github.com/Konstantin8105/errors"
 	"github.com/Konstantin8105/glsymbol"
 	"github.com/Konstantin8105/gog"
+	"github.com/Konstantin8105/ms/groups"
 	"github.com/Konstantin8105/ms/window"
 	"github.com/Konstantin8105/pow"
 	"github.com/Konstantin8105/vl"
@@ -147,7 +148,7 @@ type Model struct {
 	Coords   []Coordinate
 	Groups   struct {
 		Data string
-		meta Meta
+		meta groups.Meta
 	}
 	filename string
 }
@@ -296,7 +297,7 @@ func (mm *Model) Save() (err error) {
 	logger.Printf("Save")
 	// actions
 	var bs []byte
-	bs, err = SaveGroup(&mm.Groups.meta)
+	bs, err = groups.SaveGroup(&mm.Groups.meta)
 	if err != nil {
 		logger.Printf("Save: %v", err)
 		return
@@ -332,7 +333,7 @@ func (mm *Model) SaveAs(filename string) (err error) {
 	return nil
 }
 
-func (mm *Model) Open(mesh Mesh, filename string) (err error) {
+func (mm *Model) Open(mesh groups.Mesh, filename string) (err error) {
 	logger.Printf("Open")
 	// check
 	if filename == "" {
@@ -354,14 +355,15 @@ func (mm *Model) Open(mesh Mesh, filename string) (err error) {
 	}
 	*mm = model
 	mm.filename = filename
-	var gr Group
-	gr, err = ParseGroup(mesh, []byte(mm.Groups.Data))
+	var gr groups.Group
+	gr, err = groups.ParseGroup([]byte(mm.Groups.Data))
 	if err != nil {
 		err = fmt.Errorf("Open error: %v", err)
 		return
 	}
-	if m, ok := gr.(*Meta); ok {
+	if m, ok := gr.(*groups.Meta); ok {
 		mm.Groups.meta = *m
+		groups.FixMesh(mesh)
 	} else {
 		err = fmt.Errorf("Open error: is not Meta")
 	}
@@ -2544,7 +2546,7 @@ func (mm *Model) StandardView(view SView) {
 	// do nothing
 }
 
-func (mm *Model) GetRootGroup() *Meta {
+func (mm *Model) GetRootGroup() groups.Group {
 	return &mm.Groups.meta
 }
 

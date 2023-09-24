@@ -7,9 +7,9 @@ import (
 
 	"github.com/Konstantin8105/ds"
 	"github.com/Konstantin8105/gog"
+	"github.com/Konstantin8105/ms/groups"
 	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
-	"github.com/Konstantin8105/ms/groups"
 	"github.com/ncruces/zenity"
 )
 
@@ -2479,7 +2479,7 @@ type Mesh interface {
 	Pluginable
 	Measurementable
 
-	groups.Groupable
+	groups.Mesh
 }
 
 const (
@@ -2716,7 +2716,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	tabs.Add("Editor", &scroll)
 
 	// prepare group tree
-	tree, init, err := NewGroupTree(mesh, closedApp, actions)
+	tree, init, err := groups.NewGroupTree(mesh, closedApp, actions)
 	if err != nil {
 		return
 	}
