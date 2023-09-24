@@ -177,13 +177,72 @@ func SaveGroup(gr Group) (bs []byte, err error) {
 			return
 		}
 	default: // all other groups
-		bs, err = json.Marshal(gr)
+		bs, err = json.Marshal(m)
 		if err != nil {
 			return
 		}
 	}
 	r := record{Index: gr.GetGroupIndex(), Data: string(bs)}
 	return json.Marshal(&r)
+}
+
+type node struct {
+	Index GroupIndex
+	Gr    Group
+}
+
+func saveGroupNew(gr Group) (bs []byte, err error) {
+	var nodes []node
+
+	add := func(gr Group) {
+		nodes = append(nodes, node{
+			Index: gr.GetGroupIndex(),
+			Gr:    gr,
+		})
+	}
+	var walk func(gr Group)
+	walk = func(gr Group) {
+		add(gr)
+		switch n := gr.(type) {
+		case *Meta:
+			for i := range n.Groups {
+				walk(n.Groups[i])
+			}
+		}
+	}
+	walk(gr)
+
+	var records []record
+	for i := range nodes {
+		var local []byte
+		switch m := nodes[i].Gr.(type) {
+		case *Meta: // only for groups with slice of Groups
+			var store struct {
+				Name string
+				Ids  []int
+			}
+			store.Name = m.Name
+			for _, gr := range m.Groups {
+				store.Ids = append(store.Ids, gr.GetUniqueId())
+			}
+			local, err = json.Marshal(&store)
+			if err != nil {
+				return
+			}
+		default: // all other groups
+			local, err = json.Marshal(m)
+			if err != nil {
+				return
+			}
+		}
+		r := record{
+			Index: gr.GetGroupIndex(),
+			Data:  string(local),
+		}
+		records = append(records, r)
+	}
+
+	return json.Marshal(&records)
 }
 
 // ParseGroup return group from json

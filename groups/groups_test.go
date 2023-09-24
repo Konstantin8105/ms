@@ -93,8 +93,18 @@ func Test(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			t.Logf("%s", string(bs))
 			name := filepath.Join(testdata, name)
 			compare.Test(t, name, bs)
+
+			// save
+			{
+				bs2, err := saveGroupNew(mesh1.GetRootGroup())
+				if err != nil {
+					t.Fatal(err)
+				}
+				t.Logf("%s", string(bs2))
+			}
 
 			// parse
 			gr, err := ParseGroup(bs)
