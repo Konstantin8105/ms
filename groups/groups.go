@@ -22,7 +22,7 @@ type Mesh interface {
 
 func FixMesh(mesh Mesh) {
 	if mesh == nil {
-		panic("mesh is nil")
+		return
 	}
 	var maxId int = 1
 	{
@@ -128,6 +128,7 @@ func (gi GroupIndex) newInstance(root Mesh) (gr Group, ok bool) {
 	}
 	if ok {
 		gr.SetRoot(root)
+		FixMesh(root)
 	}
 	return
 }
@@ -628,14 +629,10 @@ type Copy struct {
 }
 
 func getGroupById(id int, root Group) (group Group) {
-	isEmpty := false
 	var walk func(gr Group)
 	walk = func(gr Group) {
 		if gr == nil {
 			return
-		}
-		if gr.GetUniqueId() == 0 {
-			isEmpty = true
 		}
 		if gr.GetUniqueId() == id {
 			group = gr
@@ -649,14 +646,19 @@ func getGroupById(id int, root Group) (group Group) {
 		}
 	}
 	walk(root)
-	if isEmpty {
-		// logger.Printf("Not valid id")
-	}
 	return
 }
 
-func getNodes(root Group) (names []string, ids []int) {
+func getNodes(
+	root Group,
+	filter func(gr Group) bool,
+) (names []string, ids []int) {
 	set := func(gr Group) {
+		if filter != nil {
+			if filter(gr) {
+				return
+			}
+		}
 		names = append(names, gr.String())
 		ids = append(ids, gr.GetUniqueId())
 	}
@@ -697,7 +699,20 @@ func (c *Copy) GetWidget(updateTree func(detail Group)) (w vl.Widget) {
 	}()
 	{
 		list.Add(vl.TextStatic("Change link id:"))
-		names, ids := getNodes(c.root.GetRootGroup())
+		names, ids := getNodes(
+			c.root.GetRootGroup(),
+			func(gr Group) bool { // filter
+				switch gr.(type) {
+				case *Copy:
+					return true
+				}
+				return false
+			},
+		)
+
+		names = append([]string{"NONE"}, names...)
+		ids = append([]int{-1}, ids...)
+
 		var combo vl.Combobox
 		combo.Add(names...)
 		list.Add(&combo)
@@ -709,6 +724,9 @@ func (c *Copy) GetWidget(updateTree func(detail Group)) (w vl.Widget) {
 		btn.Compress = true
 		btn.OnClick = func() {
 			pos := combo.GetPos()
+			if pos == 0 {
+				return
+			}
 			if len(ids) <= int(pos) {
 				return
 			}
