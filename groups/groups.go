@@ -195,10 +195,11 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 	var nodes []node
 
 	add := func(gr Group) {
-		nodes = append(nodes, node{
+		n := node{
 			Index: gr.GetGroupIndex(),
 			Gr:    gr,
-		})
+		}
+		nodes = append(nodes, n)
 	}
 	var walk func(gr Group)
 	walk = func(gr Group) {
@@ -236,13 +237,25 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 			}
 		}
 		r := record{
-			Index: gr.GetGroupIndex(),
+			Index: nodes[i].Gr.GetGroupIndex(),
 			Data:  string(local),
 		}
 		records = append(records, r)
 	}
 
-	return json.Marshal(&records)
+	bs, err = json.Marshal(&records)
+	{
+		// test of parse
+		var records []record
+		err = json.Unmarshal(bs, &records)
+		if err != nil {
+			return
+		}
+		for i := range records {
+			fmt.Println(	i, records[i])
+		}
+	}
+	return
 }
 
 // ParseGroup return group from json
