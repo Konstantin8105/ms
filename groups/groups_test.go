@@ -32,10 +32,12 @@ func Test(t *testing.T) {
 		})
 	}
 
+	var inits []func()
 	{
 		// example
 		var m Meta
 		m.Name = "example of Meta"
+		inits = append(inits, func() { m.ID = 0 })
 
 		var n NamedList
 		n.Name = "lug"
@@ -65,6 +67,7 @@ func Test(t *testing.T) {
 			name:  fmt.Sprintf("%06d_example", s.GetGroupIndex()),
 			group: &s,
 		})
+		inits = append(inits, func() { s.ID = 0 })
 		{
 			var sub Meta
 			sub.Name = "Submodel"
@@ -74,6 +77,7 @@ func Test(t *testing.T) {
 			n.Elements = []uint{34, 67, 231, 124}
 			sub.Groups = append(sub.Groups, &n)
 			m.Groups = append(m.Groups, &sub)
+			inits = append(inits, func() { sub.ID = 0 })
 		}
 
 		tcs = append(tcs, tc{
@@ -83,6 +87,9 @@ func Test(t *testing.T) {
 	}
 
 	for i := range tcs {
+		for _, f := range inits {
+			f()
+		}
 		name := fmt.Sprintf("%s.group", tcs[i].name)
 		t.Run(name, func(t *testing.T) {
 			mesh1 := GroupTest{base: tcs[i].group}

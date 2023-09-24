@@ -47,6 +47,8 @@ func FixMesh(mesh Mesh) {
 		}
 		walk(mesh.GetRootGroup())
 	}
+	// TODO problem - check with same ids 
+
 	// set id only if equal zero and root
 	{
 		set := func(gr Group) {
@@ -252,7 +254,7 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 			return
 		}
 		for i := range records {
-			fmt.Println(	i, records[i])
+			fmt.Println(i, records[i])
 		}
 	}
 	return
