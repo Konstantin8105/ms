@@ -2800,6 +2800,7 @@ func Run() (err error) {
 	// prepare model
 	// if filename == "" {
 	mm.model = new(Model)
+	groups.FixMesh(&mm)
 	mm.quit = &quit
 	// } else if strings.HasSuffix(strings.ToLower(filename), FileExtension) {
 	// 	// read native json file format
