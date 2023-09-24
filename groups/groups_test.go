@@ -14,7 +14,7 @@ const (
 	testdata = "../testdata"
 )
 
-func TestGroupsSave(t *testing.T) {
+func Test(t *testing.T) {
 	type tc struct {
 		name  string
 		group Group
