@@ -332,21 +332,6 @@ func (r *rootBase) SetRoot(root Mesh) {
 	r.root = root
 }
 
-// func SetRoot(root Mesh, gr Group) {
-// 	var walk func(g Group)
-// 	walk = func(gr Group) {
-// 		gr.SetRoot(root)
-// 		switch n := gr.(type) {
-// 		case *Meta:
-// 			for i := range n.Groups {
-// 				walk(n.Groups[i])
-// 			}
-// 		}
-// 	}
-// 	walk(gr)
-// 	FixIdGroups(gr)
-// }
-
 ///////////////////////////////////////////////////////////////////////////////
 
 type Idable struct{ ID int }
