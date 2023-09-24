@@ -749,7 +749,7 @@ func TestModel(t *testing.T) {
 			}
 
 			var o Model
-			if err = o.Open(tc.name); err != nil {
+			if err = o.Open(nil, tc.name); err != nil {
 				t.Fatal(err)
 			}
 			if fmt.Sprintf("%#v", mm) != fmt.Sprintf("%#v", o) {

@@ -9,6 +9,7 @@ import (
 	"github.com/Konstantin8105/gog"
 	"github.com/Konstantin8105/tf"
 	"github.com/Konstantin8105/vl"
+	"github.com/Konstantin8105/ms/groups"
 	"github.com/ncruces/zenity"
 )
 
@@ -2464,11 +2465,6 @@ func init() {
 	Operations = append(Operations, ops...)
 }
 
-type Groupable interface {
-	GetRootGroup() *Meta
-	Update(nodes, elements *uint)
-}
-
 type Mesh interface {
 	Filable
 	Viewable
@@ -2483,7 +2479,7 @@ type Mesh interface {
 	Pluginable
 	Measurementable
 
-	Groupable
+	groups.Groupable
 }
 
 const (

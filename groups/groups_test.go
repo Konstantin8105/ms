@@ -1,4 +1,4 @@
-package ms
+package groups
 
 import (
 	"fmt"
@@ -10,6 +10,20 @@ import (
 	"github.com/Konstantin8105/vl"
 )
 
+const (
+	testdata = "../testdata"
+)
+
+type GroupTest struct{ base Group }
+
+func (g GroupTest) GetRootGroup() Group {
+	return g.base
+}
+func (g GroupTest) Update(nodes, elements *uint)    {}
+func (g GroupTest) Select(nodes, elements []uint)   {}
+func (g GroupTest) GetSelectNodes() (ids []uint)    { return nil }
+func (g GroupTest) GetSelectElements() (ids []uint) { return nil }
+
 func TestGroupsSave(t *testing.T) {
 	type tc struct {
 		name  string
@@ -18,7 +32,7 @@ func TestGroupsSave(t *testing.T) {
 	var tcs []tc
 	for i := uint16(0); i < math.MaxUint16; i++ {
 		gi := GroupIndex(i)
-		g, ok := gi.newInstance()
+		g, ok := gi.newInstance(nil)
 		if !ok {
 			continue
 		}
@@ -35,12 +49,21 @@ func TestGroupsSave(t *testing.T) {
 
 		var n NamedList
 		n.Name = "lug"
+		n.ID = 100
 		n.Nodes = []uint{1, 2, 32, 576, 90, 98, 345, 234, 456, 5678, 7689, 46, 6}
 		n.Elements = []uint{34, 67, 23, 53465, 65, 68, 23, 657, 9, 143, 231, 124}
 		m.Groups = append(m.Groups, &n)
 		tcs = append(tcs, tc{
-			name:  fmt.Sprintf("%06d_example", n.GetId()),
+			name:  fmt.Sprintf("%06d_example", n.GetGroupIndex()),
 			group: &n,
+		})
+
+		var c Copy
+		c.Link = n.ID
+		m.Groups = append(m.Groups, &c)
+		tcs = append(tcs, tc{
+			name:  fmt.Sprintf("%06d_example", c.GetGroupIndex()),
+			group: &c,
 		})
 
 		var s NodeSupports
@@ -49,7 +72,7 @@ func TestGroupsSave(t *testing.T) {
 		s.Direction = [6]bool{true, true, false, true, false, false}
 		m.Groups = append(m.Groups, &s)
 		tcs = append(tcs, tc{
-			name:  fmt.Sprintf("%06d_example", s.GetId()),
+			name:  fmt.Sprintf("%06d_example", s.GetGroupIndex()),
 			group: &s,
 		})
 		{
@@ -64,7 +87,7 @@ func TestGroupsSave(t *testing.T) {
 		}
 
 		tcs = append(tcs, tc{
-			name:  fmt.Sprintf("%06d_example", m.GetId()),
+			name:  fmt.Sprintf("%06d_example", m.GetGroupIndex()),
 			group: &m,
 		})
 	}
@@ -72,26 +95,32 @@ func TestGroupsSave(t *testing.T) {
 	for i := range tcs {
 		name := fmt.Sprintf("%s.group", tcs[i].name)
 		t.Run(name, func(t *testing.T) {
-			e := tcs[i].group
+			mesh1 := GroupTest{base: tcs[i].group}
+			FixMesh(&mesh1)
+
 			// save
-			bs, err := SaveGroup(e)
+			bs, err := SaveGroup(mesh1.GetRootGroup())
 			if err != nil {
 				t.Fatal(err)
 			}
 			name := filepath.Join(testdata, name)
 			compare.Test(t, name, bs)
+
 			// parse
 			gr, err := ParseGroup(bs)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if s1, s2 := fmt.Sprintf("%s", e), fmt.Sprintf("%s", gr); s1 != s2 {
+			mesh2 := GroupTest{base: gr}
+			FixMesh(&mesh2)
+
+			if s1, s2 := fmt.Sprintf("%s", mesh1.GetRootGroup()),
+				fmt.Sprintf("%s", mesh2.GetRootGroup()); s1 != s2 {
 				t.Fatalf("not same after parse:\n%s\n%s", s1, s2)
 			}
 			// visualize
 			{
-				var mesh Mesh
-				tr := treeNode(gr, mesh, nil, nil)
+				tr := treeNode(gr, mesh2, nil, nil)
 				var sc vl.Screen
 				sc.Root = &tr
 				var cells [][]vl.Cell
@@ -100,9 +129,8 @@ func TestGroupsSave(t *testing.T) {
 				compare.Test(t, name+".view", []byte(vl.Convert(cells)))
 			}
 			{
-				var mesh Mesh
 				var sc vl.Screen
-				sc.Root = gr.GetWidget(mesh, nil)
+				sc.Root = gr.GetWidget(nil)
 				var cells [][]vl.Cell
 				sc.SetHeight(20)
 				sc.GetContents(50, &cells)

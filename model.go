@@ -332,7 +332,7 @@ func (mm *Model) SaveAs(filename string) (err error) {
 	return nil
 }
 
-func (mm *Model) Open(filename string) (err error) {
+func (mm *Model) Open(mesh Mesh, filename string) (err error) {
 	logger.Printf("Open")
 	// check
 	if filename == "" {
@@ -355,7 +355,7 @@ func (mm *Model) Open(filename string) (err error) {
 	*mm = model
 	mm.filename = filename
 	var gr Group
-	gr, err = ParseGroup([]byte(mm.Groups.Data))
+	gr, err = ParseGroup(mesh, []byte(mm.Groups.Data))
 	if err != nil {
 		err = fmt.Errorf("Open error: %v", err)
 		return

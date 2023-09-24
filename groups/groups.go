@@ -1,4 +1,4 @@
-package ms
+package groups
 
 import (
 	"encoding/json"
@@ -10,6 +10,66 @@ import (
 	"github.com/Konstantin8105/vl"
 )
 
+///////////////////////////////////////////////////////////////////////////////
+
+type Mesh interface {
+	GetRootGroup() Group
+	Update(nodes, elements *uint)
+
+	Select(nodes, elements []uint)
+	GetSelectNodes() (ids []uint)
+	GetSelectElements() (ids []uint)
+}
+
+func FixMesh(mesh Mesh) {
+	if mesh == nil {
+		panic("mesh is nil")
+	}
+	var maxId int = 1
+	{
+		// search maximal id
+		compare := func(id int) {
+			if maxId < id {
+				maxId = id
+			}
+		}
+		var walk func(g Group)
+		walk = func(gr Group) {
+			compare(gr.GetUniqueId())
+			switch n := gr.(type) {
+			case *Meta:
+				for i := range n.Groups {
+					walk(n.Groups[i])
+				}
+			}
+		}
+		walk(mesh.GetRootGroup())
+	}
+	// set id only if equal zero and root
+	{
+		set := func(gr Group) {
+			gr.SetRoot(mesh)
+			if gr.GetUniqueId() == 0 {
+				maxId++
+				gr.SetUniqueId(maxId)
+			}
+		}
+		var walk func(g Group)
+		walk = func(gr Group) {
+			set(gr)
+			switch n := gr.(type) {
+			case *Meta:
+				for i := range n.Groups {
+					walk(n.Groups[i])
+				}
+			}
+		}
+		walk(mesh.GetRootGroup())
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 // max uint16: 65535
 type GroupIndex uint16
 
@@ -18,6 +78,7 @@ const (
 	NamedListIndex               = 100
 	NodeSupportsIndex            = 1000
 	MetaIndex                    = 10000
+	CopyIndex                    = 10100
 )
 
 func (gi GroupIndex) String() string {
@@ -30,30 +91,47 @@ func (gi GroupIndex) String() string {
 		return "Node supports"
 	case MetaIndex:
 		return "Meta"
+	case CopyIndex:
+		return "Group copy"
 	}
 	return fmt.Sprintf("Undefined name of group %d", uint16(gi))
 }
 
-func (gi GroupIndex) newInstance() (_ Group, ok bool) {
+func (gi GroupIndex) newInstance(root Mesh) (g Group, ok bool) {
 	switch gi {
 	case NamedIndex:
-		return new(Named), true
+		g, ok = new(Named), true
 	case NamedListIndex:
-		return new(NamedList), true
+		g, ok = new(NamedList), true
 	case NodeSupportsIndex:
-		return new(NodeSupports), true
+		g, ok = new(NodeSupports), true
 	case MetaIndex:
-		return new(Meta), true
+		g, ok = new(Meta), true
+	case CopyIndex:
+		g, ok = new(Copy), true
 	}
-	return nil, false
+	if ok {
+		g.SetRoot(root)
+	}
+	return
 }
 
 type Group interface {
-	GetId() GroupIndex
-	String() string                                                 // return short name
-	Update(updating func(nodes, elements *[]uint))                  // update nodes, elements indexes
-	GetWidget(mm Mesh, updateTree func(detail Group)) (_ vl.Widget) // return gui widget
+	// UniqueId of group, only for save/parse of group
+	SetUniqueId(id int)
+	GetUniqueId() int
+
+	// update root group
+	SetRoot(root Mesh)
+
+	// operations with group
+	GetGroupIndex() GroupIndex
+	String() string
+	Update(updating func(nodes, elements *[]uint))         // update nodes, elements indexes
+	GetWidget(updateTree func(detail Group)) (_ vl.Widget) // return gui widget
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 type record struct {
 	Index GroupIndex
@@ -87,7 +165,7 @@ func SaveGroup(g Group) (bs []byte, err error) {
 			return
 		}
 	}
-	r := record{Index: g.GetId(), Data: string(bs)}
+	r := record{Index: g.GetGroupIndex(), Data: string(bs)}
 	return json.Marshal(&r)
 }
 
@@ -100,7 +178,7 @@ func ParseGroup(bs []byte) (g Group, err error) {
 	}
 	Id := r.Index
 	var ok bool
-	g, ok = Id.newInstance()
+	g, ok = Id.newInstance(nil)
 	if !ok {
 		err = fmt.Errorf("cannot create new instance for: %d", uint16(Id))
 		return
@@ -144,12 +222,12 @@ func treeNode(
 	}
 	// prepare edit widget
 	var list vl.List
-	list.Add(vl.TextStatic(g.GetId().String() + ":"))
+	list.Add(vl.TextStatic(g.GetGroupIndex().String() + ":"))
 	var btn vl.Button
 	btn.Compress = true
 	btn.SetText(g.String())
 	btn.OnClick = func() {
-		edit := g.GetWidget(mesh, updateTree)
+		edit := g.GetWidget(updateTree)
 		if edit == nil {
 			return
 		}
@@ -162,7 +240,7 @@ func treeNode(
 	case *Meta:
 		for i := range m.Groups {
 			if m.Groups[i] == nil {
-				logger.Printf("NOT ACCEPTABLE NIL")
+				// logger.Printf("NOT ACCEPTABLE NIL")
 			}
 			w := treeNode(m.Groups[i], mesh, updateTree, updateDetail)
 			t.Nodes = append(t.Nodes, w)
@@ -216,7 +294,7 @@ func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Wi
 			scroll.Root = &tree
 			list.Update(0, &scroll)
 		}
-		updateDetail(detail.GetWidget(mesh, updateTree))
+		updateDetail(detail.GetWidget(updateTree))
 	}
 
 	// first update
@@ -229,9 +307,45 @@ func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Wi
 
 ///////////////////////////////////////////////////////////////////////////////
 
-type Named struct{ Name string }
+type rootBase struct {
+	root Mesh
+}
 
-func (m Named) GetId() GroupIndex { return NamedIndex }
+func (r *rootBase) SetRoot(root Mesh) {
+	r.root = root
+}
+
+// func SetRoot(root Mesh, gr Group) {
+// 	var walk func(g Group)
+// 	walk = func(gr Group) {
+// 		gr.SetRoot(root)
+// 		switch n := gr.(type) {
+// 		case *Meta:
+// 			for i := range n.Groups {
+// 				walk(n.Groups[i])
+// 			}
+// 		}
+// 	}
+// 	walk(gr)
+// 	FixIdGroups(gr)
+// }
+
+///////////////////////////////////////////////////////////////////////////////
+
+type Idable struct{ ID int }
+
+func (id *Idable) SetUniqueId(v int) { id.ID = v }
+func (id Idable) GetUniqueId() int   { return id.ID }
+
+///////////////////////////////////////////////////////////////////////////////
+
+type Named struct {
+	Idable
+	rootBase
+	Name string
+}
+
+func (m Named) GetGroupIndex() GroupIndex { return NamedIndex }
 func (m Named) String() (name string) {
 	if m.Name == "" {
 		return "noname"
@@ -240,7 +354,7 @@ func (m Named) String() (name string) {
 }
 func (m *Named) Update(updating func(nodes, elements *[]uint)) { return }
 
-func (m *Named) GetWidget(mesh Mesh, updateTree func(g Group)) (w vl.Widget) {
+func (m *Named) GetWidget(updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
 	list.IgnoreVerticalFix = true
 	defer func() {
@@ -267,11 +381,12 @@ func (m *Named) GetWidget(mesh Mesh, updateTree func(g Group)) (w vl.Widget) {
 var _ Group = new(Meta)
 
 type Meta struct {
+	Idable
 	Named
 	Groups []Group
 }
 
-func (m Meta) GetId() GroupIndex { return MetaIndex }
+func (m Meta) GetGroupIndex() GroupIndex { return MetaIndex }
 func (m *Meta) Update(updating func(nodes, elements *[]uint)) {
 	for _, gr := range m.Groups {
 		if gr == nil {
@@ -280,14 +395,14 @@ func (m *Meta) Update(updating func(nodes, elements *[]uint)) {
 		gr.Update(updating)
 	}
 }
-func (m *Meta) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
+func (m *Meta) GetWidget(updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
 	list.IgnoreVerticalFix = true
 	defer func() {
 		w = &list
 	}()
 	{
-		n := m.Named.GetWidget(mm, func(_ Group) {
+		n := m.Named.GetWidget(func(_ Group) {
 			updateTree(m)
 		})
 		list.Add(n)
@@ -299,7 +414,7 @@ func (m *Meta) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 		var names []string
 		for i := uint16(0); i < math.MaxUint16; i++ {
 			gi := GroupIndex(i)
-			_, ok := gi.newInstance()
+			_, ok := gi.newInstance(m.root)
 			if !ok {
 				continue
 			}
@@ -318,7 +433,7 @@ func (m *Meta) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 		btn.OnClick = func() {
 			pos := combo.GetPos()
 			gi := GroupIndex(ids[pos])
-			g, ok := gi.newInstance()
+			g, ok := gi.newInstance(m.root)
 			if !ok {
 				return
 			}
@@ -335,7 +450,7 @@ func (m *Meta) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 		list.Add(&combo)
 		names = []string{"NONE"}
 		for _, gr := range m.Groups {
-			names = append(names, gr.GetId().String()+": "+gr.String())
+			names = append(names, gr.GetGroupIndex().String()+": "+gr.String())
 		}
 		combo.Add(names...)
 		combo.SetPos(0)
@@ -361,6 +476,7 @@ func (m *Meta) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 var _ Group = new(NamedList)
 
 type NamedList struct {
+	Idable
 	Named
 	Nodes, Elements []uint
 }
@@ -369,18 +485,18 @@ func (m NamedList) String() (name string) {
 	return fmt.Sprintf("%s: for %d nodes and %d elements",
 		m.Named.String(), len(m.Nodes), len(m.Elements))
 }
-func (m NamedList) GetId() GroupIndex { return NamedListIndex }
+func (m NamedList) GetGroupIndex() GroupIndex { return NamedListIndex }
 func (m *NamedList) Update(updating func(nodes, elements *[]uint)) {
 	updating(&m.Nodes, &m.Elements)
 }
-func (m *NamedList) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
+func (m *NamedList) GetWidget(updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
 	list.IgnoreVerticalFix = true
 	defer func() {
 		w = &list
 	}()
 	{
-		n := m.Named.GetWidget(mm, func(_ Group) {
+		n := m.Named.GetWidget(func(_ Group) {
 			updateTree(m)
 		})
 		list.Add(n)
@@ -390,13 +506,13 @@ func (m *NamedList) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
 		var btn vl.Button
 		btn.SetText("Select")
 		btn.OnClick = func() {
-			mm.Select(m.Nodes, m.Elements)
+			m.root.Select(m.Nodes, m.Elements)
 		}
 		list.Add(&btn)
 		list.Add(new(vl.Separator))
 	}
 	{
-		change := Change(mm, true, true, &m.Nodes, &m.Elements, func() {
+		change := Change(m.root, true, true, &m.Nodes, &m.Elements, func() {
 			updateTree(m)
 		})
 		list.Add(change)
@@ -413,12 +529,13 @@ var dir = [6]string{"Dx", "Dy", "Dz", "Rx", "Ry", "Rz"}
 var _ Group = new(NodeSupports)
 
 type NodeSupports struct {
+	Idable
 	Named
 	Direction [6]bool
 	Nodes     []uint
 }
 
-func (m NodeSupports) GetId() GroupIndex {
+func (m NodeSupports) GetGroupIndex() GroupIndex {
 	return NodeSupportsIndex
 }
 
@@ -438,14 +555,14 @@ func (m *NodeSupports) Update(updating func(nodes, elements *[]uint)) {
 	updating(&m.Nodes, nil)
 }
 
-func (m *NodeSupports) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget) {
+func (m *NodeSupports) GetWidget(updateTree func(g Group)) (w vl.Widget) {
 	var list vl.List
 	list.IgnoreVerticalFix = true
 	defer func() {
 		w = &list
 	}()
 	{
-		n := m.Named.GetWidget(mm, func(_ Group) {
+		n := m.Named.GetWidget(func(_ Group) {
 			updateTree(m)
 		})
 		list.Add(n)
@@ -455,7 +572,7 @@ func (m *NodeSupports) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget
 		var btn vl.Button
 		btn.SetText("Select")
 		btn.OnClick = func() {
-			mm.Select(m.Nodes, nil)
+			m.root.Select(m.Nodes, nil)
 		}
 		list.Add(&btn)
 		list.Add(new(vl.Separator))
@@ -476,12 +593,75 @@ func (m *NodeSupports) GetWidget(mm Mesh, updateTree func(g Group)) (w vl.Widget
 		list.Add(new(vl.Separator))
 	}
 	{
-		change := Change(mm, true, false, &m.Nodes, nil, func() {
+		change := Change(m.root, true, false, &m.Nodes, nil, func() {
 			updateTree(m)
 		})
 		list.Add(change)
 		list.Add(new(vl.Separator))
 		// TODO update screen
+	}
+	return
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+type Copy struct {
+	Idable
+	rootBase
+	Link int
+}
+
+func getGroupById(id int, root Group) (group Group) {
+	isEmpty := false
+	var walk func(g Group)
+	walk = func(gr Group) {
+		if gr == nil {
+			return
+		}
+		if gr.GetUniqueId() == 0 {
+			isEmpty = true
+		}
+		if gr.GetUniqueId() == id {
+			group = gr
+			return
+		}
+		switch n := gr.(type) {
+		case *Meta:
+			for i := range n.Groups {
+				walk(n.Groups[i])
+			}
+		}
+	}
+	walk(root)
+	if isEmpty {
+		// logger.Printf("Not valid id")
+	}
+	return
+}
+
+func (c Copy) GetGroupIndex() GroupIndex { return CopyIndex }
+func (c Copy) String() string {
+	if c.Link == 0 {
+		return "No copy"
+	}
+	if c.root == nil {
+		return fmt.Sprintf("Link have not root")
+	}
+	gr := getGroupById(c.Link, c.root.GetRootGroup())
+	if gr == nil {
+		return fmt.Sprintf("Link to undefined group")
+	}
+	return fmt.Sprintf("Id:%d\n%s", c.Link, gr.String())
+}
+func (c Copy) Update(updating func(nodes, elements *[]uint)) { return }
+func (c *Copy) GetWidget(updateTree func(detail Group)) (w vl.Widget) {
+	var list vl.List
+	list.IgnoreVerticalFix = true
+	defer func() {
+		w = &list
+	}()
+	{
+		// TODO
 	}
 	return
 }
@@ -531,8 +711,8 @@ func Change(m Mesh,
 
 	b.SetText("Change")
 	b.OnClick = func() {
-		newCoordinates := m.GetSelectNodes(Many)
-		newElements := m.GetSelectElements(Many, nil)
+		newCoordinates := m.GetSelectNodes()
+		newElements := m.GetSelectElements()
 		if len(newCoordinates) == 0 && len(newElements) == 0 {
 			return
 		}
@@ -566,3 +746,5 @@ func Change(m Mesh,
 
 	return
 }
+
+///////////////////////////////////////////////////////////////////////////////
