@@ -47,7 +47,7 @@ func FixMesh(mesh Mesh) {
 		}
 		walk(mesh.GetRootGroup())
 	}
-	// TODO problem - check with same ids 
+	// TODO problem - check with same ids
 
 	// set id only if equal zero and root
 	{
@@ -222,9 +222,11 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 		case *Meta: // only for groups with slice of Groups
 			var store struct {
 				Name string
+				ID   int
 				Ids  []int
 			}
 			store.Name = m.Name
+			store.ID = m.ID
 			for _, gr := range m.Groups {
 				store.Ids = append(store.Ids, gr.GetUniqueId())
 			}
