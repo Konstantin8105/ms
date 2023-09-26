@@ -258,6 +258,78 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 		for i := range records {
 			fmt.Println(i, records[i])
 		}
+		var groups []Group
+		for _, record := range records {
+			var ok bool
+			gr, ok := record.Index.newInstance(nil)
+			if !ok {
+				err = fmt.Errorf("cannot create new instance for: %d", record.Index)
+				return
+			}
+			if record.Index == MetaIndex {
+				continue
+			}
+			err = json.Unmarshal([]byte(record.Data), gr)
+			if err != nil {
+				return
+			}
+			groups = append(groups, gr)
+		}
+		fmt.Println(	">>> 2")
+		for i := range groups {
+			fmt.Println(i, groups[i])
+		}
+
+		for i := len(records) - 1; 0 <= i; i-- {
+			record := records[i]
+			var ok bool
+			_, ok = record.Index.newInstance(nil)
+			if !ok {
+				err = fmt.Errorf("cannot create new instance for: %d", record.Index)
+				return
+			}
+			if record.Index != MetaIndex {
+				continue
+			}
+
+			var store struct {
+				Name string
+				ID   int
+				Ids  []int
+			}
+			err = json.Unmarshal([]byte(record.Data), &store)
+			if err != nil {
+				return
+			}
+			var m Meta
+			m.Name = store.Name
+			m.ID = store.ID
+
+			for _, id := range store.Ids {
+				found := false
+				for ig := range groups {
+					if id != groups[ig].GetUniqueId() {
+						continue
+					}
+					found = true
+					m.Groups = append(m.Groups, groups[ig])
+					groups = append(groups[:ig], groups[ig+1:]...)
+					break
+				}
+				if !found {
+					fmt.Println("Not found:", id)
+				}
+			}
+
+			groups = append(groups, &m)
+		}
+
+		fmt.Println(	">>> 3")
+		for i := range groups {
+			fmt.Println(i, groups[i])
+			bs, err := SaveGroup(groups[i])
+			fmt.Println(	string(bs), err)
+		}
 	}
 	return
 }
