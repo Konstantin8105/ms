@@ -247,7 +247,7 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 		records = append(records, r)
 	}
 
-	bs, err = json.Marshal(&records)
+	bs, err = json.MarshalIndent(&records,"","\t")
 	{
 		// test of parse
 		var records []record
