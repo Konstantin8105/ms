@@ -6,11 +6,11 @@ require (
 	github.com/Konstantin8105/compare v0.0.0-20230911112847-84f0fc539f0a
 	github.com/Konstantin8105/ds v0.0.0-20230911101041-2823ea6497ce
 	github.com/Konstantin8105/errors v0.1.0
-	github.com/Konstantin8105/glsymbol v0.0.0-20230823095635-fb2ccaf8582e
+	github.com/Konstantin8105/glsymbol v0.0.0-20230929084058-89782ab16f60
 	github.com/Konstantin8105/gog v0.0.0-20230915183518-777c510635ff
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20230612182433-2ec4a099d755
-	github.com/Konstantin8105/vl v0.0.0-20230923113629-0d20b8dc5a5d
+	github.com/Konstantin8105/vl v0.0.0-20230929094058-f42e1bbd42f7
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b
