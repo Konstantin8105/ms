@@ -59,6 +59,9 @@ func (u *Undo) Undo() {
 	pre, post := u.sync(true)
 	pre()
 	defer post()
+	if u.list == nil {
+		return
+	}
 	// action
 	el := u.list.Back()
 	if el == nil {
