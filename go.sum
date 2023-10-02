@@ -18,8 +18,8 @@ github.com/Konstantin8105/tf v0.0.0-20230612182433-2ec4a099d755/go.mod h1:ttVpgk
 github.com/Konstantin8105/tree v0.1.0/go.mod h1:/KrCn6rMgf1uoXUY2HjVvML1LeLUULD1BDiHWJhJwII=
 github.com/Konstantin8105/tree v0.1.1 h1:EaEOLocAJ5IyQ+KisgY43X/TXoVyFXVd1nsykCleBxw=
 github.com/Konstantin8105/tree v0.1.1/go.mod h1:/KrCn6rMgf1uoXUY2HjVvML1LeLUULD1BDiHWJhJwII=
-github.com/Konstantin8105/vl v0.0.0-20230929111730-80929527a3a5 h1:iZ3naKRFGM+SnY30AcBsvS90YmuhMgcH4nmNiJ2QI94=
-github.com/Konstantin8105/vl v0.0.0-20230929111730-80929527a3a5/go.mod h1:LAt18EJKOvejjNx4HEa9OHdxLe5bKD+1cKPYu93Mq/A=
+github.com/Konstantin8105/vl v0.0.0-20231002125550-d8e5ec0b94c3 h1:nVAiJXnQIZmrTyZocKiv6HKjYzfvKnbdH0cAXJZwVVE=
+github.com/Konstantin8105/vl v0.0.0-20231002125550-d8e5ec0b94c3/go.mod h1:LAt18EJKOvejjNx4HEa9OHdxLe5bKD+1cKPYu93Mq/A=
 github.com/akavel/rsrc v0.10.2 h1:Zxm8V5eI1hW4gGaYsJQUhxpjkENuG91ki8B4zCrvEsw=
 github.com/akavel/rsrc v0.10.2/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=

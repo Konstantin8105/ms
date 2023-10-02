@@ -389,7 +389,7 @@ func treeNode(
 	var list vl.List
 	list.Add(vl.TextStatic(gr.GetGroupIndex().String() + ":"))
 	var btn vl.Button
-	btn.Compress = true
+	btn.Compress()
 	btn.SetText(gr.String())
 	btn.OnClick = func() {
 		edit := gr.GetWidget(updateTree)
@@ -579,7 +579,7 @@ func (m *Meta) GetWidget(updateTree func(gr Group)) (w vl.Widget) {
 		}
 		var btn vl.Button
 		btn.SetText("Add group")
-		btn.Compress = true
+		btn.Compress()
 		btn.OnClick = func() {
 			pos := combo.GetPos()
 			gi := GroupIndex(ids[pos])
@@ -606,7 +606,7 @@ func (m *Meta) GetWidget(updateTree func(gr Group)) (w vl.Widget) {
 		combo.SetPos(0)
 		var btn vl.Button
 		btn.SetText("Remove group")
-		btn.Compress = true
+		btn.Compress()
 		btn.OnClick = func() {
 			pos := combo.GetPos()
 			if pos == 0 {
@@ -854,7 +854,7 @@ func (c *Copy) GetWidget(updateTree func(detail Group)) (w vl.Widget) {
 		}
 		var btn vl.Button
 		btn.SetText("Link")
-		btn.Compress = true
+		btn.Compress()
 		btn.OnClick = func() {
 			pos := combo.GetPos()
 			if pos == 0 {
