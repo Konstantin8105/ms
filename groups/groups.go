@@ -247,7 +247,7 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 		records = append(records, r)
 	}
 
-	bs, err = json.MarshalIndent(&records,"","\t")
+	bs, err = json.MarshalIndent(&records, "", "\t")
 	{
 		// test of parse
 		var records []record
@@ -275,7 +275,7 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 			}
 			groups = append(groups, gr)
 		}
-		fmt.Println(	">>> 2")
+		fmt.Println(">>> 2")
 		for i := range groups {
 			fmt.Println(i, groups[i])
 		}
@@ -324,11 +324,11 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 			groups = append(groups, &m)
 		}
 
-		fmt.Println(	">>> 3")
+		fmt.Println(">>> 3")
 		for i := range groups {
 			fmt.Println(i, groups[i])
 			bs, err := SaveGroup(groups[i])
-			fmt.Println(	string(bs), err)
+			fmt.Println(string(bs), err)
 		}
 	}
 	return
@@ -506,7 +506,7 @@ func (m *Named) Update(updating func(nodes, elements *[]uint)) { return }
 
 func (m *Named) GetWidget(updateTree func(gr Group)) (w vl.Widget) {
 	var list vl.List
-	list.IgnoreVerticalFix = true
+	list.Compress()
 	defer func() {
 		w = &list
 	}()
@@ -547,7 +547,7 @@ func (m *Meta) Update(updating func(nodes, elements *[]uint)) {
 }
 func (m *Meta) GetWidget(updateTree func(gr Group)) (w vl.Widget) {
 	var list vl.List
-	list.IgnoreVerticalFix = true
+	list.Compress()
 	defer func() {
 		w = &list
 	}()
@@ -641,7 +641,7 @@ func (m *NamedList) Update(updating func(nodes, elements *[]uint)) {
 }
 func (m *NamedList) GetWidget(updateTree func(gr Group)) (w vl.Widget) {
 	var list vl.List
-	list.IgnoreVerticalFix = true
+	list.Compress()
 	defer func() {
 		w = &list
 	}()
@@ -707,7 +707,7 @@ func (m *NodeSupports) Update(updating func(nodes, elements *[]uint)) {
 
 func (m *NodeSupports) GetWidget(updateTree func(gr Group)) (w vl.Widget) {
 	var list vl.List
-	list.IgnoreVerticalFix = true
+	list.Compress()
 	defer func() {
 		w = &list
 	}()
@@ -826,7 +826,7 @@ func (c Copy) String() string {
 func (c Copy) Update(updating func(nodes, elements *[]uint)) { return }
 func (c *Copy) GetWidget(updateTree func(detail Group)) (w vl.Widget) {
 	var list vl.List
-	list.IgnoreVerticalFix = true
+	list.Compress()
 	defer func() {
 		w = &list
 	}()
@@ -886,7 +886,7 @@ func Change(m Mesh,
 	w vl.Widget,
 ) {
 	var list vl.List
-	list.IgnoreVerticalFix = true
+	list.Compress()
 	defer func() {
 		w = &list
 	}()
