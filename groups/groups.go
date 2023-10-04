@@ -437,10 +437,10 @@ func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Wi
 			return
 		}
 		if l1, ok := list.Get(1).(*vl.Scroll); ok {
-			l1.Root = w
+			l1.SetRoot(w)
 		} else {
 			var scroll vl.Scroll
-			scroll.Root = w
+			scroll.SetRoot(w)
 			list.Update(1, &scroll)
 		}
 	}
@@ -453,10 +453,10 @@ func NewGroupTree(mesh Mesh, closedApp *bool, actions *chan ds.Action) (gt vl.Wi
 			updateDetail,
 		)
 		if l0, ok := list.Get(0).(*vl.Scroll); ok {
-			l0.Root = &tree
+			l0.SetRoot(&tree)
 		} else {
 			var scroll vl.Scroll
-			scroll.Root = &tree
+			scroll.SetRoot(&tree)
 			list.Update(0, &scroll)
 		}
 		updateDetail(detail.GetWidget(updateTree))
@@ -512,7 +512,7 @@ func (m *Named) GetWidget(updateTree func(gr Group)) (w vl.Widget) {
 	}()
 	{
 		list.Add(vl.TextStatic("Rename:"))
-		var name vl.Inputbox
+		var name vl.InputBox
 		list.Add(&name)
 		name.SetText(m.Name)
 		var btn vl.Button
@@ -571,7 +571,7 @@ func (m *Meta) GetWidget(updateTree func(gr Group)) (w vl.Widget) {
 			ids = append(ids, gi)
 			names = append(names, gi.String())
 		}
-		var combo vl.Combobox
+		var combo vl.ComboBox
 		combo.Add(names...)
 		list.Add(&combo)
 		if 0 < len(names) {
@@ -596,7 +596,7 @@ func (m *Meta) GetWidget(updateTree func(gr Group)) (w vl.Widget) {
 	{
 		list.Add(vl.TextStatic("Remove group:"))
 		var names []string
-		var combo vl.Combobox
+		var combo vl.ComboBox
 		list.Add(&combo)
 		names = []string{"NONE"}
 		for _, gr := range m.Groups {
@@ -846,7 +846,7 @@ func (c *Copy) GetWidget(updateTree func(detail Group)) (w vl.Widget) {
 		names = append([]string{"NONE"}, names...)
 		ids = append([]int{-1}, ids...)
 
-		var combo vl.Combobox
+		var combo vl.ComboBox
 		combo.Add(names...)
 		list.Add(&combo)
 		if 0 < len(names) {

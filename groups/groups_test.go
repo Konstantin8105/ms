@@ -129,7 +129,7 @@ func Test(t *testing.T) {
 			{
 				tr := treeNode(gr, mesh2, nil, nil)
 				var sc vl.Screen
-				sc.Root = &tr
+				sc.SetRoot(&tr)
 				var cells [][]vl.Cell
 				sc.SetHeight(20)
 				sc.GetContents(50, &cells)
@@ -137,7 +137,7 @@ func Test(t *testing.T) {
 			}
 			{
 				var sc vl.Screen
-				sc.Root = gr.GetWidget(nil)
+				sc.SetRoot(gr.GetWidget(nil))
 				var cells [][]vl.Cell
 				sc.SetHeight(20)
 				sc.GetContents(50, &cells)

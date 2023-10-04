@@ -1,16 +1,16 @@
 000000001|Meta:                                             | width:000000050
-000000002|[ EXAMPLE OF META   ]                             | width:000000050
+000000002|[ EXAMPLE OF META  ]                              | width:000000050
 000000003|+-Named list:                                     | width:000000050
-000000004|| [ LUG: for 13 nodes and 12 elements   ]         | width:000000050
+000000004|| [ LUG: for 13 nodes and 12 elements  ]          | width:000000050
 000000005|+-Group copy:                                     | width:000000050
-000000006|| [ Id:100                              ]         | width:000000050
-000000007|| [ LUG: for 13 nodes and 12 elements   ]         | width:000000050
+000000006|| [ Id:100                             ]          | width:000000050
+000000007|| [ LUG: for 13 nodes and 12 elements  ]          | width:000000050
 000000008|+-Node supports:                                  | width:000000050
-000000009|| [ BASE SUPPORT: Dx Dy Rx for 15 nodes   ]       | width:000000050
+000000009|| [ BASE SUPPORT: Dx Dy Rx for 15 nodes  ]        | width:000000050
 000000010|+-Meta:                                           | width:000000050
-000000011|  [ SUBMODEL   ]                                  | width:000000050
+000000011|  [ SUBMODEL  ]                                   | width:000000050
 000000012|  +-Named list:                                   | width:000000050
-000000013|    [ HOLE: for 4 nodes and 4 elements   ]        | width:000000050
+000000013|    [ HOLE: for 4 nodes and 4 elements  ]         | width:000000050
 000000014|                                                  | width:000000050
 000000015|                                                  | width:000000050
 000000016|                                                  | width:000000050

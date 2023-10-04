@@ -1748,7 +1748,7 @@ func init() {
 				list.Add(nt)
 				inits = append(inits, init2)
 
-				ch.Root = &list
+				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
 					getC: func() (basePoint [3]float64, dc diffCoordinate, ok bool) {
@@ -1789,7 +1789,7 @@ func init() {
 				)
 				inits = append(inits, initw)
 
-				ch.Root = w
+				ch.SetRoot(w)
 				paths = append(paths, path{
 					w: &ch,
 					getC: func() (basePoint [3]float64, dc diffCoordinate, ok bool) {
@@ -1825,7 +1825,7 @@ func init() {
 				list.Add(w)
 				inits = append(inits, initi)
 
-				ch.Root = &list
+				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
 					getC: func() (basePoint [3]float64, dc diffCoordinate, ok bool) {
@@ -1909,7 +1909,7 @@ func init() {
 				list.Add(parts)
 				inits = append(inits, initp)
 
-				ch.Root = &list
+				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
 					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
@@ -1965,7 +1965,7 @@ func init() {
 				list.Add(parts)
 				inits = append(inits, initp)
 
-				ch.Root = &list
+				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
 					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
@@ -2037,7 +2037,7 @@ func init() {
 					list.Add(&h)
 				}
 
-				ch.Root = &list
+				ch.SetRoot(&list)
 
 				paths = append(paths, path{
 					w: &ch,
@@ -2085,7 +2085,7 @@ func init() {
 				list.Add(parts)
 				inits = append(inits, initp)
 
-				ch.Root = &list
+				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
 					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
@@ -2192,7 +2192,7 @@ func init() {
 				}...)
 
 				list.Add(&plane)
-				ch.Root = &list
+				ch.SetRoot(&list)
 
 				paths = append(paths, path{
 					w: &ch,
@@ -2254,7 +2254,7 @@ func init() {
 				list.Add(n2)
 				inits = append(inits, init2)
 
-				ch.Root = &list
+				ch.SetRoot(&list)
 
 				paths = append(paths, path{
 					w: &ch,
@@ -2509,7 +2509,7 @@ func InputUnsigned(prefix, postfix string, defaultValue uint) (
 ) {
 	var (
 		list vl.ListH
-		in   vl.Inputbox
+		in   vl.InputBox
 	)
 	list.Add(vl.TextStatic(prefix))
 	in.SetText(fmt.Sprintf("%d", defaultValue))
@@ -2535,7 +2535,7 @@ func InputFloat(prefix, postfix string, defaultValue float64) (
 ) {
 	var (
 		list vl.ListH
-		in   vl.Inputbox
+		in   vl.InputBox
 	)
 	list.Add(vl.TextStatic(prefix))
 
@@ -2709,10 +2709,11 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	// prepare geometry editor
 	var (
 		list   vl.List
-		scroll = vl.Scroll{Root: &list}
+		scroll vl.Scroll
 		tabs   vl.Tabs
 		inits  []func()
 	)
+	scroll.SetRoot(&list)
 	tabs.Add("Editor", &scroll)
 
 	// prepare group tree
@@ -2726,12 +2727,15 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	tui = &tabs
 
 	view := make([]bool, len(Operations))
-	colHeader := make([]vl.CollapsingHeader, endGroup)
+	colHeader := make([]struct {
+		ch   vl.CollapsingHeader
+		list vl.List
+	}, endGroup)
 	for g := range colHeader {
-		colHeader[g].SetText(GroupID(g).String())
-		var sublist vl.List
-		colHeader[g].Root = &sublist
-		list.Add(&colHeader[g])
+		colHeader[g].ch.SetText(GroupID(g).String())
+		colHeader[g].ch.SetRoot(&colHeader[g].list)
+		colHeader[g].list.Compress()
+		list.Add(&colHeader[g].ch)
 	}
 	for g := range colHeader {
 		for i := range Operations {
@@ -2746,8 +2750,9 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 				return
 			}
 			r, init := part(mesh, actions, closedApp)
-			c.Root = r
-			colHeader[g].Root.(*vl.List).Add(&c)
+			c.SetRoot(r)
+			// colHeader[g].Root.(*vl.List).Add(&c)
+			// colHeader[g].Root.(*vl.List).Add(&c)
 			view[i] = true
 			inits = append(inits, init)
 		}
