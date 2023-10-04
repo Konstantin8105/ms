@@ -2751,8 +2751,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 			}
 			r, init := part(mesh, actions, closedApp)
 			c.SetRoot(r)
-			// colHeader[g].Root.(*vl.List).Add(&c)
-			// colHeader[g].Root.(*vl.List).Add(&c)
+			colHeader[g].list.Add(&c)
 			view[i] = true
 			inits = append(inits, init)
 		}
