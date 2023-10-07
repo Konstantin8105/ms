@@ -9,8 +9,8 @@ require (
 	github.com/Konstantin8105/glsymbol v0.0.0-20230929084058-89782ab16f60
 	github.com/Konstantin8105/gog v0.0.0-20230915183518-777c510635ff
 	github.com/Konstantin8105/pow v0.1.0
-	github.com/Konstantin8105/tf v0.0.0-20231005135824-0862f8395510
-	github.com/Konstantin8105/vl v0.0.0-20231005140421-4c9df2de9b36
+	github.com/Konstantin8105/tf v0.0.0-20231007135105-ef617777c299
+	github.com/Konstantin8105/vl v0.0.0-20231007145952-09c3840e53b8
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/go-gl/gl v0.0.0-20211210172815-726fda9656d6
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20221017161538-93cebf72946b
@@ -35,6 +35,6 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	golang.org/x/image v0.13.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 )

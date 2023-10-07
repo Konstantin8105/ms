@@ -1,1 +1,6 @@
-{"Index":100,"Data":"{\"ID\":2,\"Name\":\"\",\"Nodes\":null,\"Elements\":null}"}
+[
+	{
+		"Index": 100,
+		"Data": "{\"ID\":2,\"Name\":\"\",\"Nodes\":null,\"Elements\":null}"
+	}
+]

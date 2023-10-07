@@ -159,41 +159,6 @@ type record struct {
 
 // SaveGroup return stored information at json format
 func SaveGroup(gr Group) (bs []byte, err error) {
-	switch m := gr.(type) {
-	case *Meta: // only for groups with slice of Groups
-		var store struct {
-			Name  string
-			Datas []string
-		}
-		store.Name = m.Name
-		for _, gr := range m.Groups {
-			var b []byte
-			b, err = SaveGroup(gr)
-			if err != nil {
-				return
-			}
-			store.Datas = append(store.Datas, string(b))
-		}
-		bs, err = json.Marshal(&store)
-		if err != nil {
-			return
-		}
-	default: // all other groups
-		bs, err = json.Marshal(m)
-		if err != nil {
-			return
-		}
-	}
-	r := record{Index: gr.GetGroupIndex(), Data: string(bs)}
-	return json.Marshal(&r)
-}
-
-type node struct {
-	Index GroupIndex
-	Gr    Group
-}
-
-func saveGroupNew(gr Group) (bs []byte, err error) {
 	var nodes []node
 
 	add := func(gr Group) {
@@ -246,130 +211,82 @@ func saveGroupNew(gr Group) (bs []byte, err error) {
 		}
 		records = append(records, r)
 	}
+	return json.MarshalIndent(&records, "", "\t")
+}
 
-	bs, err = json.MarshalIndent(&records, "", "\t")
-	{
-		// test of parse
-		var records []record
-		err = json.Unmarshal(bs, &records)
-		if err != nil {
-			return
-		}
-		for i := range records {
-			fmt.Println(i, records[i])
-		}
-		var groups []Group
-		for _, record := range records {
-			var ok bool
-			gr, ok := record.Index.newInstance(nil)
-			if !ok {
-				err = fmt.Errorf("cannot create new instance for: %d", record.Index)
-				return
-			}
-			if record.Index == MetaIndex {
-				continue
-			}
-			err = json.Unmarshal([]byte(record.Data), gr)
-			if err != nil {
-				return
-			}
-			groups = append(groups, gr)
-		}
-		fmt.Println(">>> 2")
-		for i := range groups {
-			fmt.Println(i, groups[i])
-		}
-
-		for i := len(records) - 1; 0 <= i; i-- {
-			record := records[i]
-			var ok bool
-			_, ok = record.Index.newInstance(nil)
-			if !ok {
-				err = fmt.Errorf("cannot create new instance for: %d", record.Index)
-				return
-			}
-			if record.Index != MetaIndex {
-				continue
-			}
-
-			var store struct {
-				Name string
-				ID   int
-				Ids  []int
-			}
-			err = json.Unmarshal([]byte(record.Data), &store)
-			if err != nil {
-				return
-			}
-			var m Meta
-			m.Name = store.Name
-			m.ID = store.ID
-
-			for _, id := range store.Ids {
-				found := false
-				for ig := range groups {
-					if id != groups[ig].GetUniqueId() {
-						continue
-					}
-					found = true
-					m.Groups = append(m.Groups, groups[ig])
-					groups = append(groups[:ig], groups[ig+1:]...)
-					break
-				}
-				if !found {
-					fmt.Println("Not found:", id)
-				}
-			}
-
-			groups = append(groups, &m)
-		}
-
-		fmt.Println(">>> 3")
-		for i := range groups {
-			fmt.Println(i, groups[i])
-			bs, err := SaveGroup(groups[i])
-			fmt.Println(string(bs), err)
-		}
-	}
-	return
+type node struct {
+	Index GroupIndex
+	Gr    Group
 }
 
 // ParseGroup return group from json
 func ParseGroup(bs []byte) (gr Group, err error) {
-	var r record
-	err = json.Unmarshal(bs, &r)
+	var records []record
+	err = json.Unmarshal(bs, &records)
 	if err != nil {
 		return
 	}
-	Id := r.Index
-	var ok bool
-	gr, ok = Id.newInstance(nil)
-	if !ok {
-		err = fmt.Errorf("cannot create new instance for: %d", uint16(Id))
-		return
-	}
-	switch m := gr.(type) {
-	case *Meta: // only for groups with slice of Groups
-		var store struct {
-			Name  string
-			Datas []string
+	var groups []Group
+	for _, record := range records {
+		gr, ok := record.Index.newInstance(nil)
+		if !ok {
+			err = fmt.Errorf("cannot create new instance for: %d", record.Index)
+			return nil, err
 		}
-		err = json.Unmarshal([]byte(r.Data), &store)
+		if record.Index == MetaIndex {
+			continue
+		}
+		err = json.Unmarshal([]byte(record.Data), gr)
+		if err != nil {
+			return nil, err
+		}
+		groups = append(groups, gr)
+	}
+	for i := len(records) - 1; 0 <= i; i-- {
+		record := records[i]
+		var ok bool
+		_, ok = record.Index.newInstance(nil)
+		if !ok {
+			err = fmt.Errorf("cannot create new instance for: %d", record.Index)
+			return
+		}
+		if record.Index != MetaIndex {
+			continue
+		}
+		var store struct {
+			Name string
+			ID   int
+			Ids  []int
+		}
+		err = json.Unmarshal([]byte(record.Data), &store)
 		if err != nil {
 			return
 		}
+		var m Meta
 		m.Name = store.Name
-		for _, d := range store.Datas {
-			var inner Group
-			inner, err = ParseGroup([]byte(d))
-			if err != nil {
-				return
-			}
-			m.Groups = append(m.Groups, inner)
-		}
+		m.ID = store.ID
 
-	default: // all other groups
-		err = json.Unmarshal([]byte(r.Data), m)
+		for _, id := range store.Ids {
+			found := false
+			for ig := range groups {
+				if id != groups[ig].GetUniqueId() {
+					continue
+				}
+				found = true
+				m.Groups = append(m.Groups, groups[ig])
+				groups = append(groups[:ig], groups[ig+1:]...)
+				break
+			}
+			if !found {
+				fmt.Println("Not found:", id)
+			}
+		}
+		groups = append(groups, &m)
+	}
+	if len(groups) == 1 {
+		gr = groups[0]
+	} else {
+		err = fmt.Errorf("Not valid amounts groups: %d", len(groups))
 	}
 	return
 }
