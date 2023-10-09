@@ -2708,6 +2708,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 
 	// prepare geometry editor
 	var (
+		menu   vl.Menu
 		list   vl.List
 		scroll vl.Scroll
 		tabs   vl.Tabs
@@ -2724,10 +2725,12 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	inits = append(inits, init)
 
 	tabs.Add("Model tree", tree)
-	tui = &tabs
+	menu.SetRoot(&tabs)
+	tui = &menu
 
 	view := make([]bool, len(Operations))
 	colHeader := make([]struct {
+		menu vl.Menu
 		ch   vl.CollapsingHeader
 		list vl.List
 	}, endGroup)
@@ -2754,7 +2757,12 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 			colHeader[g].list.Add(&c)
 			view[i] = true
 			inits = append(inits, init)
+
+			colHeader[g].menu.AddText(Operations[i].Name)
 		}
+	}
+	for g := range colHeader {
+		menu.AddMenu(GroupID(g).String(), &colHeader[g].menu)
 	}
 	initialization = func() {
 		for i := range inits {
