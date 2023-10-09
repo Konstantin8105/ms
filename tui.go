@@ -2,6 +2,7 @@ package ms
 
 import (
 	"fmt"
+	"os"
 	"runtime/debug"
 	"strconv"
 
@@ -2742,6 +2743,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	}
 	for g := range colHeader {
 		for i := range Operations {
+			i := i
 			if Operations[i].Group != GroupID(g) {
 				continue
 			}
@@ -2758,7 +2760,10 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 			view[i] = true
 			inits = append(inits, init)
 
-			colHeader[g].menu.AddText(Operations[i].Name)
+			colHeader[g].menu.AddButton(Operations[i].Name, func() {
+				// TODO
+				fmt.Fprintf(os.Stdout, "Click: %s\n", Operations[i].Name)
+			})
 		}
 	}
 	for g := range colHeader {
