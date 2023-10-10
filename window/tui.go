@@ -157,7 +157,7 @@ func (t *Tui) Draw(x, y, w, h int32) {
 	gl.LoadIdentity()
 
 	widthSymbol := uint(float64(w) / float64(t.font.MaxGlyphWidth))
-	heightSymbol := uint(h) / uint(t.font.MaxGlyphHeight)
+	heightSymbol := uint(float64(h) / float64(t.font.MaxGlyphHeight))
 	t.screen.SetHeight(heightSymbol)
 	t.screen.GetContents(widthSymbol, &t.cells)
 	for r := 0; r < len(t.cells); r++ {
