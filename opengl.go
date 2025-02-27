@@ -395,7 +395,7 @@ func (op *Opengl) model3d(s viewState, fill selectState) {
 			ps = append(ps, cos[i].Point3d)
 		}
 		// update camera
-		min, max := gog.BorderPoints(ps...)
+		min, max := gog.BorderPoints3d(ps...)
 		// minimal camera radius is diameter of cylinder with object inside
 		dia := math.Sqrt(pow.E2(max[0]-min[0]) + pow.E2(max[2]-min[2]))
 		op.camera.R = dia

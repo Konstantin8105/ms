@@ -718,7 +718,7 @@ func (mm *Model) AddConvexLines(nodes, elements []uint) {
 	for _, n := range nodes {
 		ps = append(ps, mm.Coords[n].Point3d)
 	}
-	min, max := gog.BorderPoints(ps...)
+	min, max := gog.BorderPoints3d(ps...)
 	dm := gog.Point3d{
 		math.Abs(max[0] - min[0]),
 		math.Abs(max[1] - min[1]),
