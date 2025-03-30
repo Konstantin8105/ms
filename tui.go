@@ -113,7 +113,7 @@ func init() {
 						zenity.ConfirmOverwrite(),
 						zenity.Filename(name),
 						zenity.FileFilters{
-							{"ms files", []string{"*." + FileExtension}, false},
+							{Name: "ms files", Patterns: []string{"*." + FileExtension}, CaseFold: false},
 						})
 					if err != nil {
 						return
@@ -124,13 +124,17 @@ func init() {
 					zenity.Filename("."),
 					zenity.Title("Select file"),
 					zenity.FileFilters{
-						{"ms files", []string{"*." + FileExtension}, false},
+						{Name: "ms files", Patterns: []string{"*." + FileExtension}, CaseFold: false},
 					})
 				if err != nil {
-					err = nil
+					// ignore error
 					return
 				}
-				m.Open(name)
+				err = m.Open(name)
+				if err != nil {
+					// ignore error
+					return
+				}
 				str := m.GetPresentFilename()
 				txt.SetText(str)
 			}
@@ -180,12 +184,17 @@ func init() {
 					zenity.ConfirmOverwrite(),
 					zenity.Filename(name),
 					zenity.FileFilters{
-						{"ms files", []string{"*." + FileExtension}, false},
+						{Name: "ms files", Patterns: []string{"*." + FileExtension}, CaseFold: false},
 					})
 				if err != nil {
+					// ignore error
 					return
 				}
-				m.SaveAs(name)
+				err = m.SaveAs(name)
+				if err != nil {
+					// ignore error
+					return
+				}
 			}
 			list.Add(&b)
 
@@ -211,7 +220,7 @@ func init() {
 						zenity.ConfirmOverwrite(),
 						zenity.Filename(name),
 						zenity.FileFilters{
-							{"ms files", []string{"*." + FileExtension}, false},
+							{Name: "ms files", Patterns: []string{"*." + FileExtension}, CaseFold: false},
 						})
 					if err != nil {
 						return
@@ -2098,7 +2107,6 @@ func init() {
 						if !aok {
 							return
 						}
-						ok = true
 						c, ok := m.GetCoordByID(n[0])
 						if !ok {
 							return
@@ -2704,7 +2712,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	}()
 	{
 		// widgets amount
-		logger.Printf(fmt.Sprintf("Amount widgets: %d", len(Operations)))
+		logger.Printf("Amount widgets: %d", len(Operations))
 	}
 
 	// prepare geometry editor

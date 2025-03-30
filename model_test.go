@@ -68,7 +68,7 @@ func TestIntegration(t *testing.T) {
 		var wg sync.WaitGroup
 		run := func(name string, f func()) {
 			if name != reset {
-				logger.Printf(fmt.Sprintf("begin of %s", name))
+				logger.Printf("begin of %s", name)
 			}
 			wg.Add(1)
 			*ch <- func() (fus bool) {
@@ -79,11 +79,10 @@ func TestIntegration(t *testing.T) {
 			wg.Wait()
 			// time.Sleep(time.Second)
 			if name != reset {
-				logger.Printf(fmt.Sprintf("end of %s", name))
-			}
-
-			// screenshoot
-			if name == reset {
+				logger.Printf("end of %s", name)
+			} else {
+				// screenshoot
+				logger.Printf("reset")
 				return
 			}
 			name = strings.ReplaceAll(name, " ", "_")

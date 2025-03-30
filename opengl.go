@@ -197,7 +197,7 @@ func (op *Opengl) Draw(x, y, w, h int32) {
 	}
 	{
 		// view status
-		op.font.Printf(10, float32(h)-35, fmt.Sprintf("%s", op.state))
+		op.font.Printf(10, float32(h)-35, op.state.String())
 
 		name := "Select:"
 		if op.cursorLeft&selectPoints != 0 {

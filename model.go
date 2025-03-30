@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
-	"io/ioutil"
 	"math"
 	"os"
 	"runtime/debug"
@@ -173,7 +172,7 @@ func (mm *Model) Check() error {
 	et := etree.New("check model")
 	for i, c := range mm.Coords {
 		if err := c.Check(); err != nil {
-			et.Add(fmt.Errorf("Coordinate: %d\n%v", i, err))
+			_ = et.Add(fmt.Errorf("Coordinate: %d\n%v", i, err))
 		}
 	}
 	for i := range mm.Coords {
@@ -181,19 +180,19 @@ func (mm *Model) Check() error {
 			if mm.isValidValue(v) {
 				continue
 			}
-			et.Add(fmt.Errorf("Coords: %d\nNot valid value", i))
+			_ = et.Add(fmt.Errorf("Coords: %d\nNot valid value", i))
 		}
 	}
 	for i, el := range mm.Elements {
 		if err := el.Check(); err != nil {
-			et.Add(fmt.Errorf("Element type `%d`: %d\n%v", el.ElementType, i, err))
+			_ = et.Add(fmt.Errorf("Element type `%d`: %d\n%v", el.ElementType, i, err))
 		}
 		for _, p := range el.Indexes {
 			if p < 0 {
-				et.Add(fmt.Errorf("Element: %d\nCoordinate index is negative", i))
+				_ = et.Add(fmt.Errorf("Element: %d\nCoordinate index is negative", i))
 			}
 			if len(mm.Coords) <= p {
-				et.Add(fmt.Errorf("Element: %d\nCoordinate index is too big", i))
+				_ = et.Add(fmt.Errorf("Element: %d\nCoordinate index is too big", i))
 			}
 		}
 		for i := range el.Indexes {
@@ -202,7 +201,7 @@ func (mm *Model) Check() error {
 					continue
 				}
 				if el.Indexes[i] == el.Indexes[j] {
-					et.Add(fmt.Errorf("Element: same indexes %v", el.Indexes))
+					_ = et.Add(fmt.Errorf("Element: same indexes %v", el.Indexes))
 				}
 			}
 		}
@@ -347,7 +346,7 @@ func (mm *Model) Open(mesh groups.Mesh, filename string) (err error) {
 	// actions
 	// read native json file format
 	var b []byte
-	b, err = ioutil.ReadFile(filename)
+	b, err = os.ReadFile(filename)
 	if err != nil {
 		err = fmt.Errorf("Open error: %v", err)
 		return
@@ -2739,7 +2738,7 @@ func (mm *Model) isValidValue(v float64) bool {
 
 func (mm *Model) isValidNodeId(ids []uint) bool {
 	for _, id := range ids {
-		if id < 0 || len(mm.Coords) <= int(id) {
+		if int(id) < 0 || len(mm.Coords) <= int(id) {
 			return false
 		}
 		if mm.Coords[id].Removed {
@@ -2754,7 +2753,7 @@ func (mm *Model) isValidNodeId(ids []uint) bool {
 
 func (mm *Model) isValidElementId(ids []uint, filter func(ElType) bool) bool {
 	for _, id := range ids {
-		if id < 0 || len(mm.Elements) <= int(id) {
+		if int(id) < 0 || len(mm.Elements) <= int(id) {
 			logger.Printf("isValidElementId: outside of range: %d", id)
 			return false
 		}
