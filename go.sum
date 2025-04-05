@@ -6,6 +6,10 @@ github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b h1:IZkvBy8TJTxpP
 github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b/go.mod h1:NquwK4RWQZiMO4cVCacCuMklZ+bPxxHSR8h8Qc51EPk=
 github.com/Konstantin8105/ds v0.0.0-20230911101041-2823ea6497ce h1:jjz6yGex5eEMMEhx+IAInSDR2HzMi/D+hpKnHZJEvmI=
 github.com/Konstantin8105/ds v0.0.0-20230911101041-2823ea6497ce/go.mod h1:WrDdhGNe9iX/7ICewqiaQEe3M/qkn8Ta8YbrvIupBiM=
+github.com/Konstantin8105/ds v0.0.0-20250330105955-31f8cdd4c877 h1:jGKKzHDGcGnCeNUFKII/7NO7GmSFHOhzv603YIKc3+w=
+github.com/Konstantin8105/ds v0.0.0-20250330105955-31f8cdd4c877/go.mod h1:eZBJkkFXWTse2kO4Bzr/Te4SqAZA+G3PA+Yn/bsgXMY=
+github.com/Konstantin8105/ds v0.0.0-20250330110957-6dba718ceac1 h1:+BoRNx4L/vOc9jNStUcY5tf4l8PH4Ov76P9iFfZl4TQ=
+github.com/Konstantin8105/ds v0.0.0-20250330110957-6dba718ceac1/go.mod h1:eZBJkkFXWTse2kO4Bzr/Te4SqAZA+G3PA+Yn/bsgXMY=
 github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibUOtOpkg=
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
 github.com/Konstantin8105/glsymbol v0.0.0-20230929084058-89782ab16f60 h1:gkmM7tKMsc/iE+BgJyBEbizd/GgVVKA8aK2mjfrLsyw=
@@ -23,6 +27,8 @@ github.com/Konstantin8105/tree v0.1.1 h1:EaEOLocAJ5IyQ+KisgY43X/TXoVyFXVd1nsykCl
 github.com/Konstantin8105/tree v0.1.1/go.mod h1:/KrCn6rMgf1uoXUY2HjVvML1LeLUULD1BDiHWJhJwII=
 github.com/Konstantin8105/vl v0.0.0-20240907173339-44e03c8c362d h1:WGS+o/OC6RARVUvqyJUgWZ6ULJd9BkTDhV/h8cf046c=
 github.com/Konstantin8105/vl v0.0.0-20240907173339-44e03c8c362d/go.mod h1:QaGRAgO/gsr1JmsV4JJYMoMuuS3OXpTJ3+w7//PGwM4=
+github.com/Konstantin8105/vl v0.0.0-20250329145337-29aa8490d4a2 h1:Ad/iuPOIzd27Ldhgv7lk5jfMW6SLcnLWSedPqEsih/U=
+github.com/Konstantin8105/vl v0.0.0-20250329145337-29aa8490d4a2/go.mod h1:QaGRAgO/gsr1JmsV4JJYMoMuuS3OXpTJ3+w7//PGwM4=
 github.com/akavel/rsrc v0.10.2 h1:Zxm8V5eI1hW4gGaYsJQUhxpjkENuG91ki8B4zCrvEsw=
 github.com/akavel/rsrc v0.10.2/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=

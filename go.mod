@@ -6,13 +6,13 @@ toolchain go1.24.0
 
 require (
 	github.com/Konstantin8105/compare v0.0.0-20241110101050-be8c917edda3
-	github.com/Konstantin8105/ds v0.0.0-20230911101041-2823ea6497ce
+	github.com/Konstantin8105/ds v0.0.0-20250330110957-6dba718ceac1
 	github.com/Konstantin8105/errors v0.1.0
 	github.com/Konstantin8105/glsymbol v0.0.0-20230929084058-89782ab16f60
 	github.com/Konstantin8105/gog v0.0.0-20250318072649-9c1405e03e0f
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20240403170626-5245216e7740
-	github.com/Konstantin8105/vl v0.0.0-20240907173339-44e03c8c362d
+	github.com/Konstantin8105/vl v0.0.0-20250329145337-29aa8490d4a2
 	github.com/gdamore/tcell/v2 v2.8.1
 	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20250301202403-da16c1255728
