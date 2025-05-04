@@ -6,9 +6,9 @@ toolchain go1.24.0
 
 require (
 	github.com/Konstantin8105/compare v0.0.0-20241110101050-be8c917edda3
-	github.com/Konstantin8105/ds v0.0.0-20250330110957-6dba718ceac1
+	github.com/Konstantin8105/ds v0.0.0-20250504143145-e93ab1000a29
 	github.com/Konstantin8105/errors v0.1.0
-	github.com/Konstantin8105/glsymbol v0.0.0-20230929084058-89782ab16f60
+	github.com/Konstantin8105/glsymbol v0.0.0-20250503191648-130094395025
 	github.com/Konstantin8105/gog v0.0.0-20250318072649-9c1405e03e0f
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20240403170626-5245216e7740
@@ -29,14 +29,14 @@ require (
 	github.com/dchest/jsmin v1.0.0 // indirect
 	github.com/gdamore/encoding v1.0.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
-	github.com/josephspurrier/goversioninfo v1.4.1 // indirect
+	github.com/josephspurrier/goversioninfo v1.5.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6 // indirect
 	github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	golang.org/x/image v0.25.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/term v0.30.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/image v0.26.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/term v0.31.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
 )
