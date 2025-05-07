@@ -6,7 +6,7 @@ toolchain go1.24.0
 
 require (
 	github.com/Konstantin8105/compare v0.0.0-20241110101050-be8c917edda3
-	github.com/Konstantin8105/ds v0.0.0-20250504143145-e93ab1000a29
+	github.com/Konstantin8105/ds v0.0.0-20250507101513-4661d1e44cd9
 	github.com/Konstantin8105/errors v0.1.0
 	github.com/Konstantin8105/glsymbol v0.0.0-20250503191648-130094395025
 	github.com/Konstantin8105/gog v0.0.0-20250318072649-9c1405e03e0f
@@ -35,8 +35,8 @@ require (
 	github.com/olegfedoseev/image-diff v0.0.0-20171116094004-897a4e73dfd6 // indirect
 	github.com/randall77/makefat v0.0.0-20210315173500-7ddd0e42c844 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	golang.org/x/image v0.26.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/term v0.31.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/image v0.27.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/term v0.32.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 )
