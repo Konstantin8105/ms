@@ -2217,7 +2217,7 @@ func (mm *Model) UnhideAll() {
 
 func (mm *Model) Move(nodes, elements []uint,
 	basePoint [3]float64,
-	path diffCoordinate) {
+	path DiffCoordinate) {
 	// check
 	if s := nodes; !mm.isValidNodeId(nodes) {
 		logger.Printf("Move: not valid node id: %v", s)
@@ -2248,7 +2248,7 @@ func (mm *Model) Move(nodes, elements []uint,
 	}
 }
 
-func move(coord *[3]float64, basePoint [3]float64, dc diffCoordinate) {
+func move(coord *[3]float64, basePoint [3]float64, dc DiffCoordinate) {
 	// moving
 	coord[0] += dc[0]
 	coord[1] += dc[1]
@@ -2296,7 +2296,7 @@ const radToDegree = math.Pi / 180.0
 
 func (mm *Model) Copy(nodes, elements []uint,
 	basePoint [3]float64,
-	paths []diffCoordinate,
+	paths []DiffCoordinate,
 	addLines, addTri bool) {
 	// check
 	if s := nodes; !mm.isValidNodeId(nodes) {
@@ -2718,7 +2718,7 @@ func min(xs ...float64) (res float64) {
 //	 +--------- FREQUENCY                                        //
 //	                                                             //
 
-var testCoverageFunc func(
+var TestCoverageFunc func(
 	m Mesh,
 	ch *chan ds.Action,
 	screenshot func(check func(image.Image)),
@@ -2863,8 +2863,8 @@ func Run() (err error) {
 
 	// run test function
 	go func() {
-		if f := testCoverageFunc; f != nil {
-			testCoverageFunc(&mm, &ch, screen.Screenshot)
+		if f := TestCoverageFunc; f != nil {
+			TestCoverageFunc(&mm, &ch, screen.Screenshot)
 		}
 	}()
 	// run and stop

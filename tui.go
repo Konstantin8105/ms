@@ -1701,15 +1701,15 @@ func init() {
 //	3 - angle around X
 //	4 - angle around Y
 //	5 - angle around Z
-type diffCoordinate [6]float64
+type DiffCoordinate [6]float64
 
 type MoveCopyble interface {
 	Move(nodes, elements []uint,
 		basePoint [3]float64,
-		path diffCoordinate)
+		path DiffCoordinate)
 	Copy(nodes, elements []uint,
 		basePoint [3]float64,
-		paths []diffCoordinate,
+		paths []DiffCoordinate,
 		addLines, addTri bool)
 	Mirror(nodes, elements []uint,
 		basePoint [3]gog.Point3d,
@@ -1743,7 +1743,7 @@ func init() {
 
 			type path struct {
 				w    vl.Widget
-				getC func() (basePoint [3]float64, dc diffCoordinate, ok bool)
+				getC func() (basePoint [3]float64, dc DiffCoordinate, ok bool)
 			}
 			var paths []path
 			{ // from node to node
@@ -1761,7 +1761,7 @@ func init() {
 				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
-					getC: func() (basePoint [3]float64, dc diffCoordinate, ok bool) {
+					getC: func() (basePoint [3]float64, dc DiffCoordinate, ok bool) {
 						f := nfgt()
 						if len(f) != 1 {
 							return
@@ -1802,7 +1802,7 @@ func init() {
 				ch.SetRoot(w)
 				paths = append(paths, path{
 					w: &ch,
-					getC: func() (basePoint [3]float64, dc diffCoordinate, ok bool) {
+					getC: func() (basePoint [3]float64, dc DiffCoordinate, ok bool) {
 						vs, vok := gt()
 						if !vok {
 							return
@@ -1838,7 +1838,7 @@ func init() {
 				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
-					getC: func() (basePoint [3]float64, dc diffCoordinate, ok bool) {
+					getC: func() (basePoint [3]float64, dc DiffCoordinate, ok bool) {
 						n := ntgt()
 						if len(n) != 1 {
 							return
@@ -1900,7 +1900,7 @@ func init() {
 
 			type path struct {
 				w    vl.Widget
-				getC func() (basePoint [3]float64, dcs []diffCoordinate, ok bool)
+				getC func() (basePoint [3]float64, dcs []DiffCoordinate, ok bool)
 			}
 			var paths []path
 			{ // from node to node with equal parts
@@ -1922,7 +1922,7 @@ func init() {
 				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
-					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
+					getC: func() (basePoint [3]float64, dcs []DiffCoordinate, ok bool) {
 						f := nfgt()
 						if len(f) != 1 {
 							return
@@ -1946,7 +1946,7 @@ func init() {
 						ok = true
 						basePoint = fc
 						for i := 0; i <= int(parts); i++ {
-							dcs = append(dcs, diffCoordinate([6]float64{
+							dcs = append(dcs, DiffCoordinate([6]float64{
 								(tc[0] - fc[0]) / float64(parts+1),
 								(tc[1] - fc[1]) / float64(parts+1),
 								(tc[2] - fc[2]) / float64(parts+1),
@@ -1978,7 +1978,7 @@ func init() {
 				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
-					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
+					getC: func() (basePoint [3]float64, dcs []DiffCoordinate, ok bool) {
 						vs, vok := gt()
 						if !vok {
 							return
@@ -1989,7 +1989,7 @@ func init() {
 						}
 						ok = true
 						for i := 0; i <= int(parts); i++ {
-							dcs = append(dcs, diffCoordinate([6]float64{
+							dcs = append(dcs, DiffCoordinate([6]float64{
 								vs[0] / float64(parts+1),
 								vs[1] / float64(parts+1),
 								vs[2] / float64(parts+1),
@@ -2051,7 +2051,7 @@ func init() {
 
 				paths = append(paths, path{
 					w: &ch,
-					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
+					getC: func() (basePoint [3]float64, dcs []DiffCoordinate, ok bool) {
 						ind := dir.GetPos()
 						var vs []float64
 						for i := range dgt {
@@ -2063,7 +2063,7 @@ func init() {
 						}
 						ok = true
 						for i := range vs {
-							var dc diffCoordinate
+							var dc DiffCoordinate
 							dc[ind] = vs[i]
 							dcs = append(dcs, dc)
 						}
@@ -2098,7 +2098,7 @@ func init() {
 				ch.SetRoot(&list)
 				paths = append(paths, path{
 					w: &ch,
-					getC: func() (basePoint [3]float64, dcs []diffCoordinate, ok bool) {
+					getC: func() (basePoint [3]float64, dcs []DiffCoordinate, ok bool) {
 						n := ntgt()
 						if len(n) != 1 {
 							return
@@ -2117,7 +2117,7 @@ func init() {
 						}
 						basePoint = c
 						for i := 0; i <= int(parts); i++ {
-							dcs = append(dcs, diffCoordinate([6]float64{
+							dcs = append(dcs, DiffCoordinate([6]float64{
 								0, 0, 0,
 								as[0] / float64(parts+1),
 								as[1] / float64(parts+1),

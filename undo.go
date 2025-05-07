@@ -448,7 +448,7 @@ func (u *Undo) Intersection(nodes, elements []uint) {
 
 func (u *Undo) Move(nodes, elements []uint,
 	basePoint [3]float64,
-	path diffCoordinate) {
+	path DiffCoordinate) {
 	logger.Print("Move")
 	// sync
 	pre, post := u.sync(false)
@@ -460,7 +460,7 @@ func (u *Undo) Move(nodes, elements []uint,
 
 func (u *Undo) Copy(nodes, elements []uint,
 	basePoint [3]float64,
-	paths []diffCoordinate,
+	paths []DiffCoordinate,
 	addLines, addTri bool) {
 	logger.Print("Copy")
 	// sync
