@@ -6,7 +6,7 @@ toolchain go1.24.0
 
 require (
 	github.com/Konstantin8105/compare v0.0.0-20241110101050-be8c917edda3
-	github.com/Konstantin8105/ds v0.0.0-20250507101513-4661d1e44cd9
+	github.com/Konstantin8105/ds v0.0.0-20250507140321-da58a9a97c05
 	github.com/Konstantin8105/errors v0.1.0
 	github.com/Konstantin8105/glsymbol v0.0.0-20250503191648-130094395025
 	github.com/Konstantin8105/gog v0.0.0-20250318072649-9c1405e03e0f

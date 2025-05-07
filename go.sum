@@ -6,6 +6,8 @@ github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b h1:IZkvBy8TJTxpP
 github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b/go.mod h1:NquwK4RWQZiMO4cVCacCuMklZ+bPxxHSR8h8Qc51EPk=
 github.com/Konstantin8105/ds v0.0.0-20250507101513-4661d1e44cd9 h1:ppgxYYz2tFQTv20ovQwkps28f4//SNiiHzpefezAJLQ=
 github.com/Konstantin8105/ds v0.0.0-20250507101513-4661d1e44cd9/go.mod h1:oxYG6AuEa1hkJNsaqHPW3pnBLbbrU1YTq3N17z+yAqo=
+github.com/Konstantin8105/ds v0.0.0-20250507140321-da58a9a97c05 h1:I/j2tTyoyD30TymcZiedpuk+Dohdotacni5aBXYLeSQ=
+github.com/Konstantin8105/ds v0.0.0-20250507140321-da58a9a97c05/go.mod h1:oxYG6AuEa1hkJNsaqHPW3pnBLbbrU1YTq3N17z+yAqo=
 github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibUOtOpkg=
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
 github.com/Konstantin8105/glsymbol v0.0.0-20250503191648-130094395025 h1:WlbFlEQZK8S8yF6q5A+ObgPDmSDVUrLz3q61B1kH58M=
