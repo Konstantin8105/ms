@@ -37,7 +37,7 @@ type checker struct {
 func (c *checker) Errorf(format string, args ...any) {
 	c.iserror = true
 	c.err = fmt.Errorf(format, args...)
-	panic(c)
+	panic(c.err)
 }
 
 func (c *checker) Fatalf(format string, args ...any) {
