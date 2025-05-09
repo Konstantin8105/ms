@@ -1748,6 +1748,7 @@ func init() {
 			var paths []path
 			{ // from node to node
 				var ch vl.CollapsingHeader
+				ch.BorderIfClosed(false)
 				ch.SetText("Move from node to node:")
 
 				var list vl.List
@@ -1789,6 +1790,7 @@ func init() {
 			}
 			{ // different coordinates
 				var ch vl.CollapsingHeader
+				ch.BorderIfClosed(false)
 				ch.SetText("Move by coordinate different [dX,dY,dZ]:")
 
 				w, gt, initw := Input3Float(
@@ -1817,6 +1819,7 @@ func init() {
 			}
 			{ // rotate
 				var ch vl.CollapsingHeader
+				ch.BorderIfClosed(false)
 				ch.SetText("Rotate around node:")
 
 				var list vl.List
@@ -1905,6 +1908,7 @@ func init() {
 			var paths []path
 			{ // from node to node with equal parts
 				var ch vl.CollapsingHeader
+				ch.BorderIfClosed(false)
 				ch.SetText("Copy from node to node with equal parts:")
 
 				var list vl.List
@@ -1959,6 +1963,7 @@ func init() {
 			{ // different coordinates
 
 				var ch vl.CollapsingHeader
+				ch.BorderIfClosed(false)
 				ch.SetText("Copy by coordinate different [dX,dY,dZ] with equal parts:")
 
 				var list vl.List
@@ -2001,6 +2006,7 @@ func init() {
 			}
 			{ // Translational repeat
 				var ch vl.CollapsingHeader
+				ch.BorderIfClosed(false)
 				ch.SetText("Triangulation repeat:")
 
 				var list vl.List
@@ -2073,6 +2079,7 @@ func init() {
 			}
 			{ // rotate
 				var ch vl.CollapsingHeader
+				ch.BorderIfClosed(false)
 				ch.SetText("Circular repeat around node:")
 
 				var list vl.List
@@ -2183,6 +2190,7 @@ func init() {
 			var paths []path
 			{
 				var ch vl.CollapsingHeader
+				ch.BorderIfClosed(false)
 				ch.SetText("Node and plane:")
 
 				var list vl.List
@@ -2249,6 +2257,7 @@ func init() {
 			}
 			{
 				var ch vl.CollapsingHeader
+				ch.BorderIfClosed(false)
 				ch.SetText("Plane by 3 points:")
 
 				var list vl.List
@@ -2747,6 +2756,7 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 	for g := range colHeader {
 		colHeader[g].ch.SetText(GroupID(g).String())
 		colHeader[g].ch.SetRoot(&colHeader[g].list)
+		colHeader[g].ch.BorderIfClosed(false)
 		colHeader[g].list.Compress()
 		list.Add(&colHeader[g].ch)
 	}
@@ -2756,16 +2766,17 @@ func NewTui(mesh Mesh, closedApp *bool, actions *chan ds.Action) (tui vl.Widget,
 			if Operations[i].Group != GroupID(g) {
 				continue
 			}
-			var c vl.CollapsingHeader
-			c.SetText(Operations[i].Name)
+			var ch vl.CollapsingHeader
+			ch.BorderIfClosed(false)
+			ch.SetText(Operations[i].Name)
 			part := Operations[i].Part
 			if part == nil {
 				err = fmt.Errorf("widget %02d is empty: %#v", i, Operations[i])
 				return
 			}
 			r, init := part(mesh, actions, closedApp)
-			c.SetRoot(r)
-			colHeader[g].list.Add(&c)
+			ch.SetRoot(r)
+			colHeader[g].list.Add(&ch)
 			view[i] = true
 			inits = append(inits, init)
 
