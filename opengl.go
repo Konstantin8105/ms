@@ -448,12 +448,17 @@ func (op *Opengl) model3d(s viewState, fill selectState) {
 func (op *Opengl) drawPoints(s viewState, fill selectState) {
 	cos := op.mesh.GetCoords()
 
+	gl.Disable(gl.DEPTH_TEST)
+	defer func() {
+		gl.Enable(gl.DEPTH_TEST)
+	}()
 	// prepare colors
 	var r, g, b uint8
+	const pointSize = 4
 	// Point
 	switch s {
 	case normal, colorEdgeElements:
-		gl.PointSize(5)
+		gl.PointSize(pointSize)
 		gl.Begin(gl.POINTS)
 		for i := range cos {
 			if cos[i].Removed {
@@ -472,7 +477,7 @@ func (op *Opengl) drawPoints(s viewState, fill selectState) {
 		}
 		gl.End()
 	case selectPoints:
-		gl.PointSize(5)
+		gl.PointSize(pointSize)
 		gl.Begin(gl.POINTS)
 		for i := range cos {
 			if cos[i].Removed {
