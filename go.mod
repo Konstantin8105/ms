@@ -1,8 +1,6 @@
 module github.com/Konstantin8105/ms
 
-go 1.23.1
-
-toolchain go1.24.0
+go 1.24.2
 
 require (
 	github.com/Konstantin8105/compare v0.0.0-20241110101050-be8c917edda3
