@@ -10,7 +10,7 @@ require (
 	github.com/Konstantin8105/gog v0.0.0-20251211121929-e71009fca529
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20240403170626-5245216e7740
-	github.com/Konstantin8105/vl v0.0.0-20260410145015-9aeeb1047884
+	github.com/Konstantin8105/vl v0.0.0-20260423091143-d25fadb67c53
 	github.com/gdamore/tcell/v2 v2.13.9
 	github.com/go-gl/gl v0.0.0-20260331235117-4566fea9a276
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20260406072232-3ac4aa2bb164

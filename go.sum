@@ -25,6 +25,8 @@ github.com/Konstantin8105/vl v0.0.0-20250925105754-97ba757708b5 h1:aFUAg2mhJ/XfF
 github.com/Konstantin8105/vl v0.0.0-20250925105754-97ba757708b5/go.mod h1:5QM0ap/wiYTrFSk6n8EroSC0eST95Rf9mRJznCx+YSY=
 github.com/Konstantin8105/vl v0.0.0-20260410145015-9aeeb1047884 h1:sg/h66XKeo4IwVo3UgizLXDgk4c0RaMde8/359kPYHo=
 github.com/Konstantin8105/vl v0.0.0-20260410145015-9aeeb1047884/go.mod h1:Nq92jpresKv9dZ+pa50FNt8HTqBy8DMdVeFVG0ZC7jo=
+github.com/Konstantin8105/vl v0.0.0-20260423091143-d25fadb67c53 h1:6q5F28QvM6Gz9bBf6PJWRgBBpV4EEtpJ234RrrQO/fc=
+github.com/Konstantin8105/vl v0.0.0-20260423091143-d25fadb67c53/go.mod h1:TCcPpIBykvIvyvbcs/EU4uNM6Hhqb+eQL6E/Cwkb+ck=
 github.com/akavel/rsrc v0.10.2 h1:Zxm8V5eI1hW4gGaYsJQUhxpjkENuG91ki8B4zCrvEsw=
 github.com/akavel/rsrc v0.10.2/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
