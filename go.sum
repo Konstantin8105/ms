@@ -2,6 +2,8 @@ github.com/Konstantin8105/binaryexpr v0.1.0 h1:2+mmmCRpZ6BDHyaLRAePjGiVp/Hgt7T7z
 github.com/Konstantin8105/binaryexpr v0.1.0/go.mod h1:prPPFcv/zGCwhx78QW299JwMKP4xSkldgOwhZNr99GQ=
 github.com/Konstantin8105/compare v0.0.0-20250714171656-28fa0538748e h1:62eJw2zb1ZouX3xjFSlRYQJsnbamT8ZnzFJDU6VaiBU=
 github.com/Konstantin8105/compare v0.0.0-20250714171656-28fa0538748e/go.mod h1:fUpun9N0uSc9BUqjkF1m5yWEliJK6eijIf3n5+zZDIw=
+github.com/Konstantin8105/compare v0.0.0-20260422080133-e3b4e3c34d9c h1:NhbKZUpBPsXHCi/qhW7GtnAs86ICspPjknqDmtIDXVA=
+github.com/Konstantin8105/compare v0.0.0-20260422080133-e3b4e3c34d9c/go.mod h1:fYMgskDUMjGz2/tzub3LHJpo9p9wFD2hgHDY4nAs9Fk=
 github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b h1:IZkvBy8TJTxpPHjOW1R5KqIgVF2lVk8isx9iQBHnOnw=
 github.com/Konstantin8105/cs v0.0.0-20190517091010-c069cc1cee1b/go.mod h1:NquwK4RWQZiMO4cVCacCuMklZ+bPxxHSR8h8Qc51EPk=
 github.com/Konstantin8105/ds v0.0.0-20250717125754-909098dc4907 h1:EYCXSxeg5dA/sUFxy1/4NnmmvpE0ynmH4wpGWWm4Wd4=
@@ -10,6 +12,8 @@ github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibU
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
 github.com/Konstantin8105/glsymbol v0.0.0-20250503191648-130094395025 h1:WlbFlEQZK8S8yF6q5A+ObgPDmSDVUrLz3q61B1kH58M=
 github.com/Konstantin8105/glsymbol v0.0.0-20250503191648-130094395025/go.mod h1:m25lrc3j6bEZK6Y/LVC4hAJNd0o3+8nEFEQjdZLzMAQ=
+github.com/Konstantin8105/glsymbol v0.0.0-20260423131537-77bf87be15fd h1:EAVBuF0HnWo64YGfXlqsVKPNm1uPpuN8vaGlaO9oRNk=
+github.com/Konstantin8105/glsymbol v0.0.0-20260423131537-77bf87be15fd/go.mod h1:oMbHfofKV+evOB2oVyExvd7Jwk0P8esVqohaQo92IRc=
 github.com/Konstantin8105/gog v0.0.0-20251211121929-e71009fca529 h1:ed+mUDXeKKCWvbGX8hDsAonFnfYXjFl55OzhOWVGDwA=
 github.com/Konstantin8105/gog v0.0.0-20251211121929-e71009fca529/go.mod h1:P26qWVJ7yapmO5vP8YtyYAMR3wFJZADXuiWaAxWwTuw=
 github.com/Konstantin8105/pow v0.1.0 h1:1FBuKD4UEXKRsP0snDUGqbok5LcwYPUbq5ClVOW++cE=

@@ -1,12 +1,12 @@
 module github.com/Konstantin8105/ms
 
-go 1.25.0
+go 1.26
 
 require (
-	github.com/Konstantin8105/compare v0.0.0-20250714171656-28fa0538748e
+	github.com/Konstantin8105/compare v0.0.0-20260422080133-e3b4e3c34d9c
 	github.com/Konstantin8105/ds v0.0.0-20250717125754-909098dc4907
 	github.com/Konstantin8105/errors v0.1.0
-	github.com/Konstantin8105/glsymbol v0.0.0-20250503191648-130094395025
+	github.com/Konstantin8105/glsymbol v0.0.0-20260423131537-77bf87be15fd
 	github.com/Konstantin8105/gog v0.0.0-20251211121929-e71009fca529
 	github.com/Konstantin8105/pow v0.1.0
 	github.com/Konstantin8105/tf v0.0.0-20240403170626-5245216e7740
