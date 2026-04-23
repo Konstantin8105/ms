@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/Konstantin8105/compare v0.0.0-20260422080133-e3b4e3c34d9c
-	github.com/Konstantin8105/ds v0.0.0-20250717125754-909098dc4907
+	github.com/Konstantin8105/ds v0.0.0-20260423135046-82fe86e5bc34
 	github.com/Konstantin8105/errors v0.1.0
 	github.com/Konstantin8105/glsymbol v0.0.0-20260423131537-77bf87be15fd
 	github.com/Konstantin8105/gog v0.0.0-20251211121929-e71009fca529
